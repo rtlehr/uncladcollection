@@ -1,0 +1,117 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Permission;
+use Illuminate\Database\Seeder;
+
+class PermissionSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $permissions = [
+
+            // Administration
+            [
+                'group_name' => 'Administration',
+                'name' => 'view_admin',
+                'label' => 'View Admin Area',
+                'description' => 'Access the admin section.',
+            ],
+            [
+                'group_name' => 'Administration',
+                'name' => 'manage_users',
+                'label' => 'Manage Users',
+                'description' => 'Create, edit, and delete users.',
+            ],
+            [
+                'group_name' => 'Administration',
+                'name' => 'manage_roles',
+                'label' => 'Manage Roles',
+                'description' => 'Manage security roles.',
+            ],
+            [
+                'group_name' => 'Administration',
+                'name' => 'manage_permissions',
+                'label' => 'Manage Permissions',
+                'description' => 'Manage permissions.',
+            ],
+            [
+                'group_name' => 'Administration',
+                'name' => 'manage_site_settings',
+                'label' => 'Manage Site Settings',
+                'description' => 'Manage site configuration.',
+            ],
+
+            // Images
+            [
+                'group_name' => 'Images',
+                'name' => 'manage_images',
+                'label' => 'Manage Images',
+                'description' => 'Manage stock images.',
+            ],
+            [
+                'group_name' => 'Images',
+                'name' => 'approve_images',
+                'label' => 'Approve Images',
+                'description' => 'Approve submitted images.',
+            ],
+
+            // Categories
+            [
+                'group_name' => 'Content',
+                'name' => 'manage_categories',
+                'label' => 'Manage Categories',
+                'description' => 'Manage categories.',
+            ],
+            [
+                'group_name' => 'Content',
+                'name' => 'manage_tags',
+                'label' => 'Manage Tags',
+                'description' => 'Manage tags.',
+            ],
+
+            // Blog
+            [
+                'group_name' => 'Blog',
+                'name' => 'manage_blog_posts',
+                'label' => 'Manage Blog Posts',
+                'description' => 'Manage blog content.',
+            ],
+
+            // Comments
+            [
+                'group_name' => 'Community',
+                'name' => 'moderate_comments',
+                'label' => 'Moderate Comments',
+                'description' => 'Approve and moderate comments.',
+            ],
+
+            // Orders
+            [
+                'group_name' => 'Commerce',
+                'name' => 'manage_orders',
+                'label' => 'Manage Orders',
+                'description' => 'Manage customer orders.',
+            ],
+
+            // Reports
+            [
+                'group_name' => 'Reports',
+                'name' => 'view_reports',
+                'label' => 'View Reports',
+                'description' => 'Access reporting.',
+            ],
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::updateOrCreate(
+                ['name' => $permission['name']],
+                array_merge($permission, [
+                    'is_system' => true,
+                    'is_locked' => true,
+                ])
+            );
+        }
+    }
+}
