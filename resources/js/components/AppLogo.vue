@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import type { SharedData } from '@/types';
+
+const page = usePage<SharedData>();
+
+const siteName = page.props.site?.name ?? 'Unclad Collection';
 </script>
 
 <template>
@@ -8,9 +14,10 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
     >
         <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
     </div>
+
     <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >Laravel Starter Kit</span
-        >
+        <span class="mb-0.5 truncate leading-tight font-semibold">
+            {{ siteName }}
+        </span>
     </div>
 </template>

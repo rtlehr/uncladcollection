@@ -29,3 +29,14 @@ export type TwoFactorConfigContent = {
     description: string;
     buttonText: string;
 };
+
+export type Site = {
+    name: string;
+    tagline?: string | null;
+    theme?: string | null;
+};
+
+export type SharedData = {
+    auth: Auth;
+    site?: Site;
+};
