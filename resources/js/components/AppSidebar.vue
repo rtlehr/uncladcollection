@@ -5,6 +5,9 @@ import {
     FolderGit2,
     LayoutGrid,
     Settings,
+    KeyRound,
+    ShieldCheck,
+    UsersRound,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -20,6 +23,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+
 
 import { useAuth } from '@/composables/useAuth';
 import { dashboard } from '@/routes';
@@ -37,12 +41,29 @@ const mainNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [];
 
-if (can('manage_site_settings')) {
-    adminNavItems.push({
-        title: 'Site Settings',
-        href: '/admin/site-settings',
-        icon: Settings,
-    });
+    if (can('manage_site_settings')) {
+        adminNavItems.push({
+            title: 'Site Settings',
+            href: '/admin/site-settings',
+            icon: Settings,
+        });
+    }
+
+    if (can('manage_permissions')) {
+        adminNavItems.push({
+            title: 'Permissions',
+            href: '/admin/permissions',
+            icon: KeyRound,
+        });
+
+    if (can('manage_roles')) {
+        adminNavItems.push({
+            title: 'Roles',
+            href: '/admin/roles',
+            icon: ShieldCheck,
+        });
+    }
+
 }
 
 const showAdminSection =
