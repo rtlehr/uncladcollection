@@ -82,6 +82,85 @@ class SiteSettingSeeder extends Seeder
                 'description' => 'Default store currency.',
                 'is_public' => true,
             ],
+            [
+                'group_name' => 'branding',
+                'setting_key' => 'site_logo',
+                'setting_value' => null,
+                'setting_type' => 'image',
+                'description' => 'Main site logo.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'branding',
+                'setting_key' => 'site_favicon',
+                'setting_value' => null,
+                'setting_type' => 'image',
+                'description' => 'Browser favicon.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'branding',
+                'setting_key' => 'footer_text',
+                'setting_value' => '© Unclad Collection. All rights reserved.',
+                'setting_type' => 'text',
+                'description' => 'Footer copyright text.',
+                'is_public' => true,
+            ],
+            [
+                'group_name' => 'social',
+                'setting_key' => 'facebook_url',
+                'setting_value' => null,
+                'setting_type' => 'url',
+                'description' => 'Facebook page URL.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'social',
+                'setting_key' => 'instagram_url',
+                'setting_value' => null,
+                'setting_type' => 'url',
+                'description' => 'Instagram profile URL.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'social',
+                'setting_key' => 'youtube_url',
+                'setting_value' => null,
+                'setting_type' => 'url',
+                'description' => 'YouTube channel URL.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'social',
+                'setting_key' => 'pinterest_url',
+                'setting_value' => null,
+                'setting_type' => 'url',
+                'description' => 'Pinterest profile URL.',
+                'is_public' => true,
+            ],
+            [
+                'group_name' => 'seo',
+                'setting_key' => 'default_meta_title',
+                'setting_value' => 'Unclad Collection',
+                'setting_type' => 'text',
+                'description' => 'Default page title for SEO.',
+                'is_public' => true,
+            ],
+
+            [
+                'group_name' => 'seo',
+                'setting_key' => 'default_meta_description',
+                'setting_value' => '',
+                'setting_type' => 'textarea',
+                'description' => 'Default meta description for SEO.',
+                'is_public' => true,
+            ],
+
         ];
 
         foreach ($settings as $setting) {

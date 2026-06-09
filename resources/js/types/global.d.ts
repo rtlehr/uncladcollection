@@ -31,3 +31,9 @@ declare module 'vue' {
         $headManager: ReturnType<typeof createHeadManager>;
     }
 }
+
+export interface SiteSettings {
+    name: string
+    tagline?: string
+    theme?: string
+}
