@@ -17,7 +17,14 @@ use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable([
+    'name',
+    'username',
+    'email',
+    'password',
+    'is_disabled',
+])]
+
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -35,6 +42,7 @@ class User extends Authenticatable implements PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_disabled' => 'boolean',
         ];
     }
 

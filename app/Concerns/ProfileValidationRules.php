@@ -11,13 +11,16 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user profiles.
      *
+     * Used during registration.
+     *
      * @return array<string, array<int, ValidationRule|array<mixed>|string>>
      */
-    protected function profileRules(?int $userId = null): array
+    public function profileRules(): array
     {
         return [
             'name' => $this->nameRules(),
-            'email' => $this->emailRules($userId),
+            'username' => $this->usernameRules(),
+            'email' => $this->emailRules(),
         ];
     }
 
@@ -29,6 +32,23 @@ trait ProfileValidationRules
     protected function nameRules(): array
     {
         return ['required', 'string', 'max:255'];
+    }
+
+    /**
+     * Get the validation rules used to validate usernames.
+     *
+     * @return array<int, ValidationRule|array<mixed>|string>
+     */
+    protected function usernameRules(?int $userId = null): array
+    {
+        return [
+            'required',
+            'string',
+            'max:255',
+            $userId === null
+                ? Rule::unique(User::class, 'username')
+                : Rule::unique(User::class, 'username')->ignore($userId),
+        ];
     }
 
     /**

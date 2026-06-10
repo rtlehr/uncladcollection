@@ -26,6 +26,10 @@ class DatabaseSeeder extends Seeder
             SiteSettingSeeder::class,
             PermissionSeeder::class,
             RoleSeeder::class,
+            DevelopmentUserSeeder::class,
+            CategorySeeder::class,
+            TagSeeder::class,
+            CollectionSeeder::class,
         ]);
 
     }

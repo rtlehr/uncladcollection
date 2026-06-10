@@ -8,6 +8,9 @@ import {
     KeyRound,
     ShieldCheck,
     UsersRound,
+    Tags,
+    Tag,
+    Images,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -61,6 +64,38 @@ const adminNavItems: NavItem[] = [];
             title: 'Roles',
             href: '/admin/roles',
             icon: ShieldCheck,
+        });
+    }
+
+    if (can('manage_users')) {
+        adminNavItems.push({
+            title: 'Users',
+            href: '/admin/users',
+            icon: UsersRound,
+        });
+    }
+
+    if (can('manage_categories')) {
+        adminNavItems.push({
+            title: 'Categories',
+            href: '/admin/categories',
+            icon: Tags,
+        });
+    }
+
+    if (can('manage_tags')) {
+        adminNavItems.push({
+            title: 'Tags',
+            href: '/admin/tags',
+            icon: Tag,
+        });
+    }
+
+    if (can('manage_collections')) {
+        adminNavItems.push({
+            title: 'Collections',
+            href: '/admin/collections',
+            icon: Images,
         });
     }
 

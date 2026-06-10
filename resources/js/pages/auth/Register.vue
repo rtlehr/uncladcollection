@@ -31,7 +31,6 @@ defineOptions({
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
-        <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
                 <Input
@@ -48,12 +47,29 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
+                <Label for="username">Username</Label>
+                <Input
+                    id="username"
+                    type="text"
+                    required
+                    :tabindex="2"
+                    autocomplete="nickname"
+                    name="username"
+                    placeholder="Public username"
+                />
+                <p class="text-xs text-muted-foreground">
+                    This is the public name that will appear on comments and community activity.
+                </p>
+                <InputError :message="errors.username" />
+            </div>
+            
+            <div class="grid gap-2">
                 <Label for="email">Email address</Label>
                 <Input
                     id="email"
                     type="email"
                     required
-                    :tabindex="2"
+                    :tabindex="3"
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
@@ -66,7 +82,7 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="3"
+                    :tabindex="4"
                     autocomplete="new-password"
                     name="password"
                     placeholder="Password"
@@ -80,7 +96,7 @@ defineOptions({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="4"
+                    :tabindex="5"
                     autocomplete="new-password"
                     name="password_confirmation"
                     placeholder="Confirm password"
@@ -92,23 +108,22 @@ defineOptions({
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
+                tabindex="6"
                 :disabled="processing"
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
                 Create account
             </Button>
-        </div>
 
-        <div class="text-center text-sm text-muted-foreground">
-            Already have an account?
-            <TextLink
-                :href="login()"
-                class="underline underline-offset-4"
-                :tabindex="6"
-                >Log in</TextLink
-            >
-        </div>
+            <div class="text-center text-sm text-muted-foreground">
+                Already have an account?
+                <TextLink
+                    :href="login()"
+                    class="underline underline-offset-4"
+                    :tabindex="6"
+                    >Log in</TextLink
+                >
+            </div>
     </Form>
 </template>

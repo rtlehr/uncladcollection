@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+class Image extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'collection_id',
+        'title',
+        'slug',
+        'description',
+        'image_path',
+        'thumbnail_path',
+        'photographer',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'collection_id' => 'integer',
+        'sort_order' => 'integer',
+        'is_active' => 'boolean',
+    ];
+
+    public function collection(): BelongsTo
+    {
+        return $this->belongsTo(Collection::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class)
+            ->withTimestamps();
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)
+            ->withTimestamps();
+    }
+}

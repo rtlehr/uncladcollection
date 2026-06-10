@@ -25,6 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'enabled' => \App\Http\Middleware\EnsureUserIsEnabled::class,
+        ]);
+
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\EnsureUserIsEnabled::class,
         ]);
 
     })

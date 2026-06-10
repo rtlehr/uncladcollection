@@ -36,7 +36,7 @@ const user = computed(() => page.props.auth.user);
         <Heading
             variant="small"
             title="Profile"
-            description="Update your name and email address"
+            description="Update your name, username, and email address"
         />
 
         <Form
@@ -56,6 +56,41 @@ const user = computed(() => page.props.auth.user);
                     placeholder="Full name"
                 />
                 <InputError class="mt-2" :message="errors.name" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="username">Username</Label>
+                <Input
+                    id="username"
+                    class="mt-1 block w-full"
+                    name="username"
+                    :default-value="user.username"
+                    required
+                    autocomplete="nickname"
+                    placeholder="Public username"
+                />
+                <p class="text-xs text-muted-foreground">
+                    This is the name shown on comments and public activity.
+                </p>
+                <InputError class="mt-2" :message="errors.username" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label>Member Role</Label>
+
+                <div class="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                    <span v-if="user.roles?.length">
+                        {{ user.roles.join(', ') }}
+                    </span>
+
+                    <span v-else class="text-muted-foreground">
+                        No role assigned
+                    </span>
+                </div>
+
+                <p class="text-xs text-muted-foreground">
+                    Roles are managed by site administrators.
+                </p>
             </div>
 
             <div class="grid gap-2">

@@ -43,6 +43,27 @@ class PermissionSeeder extends Seeder
                 'description' => 'Manage site configuration.',
             ],
 
+            // Content
+            [
+                'name' => 'manage_categories',
+                'label' => 'Manage Categories',
+                'group_name' => 'Content',
+                'description' => 'Create, edit, and delete categories.',
+            ],
+            [
+                'name' => 'manage_tags',
+                'label' => 'Manage Tags',
+                'group_name' => 'Content',
+                'description' => 'Create, edit, delete, and manage tags.',
+            ],
+            [
+                'name' => 'manage_collections',
+                'label' => 'Manage Collections',
+                'group_name' => 'Content',
+                'description' => 'Create, edit, delete, and manage image collections.',
+            ],
+
+
             // Images
             [
                 'group_name' => 'Images',
