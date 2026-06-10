@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -30,7 +31,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::resource('roles', RoleController::class)
             ->except(['show'])
             ->middleware('permission:manage_roles');
-        
+
         Route::get('/users', [UserController::class, 'index'])
             ->middleware('permission:manage_users')
             ->name('users.index');

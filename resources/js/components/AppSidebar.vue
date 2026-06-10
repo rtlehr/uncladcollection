@@ -11,6 +11,7 @@ import {
     Tags,
     Tag,
     Images,
+    ImageIcon,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -97,6 +98,14 @@ const adminNavItems: NavItem[] = [];
             href: '/admin/collections',
             icon: Images,
         });
+    }
+
+    if (can('manage_images')) {
+    adminNavItems.push({
+        title: 'Images',
+        href: '/admin/images',
+        icon: ImageIcon,
+    });
     }
 
 }
