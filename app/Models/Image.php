@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Image extends Model
 {
@@ -64,6 +65,11 @@ class Image extends Model
             'is_active' => 'boolean',
             'is_ai_generated' => 'boolean',
         ];
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(ImageFavorite::class);
     }
 
 }

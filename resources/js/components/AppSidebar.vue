@@ -12,6 +12,7 @@ import {
     Tag,
     Images,
     ImageIcon,
+    Heart,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -41,6 +42,16 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Images',
+        href: '/images',
+        icon: ImageIcon,
+    },
+    {
+        title: 'My Favorites',
+        href: '/favorites',
+        icon: Heart,
+    }
 ];
 
 const adminNavItems: NavItem[] = [];

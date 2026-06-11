@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use App\Models\Role;
 use App\Models\Permission;
@@ -137,6 +138,11 @@ class User extends Authenticatable implements PasskeyUser
     public function getActivityName(): string
     {
         return $this->name;
+    }
+
+    public function imageFavorites(): HasMany
+    {
+        return $this->hasMany(ImageFavorite::class);
     }
 
 }
