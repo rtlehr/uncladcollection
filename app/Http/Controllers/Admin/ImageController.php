@@ -9,6 +9,7 @@ use App\Models\Collection;
 use App\Models\Image;
 use App\Models\Tag;
 use App\Services\AdminActivityService;
+use App\Services\ImageProcessingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -137,7 +138,12 @@ class ImageController extends Controller
             'views_count' => 0,
         ]);
 
-        $image->update($this->storeImageVersions($request, $image));
+        $image->update(
+            app(ImageProcessingService::class)->processUploadedImage(
+                uploadedFile: $request->file('image'),
+                image: $image
+            )
+        );
 
         $image->categories()->sync($validated['categories'] ?? []);
         $image->tags()->sync($validated['tags'] ?? []);
@@ -277,7 +283,12 @@ class ImageController extends Controller
         if ($request->hasFile('image')) {
             $this->deleteImageFolder($image);
 
-            $image->update($this->storeImageVersions($request, $image));
+            $image->update(
+                app(ImageProcessingService::class)->processUploadedImage(
+                    uploadedFile: $request->file('image'),
+                    image: $image
+                )
+            );
 
             $activityService->log(
                 action: 'file_replaced',
@@ -384,28 +395,6 @@ class ImageController extends Controller
         return redirect()
             ->route('admin.images.index')
             ->with('success', 'Image deleted successfully.');
-    }
-
-    private function storeImageVersions(Request $request, Image $image): array
-    {
-        $uploadedFile = $request->file('image');
-
-        $extension = $uploadedFile->getClientOriginalExtension();
-        $baseFilename = Str::slug(pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME));
-
-        if ($baseFilename === '') {
-            $baseFilename = 'image';
-        }
-
-        $filename = "{$baseFilename}.{$extension}";
-        $baseFolder = $this->imageBaseFolder($image);
-
-        return [
-            'original_path' => $uploadedFile->storeAs("{$baseFolder}/original", $filename, 'public'),
-            'high_res_path' => $uploadedFile->storeAs("{$baseFolder}/high-res", $filename, 'public'),
-            'thumbnail_path' => $uploadedFile->storeAs("{$baseFolder}/thumbnail", $filename, 'public'),
-            'icon_path' => $uploadedFile->storeAs("{$baseFolder}/icon", $filename, 'public'),
-        ];
     }
 
     private function deleteImageFolder(Image $image): void
