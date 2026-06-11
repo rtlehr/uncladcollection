@@ -125,6 +125,11 @@ class AdminActivityService
             'thumbnail_path',
             'icon_path' => 'Image file path changed.',
             default => 'Record updated.',
+            'is_ai_generated' => 'AI generated status changed.',
+            'downloads_count' => 'Downloads count changed.',
+            'favorites_count' => 'Favorites count changed.',
+            'purchases_count' => 'Purchases count changed.',
+            'views_count' => 'Views count changed.',
         };
     }
 

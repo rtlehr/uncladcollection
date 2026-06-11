@@ -23,6 +23,11 @@ class Image extends Model
         'photographer',
         'sort_order',
         'is_active',
+        'downloads_count',
+        'favorites_count',
+        'purchases_count',
+        'views_count',
+        'is_ai_generated',
     ];
 
     protected $casts = [
@@ -51,6 +56,14 @@ class Image extends Model
     public function getActivityName(): string
     {
         return $this->title;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+            'is_ai_generated' => 'boolean',
+        ];
     }
 
 }

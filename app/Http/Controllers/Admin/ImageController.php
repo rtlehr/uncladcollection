@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminActivity;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Image;
 use App\Models\Tag;
-use App\Models\AdminActivity;
 use App\Services\AdminActivityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -111,9 +111,13 @@ class ImageController extends Controller
             'photographer' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_ai_generated' => ['boolean'],
+
             'image' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:51200'],
+
             'categories' => ['array'],
             'categories.*' => ['exists:categories,id'],
+
             'tags' => ['array'],
             'tags.*' => ['exists:tags,id'],
         ]);
@@ -126,11 +130,14 @@ class ImageController extends Controller
             'photographer' => $validated['photographer'] ?? null,
             'sort_order' => $validated['sort_order'],
             'is_active' => $request->boolean('is_active'),
+            'is_ai_generated' => $request->boolean('is_ai_generated'),
+            'downloads_count' => 0,
+            'favorites_count' => 0,
+            'purchases_count' => 0,
+            'views_count' => 0,
         ]);
 
-        $paths = $this->storeImageVersions($request, $image);
-
-        $image->update($paths);
+        $image->update($this->storeImageVersions($request, $image));
 
         $image->categories()->sync($validated['categories'] ?? []);
         $image->tags()->sync($validated['tags'] ?? []);
@@ -147,11 +154,7 @@ class ImageController extends Controller
 
     public function show(Image $image): Response
     {
-        $image->load([
-            'collection',
-            'categories',
-            'tags',
-        ]);
+        $image->load(['collection', 'categories', 'tags']);
 
         return Inertia::render('Admin/Images/Show', [
             'imageRecord' => $this->formatImageForIndex($image),
@@ -209,9 +212,18 @@ class ImageController extends Controller
             'photographer' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_ai_generated' => ['boolean'],
+
+            'downloads_count' => ['nullable', 'integer', 'min:0'],
+            'favorites_count' => ['nullable', 'integer', 'min:0'],
+            'purchases_count' => ['nullable', 'integer', 'min:0'],
+            'views_count' => ['nullable', 'integer', 'min:0'],
+
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:51200'],
+
             'categories' => ['array'],
             'categories.*' => ['exists:categories,id'],
+
             'tags' => ['array'],
             'tags.*' => ['exists:tags,id'],
         ]);
@@ -226,13 +238,18 @@ class ImageController extends Controller
             'photographer',
             'sort_order',
             'is_active',
+            'is_ai_generated',
+            'downloads_count',
+            'favorites_count',
+            'purchases_count',
+            'views_count',
             'original_path',
             'high_res_path',
             'thumbnail_path',
             'icon_path',
         ]);
 
-        $oldCategories = $image->categories() 
+        $oldCategories = $image->categories()
             ->orderBy('name')
             ->pluck('name')
             ->toArray();
@@ -250,6 +267,11 @@ class ImageController extends Controller
             'photographer' => $validated['photographer'] ?? null,
             'sort_order' => $validated['sort_order'],
             'is_active' => $request->boolean('is_active'),
+            'is_ai_generated' => $request->boolean('is_ai_generated'),
+            'downloads_count' => $validated['downloads_count'] ?? $image->downloads_count,
+            'favorites_count' => $validated['favorites_count'] ?? $image->favorites_count,
+            'purchases_count' => $validated['purchases_count'] ?? $image->purchases_count,
+            'views_count' => $validated['views_count'] ?? $image->views_count,
         ]);
 
         if ($request->hasFile('image')) {
@@ -270,25 +292,12 @@ class ImageController extends Controller
 
         $freshImage = $image->fresh();
 
-        $newValues = $freshImage->only([
-            'title',
-            'slug',
-            'description',
-            'photographer',
-            'sort_order',
-            'is_active',
-            'original_path',
-            'high_res_path',
-            'thumbnail_path',
-            'icon_path',
-        ]);
-
-        $oldCollectionName = $image->collection_id
-            ? \App\Models\Collection::find($oldValues['collection_id'])?->name
+        $oldCollectionName = $oldValues['collection_id']
+            ? Collection::find($oldValues['collection_id'])?->name
             : null;
 
         $newCollectionName = $freshImage->collection_id
-            ? \App\Models\Collection::find($freshImage->collection_id)?->name
+            ? Collection::find($freshImage->collection_id)?->name
             : null;
 
         if ($oldCollectionName !== $newCollectionName) {
@@ -298,14 +307,30 @@ class ImageController extends Controller
                 fieldName: 'collection',
                 oldValue: $oldCollectionName,
                 newValue: $newCollectionName,
-                description: 'Updated image collection.'
+                description: 'Collection changed.'
             );
         }
 
         $activityService->logChanges(
             subject: $freshImage,
             oldValues: collect($oldValues)->except('collection_id')->toArray(),
-            newValues: $newValues
+            newValues: $freshImage->only([
+                'title',
+                'slug',
+                'description',
+                'photographer',
+                'sort_order',
+                'is_active',
+                'is_ai_generated',
+                'downloads_count',
+                'favorites_count',
+                'purchases_count',
+                'views_count',
+                'original_path',
+                'high_res_path',
+                'thumbnail_path',
+                'icon_path',
+            ])
         );
 
         $newCategories = $freshImage->categories()
@@ -320,7 +345,7 @@ class ImageController extends Controller
                 fieldName: 'categories',
                 oldValue: $oldCategories,
                 newValue: $newCategories,
-                description: 'Updated image categories.'
+                description: 'Categories changed.'
             );
         }
 
@@ -336,7 +361,7 @@ class ImageController extends Controller
                 fieldName: 'tags',
                 oldValue: $oldTags,
                 newValue: $newTags,
-                description: 'Updated image tags.'
+                description: 'Tags changed.'
             );
         }
 
@@ -375,35 +400,11 @@ class ImageController extends Controller
         $filename = "{$baseFilename}.{$extension}";
         $baseFolder = $this->imageBaseFolder($image);
 
-        $originalPath = $uploadedFile->storeAs(
-            "{$baseFolder}/original",
-            $filename,
-            'public'
-        );
-
-        $highResPath = $uploadedFile->storeAs(
-            "{$baseFolder}/high-res",
-            $filename,
-            'public'
-        );
-
-        $thumbnailPath = $uploadedFile->storeAs(
-            "{$baseFolder}/thumbnail",
-            $filename,
-            'public'
-        );
-
-        $iconPath = $uploadedFile->storeAs(
-            "{$baseFolder}/icon",
-            $filename,
-            'public'
-        );
-
         return [
-            'original_path' => $originalPath,
-            'high_res_path' => $highResPath,
-            'thumbnail_path' => $thumbnailPath,
-            'icon_path' => $iconPath,
+            'original_path' => $uploadedFile->storeAs("{$baseFolder}/original", $filename, 'public'),
+            'high_res_path' => $uploadedFile->storeAs("{$baseFolder}/high-res", $filename, 'public'),
+            'thumbnail_path' => $uploadedFile->storeAs("{$baseFolder}/thumbnail", $filename, 'public'),
+            'icon_path' => $uploadedFile->storeAs("{$baseFolder}/icon", $filename, 'public'),
         ];
     }
 
@@ -450,6 +451,12 @@ class ImageController extends Controller
             'photographer' => $image->photographer,
             'sort_order' => $image->sort_order,
             'is_active' => $image->is_active,
+            'is_ai_generated' => $image->is_ai_generated,
+
+            'downloads_count' => $image->downloads_count,
+            'favorites_count' => $image->favorites_count,
+            'purchases_count' => $image->purchases_count,
+            'views_count' => $image->views_count,
 
             'collection' => $image->collection
                 ? [
@@ -472,7 +479,8 @@ class ImageController extends Controller
                 ])
                 ->values(),
 
-            'created_at' => $image->created_at?->format('Y-m-d'),
+            'created_at' => $image->created_at?->format('Y-m-d H:i'),
+            'updated_at' => $image->updated_at?->format('Y-m-d H:i'),
         ];
     }
 
@@ -500,6 +508,12 @@ class ImageController extends Controller
             'photographer' => $image->photographer,
             'sort_order' => $image->sort_order,
             'is_active' => $image->is_active,
+            'is_ai_generated' => $image->is_ai_generated,
+
+            'downloads_count' => $image->downloads_count,
+            'favorites_count' => $image->favorites_count,
+            'purchases_count' => $image->purchases_count,
+            'views_count' => $image->views_count,
 
             'categories' => $image->categories->pluck('id')->values(),
             'tags' => $image->tags->pluck('id')->values(),
