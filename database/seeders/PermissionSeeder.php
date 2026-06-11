@@ -123,6 +123,13 @@ class PermissionSeeder extends Seeder
                 'label' => 'View Reports',
                 'description' => 'Access reporting.',
             ],
+            [
+                'name' => 'manage_license_types',
+                'group_name' => 'Licensing',
+                'label' => 'Manage License Types',
+                'description' => 'Create, edit, and delete license types.',
+            ]
+
         ];
 
         foreach ($permissions as $permission) {

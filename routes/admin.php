@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\ImageController;
+use App\Http\Controllers\Admin\LicenseTypeController;
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->prefix('admin')
@@ -59,5 +60,8 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
+
+        Route::resource('license-types', LicenseTypeController::class)
+            ->except(['show']);
 
     });

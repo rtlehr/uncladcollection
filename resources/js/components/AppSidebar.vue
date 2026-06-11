@@ -13,6 +13,7 @@ import {
     Images,
     ImageIcon,
     Heart,
+    BadgeDollarSign,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -112,11 +113,20 @@ const adminNavItems: NavItem[] = [];
     }
 
     if (can('manage_images')) {
-    adminNavItems.push({
-        title: 'Images',
-        href: '/admin/images',
-        icon: ImageIcon,
-    });
+        adminNavItems.push({
+            title: 'Images',
+            href: '/admin/images',
+            icon: ImageIcon,
+        });
+
+    }
+
+    if (can('manage_license_types')) {
+        adminNavItems.push({
+            title: 'License Types',
+            href: '/admin/license-types',
+            icon: BadgeDollarSign,
+        });
     }
 
 }
