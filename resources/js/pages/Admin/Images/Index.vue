@@ -282,6 +282,16 @@ function deleteImage(image: ImageRecord) {
                                     variant="outline"
                                     as-child
                                 >
+                                    <Link :href="`/admin/images/${image.id}`">
+                                        View
+                                    </Link>
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    as-child
+                                >
                                     <Link :href="`/admin/images/${image.id}/edit`">
                                         Edit
                                     </Link>

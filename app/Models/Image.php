@@ -47,4 +47,10 @@ class Image extends Model
         return $this->belongsToMany(Tag::class)
             ->withTimestamps();
     }
+
+    public function getActivityName(): string
+    {
+        return $this->title;
+    }
+
 }

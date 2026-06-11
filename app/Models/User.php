@@ -134,4 +134,9 @@ class User extends Authenticatable implements PasskeyUser
             ->toArray();
     }
 
+    public function getActivityName(): string
+    {
+        return $this->name;
+    }
+
 }

@@ -161,7 +161,13 @@ function sortIndicator(column: string) {
                         </td>
 
                         <td class="p-4">
-                            <div class="flex justify-end">
+                            <div class="flex justify-end gap-2">
+                                <Button size="sm" variant="outline" as-child>
+                                    <Link :href="`/admin/users/${user.id}`">
+                                        View
+                                    </Link>
+                                </Button>
+
                                 <Button size="sm" variant="outline" as-child>
                                     <Link :href="`/admin/users/${user.id}/edit`">
                                         Edit
@@ -169,6 +175,7 @@ function sortIndicator(column: string) {
                                 </Button>
                             </div>
                         </td>
+
                     </tr>
 
                     <tr v-if="users.length === 0">

@@ -36,6 +36,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_users')
             ->name('users.index');
 
+        Route::get('/users/{user}', [UserController::class, 'show'])
+            ->middleware('permission:manage_users')
+            ->name('users.show');
+
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])
             ->middleware('permission:manage_users')
             ->name('users.edit');
