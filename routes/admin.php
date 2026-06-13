@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
+use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminLicenseController;
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->prefix('admin')
@@ -63,5 +65,22 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('license-types', LicenseTypeController::class)
             ->except(['show']);
+
+        Route::get('/orders', [AdminOrderController::class, 'index'])
+        ->middleware('permission:manage_orders')
+        ->name('admin.orders.index');
+
+        Route::get('/orders/{order}', [AdminOrderController::class, 'show'])
+            ->middleware('permission:manage_orders')
+            ->name('admin.orders.show');
+
+        Route::get('/licenses', [AdminLicenseController::class, 'index'])
+            ->middleware('permission:manage_licenses')
+            ->name('admin.licenses.index');
+
+        Route::get('/licenses/{license}', [AdminLicenseController::class, 'show'])
+            ->middleware('permission:manage_licenses')
+            ->name('admin.licenses.show');
+
 
     });

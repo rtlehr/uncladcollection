@@ -14,6 +14,7 @@ import {
     ImageIcon,
     Heart,
     BadgeDollarSign,
+    ClipboardList,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -52,7 +53,13 @@ const mainNavItems: NavItem[] = [
         title: 'My Favorites',
         href: '/favorites',
         icon: Heart,
-    }
+    },
+    {
+        title: 'My Purchases',
+        href: '/purchases',
+        icon: BadgeDollarSign,
+    },
+
 ];
 
 const adminNavItems: NavItem[] = [];
@@ -128,6 +135,23 @@ const adminNavItems: NavItem[] = [];
             icon: BadgeDollarSign,
         });
     }
+
+    if (can('manage_orders')) {
+        adminNavItems.push({
+            title: 'Orders',
+            href: '/admin/orders',
+            icon: ClipboardList,
+        });
+    }
+
+    if (can('manage_licenses')) {
+        adminNavItems.push({
+            title: 'Licenses',
+            href: '/admin/licenses',
+            icon: KeyRound,
+        });
+    }
+
 
 }
 

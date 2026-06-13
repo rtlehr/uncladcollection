@@ -72,4 +72,14 @@ class Image extends Model
         return $this->hasMany(ImageFavorite::class);
     }
 
+    public function licenses(): HasMany
+    {
+        return $this->hasMany(License::class);
+    }
+
+    public function downloads(): HasMany
+    {
+        return $this->hasMany(Download::class);
+    }
+
 }

@@ -128,7 +128,19 @@ class PermissionSeeder extends Seeder
                 'group_name' => 'Licensing',
                 'label' => 'Manage License Types',
                 'description' => 'Create, edit, and delete license types.',
-            ]
+            ],
+            [
+                'name' => 'manage_orders',
+                'group_name' => 'Licensing',
+                'label' => 'Manage Orders',
+                'description' => 'View and manage customer orders.',
+            ],
+            [
+                'name' => 'manage_licenses',
+                'group_name' => 'Licensing',
+                'label' => 'Manage Licenses',
+                'description' => 'View and manage customer image licenses.',
+            ],
 
         ];
 

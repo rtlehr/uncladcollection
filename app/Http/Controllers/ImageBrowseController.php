@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\LicenseType;
+use App\Services\PurchaseService;
 
 class ImageBrowseController extends Controller
 {
@@ -95,7 +97,18 @@ class ImageBrowseController extends Controller
 
         $image->increment('views_count');
 
-        $userId = Auth::id();
+        $user = Auth::user();
+
+        $isPurchased = false;
+        $canDownload = false;
+
+        if ($user) {
+            $activeLicense = app(PurchaseService::class)
+                ->getActiveLicenseForImage($user, $image);
+
+            $isPurchased = $activeLicense !== null;
+            $canDownload = $activeLicense?->canDownload() ?? false;
+        }
 
         return Inertia::render('Images/Show', [
             'imageRecord' => array_merge(
@@ -105,14 +118,26 @@ class ImageBrowseController extends Controller
                     'original_url' => $image->original_path ? Storage::url($image->original_path) : null,
                     'high_res_url' => $image->high_res_path ? Storage::url($image->high_res_path) : null,
                     'created_at' => $image->created_at?->format('Y-m-d'),
-                    'is_favorited' => $userId
-                        ? $image->favorites()->where('user_id', $userId)->exists()
+                    'is_favorited' => $user
+                        ? $image->favorites()->where('user_id', $user->id)->exists()
                         : false,
-                    'is_purchased' => false,
-                    'can_purchase' => true,
-                    'can_download' => false,
+                    'is_purchased' => $isPurchased,
+                    'can_purchase' => ! $isPurchased,
+                    'can_download' => $canDownload,
                 ]
             ),
+
+            'licenseTypes' => LicenseType::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'name',
+                    'description',
+                    'price_cents',
+                    'currency',
+                ]),
 
             'relatedImages' => Image::query()
                 ->with(['collection', 'categories', 'tags'])

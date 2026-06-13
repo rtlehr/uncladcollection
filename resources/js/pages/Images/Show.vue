@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Heart } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
-
 
 type Option = {
     id: number;
     name: string;
+};
+
+type LicenseType = {
+    id: number;
+    name: string;
+    description: string | null;
+    price_cents: number;
+    currency: string;
 };
 
 type ImageRecord = {
@@ -48,14 +55,23 @@ type ImageCard = {
 const props = defineProps<{
     imageRecord: ImageRecord;
     relatedImages: ImageCard[];
+    licenseTypes: LicenseType[];
 }>();
 
 const page = usePage();
+
+const selectedLicenseTypeId = ref<number | null>(
+    props.licenseTypes.length ? props.licenseTypes[0].id : null
+);
 
 const isLoggedIn = computed(() => Boolean((page.props as any).auth?.user));
 
 function formatNumber(value: number): string {
     return Number(value ?? 0).toLocaleString();
+}
+
+function formatPrice(priceCents: number): string {
+    return `$${(priceCents / 100).toFixed(2)}`;
 }
 
 function favoriteImage() {
@@ -71,6 +87,23 @@ function favoriteImage() {
 
 function unfavoriteImage() {
     router.delete(`/images/${props.imageRecord.id}/favorite`, {
+        preserveScroll: true,
+    });
+}
+
+function purchaseImage() {
+    if (!isLoggedIn.value) {
+        router.visit('/login');
+        return;
+    }
+
+    if (!selectedLicenseTypeId.value) {
+        return;
+    }
+
+    router.post(`/images/${props.imageRecord.id}/purchase`, {
+        license_type_id: selectedLicenseTypeId.value,
+    }, {
         preserveScroll: true,
     });
 }
@@ -101,7 +134,7 @@ function unfavoriteImage() {
                 </p>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex flex-wrap justify-end gap-2">
                 <Button
                     v-if="!imageRecord.is_favorited"
                     variant="outline"
@@ -122,10 +155,10 @@ function unfavoriteImage() {
                     Favorited
                 </Button>
 
-                <Button
-                    v-if="imageRecord.can_download"
-                >
-                    Download
+                <Button v-if="imageRecord.can_download" as-child>
+                    <a :href="`/images/${imageRecord.id}/download`">
+                        Download
+                    </a>
                 </Button>
 
                 <Button
@@ -136,11 +169,31 @@ function unfavoriteImage() {
                     Purchased
                 </Button>
 
-                <Button
+                <div
                     v-else-if="imageRecord.can_purchase"
+                    class="flex flex-wrap items-center gap-2"
                 >
-                    Buy License
-                </Button>
+                    <select
+                        v-model.number="selectedLicenseTypeId"
+                        class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option
+                            v-for="licenseType in licenseTypes"
+                            :key="licenseType.id"
+                            :value="licenseType.id"
+                        >
+                            {{ licenseType.name }} -
+                            {{ formatPrice(licenseType.price_cents) }}
+                        </option>
+                    </select>
+
+                    <Button
+                        :disabled="!selectedLicenseTypeId"
+                        @click="purchaseImage"
+                    >
+                        Test Purchase
+                    </Button>
+                </div>
             </div>
         </div>
 

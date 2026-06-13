@@ -13,6 +13,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\License;
 
 use App\Models\Role;
 use App\Models\Permission;
@@ -145,4 +146,13 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(ImageFavorite::class);
     }
 
+    public function licenses(): HasMany
+    {
+        return $this->hasMany(License::class);
+    }
+
+    public function downloads(): HasMany
+    {
+        return $this->hasMany(Download::class);
+    }
 }
