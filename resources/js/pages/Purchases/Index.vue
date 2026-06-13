@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
 
 type PurchasedImage = {
     id: number;
@@ -40,8 +41,12 @@ defineProps<{
     };
 }>();
 
-function formatNumber(value: number): string {
-    return Number(value ?? 0).toLocaleString();
+function downloadLabel(license: PurchasedImage): string {
+    if (license.download_limit === null) {
+        return `${license.downloads_used} / Unlimited`;
+    }
+
+    return `${license.downloads_used} / ${license.download_limit}`;
 }
 </script>
 
@@ -55,45 +60,47 @@ function formatNumber(value: number): string {
             </h1>
 
             <p class="mt-1 text-muted-foreground">
-                Images you have purchased and licensed.
+                View and download your licensed images.
             </p>
         </div>
 
         <div
             v-if="licenses.data.length"
-            class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-            <Link
+            <div
                 v-for="license in licenses.data"
                 :key="license.id"
-                :href="`/purchases/${license.image.slug}`"
-                class="group overflow-hidden rounded-lg border bg-card shadow-sm transition hover:shadow-md"
+                class="overflow-hidden rounded-lg border bg-card shadow-sm"
             >
-                <div class="aspect-square bg-muted">
-                    <img
-                        v-if="license.image.thumbnail_url"
-                        :src="license.image.thumbnail_url"
-                        :alt="license.image.title"
-                        class="h-full w-full object-cover transition group-hover:scale-105"
-                    />
+                <Link :href="`/purchases/${license.image.slug}`">
+                    <div class="aspect-square bg-muted">
+                        <img
+                            v-if="license.image.thumbnail_url"
+                            :src="license.image.thumbnail_url"
+                            :alt="license.image.title"
+                            class="h-full w-full object-cover transition hover:scale-105"
+                        />
 
-                    <div
-                        v-else
-                        class="flex h-full items-center justify-center text-sm text-muted-foreground"
-                    >
-                        No Preview
-                    </div>
-                </div>
-
-                <div class="space-y-3 p-4">
-                    <div>
-                        <h2 class="line-clamp-1 font-semibold">
-                            {{ license.image.title }}
-                        </h2>
-
-                        <p
-                            class="text-sm text-muted-foreground"
+                        <div
+                            v-else
+                            class="flex h-full items-center justify-center text-sm text-muted-foreground"
                         >
+                            No Preview
+                        </div>
+                    </div>
+                </Link>
+
+                <div class="space-y-4 p-4">
+                    <div>
+                        <Link
+                            :href="`/purchases/${license.image.slug}`"
+                            class="font-semibold hover:underline"
+                        >
+                            {{ license.image.title }}
+                        </Link>
+
+                        <p class="text-sm text-muted-foreground">
                             {{ license.license_name }}
                         </p>
                     </div>
@@ -111,28 +118,30 @@ function formatNumber(value: number): string {
 
                         <div>
                             Downloads:
-                            {{ license.downloads_used }}
-                            <span v-if="license.download_limit !== null">
-                                / {{ license.download_limit }}
-                            </span>
+                            {{ downloadLabel(license) }}
+                        </div>
+
+                        <div>
+                            Expires:
+                            {{ license.expires_at ?? 'Never' }}
                         </div>
                     </div>
 
-                    <div
-                        class="flex justify-between text-xs text-muted-foreground"
-                    >
-                        <span>
-                            {{ formatNumber(license.image.views_count) }}
-                            views
-                        </span>
+                    <div class="flex gap-2">
+                        <Button as-child class="flex-1">
+                            <a :href="`/images/${license.image.id}/download`">
+                                Download
+                            </a>
+                        </Button>
 
-                        <span>
-                            {{ formatNumber(license.image.downloads_count) }}
-                            downloads
-                        </span>
+                        <Button variant="outline" as-child>
+                            <Link :href="`/purchases/${license.image.slug}`">
+                                Details
+                            </Link>
+                        </Button>
                     </div>
                 </div>
-            </Link>
+            </div>
         </div>
 
         <div

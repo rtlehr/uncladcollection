@@ -15,6 +15,7 @@ import {
     Heart,
     BadgeDollarSign,
     ClipboardList,
+    Download,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -149,6 +150,14 @@ const adminNavItems: NavItem[] = [];
             title: 'Licenses',
             href: '/admin/licenses',
             icon: KeyRound,
+        });
+    }
+
+    if (can('manage_downloads')) {
+        adminNavItems.push({
+            title: 'Downloads',
+            href: '/admin/downloads',
+            icon: Download,
         });
     }
 

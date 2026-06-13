@@ -141,6 +141,12 @@ class PermissionSeeder extends Seeder
                 'label' => 'Manage Licenses',
                 'description' => 'View and manage customer image licenses.',
             ],
+            [
+                'name' => 'manage_downloads',
+                'group_name' => 'Licensing',
+                'label' => 'Manage Downloads',
+                'description' => 'View customer image download history.',
+            ],
 
         ];
 
