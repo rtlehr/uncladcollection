@@ -12,3 +12,4 @@ require __DIR__.'/settings.php';
 require __DIR__.'/admin.php'; 
 require __DIR__.'/favorite.php'; 
 require __DIR__.'/user-images.php'; 
+require __DIR__.'/checkout.php'; 

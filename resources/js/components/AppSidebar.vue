@@ -67,6 +67,14 @@ const adminNavItems: NavItem[] = [];
 
     if (can('manage_site_settings')) {
         adminNavItems.push({
+            title: 'Admin Dashboard',
+            href: '/admin',
+            icon: Settings,
+        });
+    }
+
+    if (can('manage_site_settings')) {
+        adminNavItems.push({
             title: 'Site Settings',
             href: '/admin/site-settings',
             icon: Settings,

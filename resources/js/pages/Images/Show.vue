@@ -93,7 +93,7 @@ function unfavoriteImage() {
 
 function purchaseImage() {
     if (!isLoggedIn.value) {
-        router.visit('/login');
+        window.location.href = '/login';
         return;
     }
 
@@ -101,11 +101,35 @@ function purchaseImage() {
         return;
     }
 
-    router.post(`/images/${props.imageRecord.id}/purchase`, {
-        license_type_id: selectedLicenseTypeId.value,
-    }, {
-        preserveScroll: true,
-    });
+    const form = document.createElement('form');
+
+    form.method = 'POST';
+    form.action = `/checkout/${props.imageRecord.id}`;
+
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+
+        form.appendChild(csrfInput);
+    }
+
+    const licenseInput = document.createElement('input');
+
+    licenseInput.type = 'hidden';
+    licenseInput.name = 'license_type_id';
+    licenseInput.value = String(selectedLicenseTypeId.value);
+
+    form.appendChild(licenseInput);
+
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 
@@ -191,7 +215,7 @@ function purchaseImage() {
                         :disabled="!selectedLicenseTypeId"
                         @click="purchaseImage"
                     >
-                        Test Purchase
+                        Buy License
                     </Button>
                 </div>
             </div>
