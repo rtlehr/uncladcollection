@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Image extends Model
 {
@@ -80,6 +81,41 @@ class Image extends Model
     public function downloads(): HasMany
     {
         return $this->hasMany(Download::class);
+    }
+
+    protected $appends = [
+        'original_url',
+        'high_res_url',
+        'thumbnail_url',
+        'icon_url',
+    ];
+
+    public function getOriginalUrlAttribute(): ?string
+    {
+        return $this->original_path
+            ? Storage::url($this->original_path)
+            : null;
+    }
+
+    public function getHighResUrlAttribute(): ?string
+    {
+        return $this->high_res_path
+            ? Storage::url($this->high_res_path)
+            : null;
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        return $this->thumbnail_path
+            ? Storage::url($this->thumbnail_path)
+            : null;
+    }
+
+    public function getIconUrlAttribute(): ?string
+    {
+        return $this->icon_path
+            ? Storage::url($this->icon_path)
+            : null;
     }
 
 }

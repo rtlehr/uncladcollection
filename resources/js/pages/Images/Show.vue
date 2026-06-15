@@ -131,6 +131,25 @@ function purchaseImage() {
     document.body.appendChild(form);
     form.submit();
 }
+
+function addToCart() {
+    if (!isLoggedIn.value) {
+        router.visit('/login');
+        return;
+    }
+
+    if (!selectedLicenseTypeId.value) {
+        return;
+    }
+
+    router.post('/cart/items', {
+        image_id: props.imageRecord.id,
+        license_type_id: selectedLicenseTypeId.value,
+    }, {
+        preserveScroll: true,
+    });
+}
+
 </script>
 
 <template>
@@ -211,12 +230,22 @@ function purchaseImage() {
                         </option>
                     </select>
 
-                    <Button
-                        :disabled="!selectedLicenseTypeId"
-                        @click="purchaseImage"
-                    >
-                        Buy License
-                    </Button>
+                   <div class="flex gap-2">
+                        <Button
+                            :disabled="!selectedLicenseTypeId"
+                            @click="purchaseImage"
+                        >
+                            Buy Now
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            :disabled="!selectedLicenseTypeId"
+                            @click="addToCart"
+                        >
+                            Add to Cart
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

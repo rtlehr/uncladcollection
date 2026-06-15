@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\CartItem;
 
 class PurchaseService
 {
@@ -50,6 +51,45 @@ class PurchaseService
     }
 
     /**
+     * Create a pending order from multiple cart items.
+     */
+    public function createPendingOrderFromCart(User $user, $cartItems): Order
+    {
+        return DB::transaction(function () use ($user, $cartItems) {
+            $subtotalCents = $cartItems->sum('price_cents');
+            $currency = $cartItems->first()->currency ?? 'USD';
+
+            $order = Order::create([
+                'user_id' => $user->id,
+                'status' => Order::STATUS_PENDING,
+                'subtotal_cents' => $subtotalCents,
+                'discount_cents' => 0,
+                'tax_cents' => 0,
+                'total_cents' => $subtotalCents,
+                'currency' => $currency,
+                'payment_provider' => Order::PAYMENT_PROVIDER_MANUAL,
+            ]);
+
+            foreach ($cartItems as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'image_id' => $cartItem->image_id,
+                    'license_type_id' => $cartItem->license_type_id,
+                    'status' => OrderItem::STATUS_PENDING,
+                    'quantity' => 1,
+                    'unit_price_cents' => $cartItem->price_cents,
+                    'total_price_cents' => $cartItem->price_cents,
+                    'image_title' => $cartItem->image->title,
+                    'license_name' => $cartItem->licenseType->name,
+                    'license_terms' => $cartItem->licenseType->usage_terms,
+                ]);
+            }
+
+            return $order->load('items');
+        });
+    }
+
+    /**
      * Mark an order as paid and create licenses for each order item.
      */
     public function markOrderPaid(Order $order): Order
@@ -72,6 +112,11 @@ class PurchaseService
 
                 $item->image?->increment('purchases_count');
             }
+
+            CartItem::query()
+                ->where('user_id', $order->user_id)
+                ->whereIn('image_id', $order->items->pluck('image_id'))
+                ->delete();
 
             return $order->fresh(['items', 'licenses']);
         });

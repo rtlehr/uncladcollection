@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\CartItem;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -73,7 +74,38 @@ class HandleInertiaRequests extends Middleware
             ],
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state')
-                || $request->cookie('sidebar_state') === 'true',
+                        || $request->cookie('sidebar_state') === 'true',
+
+                    'cart' => fn () => $request->user()
+            ? [
+                'count' => CartItem::query()
+                    ->where('user_id', $request->user()->id)
+                    ->count(),
+
+                'items' => CartItem::query()
+                    ->with(['image', 'licenseType'])
+                    ->where('user_id', $request->user()->id)
+                    ->latest()
+                    ->limit(5)
+                    ->get()
+                    ->map(fn (CartItem $cartItem) => [
+                        'id' => $cartItem->id,
+                        'price_cents' => $cartItem->price_cents,
+                        'image' => [
+                            'title' => $cartItem->image?->title,
+                            'slug' => $cartItem->image?->slug,
+                            'thumbnail_url' => $cartItem->image?->thumbnail_url,
+                            'icon_url' => $cartItem->image?->icon_url,
+                        ],
+                        'license_type' => [
+                            'name' => $cartItem->licenseType?->name,
+                        ],
+                    ]),
+            ]
+            : [
+                'count' => 0,
+                'items' => [],
+            ],
         ];
     }
 }
