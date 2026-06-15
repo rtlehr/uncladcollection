@@ -18,21 +18,23 @@ function formatPrice(priceCents: number): string {
 
 <template>
     <div class="relative group">
-        <Button variant="ghost" size="sm" class="relative gap-2" as-child>
-            <Link href="/cart">
-                <ShoppingCart class="h-5 w-5" />
+        <div class="pb-3">
+            <Button variant="ghost" size="sm" class="relative gap-2" as-child>
+                <Link href="/cart">
+                    <ShoppingCart class="h-5 w-5" />
 
-                <span
-                    v-if="cart.count > 0"
-                    class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground"
-                >
-                    {{ cart.count }}
-                </span>
-            </Link>
-        </Button>
+                    <span
+                        v-if="cart.count > 0"
+                        class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground"
+                    >
+                        {{ cart.count }}
+                    </span>
+                </Link>
+            </Button>
+        </div>
 
         <div
-            class="absolute right-0 z-50 mt-2 hidden w-80 rounded-lg border bg-popover p-4 shadow-lg group-hover:block"
+            class="absolute right-0 top-full z-50 hidden w-80 rounded-lg border bg-popover p-4 shadow-lg group-hover:block"
         >
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="font-semibold">Cart</h3>
