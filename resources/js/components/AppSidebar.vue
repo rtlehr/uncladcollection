@@ -16,6 +16,7 @@ import {
     BadgeDollarSign,
     ClipboardList,
     Download,
+    Newspaper,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -145,7 +146,7 @@ const adminNavItems: NavItem[] = [];
         });
     }
 
-    if (can('manage_orders')) {
+   /* if (can('manage_orders')) {
         adminNavItems.push({
             title: 'Orders',
             href: '/admin/orders',
@@ -166,6 +167,14 @@ const adminNavItems: NavItem[] = [];
             title: 'Downloads',
             href: '/admin/downloads',
             icon: Download,
+        });
+    }*/
+
+    if (can('manage_blog_posts')) {
+        adminNavItems.push({
+            title: 'Blog Posts',
+            href: '/admin/blog-posts',
+            icon: Newspaper,
         });
     }
 

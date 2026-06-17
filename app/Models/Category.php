@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
@@ -19,4 +20,13 @@ class Category extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    public function blogPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            BlogPost::class,
+            'blog_post_category'
+        );
+    }
+
 }

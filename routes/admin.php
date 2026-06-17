@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminBlogPostController;
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->prefix('admin')
@@ -95,4 +96,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/downloads/{download}', [AdminDownloadController::class, 'show'])
             ->middleware('permission:manage_downloads')
             ->name('downloads.show');
+
+        Route::resource('blog-posts', AdminBlogPostController::class)
+            ->middleware('permission:manage_blog_posts');
     });

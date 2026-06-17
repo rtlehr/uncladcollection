@@ -19,6 +19,8 @@ use App\Models\Role;
 use App\Models\Permission;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+use App\Models\BlogPost;
+
 #[Fillable([
     'name',
     'username',
@@ -154,5 +156,10 @@ class User extends Authenticatable implements PasskeyUser
     public function downloads(): HasMany
     {
         return $this->hasMany(Download::class);
+    }
+
+    public function blogPosts(): HasMany
+    {
+        return $this->hasMany(BlogPost::class);
     }
 }

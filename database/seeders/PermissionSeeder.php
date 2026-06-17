@@ -147,6 +147,12 @@ class PermissionSeeder extends Seeder
                 'label' => 'Manage Downloads',
                 'description' => 'View customer image download history.',
             ],
+            [
+                'name' => 'manage_blog_posts',
+                'group_name' => 'Blog',
+                'label' => 'Manage Blog Posts',
+                'description' => 'Manage blog content.',
+            ],
 
         ];
 

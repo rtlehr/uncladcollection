@@ -130,6 +130,16 @@ class AdminActivityService
             'favorites_count' => 'Favorites count changed.',
             'purchases_count' => 'Purchases count changed.',
             'views_count' => 'Views count changed.',
+            'excerpt' => 'Excerpt changed.',
+            'content' => 'Blog content changed.',
+            'status' => 'Publication status changed.',
+            'published_at' => 'Publish date changed.',
+            'seo_title' => 'SEO title changed.',
+            'seo_description' => 'SEO description changed.',
+            'is_featured' => 'Featured post status changed.',
+            'featured_image_path' => 'Featured image changed.',
+            'header_image_path' => 'Header image changed.',
+            'icon_image_path' => 'Icon image changed.',
         };
     }
 
