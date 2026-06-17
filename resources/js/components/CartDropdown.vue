@@ -80,7 +80,7 @@ function formatPrice(priceCents: number): string {
                 </Link>
 
                 <Button class="w-full" as-child>
-                    <Link href="/cart">
+                    <Link href="/cart"> 
                         Checkout
                     </Link>
                 </Button>
