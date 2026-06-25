@@ -97,11 +97,15 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_downloads')
             ->name('downloads.show');
 
+        Route::get('/blog-posts/image-library', [AdminBlogPostController::class, 'imageLibrary'])
+            ->middleware('permission:manage_blog_posts')
+            ->name('blog-posts.image-library');
+
         Route::resource('blog-posts', AdminBlogPostController::class)
             ->middleware('permission:manage_blog_posts');
 
         Route::post('/blog-posts/upload-content-image', [AdminBlogPostController::class, 'uploadContentImage'])
             ->middleware('permission:manage_blog_posts')
             ->name('blog-posts.upload-content-image');
-            
+
     });

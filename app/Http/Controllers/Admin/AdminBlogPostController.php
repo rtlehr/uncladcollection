@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Image;
 
 class AdminBlogPostController extends Controller
 {
@@ -359,6 +360,48 @@ class AdminBlogPostController extends Controller
 
         return response()->json([
             'url' => Storage::url($path),
+        ]);
+    }
+
+    public function imageLibrary(Request $request)
+    {
+        $search = $request->string('search')->toString();
+
+        $images = Image::query()
+            ->where('is_active', true)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query
+                        ->where('title', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhere('photographer', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->limit(24)
+            ->get([
+                'id',
+                'title',
+                'slug',
+                'photographer',
+                'thumbnail_path',
+                'icon_path',
+                'high_res_path',
+            ])
+            ->map(function (Image $image) {
+                return [
+                    'id' => $image->id,
+                    'title' => $image->title,
+                    'slug' => $image->slug,
+                    'photographer' => $image->photographer,
+                    'thumbnail_url' => $image->thumbnail_url,
+                    'icon_url' => $image->icon_url,
+                    'high_res_url' => $image->high_res_url,
+                ];
+            });
+
+        return response()->json([
+            'images' => $images,
         ]);
     }
 
