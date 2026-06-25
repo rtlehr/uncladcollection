@@ -1,9 +1,39 @@
 <script setup lang="ts">
-import { EditorContent, useEditor } from '@tiptap/vue-3';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
+
+
+import {
+    AlignCenter,
+    AlignLeft,
+    AlignRight,
+    Bold,
+    Code,
+    Heading1,
+    Heading2,
+    Heading3,
+    Highlighter,
+    ImageIcon,
+    Italic,
+    LinkIcon,
+    List,
+    ListOrdered,
+    Pilcrow,
+    Quote,
+    Redo2,
+    RemoveFormatting,
+    Strikethrough,
+    Trash2,
+    UnderlineIcon,
+    Undo2,
+    WrapText,
+} from '@lucide/vue';
+
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
+import StarterKit from '@tiptap/starter-kit';
+
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import { computed, ref, watch } from 'vue';
@@ -113,7 +143,6 @@ const wordCount = computed(() => {
 });
 
 const characterCount = computed(() => editor.value?.getText().length ?? 0);
-
 const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 220)));
 
 watch(
@@ -347,81 +376,146 @@ async function uploadImage() {
 <template>
     <div class="overflow-hidden rounded-md border bg-background">
         <div v-if="editor" class="space-y-3 border-b bg-muted/30 p-3">
-            <div class="flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleBold().run()">B</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleItalic().run()">I</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleUnderline().run()">U</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleStrike().run()">S</Button>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Bold" @click="editor.chain().focus().toggleBold().run()">
+                        <Bold class="h-4 w-4" />
+                    </Button>
 
-                <span class="mx-1 border-l" />
+                    <Button type="button" size="icon" variant="ghost" title="Italic" @click="editor.chain().focus().toggleItalic().run()">
+                        <Italic class="h-4 w-4" />
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()">H1</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">H2</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">H3</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().setParagraph().run()">P</Button>
+                    <Button type="button" size="icon" variant="ghost" title="Underline" @click="editor.chain().focus().toggleUnderline().run()">
+                        <UnderlineIcon class="h-4 w-4" />
+                    </Button>
 
-                <span class="mx-1 border-l" />
+                    <Button type="button" size="icon" variant="ghost" title="Strikethrough" @click="editor.chain().focus().toggleStrike().run()">
+                        <Strikethrough class="h-4 w-4" />
+                    </Button>
+                </div>
 
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleBulletList().run()">Bullets</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleOrderedList().run()">Numbers</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleBlockquote().run()">Quote</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleCodeBlock().run()">Code</Button>
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Heading 1" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()">
+                        <Heading1 class="h-4 w-4" />
+                    </Button>
 
-                <span class="mx-1 border-l" />
+                    <Button type="button" size="icon" variant="ghost" title="Heading 2" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">
+                        <Heading2 class="h-4 w-4" />
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleHighlight().run()">Highlight</Button>
+                    <Button type="button" size="icon" variant="ghost" title="Heading 3" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">
+                        <Heading3 class="h-4 w-4" />
+                    </Button>
 
-                <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    :disabled="uploadingImage"
-                    @click="uploadImage"
-                >
-                    {{ uploadingImage ? 'Uploading...' : 'Image' }}
-                </Button>
+                    <Button type="button" size="icon" variant="ghost" title="Paragraph" @click="editor.chain().focus().setParagraph().run()">
+                        <Pilcrow class="h-4 w-4" />
+                    </Button>
+                </div>
 
-                <Button type="button" size="sm" variant="outline" @click="setLink">Link</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().unsetLink().run()">Unlink</Button>
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Bullet List" @click="editor.chain().focus().toggleBulletList().run()">
+                        <List class="h-4 w-4" />
+                    </Button>
 
-                <span class="mx-1 border-l" />
+                    <Button type="button" size="icon" variant="ghost" title="Numbered List" @click="editor.chain().focus().toggleOrderedList().run()">
+                        <ListOrdered class="h-4 w-4" />
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().setTextAlign('left').run()">Text Left</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().setTextAlign('center').run()">Text Center</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().setTextAlign('right').run()">Text Right</Button>
+                    <Button type="button" size="icon" variant="ghost" title="Quote" @click="editor.chain().focus().toggleBlockquote().run()">
+                        <Quote class="h-4 w-4" />
+                    </Button>
 
-                <span class="mx-1 border-l" />
+                    <Button type="button" size="icon" variant="ghost" title="Code Block" @click="editor.chain().focus().toggleCodeBlock().run()">
+                        <Code class="h-4 w-4" />
+                    </Button>
+                </div>
 
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().undo().run()">Undo</Button>
-                <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().redo().run()">Redo</Button>
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Highlight" @click="editor.chain().focus().toggleHighlight().run()">
+                        <Highlighter class="h-4 w-4" />
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @click="toggleCodeView">
-                    {{ codeView ? 'WYSIWYG' : 'HTML' }}
-                </Button>
+                    <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        title="Upload Image"
+                        :disabled="uploadingImage"
+                        @click="uploadImage"
+                    >
+                        <ImageIcon class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="icon" variant="ghost" title="Add Link" @click="setLink">
+                        <LinkIcon class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="icon" variant="ghost" title="Remove Link" @click="editor.chain().focus().unsetLink().run()">
+                        <RemoveFormatting class="h-4 w-4" />
+                    </Button>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Text Left" @click="editor.chain().focus().setTextAlign('left').run()">
+                        <AlignLeft class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="icon" variant="ghost" title="Text Center" @click="editor.chain().focus().setTextAlign('center').run()">
+                        <AlignCenter class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="icon" variant="ghost" title="Text Right" @click="editor.chain().focus().setTextAlign('right').run()">
+                        <AlignRight class="h-4 w-4" />
+                    </Button>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
+                    <Button type="button" size="icon" variant="ghost" title="Undo" @click="editor.chain().focus().undo().run()">
+                        <Undo2 class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="icon" variant="ghost" title="Redo" @click="editor.chain().focus().redo().run()">
+                        <Redo2 class="h-4 w-4" />
+                    </Button>
+
+                    <Button type="button" size="sm" variant="ghost" title="HTML View" @click="toggleCodeView">
+                        {{ codeView ? 'WYSIWYG' : 'HTML' }}
+                    </Button>
+                </div>
+            </div>
+
+            <div
+                v-if="uploadingImage"
+                class="rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground"
+            >
+                Uploading image...
             </div>
 
             <div
                 v-if="selectedImage && !codeView"
                 class="rounded-md border bg-background p-3 shadow-sm"
             >
-                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <ImageIcon class="h-4 w-4" />
                     Image Tools
                 </div>
 
                 <div class="flex flex-wrap gap-2">
                     <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-left')">
+                        <WrapText class="mr-2 h-4 w-4" />
                         Left Wrap
                     </Button>
 
                     <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center')">
+                        <AlignCenter class="mr-2 h-4 w-4" />
                         Center
                     </Button>
 
                     <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-right')">
+                        <WrapText class="mr-2 h-4 w-4 rotate-180" />
                         Right Wrap
                     </Button>
-
-                    <span class="mx-1 border-l" />
 
                     <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-small')">
                         Small
@@ -439,9 +533,8 @@ async function uploadImage() {
                         Full Width
                     </Button>
 
-                    <span class="mx-1 border-l" />
-
                     <Button type="button" size="sm" variant="destructive" @mousedown.prevent @click="removeImage">
+                        <Trash2 class="mr-2 h-4 w-4" />
                         Remove
                     </Button>
                 </div>
