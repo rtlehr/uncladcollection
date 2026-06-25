@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 
+
 interface Author {
     id: number;
     name: string;
@@ -40,6 +41,23 @@ interface BlogPost {
     categories: Category[];
     tags: Tag[];
 }
+
+const arrowIconSvg = `
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.25"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+>
+    <path d="M7 17L17 7"/>
+    <path d="M7 7h10v10"/>
+</svg>
+`;
 
 const props = defineProps<{
     blogPost: BlogPost;
@@ -128,20 +146,40 @@ function buildEnhancedContent() {
             <div class="uc-media-card-title">${title}</div>
             ${
                 photographer
-                    ? `<div class="uc-media-card-credit">Photo by ${photographer}</div>`
-                    : ''
-            }
-            ${
-                publicUrl
-                    ? `<a class="uc-media-card-link" href="${publicUrl}">View Image →</a>`
+                    ? `
+                        <div class="uc-media-card-credit-label">Photography by</div>
+                        <div class="uc-media-card-credit-name">${photographer}</div>
+                    `
                     : ''
             }
         `;
 
-        figure.appendChild(clonedImg);
+        const imageContainer = doc.createElement('div');
+        imageContainer.className = 'uc-media-card-image-container';
+
+        imageContainer.appendChild(clonedImg);
+
+        const icon = doc.createElement('div');
+        icon.className = 'uc-media-card-icon';
+        icon.innerHTML = arrowIconSvg;
+
+        imageContainer.appendChild(icon);
+
+        figure.appendChild(imageContainer);
+
         figure.appendChild(caption);
 
-        img.replaceWith(figure);
+        if (publicUrl) {
+            const wrapper = doc.createElement('a');
+            wrapper.href = publicUrl;
+            wrapper.className = `uc-media-card-wrapper ${originalClass}`.trim();
+            wrapper.setAttribute('aria-label', `View ${title}`);
+            wrapper.appendChild(figure);
+
+            img.replaceWith(wrapper);
+        } else {
+            img.replaceWith(figure);
+        }
     });
 
     enhancedContent.value = doc.body.innerHTML;

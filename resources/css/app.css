@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-
 @import 'tw-animate-css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -61,14 +60,6 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
     *,
     ::after,
@@ -76,6 +67,14 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground;
     }
 }
 
@@ -88,6 +87,12 @@
             'Noto Color Emoji';
     }
 }
+
+/*
+|--------------------------------------------------------------------------
+| Theme Variables
+|--------------------------------------------------------------------------
+*/
 
 :root {
     --background: hsl(0 0% 100%);
@@ -153,7 +158,7 @@
     --chart-5: hsl(340 75% 55%);
     --sidebar-background: hsl(0 0% 7%);
     --sidebar-foreground: hsl(0 0% 95.9%);
-    --sidebar-primary: hsl(360, 100%, 100%);
+    --sidebar-primary: hsl(360 100% 100%);
     --sidebar-primary-foreground: hsl(0 0% 100%);
     --sidebar-accent: hsl(0 0% 15.9%);
     --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
@@ -162,15 +167,11 @@
     --sidebar: hsl(240 5.9% 10%);
 }
 
-@layer base {
-    * {
-        @apply border-border outline-ring/50;
-    }
-    body {
-        @apply bg-background text-foreground;
-    }
-}
-
+/*
+|--------------------------------------------------------------------------
+| Blog Content Images
+|--------------------------------------------------------------------------
+*/
 
 .blog-content img.blog-image-left {
     float: left !important;
@@ -210,83 +211,93 @@
     width: 100% !important;
 }
 
-.blog-content::after {
-    content: "";
-    display: block;
-    clear: both;
-}
+/*
+|--------------------------------------------------------------------------
+| Blog Managed Media Cards
+|--------------------------------------------------------------------------
+*/
 
-.blog-content .uc-media-card {
-    overflow: hidden;
-    border: 1px solid hsl(var(--border));
-    border-radius: 1rem;
-    background: hsl(var(--card));
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
-}
-
-.blog-content .uc-media-card-image {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin: 0;
-}
-
-.blog-content .uc-media-card-caption {
-    padding: 0.9rem 1rem;
-    font-size: 0.875rem;
-    line-height: 1.4;
-}
-
-.blog-content .uc-media-card-title {
-    font-weight: 700;
-}
-
-.blog-content .uc-media-card-credit {
-    margin-top: 0.25rem;
-    color: hsl(var(--muted-foreground));
-}
-
-.blog-content .uc-media-card-link {
+.blog-content .uc-media-card-wrapper {
     display: inline-block;
-    margin-top: 0.5rem;
-    font-weight: 600;
-    color: hsl(var(--primary));
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
 }
 
-.blog-content figure.uc-media-card.blog-image-left {
+.blog-content .uc-media-card-wrapper:hover {
+    text-decoration: none;
+}
+
+.blog-content .uc-media-card-wrapper.blog-image-left {
     float: left !important;
     max-width: 30% !important;
     margin: 0.5rem 1.5rem 1rem 0 !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-right {
+.blog-content .uc-media-card-wrapper.blog-image-right {
     float: right !important;
     max-width: 30% !important;
     margin: 0.5rem 0 1rem 1.5rem !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-center {
+.blog-content .uc-media-card-wrapper.blog-image-center {
     display: block;
     float: none !important;
     max-width: 70% !important;
     margin: 1.5rem auto !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-small {
+.blog-content .uc-media-card-wrapper.blog-image-small {
     max-width: 30% !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-medium {
+.blog-content .uc-media-card-wrapper.blog-image-medium {
     max-width: 45% !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-large {
+.blog-content .uc-media-card-wrapper.blog-image-large {
     max-width: 70% !important;
 }
 
-.blog-content figure.uc-media-card.blog-image-full {
+.blog-content .uc-media-card-wrapper.blog-image-full {
     max-width: 100% !important;
     width: 100% !important;
+}
+
+.blog-content figure.uc-media-card {
+    overflow: hidden;
+    width: 100%;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border: 1px solid hsl(var(--border));
+    border-radius: 1rem;
+    background: hsl(var(--card));
+    box-shadow:
+        0 1px 2px rgb(0 0 0 / 0.06),
+        0 12px 30px rgb(0 0 0 / 0.08);
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        border-color 160ms ease;
+}
+
+.blog-content .uc-media-card-wrapper:hover figure.uc-media-card {
+    transform: translateY(-3px);
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow:
+        0 8px 18px rgb(0 0 0 / 0.10),
+        0 18px 40px rgb(0 0 0 / 0.14);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Blog Managed Media Card Image
+|--------------------------------------------------------------------------
+*/
+
+.blog-content figure.uc-media-card .uc-media-card-image-container {
+    position: relative;
+    overflow: hidden;
 }
 
 .blog-content figure.uc-media-card .uc-media-card-image {
@@ -295,4 +306,130 @@
     max-width: 100% !important;
     height: auto;
     margin: 0 !important;
+    transition: transform 220ms ease;
+}
+
+.blog-content .uc-media-card-wrapper:hover .uc-media-card-image {
+    transform: scale(1.04);
+}
+
+.blog-content figure.uc-media-card .uc-media-card-icon {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 78%);
+    backdrop-filter: blur(8px);
+
+    color: hsl(var(--foreground));
+
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.12);
+
+    opacity: 0;
+    transform: scale(0.85);
+
+    transition:
+        opacity 180ms ease,
+        transform 180ms ease,
+        background 180ms ease;
+}
+
+.blog-content figure.uc-media-card .uc-media-card-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.blog-content .uc-media-card-wrapper:hover .uc-media-card-icon {
+    opacity: 1;
+    transform: scale(1);
+    background: white;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Blog Managed Media Card Caption
+|--------------------------------------------------------------------------
+*/
+
+.blog-content figure.uc-media-card .uc-media-card-caption {
+    border-top: 1px solid hsl(var(--border));
+    padding: 0.9rem 1rem 1rem;
+    background:
+        linear-gradient(
+            180deg,
+            hsl(var(--card)) 0%,
+            hsl(var(--muted) / 0.35) 100%
+        );
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.blog-content figure.uc-media-card .uc-media-card-title {
+    margin: 0;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+}
+
+.blog-content .uc-media-card-wrapper:hover .uc-media-card-title {
+    color: hsl(var(--primary));
+}
+
+.blog-content figure.uc-media-card .uc-media-card-credit-label {
+    margin-top: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+}
+
+.blog-content figure.uc-media-card .uc-media-card-credit-name {
+    margin-top: 0.05rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+/*
+|--------------------------------------------------------------------------
+| Blog Content Helpers
+|--------------------------------------------------------------------------
+*/
+
+.blog-content::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Responsive Blog Media
+|--------------------------------------------------------------------------
+*/
+
+@media (max-width: 768px) {
+    .blog-content img.blog-image-left,
+    .blog-content img.blog-image-right,
+    .blog-content img.blog-image-small,
+    .blog-content img.blog-image-medium,
+    .blog-content img.blog-image-large,
+    .blog-content .uc-media-card-wrapper.blog-image-left,
+    .blog-content .uc-media-card-wrapper.blog-image-right,
+    .blog-content .uc-media-card-wrapper.blog-image-small,
+    .blog-content .uc-media-card-wrapper.blog-image-medium,
+    .blog-content .uc-media-card-wrapper.blog-image-large {
+        float: none !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 1.5rem 0 !important;
+    }
 }
