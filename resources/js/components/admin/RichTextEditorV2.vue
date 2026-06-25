@@ -20,7 +20,6 @@ const codeView = ref(false);
 const htmlCode = ref(props.modelValue ?? '');
 const uploadingImage = ref(false);
 const selectedImage = ref(false);
-const selectedImagePos = ref<number | null>(null);
 const selectedImageSrc = ref<string | null>(null);
 
 const BlogImage = Image.extend({
@@ -31,21 +30,17 @@ const BlogImage = Image.extend({
             class: {
                 default: 'blog-image-center blog-image-large',
                 parseHTML: (element) => element.getAttribute('class'),
-                renderHTML: (attributes) => {
-                    return {
-                        class: attributes.class,
-                    };
-                },
+                renderHTML: (attributes) => ({
+                    class: attributes.class,
+                }),
             },
 
             alt: {
                 default: null,
                 parseHTML: (element) => element.getAttribute('alt'),
-                renderHTML: (attributes) => {
-                    return {
-                        alt: attributes.alt,
-                    };
-                },
+                renderHTML: (attributes) => ({
+                    alt: attributes.alt,
+                }),
             },
         };
     },
@@ -55,8 +50,8 @@ const editor = useEditor({
     content: props.modelValue,
     extensions: [
         StarterKit.configure({
-        link: false,
-        underline: false,
+            link: false,
+            underline: false,
         }),
         Underline,
         Highlight,
@@ -79,13 +74,11 @@ const editor = useEditor({
         handleClickOn(view, pos, node) {
             if (node.type.name !== 'image') {
                 selectedImage.value = false;
-                selectedImagePos.value = null;
                 selectedImageSrc.value = null;
                 return false;
             }
 
             selectedImage.value = true;
-            selectedImagePos.value = pos;
             selectedImageSrc.value = node.attrs.src;
 
             return false;
@@ -96,7 +89,7 @@ const editor = useEditor({
 
             if (target.tagName !== 'IMG') {
                 selectedImage.value = false;
-                selectedImagePos.value = null;
+                selectedImageSrc.value = null;
             }
 
             return false;
@@ -120,6 +113,7 @@ const wordCount = computed(() => {
 });
 
 const characterCount = computed(() => editor.value?.getText().length ?? 0);
+
 const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 220)));
 
 watch(
@@ -136,19 +130,10 @@ watch(
 );
 
 function emitEditorHtml() {
-
-    console.log('emitEditorHtml called');
-
     if (!editor.value) return;
 
-    console.log('editor.value is available');
-
     const html = editor.value.getHTML();
-
-    console.log('Emitting HTML:', html);
-
     htmlCode.value = html;
-
     emit('update:modelValue', html);
 }
 
@@ -216,7 +201,6 @@ function findSelectedImage() {
     if (!found) {
         alert('Click the image first, then choose an image option.');
         selectedImage.value = false;
-        selectedImagePos.value = null;
         selectedImageSrc.value = null;
     }
 
@@ -249,17 +233,11 @@ function currentSize(): string {
 }
 
 function updateImage(alignment?: string, size?: string) {
-    console.log('updateImage called with alignment:', alignment, 'size:', size);
-
     if (!editor.value) return;
-    
-    console.log('editor.value is available');
 
     const found = findSelectedImage();
 
     if (!found) return;
-
-    console.log('Found image node:', found.node, 'at position:', found.pos);
 
     const newClass = imageClass(
         alignment ?? currentAlignment(),
@@ -268,20 +246,14 @@ function updateImage(alignment?: string, size?: string) {
 
     const { state, view } = editor.value;
 
-    console.log('Before:', editor.value.getHTML());
-
     view.dispatch(
         state.tr.setNodeMarkup(found.pos, undefined, {
             ...found.node.attrs,
             class: newClass,
         })
     );
-    
-    console.log('----------------------');
-    console.log('After:', editor.value.getHTML());
 
     selectedImage.value = true;
-    selectedImagePos.value = found.pos;
     selectedImageSrc.value = found.node.attrs.src;
 
     emitEditorHtml();
@@ -304,7 +276,6 @@ function removeImage() {
     );
 
     selectedImage.value = false;
-    selectedImagePos.value = null;
     selectedImageSrc.value = null;
 
     emitEditorHtml();
@@ -358,6 +329,9 @@ async function uploadImage() {
                 })
                 .run();
 
+            selectedImage.value = true;
+            selectedImageSrc.value = data.url;
+
             emitEditorHtml();
         } catch {
             alert('Image upload failed.');
@@ -372,7 +346,7 @@ async function uploadImage() {
 
 <template>
     <div class="overflow-hidden rounded-md border bg-background">
-        <div v-if="editor" class="space-y-2 border-b bg-muted/30 p-3">
+        <div v-if="editor" class="space-y-3 border-b bg-muted/30 p-3">
             <div class="flex flex-wrap gap-2">
                 <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleBold().run()">B</Button>
                 <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleItalic().run()">I</Button>
@@ -397,7 +371,13 @@ async function uploadImage() {
 
                 <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().toggleHighlight().run()">Highlight</Button>
 
-                <Button type="button" size="sm" variant="outline" :disabled="uploadingImage" @click="uploadImage">
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    :disabled="uploadingImage"
+                    @click="uploadImage"
+                >
                     {{ uploadingImage ? 'Uploading...' : 'Image' }}
                 </Button>
 
@@ -414,6 +394,7 @@ async function uploadImage() {
 
                 <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().undo().run()">Undo</Button>
                 <Button type="button" size="sm" variant="outline" @click="editor.chain().focus().redo().run()">Redo</Button>
+
                 <Button type="button" size="sm" variant="outline" @click="toggleCodeView">
                     {{ codeView ? 'WYSIWYG' : 'HTML' }}
                 </Button>
@@ -421,43 +402,49 @@ async function uploadImage() {
 
             <div
                 v-if="selectedImage && !codeView"
-                class="flex flex-wrap items-center gap-2 rounded-md border bg-background p-2"
+                class="rounded-md border bg-background p-3 shadow-sm"
             >
-                <span class="text-xs font-semibold text-muted-foreground">
+                <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Image Tools
-                </span>
+                </div>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-left')">
-                    Left Wrap
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-left')">
+                        Left Wrap
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center')">
-                    Center
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center')">
+                        Center
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-right')">
-                    Right Wrap
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-right')">
+                        Right Wrap
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-small')">
-                    Small
-                </Button>
+                    <span class="mx-1 border-l" />
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-medium')">
-                    Medium
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-small')">
+                        Small
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-large')">
-                    Large
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-medium')">
+                        Medium
+                    </Button>
 
-                <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center', 'blog-image-full')">
-                    Full
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage(undefined, 'blog-image-large')">
+                        Large
+                    </Button>
 
-                <Button type="button" size="sm" variant="destructive" @mousedown.prevent @click="removeImage">
-                    Remove
-                </Button>
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center', 'blog-image-full')">
+                        Full Width
+                    </Button>
+
+                    <span class="mx-1 border-l" />
+
+                    <Button type="button" size="sm" variant="destructive" @mousedown.prevent @click="removeImage">
+                        Remove
+                    </Button>
+                </div>
             </div>
         </div>
 
