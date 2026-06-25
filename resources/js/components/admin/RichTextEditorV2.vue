@@ -73,6 +73,42 @@ const BlogImage = Image.extend({
                     alt: attributes.alt,
                 }),
             },
+
+            imageId: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-image-id'),
+                renderHTML: (attributes) =>
+                    attributes.imageId
+                        ? { 'data-image-id': attributes.imageId }
+                        : {},
+            },
+
+            imageSlug: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-image-slug'),
+                renderHTML: (attributes) =>
+                    attributes.imageSlug
+                        ? { 'data-image-slug': attributes.imageSlug }
+                        : {},
+            },
+
+            photographer: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-photographer'),
+                renderHTML: (attributes) =>
+                    attributes.photographer
+                        ? { 'data-photographer': attributes.photographer }
+                        : {},
+            },
+
+            publicUrl: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-public-url'),
+                renderHTML: (attributes) =>
+                    attributes.publicUrl
+                        ? { 'data-public-url': attributes.publicUrl }
+                        : {},
+            },
         };
     },
 });
@@ -331,6 +367,36 @@ function insertImage(src: string, alt: string | null = null) {
     emitEditorHtml();
 }
 
+function insertLibraryManagedImage(image: LibraryImage) {
+    if (!editor.value) return;
+
+    const src = image.high_res_url ?? image.thumbnail_url ?? image.icon_url;
+
+    if (!src) {
+        alert('This image does not have an available URL.');
+        return;
+    }
+
+    editor.value
+        .chain()
+        .focus()
+        .setImage({
+            src,
+            alt: image.title,
+            class: 'blog-image-center blog-image-large',
+            imageId: String(image.id),
+            imageSlug: image.slug,
+            photographer: image.photographer ?? '',
+            publicUrl: image.public_url ?? '',
+        })
+        .run();
+
+    selectedImage.value = true;
+    selectedImageSrc.value = src;
+
+    emitEditorHtml();
+}
+
 async function uploadImage() {
     if (!editor.value || uploadingImage.value) return;
 
@@ -389,14 +455,7 @@ function closeImageLibrary() {
 }
 
 function insertLibraryImage(image: LibraryImage) {
-    const src = image.high_res_url ?? image.thumbnail_url ?? image.icon_url;
-
-    if (!src) {
-        alert('This image does not have an available URL.');
-        return;
-    }
-
-    insertImage(src, image.title);
+    insertLibraryManagedImage(image);
     closeImageLibrary();
 }
 </script>

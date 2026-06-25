@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 interface Author {
     id: number;
@@ -83,6 +83,82 @@ function formatDate(date: string | null): string {
 function postImage(post: BlogPost): string | null {
     return post.featured_image_url ?? post.header_image_url ?? post.icon_image_url;
 }
+
+const enhancedContent = ref('');
+
+function buildEnhancedContent() {
+    const html = props.blogPost.content ?? '';
+
+    if (!html) {
+        enhancedContent.value = '';
+        return;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    doc.querySelectorAll('img[data-image-id]').forEach((img) => {
+        const imageId = img.getAttribute('data-image-id');
+        const slug = img.getAttribute('data-image-slug');
+        const photographer = img.getAttribute('data-photographer');
+        const publicUrl = img.getAttribute('data-public-url');
+        const title = img.getAttribute('alt') || 'View image';
+
+        const originalClass = img
+            .getAttribute('class')
+            ?.replace('ProseMirror-selectednode', '')
+            .trim() ?? '';
+
+        const figure = doc.createElement('figure');
+        figure.className = `uc-media-card ${originalClass}`.trim();
+
+        if (imageId) figure.setAttribute('data-image-id', imageId);
+        if (slug) figure.setAttribute('data-image-slug', slug);
+        if (publicUrl) figure.setAttribute('data-public-url', publicUrl);
+
+        const clonedImg = img.cloneNode(true) as HTMLImageElement;
+        clonedImg.className = 'uc-media-card-image';
+        clonedImg.removeAttribute('contenteditable');
+        clonedImg.removeAttribute('draggable');
+
+        const caption = doc.createElement('figcaption');
+        caption.className = 'uc-media-card-caption';
+
+        caption.innerHTML = `
+            <div class="uc-media-card-title">${title}</div>
+            ${
+                photographer
+                    ? `<div class="uc-media-card-credit">Photo by ${photographer}</div>`
+                    : ''
+            }
+            ${
+                publicUrl
+                    ? `<a class="uc-media-card-link" href="${publicUrl}">View Image →</a>`
+                    : ''
+            }
+        `;
+
+        figure.appendChild(clonedImg);
+        figure.appendChild(caption);
+
+        img.replaceWith(figure);
+    });
+
+    enhancedContent.value = doc.body.innerHTML;
+}
+
+onMounted(() => {
+    buildEnhancedContent();
+});
+
+watch(
+    () => props.blogPost.content,
+    () => {
+        buildEnhancedContent();
+    },
+    { immediate: true }
+);
+
 </script>
 
 <template>
@@ -200,7 +276,7 @@ function postImage(post: BlogPost): string | null {
                         <div class="mx-auto w-full max-w-3xl">
                             <div
                                 class="blog-content prose prose-lg prose-neutral max-w-none dark:prose-invert"
-                                v-html="blogPost.content"
+                                v-html="enhancedContent"
                             />
 
                             <div

@@ -13,6 +13,7 @@ export interface LibraryImage {
     thumbnail_url: string | null;
     icon_url: string | null;
     high_res_url: string | null;
+    public_url: string | null;
 }
 
 const props = defineProps<{

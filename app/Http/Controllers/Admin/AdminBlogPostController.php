@@ -105,6 +105,8 @@ class AdminBlogPostController extends Controller
 
             'expires_at' => ['nullable', 'date', 'after:published_at'],
 
+            'public_url' => url('/images/' . $image->slug),
+
         ]);
 
         $featuredImagePath = $request->hasFile('featured_image')
@@ -397,6 +399,7 @@ class AdminBlogPostController extends Controller
                     'thumbnail_url' => $image->thumbnail_url,
                     'icon_url' => $image->icon_url,
                     'high_res_url' => $image->high_res_url,
+                    'public_url' => url('/images/' . $image->slug),
                 ];
             });
 
