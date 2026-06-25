@@ -199,7 +199,7 @@ function postImage(post: BlogPost): string | null {
                     <div class="grid gap-10 lg:grid-cols-[1fr_280px]">
                         <div class="mx-auto w-full max-w-3xl">
                             <div
-                                class="prose prose-lg prose-neutral max-w-none dark:prose-invert"
+                                class="blog-content prose prose-lg prose-neutral max-w-none dark:prose-invert"
                                 v-html="blogPost.content"
                             />
 

@@ -101,6 +101,9 @@ class AdminBlogPostController extends Controller
 
             'tag_ids' => ['array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
+
+            'expires_at' => ['nullable', 'date', 'after:published_at'],
+
         ]);
 
         $featuredImagePath = $request->hasFile('featured_image')
@@ -136,6 +139,8 @@ class AdminBlogPostController extends Controller
 
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
+
+            'expires_at' => $validated['expires_at'] ?? null,
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
@@ -225,6 +230,8 @@ class AdminBlogPostController extends Controller
 
             'tag_ids' => ['array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
+
+            'expires_at' => ['nullable', 'date', 'after:published_at'],
         ]);
 
         $oldValues = $blogPost->getAttributes();
@@ -277,11 +284,14 @@ class AdminBlogPostController extends Controller
                 ? ($validated['published_at'] ?? $blogPost->published_at ?? now())
                 : ($validated['published_at'] ?? null),
 
+            'expires_at' => $validated['expires_at'] ?? null,
+
             'seo_title' => $validated['seo_title'] ?? null,
             'seo_description' => $validated['seo_description'] ?? null,
 
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
+
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
@@ -337,4 +347,19 @@ class AdminBlogPostController extends Controller
             ->route('admin.blog-posts.index')
             ->with('success', 'Blog post deleted successfully.');
     }
+
+    public function uploadContentImage(Request $request)
+    {
+        $request->validate([
+            'image' => ['required', 'image', 'max:5120'],
+        ]);
+
+        $path = $request->file('image')
+            ->store('blog/content-images', 'public');
+
+        return response()->json([
+            'url' => Storage::url($path),
+        ]);
+    }
+
 }

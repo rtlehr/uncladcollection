@@ -1,8 +1,21 @@
 <?php
 
+use App\Models\BlogPost;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', function () {
+    $latestArticles = BlogPost::query()
+        ->published()
+        ->with(['author:id,name', 'categories:id,name'])
+        ->latest('published_at')
+        ->take(3)
+        ->get();
+
+    return Inertia::render('Welcome', [
+        'latestArticles' => $latestArticles,
+    ]);
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

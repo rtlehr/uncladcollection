@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -10,7 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
-
 interface BlogPost {
     id: number;
     title: string;
@@ -19,6 +19,7 @@ interface BlogPost {
     is_featured: boolean;
     is_active: boolean;
     published_at: string | null;
+    expires_at: string | null;
     views_count: number;
 
     author?: {
@@ -54,6 +55,48 @@ const props = defineProps<{
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
+
+function formatDate(value: string | null): string {
+    return value ? new Date(value).toLocaleDateString() : '-';
+}
+
+function postDisplayStatus(post: BlogPost): string {
+    const now = new Date();
+
+    if (!post.is_active) {
+        return 'Inactive';
+    }
+
+    if (post.status === 'draft') {
+        return 'Draft';
+    }
+
+    if (post.published_at && new Date(post.published_at) > now) {
+        return 'Scheduled';
+    }
+
+    if (post.expires_at && new Date(post.expires_at) <= now) {
+        return 'Expired';
+    }
+
+    if (post.status === 'published') {
+        return 'Live';
+    }
+
+    return post.status;
+}
+
+function postStatusClass(post: BlogPost): string {
+    const status = postDisplayStatus(post);
+
+    return {
+        Live: 'bg-green-100 text-green-700',
+        Scheduled: 'bg-blue-100 text-blue-700',
+        Draft: 'bg-yellow-100 text-yellow-700',
+        Expired: 'bg-gray-100 text-gray-700',
+        Inactive: 'bg-red-100 text-red-700',
+    }[status] ?? 'bg-muted text-muted-foreground';
+}
 
 watch([search, status], () => {
     router.get(
@@ -150,7 +193,11 @@ watch([search, status], () => {
                                     </th>
 
                                     <th class="py-3 text-left">
-                                        Published
+                                        Release
+                                    </th>
+
+                                    <th class="py-3 text-left">
+                                        End Date
                                     </th>
 
                                     <th class="py-3 text-left">
@@ -174,15 +221,13 @@ watch([search, status], () => {
                                             {{ post.title }}
                                         </div>
 
-                                        <div
-                                            class="text-xs text-muted-foreground"
-                                        >
+                                        <div class="text-xs text-muted-foreground">
                                             {{ post.slug }}
                                         </div>
 
                                         <div
                                             v-if="post.is_featured"
-                                            class="mt-1 text-xs text-yellow-600"
+                                            class="mt-1 text-xs font-medium text-yellow-600"
                                         >
                                             Featured
                                         </div>
@@ -193,15 +238,26 @@ watch([search, status], () => {
                                     </td>
 
                                     <td class="py-3">
-                                        {{ post.status }}
+                                        <span
+                                            class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                                            :class="postStatusClass(post)"
+                                        >
+                                            {{ postDisplayStatus(post) }}
+                                        </span>
                                     </td>
 
                                     <td class="py-3">
-                                        {{
-                                            post.published_at
-                                                ? new Date(post.published_at).toLocaleDateString()
-                                                : '-'
-                                        }}
+                                        {{ formatDate(post.published_at) }}
+                                    </td>
+
+                                    <td class="py-3">
+                                        <span v-if="post.expires_at">
+                                            {{ formatDate(post.expires_at) }}
+                                        </span>
+
+                                        <span v-else class="italic text-muted-foreground">
+                                            Never
+                                        </span>
                                     </td>
 
                                     <td class="py-3">
@@ -234,7 +290,7 @@ watch([search, status], () => {
 
                                 <tr v-if="blogPosts.data.length === 0">
                                     <td
-                                        colspan="6"
+                                        colspan="7"
                                         class="py-8 text-center text-muted-foreground"
                                     >
                                         No blog posts found.

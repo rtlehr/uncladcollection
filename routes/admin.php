@@ -99,4 +99,9 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('blog-posts', AdminBlogPostController::class)
             ->middleware('permission:manage_blog_posts');
+
+        Route::post('/blog-posts/upload-content-image', [AdminBlogPostController::class, 'uploadContentImage'])
+            ->middleware('permission:manage_blog_posts')
+            ->name('blog-posts.upload-content-image');
+            
     });

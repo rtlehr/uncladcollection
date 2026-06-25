@@ -2,7 +2,6 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -229,7 +228,7 @@ function deletePost() {
                     />
 
                     <div
-                        class="prose prose-neutral max-w-none dark:prose-invert"
+                        class="blog-content prose prose-neutral max-w-none dark:prose-invert"
                         v-html="blogPost.content"
                     />
 

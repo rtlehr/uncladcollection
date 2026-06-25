@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 
+
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Card,
     CardContent,
@@ -10,11 +14,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-
-import RichTextEditor from '@/components/admin/RichTextEditor.vue';
+import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 
 interface Category {
     id: number;
@@ -44,6 +44,7 @@ const form = useForm({
 
     status: 'draft',
     published_at: '',
+    expires_at: '',
 
     seo_title: '',
     seo_description: '',
@@ -257,7 +258,7 @@ function submit() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Publishing</CardTitle>
+                        <CardTitle>Publishing Schedule</CardTitle>
                     </CardHeader>
 
                     <CardContent class="grid gap-4 md:grid-cols-2">
@@ -284,7 +285,7 @@ function submit() {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="published_at">Publish Date</Label>
+                            <Label for="published_at">Release Date</Label>
 
                             <Input
                                 id="published_at"
@@ -292,20 +293,48 @@ function submit() {
                                 type="datetime-local"
                             />
 
+                            <p class="text-xs text-muted-foreground">
+                                The article will appear publicly on or after this date when status is published.
+                            </p>
+
                             <p v-if="form.errors.published_at" class="text-sm text-red-600">
                                 {{ form.errors.published_at }}
                             </p>
                         </div>
 
-                        <label class="flex items-center gap-2 text-sm">
-                            <input v-model="form.is_featured" type="checkbox" />
-                            Featured Post
-                        </label>
+                        <div class="space-y-2">
+                            <Label for="expires_at">End Date</Label>
 
-                        <label class="flex items-center gap-2 text-sm">
-                            <input v-model="form.is_active" type="checkbox" />
-                            Active
-                        </label>
+                            <Input
+                                id="expires_at"
+                                v-model="form.expires_at"
+                                type="datetime-local"
+                            />
+
+                            <p class="text-xs text-muted-foreground">
+                                Optional. Leave blank to keep this article published forever.
+                            </p>
+
+                            <p v-if="form.errors.expires_at" class="text-sm text-red-600">
+                                {{ form.errors.expires_at }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-3 rounded-md border p-4">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input v-model="form.is_featured" type="checkbox" />
+                                Featured Post
+                            </label>
+
+                            <label class="flex items-center gap-2 text-sm">
+                                <input v-model="form.is_active" type="checkbox" />
+                                Active
+                            </label>
+
+                            <p class="text-xs text-muted-foreground">
+                                A post must be active, published, and within its release window to appear publicly.
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
 

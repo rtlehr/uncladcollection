@@ -33,6 +33,7 @@ class BlogPost extends Model
         'is_featured',
         'is_active',
         'views_count',
+        'expires_at',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class BlogPost extends Model
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
         'views_count' => 'integer',
+        'expires_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -100,7 +102,11 @@ class BlogPost extends Model
             ->where('status', self::STATUS_PUBLISHED)
             ->where('is_active', true)
             ->whereNotNull('published_at')
-            ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
     }
 
     public function scopeDraft(Builder $query): Builder
@@ -113,6 +119,10 @@ class BlogPost extends Model
         return $this->status === self::STATUS_PUBLISHED
             && $this->is_active
             && $this->published_at
-            && $this->published_at->lte(now());
+            && $this->published_at->lte(now())
+            && (
+                ! $this->expires_at
+                || $this->expires_at->gt(now())
+            );
     }
 }
