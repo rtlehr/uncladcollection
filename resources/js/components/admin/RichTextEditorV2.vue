@@ -28,27 +28,17 @@ import {
     Quote,
     Redo2,
     RemoveFormatting,
-    Search,
     Strikethrough,
     Trash2,
     UnderlineIcon,
     Undo2,
     WrapText,
-    X,
 } from '@lucide/vue';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-
-interface LibraryImage {
-    id: number;
-    title: string;
-    slug: string;
-    photographer: string | null;
-    thumbnail_url: string | null;
-    icon_url: string | null;
-    high_res_url: string | null;
-}
+import ImagePickerDialog, {
+    type LibraryImage,
+} from '@/components/admin/ImagePickerDialog.vue';
 
 const props = defineProps<{ modelValue: string }>();
 
@@ -61,11 +51,7 @@ const htmlCode = ref(props.modelValue ?? '');
 const uploadingImage = ref(false);
 const selectedImage = ref(false);
 const selectedImageSrc = ref<string | null>(null);
-
 const libraryOpen = ref(false);
-const librarySearch = ref('');
-const libraryImages = ref<LibraryImage[]>([]);
-const loadingLibrary = ref(false);
 
 const BlogImage = Image.extend({
     addAttributes() {
@@ -158,6 +144,7 @@ const wordCount = computed(() => {
 });
 
 const characterCount = computed(() => editor.value?.getText().length ?? 0);
+
 const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 220)));
 
 watch(
@@ -325,6 +312,25 @@ function removeImage() {
     emitEditorHtml();
 }
 
+function insertImage(src: string, alt: string | null = null) {
+    if (!editor.value) return;
+
+    editor.value
+        .chain()
+        .focus()
+        .setImage({
+            src,
+            alt: alt ?? '',
+            class: 'blog-image-center blog-image-large',
+        })
+        .run();
+
+    selectedImage.value = true;
+    selectedImageSrc.value = src;
+
+    emitEditorHtml();
+}
+
 async function uploadImage() {
     if (!editor.value || uploadingImage.value) return;
 
@@ -374,63 +380,12 @@ async function uploadImage() {
     input.click();
 }
 
-function insertImage(src: string, alt: string | null = null) {
-    if (!editor.value) return;
-
-    editor.value
-        .chain()
-        .focus()
-        .setImage({
-            src,
-            alt: alt ?? '',
-            class: 'blog-image-center blog-image-large',
-        })
-        .run();
-
-    selectedImage.value = true;
-    selectedImageSrc.value = src;
-
-    emitEditorHtml();
-}
-
-async function openImageLibrary() {
+function openImageLibrary() {
     libraryOpen.value = true;
-    await searchLibrary();
 }
 
 function closeImageLibrary() {
     libraryOpen.value = false;
-}
-
-async function searchLibrary() {
-    loadingLibrary.value = true;
-
-    try {
-        const params = new URLSearchParams();
-
-        if (librarySearch.value.trim()) {
-            params.append('search', librarySearch.value.trim());
-        }
-
-        const response = await fetch(`/admin/blog-posts/image-library?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            alert('Unable to load image library.');
-            return;
-        }
-
-        const data = await response.json();
-
-        libraryImages.value = data.images ?? [];
-    } catch {
-        alert('Unable to load image library.');
-    } finally {
-        loadingLibrary.value = false;
-    }
 }
 
 function insertLibraryImage(image: LibraryImage) {
@@ -639,92 +594,10 @@ function insertLibraryImage(image: LibraryImage) {
             <span>{{ readingTime }} min read</span>
         </div>
 
-        <div
-            v-if="libraryOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-        >
-            <div class="max-h-[85vh] w-full max-w-5xl overflow-hidden rounded-lg border bg-background shadow-lg">
-                <div class="flex items-center justify-between border-b p-4">
-                    <div>
-                        <h3 class="text-lg font-semibold">
-                            Insert From Image Library
-                        </h3>
-
-                        <p class="text-sm text-muted-foreground">
-                            Search and insert an existing Unclad Collection image.
-                        </p>
-                    </div>
-
-                    <Button type="button" size="icon" variant="ghost" @click="closeImageLibrary">
-                        <X class="h-4 w-4" />
-                    </Button>
-                </div>
-
-                <div class="border-b p-4">
-                    <div class="flex gap-2">
-                        <div class="relative flex-1">
-                            <Search class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-
-                            <Input
-                                v-model="librarySearch"
-                                class="pl-9"
-                                placeholder="Search by title, slug, or photographer..."
-                                @keyup.enter="searchLibrary"
-                            />
-                        </div>
-
-                        <Button type="button" @click="searchLibrary">
-                            Search
-                        </Button>
-                    </div>
-                </div>
-
-                <div class="max-h-[58vh] overflow-y-auto p-4">
-                    <div v-if="loadingLibrary" class="py-12 text-center text-sm text-muted-foreground">
-                        Loading images...
-                    </div>
-
-                    <div v-else-if="libraryImages.length === 0" class="py-12 text-center text-sm text-muted-foreground">
-                        No images found.
-                    </div>
-
-                    <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                        <button
-                            v-for="image in libraryImages"
-                            :key="image.id"
-                            type="button"
-                            class="overflow-hidden rounded-md border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md"
-                            @click="insertLibraryImage(image)"
-                        >
-                            <div class="aspect-[4/3] bg-muted">
-                                <img
-                                    v-if="image.thumbnail_url || image.icon_url"
-                                    :src="image.thumbnail_url ?? image.icon_url ?? ''"
-                                    :alt="image.title"
-                                    class="h-full w-full object-cover"
-                                />
-
-                                <div
-                                    v-else
-                                    class="flex h-full items-center justify-center text-xs text-muted-foreground"
-                                >
-                                    No preview
-                                </div>
-                            </div>
-
-                            <div class="space-y-1 p-3">
-                                <div class="line-clamp-2 text-sm font-medium">
-                                    {{ image.title }}
-                                </div>
-
-                                <div class="text-xs text-muted-foreground">
-                                    {{ image.photographer ?? 'Unknown photographer' }}
-                                </div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ImagePickerDialog
+            :open="libraryOpen"
+            @close="closeImageLibrary"
+            @select="insertLibraryImage"
+        />
     </div>
 </template>
