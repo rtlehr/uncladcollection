@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
-
+import CommentSection from '@/components/comments/CommentSection.vue';
 
 interface Author {
     id: number;
@@ -69,6 +69,7 @@ const props = defineProps<{
     blogPost: BlogPost;
     relatedPosts: BlogPost[];
     authorPosts: BlogPost[];
+    comments: any[];
 }>();
 
 const articleImage = computed(() => {
@@ -332,25 +333,10 @@ watch(
                                 v-html="enhancedContent"
                             />
 
-                            <div
-                                v-if="blogPost.tags.length"
-                                class="mt-12 border-t pt-6"
-                            >
-                                <div class="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Tags
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    <Link
-                                        v-for="tag in blogPost.tags"
-                                        :key="tag.id"
-                                        :href="`/blog?tag_id=${tag.id}`"
-                                        class="rounded-full border px-3 py-1 text-sm transition hover:bg-muted"
-                                    >
-                                        #{{ tag.name }}
-                                    </Link>
-                                </div>
-                            </div>
+                            <CommentSection
+                                :blog-post-slug="blogPost.slug"
+                                :comments="comments"
+                            />
                         </div>
 
                         <aside class="space-y-6">
@@ -462,6 +448,27 @@ watch(
                                     </Link>
                                 </div>
                             </div>
+
+                            <div
+                                v-if="blogPost.categories.length"
+                                class="rounded-2xl border bg-card p-5 shadow-sm"
+                            >
+                                <div class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                                    Tags
+                                </div>
+
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                     <Link
+                                        v-for="tag in blogPost.tags"
+                                        :key="tag.id"
+                                        :href="`/blog?tag_id=${tag.id}`"
+                                        class="rounded-full border px-3 py-1 text-sm transition hover:bg-muted"
+                                    >
+                                        #{{ tag.name }}
+                                    </Link>
+                                </div>
+                            </div>
+
                         </aside>
                     </div>
                 </section>

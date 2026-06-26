@@ -1,14 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
+use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
+use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -16,7 +17,6 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AdminBlogPostController;
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->prefix('admin')
@@ -107,5 +107,42 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::post('/blog-posts/upload-content-image', [AdminBlogPostController::class, 'uploadContentImage'])
             ->middleware('permission:manage_blog_posts')
             ->name('blog-posts.upload-content-image');
+    });
 
+Route::middleware(['auth', 'verified', 'permission:manage_comments'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/comments', [CommentModerationController::class, 'index'])
+            ->name('comments.index');
+
+        Route::get('/comments/reports', [CommentModerationController::class, 'reports'])
+            ->name('comments.reports');
+
+        Route::patch('/comments/{comment}/approve', [CommentModerationController::class, 'approve'])
+            ->name('comments.approve');
+
+        Route::patch('/comments/{comment}/hide', [CommentModerationController::class, 'hide'])
+            ->name('comments.hide');
+
+        Route::patch('/comments/{comment}/restore', [CommentModerationController::class, 'restore'])
+            ->name('comments.restore');
+
+        Route::patch('/comments/{comment}/pin', [CommentModerationController::class, 'pin'])
+            ->name('comments.pin');
+
+        Route::patch('/comments/{comment}/unpin', [CommentModerationController::class, 'unpin'])
+            ->name('comments.unpin');
+
+        Route::patch('/comments/{comment}/spam', [CommentModerationController::class, 'spam'])
+            ->name('comments.spam');
+
+        Route::delete('/comments/{comment}', [CommentModerationController::class, 'destroy'])
+            ->name('comments.destroy');
+
+        Route::patch('/comment-reports/{commentReport}/dismiss', [CommentModerationController::class, 'dismissReport'])
+            ->name('comment-reports.dismiss');
+
+        Route::patch('/comment-reports/{commentReport}/reviewed', [CommentModerationController::class, 'markReportReviewed'])
+            ->name('comment-reports.reviewed');
     });

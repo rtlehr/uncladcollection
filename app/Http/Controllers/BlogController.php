@@ -110,10 +110,23 @@ class BlogController extends Controller
             ->take(4)
             ->get();
 
+        $comments = $blogPost->approvedComments()
+            ->root()
+            ->with([
+                'user:id,name,username,avatar_path',
+                'approvedReplies.user:id,name,username,avatar_path',
+                'approvedReplies.approvedReplies.user:id,name,username,avatar_path',
+            ])
+            ->withCount('likes')
+            ->pinnedFirst()
+            ->latest()
+            ->get();
+
         return Inertia::render('Blog/Show', [
             'blogPost' => $blogPost,
             'relatedPosts' => $relatedPosts,
             'authorPosts' => $authorPosts,
+            'comments' => $comments,
         ]);
     }
 }

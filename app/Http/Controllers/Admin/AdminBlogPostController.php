@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Category;
+use App\Models\Image;
 use App\Models\Tag;
 use App\Services\AdminActivityService;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\Image;
 
 class AdminBlogPostController extends Controller
 {
@@ -90,6 +90,7 @@ class AdminBlogPostController extends Controller
 
             'status' => ['required', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'],
 
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
@@ -97,16 +98,15 @@ class AdminBlogPostController extends Controller
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
 
+            'comments_enabled' => ['boolean'],
+            'comments_visible' => ['boolean'],
+            'comments_require_approval' => ['boolean'],
+
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
 
             'tag_ids' => ['array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
-
-            'expires_at' => ['nullable', 'date', 'after:published_at'],
-
-            'public_url' => url('/images/' . $image->slug),
-
         ]);
 
         $featuredImagePath = $request->hasFile('featured_image')
@@ -136,6 +136,7 @@ class AdminBlogPostController extends Controller
             'published_at' => $validated['status'] === BlogPost::STATUS_PUBLISHED
                 ? ($validated['published_at'] ?? now())
                 : ($validated['published_at'] ?? null),
+            'expires_at' => $validated['expires_at'] ?? null,
 
             'seo_title' => $validated['seo_title'] ?? null,
             'seo_description' => $validated['seo_description'] ?? null,
@@ -143,7 +144,9 @@ class AdminBlogPostController extends Controller
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
 
-            'expires_at' => $validated['expires_at'] ?? null,
+            'comments_enabled' => $request->boolean('comments_enabled', true),
+            'comments_visible' => $request->boolean('comments_visible', true),
+            'comments_require_approval' => $request->boolean('comments_require_approval'),
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
@@ -221,6 +224,7 @@ class AdminBlogPostController extends Controller
 
             'status' => ['required', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'],
 
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
@@ -228,13 +232,15 @@ class AdminBlogPostController extends Controller
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
 
+            'comments_enabled' => ['boolean'],
+            'comments_visible' => ['boolean'],
+            'comments_require_approval' => ['boolean'],
+
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
 
             'tag_ids' => ['array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
-
-            'expires_at' => ['nullable', 'date', 'after:published_at'],
         ]);
 
         $oldValues = $blogPost->getAttributes();
@@ -286,7 +292,6 @@ class AdminBlogPostController extends Controller
             'published_at' => $validated['status'] === BlogPost::STATUS_PUBLISHED
                 ? ($validated['published_at'] ?? $blogPost->published_at ?? now())
                 : ($validated['published_at'] ?? null),
-
             'expires_at' => $validated['expires_at'] ?? null,
 
             'seo_title' => $validated['seo_title'] ?? null,
@@ -295,6 +300,9 @@ class AdminBlogPostController extends Controller
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
 
+            'comments_enabled' => $request->boolean('comments_enabled', true),
+            'comments_visible' => $request->boolean('comments_visible', true),
+            'comments_require_approval' => $request->boolean('comments_require_approval'),
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
@@ -407,5 +415,4 @@ class AdminBlogPostController extends Controller
             'images' => $images,
         ]);
     }
-
 }

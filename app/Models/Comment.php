@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\CommentLike;
+use App\Models\CommentReport;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
@@ -87,4 +89,15 @@ class Comment extends Model
     {
         return $query->orderByDesc('is_pinned');
     }
+
+    public function likes(): HasMany
+    {
+        return $this->hasMany(CommentLike::class);
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(CommentReport::class);
+    }
+
 }

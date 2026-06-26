@@ -153,6 +153,12 @@ class PermissionSeeder extends Seeder
                 'label' => 'Manage Blog Posts',
                 'description' => 'Manage blog content.',
             ],
+            [
+                'name' => 'manage_comments',
+                'group_name' => 'Comments',
+                'label' => 'Manage comments',
+                'description' => 'Manage comments',
+            ],
 
         ];
 

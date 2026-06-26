@@ -17,6 +17,7 @@ import {
     ClipboardList,
     Download,
     Newspaper,
+    MessageCircle,
 } from '@lucide/vue';
 
 import AppLogo from '@/components/AppLogo.vue';
@@ -180,6 +181,14 @@ const adminNavItems: NavItem[] = [];
             title: 'Blog Posts',
             href: '/admin/blog-posts',
             icon: Newspaper,
+        });
+    }
+
+    if (can('manage_comments')) {
+        adminNavItems.push({
+            title: 'Manage Comments',
+            href: '/admin/comments',
+            icon: MessageCircle,
         });
     }
 

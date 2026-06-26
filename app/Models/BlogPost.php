@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Comment;
 
 class BlogPost extends Model
 {
@@ -34,6 +35,9 @@ class BlogPost extends Model
         'is_active',
         'views_count',
         'expires_at',
+        'comments_enabled',
+        'comments_visible',
+        'comments_require_approval',
     ];
 
     protected $casts = [
@@ -42,6 +46,9 @@ class BlogPost extends Model
         'is_active' => 'boolean',
         'views_count' => 'integer',
         'expires_at' => 'datetime',
+        'comments_enabled' => 'boolean',
+        'comments_visible' => 'boolean',
+        'comments_require_approval' => 'boolean',
     ];
 
     protected $appends = [
@@ -125,4 +132,16 @@ class BlogPost extends Model
                 || $this->expires_at->gt(now())
             );
     }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function approvedComments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable')
+            ->where('status', Comment::STATUS_APPROVED);
+    }
+
 }

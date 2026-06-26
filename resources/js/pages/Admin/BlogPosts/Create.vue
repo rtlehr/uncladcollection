@@ -2,7 +2,8 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
-
+import AppLayout from '@/layouts/AppLayout.vue';
+import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-
-import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 
 interface Category {
     id: number;
@@ -52,6 +51,10 @@ const form = useForm({
     is_featured: false,
     is_active: true,
 
+    comments_enabled: true,
+    comments_visible: true,
+    comments_require_approval: false,
+
     category_ids: [] as number[],
     tag_ids: [] as number[],
 });
@@ -82,7 +85,7 @@ function toggleTag(tagId: number) {
 
 function setFile(
     event: Event,
-    field: 'featured_image' | 'header_image' | 'icon_image'
+    field: 'featured_image' | 'header_image' | 'icon_image',
 ) {
     const input = event.target as HTMLInputElement;
     form[field] = input.files?.[0] ?? null;
@@ -101,7 +104,7 @@ function submit() {
 
     <AppLayout>
         <div class="space-y-6">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-4">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">
                         Create Blog Post
@@ -268,7 +271,7 @@ function submit() {
                             <select
                                 id="status"
                                 v-model="form.status"
-                                class="h-10 w-full rounded-md border bg-background px-3"
+                                class="h-10 w-full rounded-md border bg-background px-3 text-sm"
                             >
                                 <option
                                     v-for="status in statuses"
@@ -322,17 +325,76 @@ function submit() {
 
                         <div class="space-y-3 rounded-md border p-4">
                             <label class="flex items-center gap-2 text-sm">
-                                <input v-model="form.is_featured" type="checkbox" />
+                                <input
+                                    v-model="form.is_featured"
+                                    type="checkbox"
+                                    class="rounded border-input"
+                                />
+
                                 Featured Post
                             </label>
 
                             <label class="flex items-center gap-2 text-sm">
-                                <input v-model="form.is_active" type="checkbox" />
+                                <input
+                                    v-model="form.is_active"
+                                    type="checkbox"
+                                    class="rounded border-input"
+                                />
+
                                 Active
                             </label>
 
                             <p class="text-xs text-muted-foreground">
                                 A post must be active, published, and within its release window to appear publicly.
+                            </p>
+                        </div>
+
+                        <div class="space-y-4 rounded-md border p-4 md:col-span-2">
+                            <div>
+                                <h3 class="text-sm font-medium">
+                                    Comment Settings
+                                </h3>
+
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Control whether comments are shown, open for new replies, or require moderation.
+                                </p>
+                            </div>
+
+                            <label class="flex items-center gap-3 text-sm">
+                                <input
+                                    v-model="form.comments_enabled"
+                                    type="checkbox"
+                                    class="rounded border-input"
+                                />
+
+                                Allow members to post comments
+                            </label>
+
+                            <label class="flex items-center gap-3 text-sm">
+                                <input
+                                    v-model="form.comments_visible"
+                                    type="checkbox"
+                                    class="rounded border-input"
+                                />
+
+                                Show comments on the public article page
+                            </label>
+
+                            <label class="flex items-center gap-3 text-sm">
+                                <input
+                                    v-model="form.comments_require_approval"
+                                    type="checkbox"
+                                    class="rounded border-input"
+                                />
+
+                                Require approval before comments appear
+                            </label>
+
+                            <p
+                                v-if="form.errors.comments_enabled || form.errors.comments_visible || form.errors.comments_require_approval"
+                                class="text-sm text-red-600"
+                            >
+                                Please check the comment settings.
                             </p>
                         </div>
                     </CardContent>
@@ -355,6 +417,7 @@ function submit() {
                                 >
                                     <input
                                         type="checkbox"
+                                        class="rounded border-input"
                                         :checked="form.category_ids.includes(category.id)"
                                         @change="toggleCategory(category.id)"
                                     />
@@ -379,6 +442,7 @@ function submit() {
                                 >
                                     <input
                                         type="checkbox"
+                                        class="rounded border-input"
                                         :checked="form.tag_ids.includes(tag.id)"
                                         @change="toggleTag(tag.id)"
                                     />
