@@ -79,7 +79,7 @@ class BlogController extends Controller
         $blogPost->increment('views_count');
 
         $blogPost->load([
-            'author:id,name',
+            'author:id,name,author_title,author_bio,author_website_url,avatar_path',
             'categories:id,name,slug',
             'tags:id,name,slug',
         ]);
@@ -101,9 +101,19 @@ class BlogController extends Controller
             ->take(3)
             ->get();
 
+        $authorPosts = BlogPost::query()
+            ->published()
+            ->whereKeyNot($blogPost->id)
+            ->where('user_id', $blogPost->user_id)
+            ->with(['categories:id,name,slug'])
+            ->latest('published_at')
+            ->take(4)
+            ->get();
+
         return Inertia::render('Blog/Show', [
             'blogPost' => $blogPost,
             'relatedPosts' => $relatedPosts,
+            'authorPosts' => $authorPosts,
         ]);
     }
 }

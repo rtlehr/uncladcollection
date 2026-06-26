@@ -14,6 +14,7 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\License;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\Role;
 use App\Models\Permission;
@@ -27,6 +28,10 @@ use App\Models\BlogPost;
     'email',
     'password',
     'is_disabled',
+    'author_title',
+    'author_bio',
+    'author_website_url',
+    'avatar_path',
 ])]
 
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -49,6 +54,10 @@ class User extends Authenticatable implements PasskeyUser
             'is_disabled' => 'boolean',
         ];
     }
+
+    protected $appends = [
+        'avatar_url',
+    ];
 
     /**
      * Roles assigned directly to this user.
@@ -162,4 +171,13 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(BlogPost::class);
     }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar_path
+            ? Storage::disk('public')->url($this->avatar_path)
+            : null;
+    }
+
+
 }

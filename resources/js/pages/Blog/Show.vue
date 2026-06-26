@@ -6,6 +6,12 @@ import { computed, onMounted, ref, watch } from 'vue';
 interface Author {
     id: number;
     name: string;
+
+    author_title?: string | null;
+    author_bio?: string | null;
+    author_website_url?: string | null;
+
+    avatar_url?: string | null;
 }
 
 interface Category {
@@ -62,12 +68,21 @@ const arrowIconSvg = `
 const props = defineProps<{
     blogPost: BlogPost;
     relatedPosts: BlogPost[];
+    authorPosts: BlogPost[];
 }>();
 
 const articleImage = computed(() => {
     return props.blogPost.header_image_url
         ?? props.blogPost.featured_image_url
         ?? props.blogPost.icon_image_url;
+});
+
+const authorAvatar = computed(() => {
+    return (
+        props.blogPost.author?.avatar_url ??
+        props.blogPost.icon_image_url ??
+        null
+    );
 });
 
 const metaTitle = computed(() => {
@@ -268,9 +283,9 @@ watch(
                         <div class="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
                             <div class="flex items-center gap-3">
                                 <img
-                                    v-if="blogPost.icon_image_url"
-                                    :src="blogPost.icon_image_url"
-                                    :alt="blogPost.title"
+                                    v-if="authorAvatar"
+                                    :src="authorAvatar"
+                                    :alt="blogPost.author?.name ?? blogPost.title"
                                     class="h-11 w-11 rounded-full object-cover ring-2 ring-background"
                                 />
 
@@ -339,41 +354,94 @@ watch(
                         </div>
 
                         <aside class="space-y-6">
-                            <div class="rounded-2xl border bg-card p-5 shadow-sm">
-                                <div class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                                    About this article
-                                </div>
 
-                                <div class="mt-4 space-y-3 text-sm">
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-muted-foreground">Author</span>
-                                        <span class="font-medium text-right">
+                                <div class="rounded-2xl border bg-card p-5 shadow-sm">
+                                    <div class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                                        About the Author
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <div class="text-lg font-bold">
                                             {{ blogPost.author?.name ?? 'Unclad Collection' }}
-                                        </span>
-                                    </div>
+                                        </div>
 
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-muted-foreground">Published</span>
-                                        <span class="font-medium text-right">
-                                            {{ formatDate(blogPost.published_at) }}
-                                        </span>
-                                    </div>
+                                        <div
+                                            v-if="blogPost.author?.author_title"
+                                            class="mt-1 text-sm font-medium text-muted-foreground"
+                                        >
+                                            {{ blogPost.author.author_title }}
+                                        </div>
 
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-muted-foreground">Reading Time</span>
-                                        <span class="font-medium text-right">
-                                            {{ readingTime }}
-                                        </span>
-                                    </div>
+                                        <p class="mt-3 text-sm leading-6 text-muted-foreground">
+                                            {{
+                                                blogPost.author?.author_bio
+                                                    ?? 'Contributor to Unclad Collection, sharing articles, photography, and resources for the nudist and naturist community.'
+                                            }}
+                                        </p>
 
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-muted-foreground">Views</span>
-                                        <span class="font-medium text-right">
-                                            {{ blogPost.views_count }}
-                                        </span>
+                                        <a
+                                            v-if="blogPost.author?.author_website_url"
+                                            :href="blogPost.author.author_website_url"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+                                        >
+                                            Author Website →
+                                        </a>
                                     </div>
                                 </div>
-                            </div>
+
+                                <div
+                                    v-if="authorPosts.length"
+                                    class="rounded-2xl border bg-card p-5 shadow-sm"
+                                >
+                                    <div class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                                        More by {{ blogPost.author?.name ?? 'this author' }}
+                                    </div>
+
+                                    <div class="mt-4 space-y-4">
+                                        <Link
+                                            v-for="post in authorPosts"
+                                            :key="post.id"
+                                            :href="`/blog/${post.slug}`"
+                                            class="block group"
+                                        >
+                                            <div class="text-sm font-semibold leading-5 group-hover:text-primary">
+                                                {{ post.title }}
+                                            </div>
+
+                                            <div class="mt-1 text-xs text-muted-foreground">
+                                                {{ formatDate(post.published_at) }}
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                <div
+                                    v-if="relatedPosts.length"
+                                    class="rounded-2xl border bg-card p-5 shadow-sm"
+                                >
+                                    <div class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                                        Related Articles
+                                    </div>
+
+                                    <div class="mt-4 space-y-4">
+                                        <Link
+                                            v-for="post in relatedPosts"
+                                            :key="post.id"
+                                            :href="`/blog/${post.slug}`"
+                                            class="block group"
+                                        >
+                                            <div class="text-sm font-semibold leading-5 group-hover:text-primary">
+                                                {{ post.title }}
+                                            </div>
+
+                                            <div class="mt-1 text-xs text-muted-foreground">
+                                                {{ formatDate(post.published_at) }}
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
 
                             <div
                                 v-if="blogPost.categories.length"

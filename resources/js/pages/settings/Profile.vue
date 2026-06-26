@@ -41,6 +41,7 @@ const user = computed(() => page.props.auth.user);
 
         <Form
             v-bind="ProfileController.update.form()"
+            :options="{ forceFormData: true }"
             class="space-y-6"
             v-slot="{ errors, processing }"
         >
@@ -73,6 +74,39 @@ const user = computed(() => page.props.auth.user);
                     This is the name shown on comments and public activity.
                 </p>
                 <InputError class="mt-2" :message="errors.username" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="avatar">Profile Icon</Label>
+
+                <div class="flex items-center gap-4">
+                    <img
+                        v-if="user.avatar_url"
+                        :src="user.avatar_url"
+                        :alt="user.name"
+                        class="h-16 w-16 rounded-full object-cover border"
+                    />
+
+                    <div
+                        v-else
+                        class="flex h-16 w-16 items-center justify-center rounded-full border bg-muted text-lg font-semibold"
+                    >
+                        {{ user.name?.charAt(0) ?? '?' }}
+                    </div>
+
+                    <Input
+                        id="avatar"
+                        name="avatar"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                    />
+                </div>
+
+                <p class="text-xs text-muted-foreground">
+                    Recommended: square image, 256×256 or larger. JPG, PNG, or WebP.
+                </p>
+
+                <InputError class="mt-2" :message="errors.avatar" />
             </div>
 
             <div class="grid gap-2">
@@ -126,6 +160,49 @@ const user = computed(() => page.props.auth.user);
                 >
                     A new verification link has been sent to your email address.
                 </div>
+            </div>
+            
+            <div class="border-t pt-6">
+                <Heading
+                    variant="small"
+                    title="Author Profile"
+                    description="Optional information shown on your public blog articles"
+                />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="author_title">Author Title</Label>
+                <Input
+                    id="author_title"
+                    name="author_title"
+                    :default-value="user.author_title"
+                    placeholder="Photographer, Writer, Contributor..."
+                />
+                <InputError class="mt-2" :message="errors.author_title" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="author_bio">Author Bio</Label>
+                <textarea
+                    id="author_bio"
+                    name="author_bio"
+                    class="min-h-32 rounded-md border bg-background px-3 py-2 text-sm"
+                    :default-value="user.author_bio"
+                    placeholder="Write a short bio for your blog author profile..."
+                />
+                <InputError class="mt-2" :message="errors.author_bio" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="author_website_url">Author Website URL</Label>
+                <Input
+                    id="author_website_url"
+                    name="author_website_url"
+                    type="url"
+                    :default-value="user.author_website_url"
+                    placeholder="https://example.com"
+                />
+                <InputError class="mt-2" :message="errors.author_website_url" />
             </div>
 
             <div class="flex items-center gap-4">

@@ -12,6 +12,9 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'author_title' => ['nullable', 'string', 'max:255'],
+            'author_bio' => ['nullable', 'string', 'max:2000'],
+            'author_website_url' => ['nullable', 'url', 'max:255'],
 
             'username' => [
                 'required',
@@ -28,6 +31,8 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class, 'email')->ignore($this->user()->id),
             ],
+
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }
