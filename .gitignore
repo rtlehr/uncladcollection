@@ -11,8 +11,9 @@
 /resources/js/routes
 /resources/js/wayfinder
 /vendor
+.env
 .DS_Store
-.phpactor.json
+.phpactor.jsongit 
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
