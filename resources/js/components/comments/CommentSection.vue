@@ -29,7 +29,13 @@ type Comment = {
 
 const props = defineProps<{
     blogPostSlug: string;
+    blogAuthorId: number;
     comments: Comment[];
+    commentsPagination?: {
+        next_page_url?: string | null;
+        links?: any[];
+    };
+    commentsEnabled: boolean;
 }>();
 
 const page = usePage();
@@ -64,7 +70,7 @@ function submitComment() {
     <section class="mt-12 rounded-xl border bg-card p-6 shadow-sm">
         <div class="mb-6">
             <h2 class="text-2xl font-semibold tracking-tight">
-                Comments
+                Comments ({{ comments.length }})
             </h2>
 
             <p class="mt-1 text-sm text-muted-foreground">
@@ -72,13 +78,21 @@ function submitComment() {
             </p>
         </div>
 
-        <div v-if="authUser" class="mb-8 space-y-3">
+        <div v-if="authUser && commentsEnabled" class="mb-8 space-y-3">
             <Textarea
                 v-model="body"
                 rows="4"
                 placeholder="Write a comment..."
                 class="resize-none"
             />
+
+            <div class="mt-2 text-xs text-muted-foreground">
+                Supports Markdown:
+                <code>**bold**</code>,
+                <code>*italic*</code>,
+                <code>- lists</code>,
+                <code>[links](https://...)</code>
+            </div>
 
             <div class="flex justify-end">
                 <Button
@@ -91,6 +105,13 @@ function submitComment() {
             </div>
         </div>
 
+        <div
+            v-else-if="authUser && !commentsEnabled"
+            class="mb-8 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+            Comments are closed for this article.
+        </div>
+
         <div v-else class="mb-8 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
             Please log in to post a comment. Guests can read the discussion.
         </div>
@@ -101,6 +122,7 @@ function submitComment() {
                 :key="comment.id"
                 :comment="comment"
                 :blog-post-slug="blogPostSlug"
+                :blog-author-id="blogAuthorId"
                 :auth-user="authUser"
             />
         </div>
@@ -108,5 +130,23 @@ function submitComment() {
         <div v-else class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             No comments yet. Be the first to start the conversation.
         </div>
+
+        <div
+            v-if="commentsPagination?.next_page_url"
+            class="mt-6 flex justify-center"
+        >
+            <Button
+                type="button"
+                variant="outline"
+                @click="router.visit(commentsPagination.next_page_url, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ['comments'],
+                })"
+            >
+                Load More Comments
+            </Button>
+        </div>
+
     </section>
 </template>

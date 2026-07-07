@@ -6,6 +6,27 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/composables/useAuth';
+import CommentStatusBadge from '@/components/comments/CommentStatusBadge.vue';
+import RelativeTime from '@/components/common/RelativeTime.vue';
+
+import {
+    Check,
+    EyeOff,
+    Pin,
+    ShieldAlert,
+    Trash2,
+    ChevronDown,
+    ChevronRight,
+} from '@lucide/vue';
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type CommentUser = {
     id: number;
@@ -17,6 +38,7 @@ type CommentUser = {
 type Comment = {
     id: number;
     body: string;
+    body_html?: string;
     status: string;
     user: CommentUser;
     parent_id?: number | null;
@@ -33,10 +55,17 @@ type Comment = {
 const props = defineProps<{
     comment: Comment;
     blogPostSlug: string;
+    blogAuthorId: number;
     authUser: any;
 }>();
 
 const { can } = useAuth();
+
+const repliesExpanded = ref(true);
+
+const replies = computed(() => props.comment.approved_replies ?? []);
+
+const replyCount = computed(() => replies.value.length);
 
 const replying = ref(false);
 const editing = ref(false);
@@ -101,13 +130,13 @@ const moderationConfirmVariant = computed(() => {
     return moderationAction.value === 'spam' ? 'destructive' : 'default';
 });
 
-function formatDate(date: string) {
-    return new Date(date).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-}
+const isAuthor = computed(() =>
+    props.comment.user.id === props.blogAuthorId
+);
+
+const isModerator = computed(() =>
+    can('manage_comments')
+);
 
 function submitReply() {
     if (!replyBody.value.trim()) return;
@@ -220,20 +249,20 @@ function performModerationAction() {
 
 <template>
     <article
-        class="rounded-lg border bg-background p-4"
-        :class="comment.depth > 0 ? 'ml-6 mt-4 border-l-4' : ''"
+        class="group rounded-lg border bg-background p-3 transition hover:shadow-sm"
+        :class="comment.depth > 0 ? 'mt-3 border-muted bg-muted/10' : ''"
     >
         <div class="flex gap-3">
             <img
                 v-if="comment.user.avatar_url"
                 :src="comment.user.avatar_url"
                 :alt="displayName"
-                class="h-10 w-10 rounded-full object-cover"
-            >
+                class="h-10 w-10 rounded-full object-cover ring-2 ring-background"
+            />
 
             <div
                 v-else
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-2 ring-background"
             >
                 {{ displayName.charAt(0).toUpperCase() }}
             </div>
@@ -244,14 +273,22 @@ function performModerationAction() {
                         {{ displayName }}
                     </span>
 
+                    <span
+                        v-if="isAuthor"
+                        class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary"
+                    >
+                        Author
+                    </span>
+
                     <span class="text-xs text-muted-foreground">
-                        {{ formatDate(comment.created_at) }}
+                        <RelativeTime :date="comment.created_at" />
                     </span>
 
                     <span
                         v-if="comment.is_pinned"
-                        class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium"
+                        class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
                     >
+                        <Pin class="h-3 w-3" />
                         Pinned
                     </span>
 
@@ -259,7 +296,7 @@ function performModerationAction() {
                         v-if="comment.is_edited"
                         class="text-xs text-muted-foreground"
                     >
-                        edited
+                        · edited
                     </span>
                 </div>
 
@@ -289,14 +326,13 @@ function performModerationAction() {
                     </div>
                 </div>
 
-                <p
+                <div
                     v-else
-                    class="mt-3 whitespace-pre-line text-sm leading-6 text-foreground"
-                >
-                    {{ comment.body }}
-                </p>
+                    class="comment-markdown mt-3 text-sm leading-6 text-foreground"
+                    v-html="comment.body_html || comment.body"
+                />
 
-                <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                <div class="mt-3 flex flex-wrap items-center gap-1 text-sm opacity-80 transition-opacity group-hover:opacity-100">
                     <Button
                         v-if="authUser"
                         size="sm"
@@ -345,79 +381,87 @@ function performModerationAction() {
 
                 <div
                     v-if="canManageComments"
-                    class="mt-3 rounded-md border bg-muted/20 p-3"
+                    class="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/10 px-3 py-2"
                 >
-                    <div class="mb-2 flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Moderator
-                        </span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Moderator
+                    </span>
 
-                        <span class="rounded-full bg-muted px-2 py-0.5 text-xs">
-                            {{ comment.status }}
-                        </span>
+                    <CommentStatusBadge :status="comment.status" />
 
-                        <span
-                            v-if="comment.reports_count > 0"
-                            class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700"
-                        >
-                            {{ comment.reports_count }} reports
-                        </span>
-                    </div>
+                    <span
+                        v-if="comment.reports_count > 0"
+                        class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700"
+                    >
+                        {{ comment.reports_count }} reports
+                    </span>
 
-                    <div class="flex flex-wrap gap-2">
-                        <Button
-                            v-if="comment.status !== 'approved'"
-                            size="sm"
-                            variant="outline"
-                            @click="confirmModerationAction('restore')"
-                        >
-                            Approve / Restore
-                        </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button size="sm" variant="ghost" class="ml-auto h-8">
+                                Actions
+                                <ChevronDown class="ml-1 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
 
-                        <Button
-                            v-if="comment.status === 'approved'"
-                            size="sm"
-                            variant="outline"
-                            @click="confirmModerationAction('hide')"
-                        >
-                            Hide
-                        </Button>
+                        <DropdownMenuContent align="end" class="w-52">
+                            <DropdownMenuLabel>
+                                Comment Actions
+                            </DropdownMenuLabel>
 
-                        <Button
-                            v-if="!comment.is_pinned"
-                            size="sm"
-                            variant="outline"
-                            @click="router.patch(`/admin/comments/${comment.id}/pin`, {}, { preserveScroll: true })"
-                        >
-                            Pin
-                        </Button>
+                            <DropdownMenuSeparator />
 
-                        <Button
-                            v-else
-                            size="sm"
-                            variant="outline"
-                            @click="router.patch(`/admin/comments/${comment.id}/unpin`, {}, { preserveScroll: true })"
-                        >
-                            Unpin
-                        </Button>
+                            <DropdownMenuItem
+                                v-if="comment.status !== 'approved'"
+                                @click="confirmModerationAction('restore')"
+                            >
+                                <Check class="mr-2 h-4 w-4" />
+                                Approve / Restore
+                            </DropdownMenuItem>
 
-                        <Button
-                            v-if="comment.status !== 'spam'"
-                            size="sm"
-                            variant="outline"
-                            @click="confirmModerationAction('spam')"
-                        >
-                            Spam
-                        </Button>
+                            <DropdownMenuItem
+                                v-if="comment.status === 'approved'"
+                                @click="confirmModerationAction('hide')"
+                            >
+                                <EyeOff class="mr-2 h-4 w-4" />
+                                Hide
+                            </DropdownMenuItem>
 
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            @click="confirmModerationAction('delete')"
-                        >
-                            Admin Delete
-                        </Button>
-                    </div>
+                            <DropdownMenuItem
+                                v-if="!comment.is_pinned"
+                                @click="router.patch(`/admin/comments/${comment.id}/pin`, {}, { preserveScroll: true })"
+                            >
+                                <Pin class="mr-2 h-4 w-4" />
+                                Pin
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                v-else
+                                @click="router.patch(`/admin/comments/${comment.id}/unpin`, {}, { preserveScroll: true })"
+                            >
+                                <Pin class="mr-2 h-4 w-4" />
+                                Unpin
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                v-if="comment.status !== 'spam'"
+                                @click="confirmModerationAction('spam')"
+                            >
+                                <ShieldAlert class="mr-2 h-4 w-4" />
+                                Mark Spam
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem
+                                class="text-red-600 focus:text-red-600"
+                                @click="confirmModerationAction('delete')"
+                            >
+                                <Trash2 class="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 <div v-if="replying" class="mt-4 space-y-3">
@@ -427,6 +471,14 @@ function performModerationAction() {
                         placeholder="Write a reply..."
                         class="resize-none"
                     />
+
+                    <div class="mt-2 text-xs text-muted-foreground">
+                        Supports Markdown:
+                        <code>**bold**</code>,
+                        <code>*italic*</code>,
+                        <code>- lists</code>,
+                        <code>[links](https://...)</code>
+                    </div>
 
                     <div class="flex gap-2">
                         <Button
@@ -447,17 +499,50 @@ function performModerationAction() {
                     </div>
                 </div>
 
+                
                 <div
-                    v-if="comment.approved_replies?.length"
-                    class="mt-4 space-y-4"
+                    v-if="replyCount"
+                    class="mt-3"
                 >
-                    <CommentItem
-                        v-for="reply in comment.approved_replies"
-                        :key="reply.id"
-                        :comment="reply"
-                        :blog-post-slug="blogPostSlug"
-                        :auth-user="authUser"
-                    />
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        class="mb-2 h-8 px-0 text-xs text-muted-foreground hover:text-foreground"
+                        @click="repliesExpanded = !repliesExpanded"
+                    >
+                        <ChevronDown
+                            v-if="repliesExpanded"
+                            class="mr-1 h-4 w-4"
+                        />
+
+                        <ChevronRight
+                            v-else
+                            class="mr-1 h-4 w-4"
+                        />
+
+                        <span v-if="repliesExpanded">
+                            Hide replies ({{ replyCount }})
+                        </span>
+
+                        <span v-else>
+                            View replies ({{ replyCount }})
+                        </span>
+                    </Button>
+
+                    <div
+                        v-if="repliesExpanded"
+                        class="relative ml-4 border-l pl-4"
+                    >
+                        <CommentItem
+                            v-for="reply in replies"
+                            :key="reply.id"
+                            :comment="reply"
+                            :blog-post-slug="blogPostSlug"
+                            :blog-author-id="blogAuthorId"
+                            :auth-user="authUser"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -485,4 +570,42 @@ function performModerationAction() {
         @confirm="performModerationAction"
     />
     
+   
+
 </template>
+
+ <style scoped>
+.comment-markdown :deep(p) {
+    margin-bottom: 0.75rem;
+}
+
+.comment-markdown :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.comment-markdown :deep(ul),
+.comment-markdown :deep(ol) {
+    margin: 0.5rem 0 0.5rem 1.25rem;
+}
+
+.comment-markdown :deep(ul) {
+    list-style: disc;
+}
+
+.comment-markdown :deep(ol) {
+    list-style: decimal;
+}
+
+.comment-markdown :deep(a) {
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.comment-markdown :deep(strong) {
+    font-weight: 700;
+}
+
+.comment-markdown :deep(em) {
+    font-style: italic;
+}
+</style>

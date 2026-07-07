@@ -46,7 +46,15 @@ interface BlogPost {
     author: Author | null;
     categories: Category[];
     tags: Tag[];
+
+    user_id: number;
+
+    comments_enabled: boolean;
+    comments_visible: boolean;
 }
+
+const commentsEnabled = computed(() => props.blogPost.comments_enabled ?? true);
+const commentsVisible = computed(() => props.blogPost.comments_visible ?? true);
 
 const arrowIconSvg = `
 <svg
@@ -69,7 +77,11 @@ const props = defineProps<{
     blogPost: BlogPost;
     relatedPosts: BlogPost[];
     authorPosts: BlogPost[];
-    comments: any[];
+    comments: {
+        data: any[];
+        links: any[];
+        next_page_url?: string | null;
+    };
 }>();
 
 const articleImage = computed(() => {
@@ -334,8 +346,12 @@ watch(
                             />
 
                             <CommentSection
+                                v-if="commentsVisible"
                                 :blog-post-slug="blogPost.slug"
-                                :comments="comments"
+                                :blog-author-id="blogPost.user_id"
+                                :comments="comments.data"
+                                :comments-pagination="comments"
+                                :comments-enabled="commentsEnabled"
                             />
                         </div>
 

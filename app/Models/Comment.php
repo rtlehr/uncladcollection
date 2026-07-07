@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\CommentLike;
 use App\Models\CommentReport;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use League\CommonMark\CommonMarkConverter;
 
 class Comment extends Model
 {
@@ -98,6 +99,20 @@ class Comment extends Model
     public function reports(): HasMany
     {
         return $this->hasMany(CommentReport::class);
+    }
+
+    protected $appends = [
+        'body_html',
+    ];
+
+    public function getBodyHtmlAttribute(): string
+    {
+        $converter = new CommonMarkConverter([
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ]);
+
+        return clean($converter->convert($this->body)->getContent());
     }
 
 }
