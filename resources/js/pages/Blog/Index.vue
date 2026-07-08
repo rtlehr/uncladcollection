@@ -2,40 +2,14 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-interface Category {
-    id: number;
-    name: string;
-    slug?: string;
-}
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import SectionHeader from '@/Components/Shared/SectionHeader.vue';
 
-interface Tag {
-    id: number;
-    name: string;
-    slug?: string;
-}
+import { contentImage } from '@/lib/contentImages';
+import { formatDate } from '@/lib/formatDate';
 
-interface Author {
-    id: number;
-    name: string;
-}
-
-interface BlogPost {
-    id: number;
-    title: string;
-    slug: string;
-    excerpt: string | null;
-
-    featured_image_url: string | null;
-    header_image_url: string | null;
-    icon_image_url: string | null;
-
-    published_at: string | null;
-    is_featured: boolean;
-
-    author: Author | null;
-    categories: Category[];
-    tags: Tag[];
-}
+import type { BlogPost, Category, Tag } from '@/types/blog';
 
 const props = defineProps<{
     posts: {
@@ -91,7 +65,7 @@ function applyFilters() {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-        }
+        },
     );
 }
 
@@ -107,24 +81,8 @@ function clearFilters() {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-        }
+        },
     );
-}
-
-function formatDate(date: string | null): string {
-    if (!date) {
-        return '';
-    }
-
-    return new Date(date).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
-
-function postImage(post: BlogPost): string | null {
-    return post.featured_image_url ?? post.header_image_url ?? post.icon_image_url;
 }
 </script>
 
@@ -134,20 +92,12 @@ function postImage(post: BlogPost): string | null {
     <div class="min-h-screen bg-background">
         <section class="border-b bg-muted/30">
             <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-                <div class="mx-auto max-w-3xl text-center">
-                    <p class="mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
-                        Articles & Stories
-                    </p>
-
-                    <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">
-                        Unclad Collection Blog
-                    </h1>
-
-                    <p class="mt-4 text-lg leading-8 text-muted-foreground">
-                        Photography insights, nudist lifestyle articles, community stories,
-                        and updates from Unclad Collection.
-                    </p>
-                </div>
+                <PageHeader
+                    eyebrow="Articles & Stories"
+                    title="Unclad Collection Blog"
+                    description="Photography insights, nudist lifestyle articles, community stories, and updates from Unclad Collection."
+                    align="center"
+                />
             </div>
         </section>
 
@@ -161,8 +111,8 @@ function postImage(post: BlogPost): string | null {
                     class="block overflow-hidden bg-muted lg:col-span-3"
                 >
                     <img
-                        v-if="postImage(heroPost)"
-                        :src="postImage(heroPost)!"
+                        v-if="contentImage(heroPost)"
+                        :src="contentImage(heroPost)!"
                         :alt="heroPost.title"
                         class="aspect-[16/10] h-full w-full object-cover transition duration-300 hover:scale-105 lg:aspect-auto"
                     />
@@ -239,8 +189,8 @@ function postImage(post: BlogPost): string | null {
                 >
                     <div class="overflow-hidden bg-muted sm:col-span-1">
                         <img
-                            v-if="postImage(post)"
-                            :src="postImage(post)!"
+                            v-if="contentImage(post)"
+                            :src="contentImage(post)!"
                             :alt="post.title"
                             class="aspect-[4/3] h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         />
@@ -342,17 +292,10 @@ function postImage(post: BlogPost): string | null {
             </section>
 
             <section>
-                <div class="mb-6 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold tracking-tight">
-                            Latest Articles
-                        </h2>
-
-                        <p class="text-sm text-muted-foreground">
-                            Browse the newest posts from Unclad Collection.
-                        </p>
-                    </div>
-                </div>
+                <SectionHeader
+                    title="Latest Articles"
+                    description="Browse the newest posts from Unclad Collection."
+                />
 
                 <div
                     v-if="regularPosts.length"
@@ -366,8 +309,8 @@ function postImage(post: BlogPost): string | null {
                     >
                         <div class="overflow-hidden bg-muted">
                             <img
-                                v-if="postImage(post)"
-                                :src="postImage(post)!"
+                                v-if="contentImage(post)"
+                                :src="contentImage(post)!"
                                 :alt="post.title"
                                 class="aspect-[16/9] w-full object-cover transition duration-300 group-hover:scale-105"
                             />
@@ -422,12 +365,11 @@ function postImage(post: BlogPost): string | null {
                     </Link>
                 </div>
 
-                <div
+                <EmptyState
                     v-else
-                    class="rounded-xl border bg-card p-10 text-center text-muted-foreground"
-                >
-                    No blog posts found.
-                </div>
+                    title="No blog posts found"
+                    description="Try changing your search, category, or tag filters."
+                />
             </section>
 
             <div
