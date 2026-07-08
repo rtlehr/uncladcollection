@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
+import BlogPostCard from '@/Components/Blog/BlogPostCard.vue';
 import EmptyState from '@/Components/Shared/EmptyState.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import SectionHeader from '@/Components/Shared/SectionHeader.vue';
@@ -181,49 +182,13 @@ function clearFilters() {
                 v-if="secondaryFeaturedPosts.length"
                 class="grid gap-6 md:grid-cols-2"
             >
-                <Link
+                <BlogPostCard
                     v-for="post in secondaryFeaturedPosts"
                     :key="post.id"
-                    :href="`/blog/${post.slug}`"
-                    class="group grid overflow-hidden rounded-xl border bg-card shadow-sm transition hover:shadow-md sm:grid-cols-3"
-                >
-                    <div class="overflow-hidden bg-muted sm:col-span-1">
-                        <img
-                            v-if="contentImage(post)"
-                            :src="contentImage(post)!"
-                            :alt="post.title"
-                            class="aspect-[4/3] h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        />
-
-                        <div
-                            v-else
-                            class="flex aspect-[4/3] h-full w-full items-center justify-center bg-muted text-sm text-muted-foreground"
-                        >
-                            No image
-                        </div>
-                    </div>
-
-                    <div class="p-5 sm:col-span-2">
-                        <div class="mb-2 text-xs font-semibold uppercase text-primary">
-                            Featured
-                        </div>
-
-                        <h3 class="line-clamp-2 text-xl font-bold group-hover:text-primary">
-                            {{ post.title }}
-                        </h3>
-
-                        <p
-                            v-if="post.excerpt"
-                            class="mt-2 line-clamp-2 text-sm text-muted-foreground"
-                        >
-                            {{ post.excerpt }}
-                        </p>
-
-                        <div class="mt-4 text-xs text-muted-foreground">
-                            {{ formatDate(post.published_at) }}
-                        </div>
-                    </div>
-                </Link>
+                    :post="post"
+                    variant="featured"
+                    :show-author="false"
+                />
             </section>
 
             <section class="rounded-2xl border bg-card p-4 shadow-sm">
@@ -301,68 +266,11 @@ function clearFilters() {
                     v-if="regularPosts.length"
                     class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
-                    <Link
+                    <BlogPostCard
                         v-for="post in regularPosts"
                         :key="post.id"
-                        :href="`/blog/${post.slug}`"
-                        class="group overflow-hidden rounded-xl border bg-card shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                        <div class="overflow-hidden bg-muted">
-                            <img
-                                v-if="contentImage(post)"
-                                :src="contentImage(post)!"
-                                :alt="post.title"
-                                class="aspect-[16/9] w-full object-cover transition duration-300 group-hover:scale-105"
-                            />
-
-                            <div
-                                v-else
-                                class="flex aspect-[16/9] w-full items-center justify-center bg-muted text-sm text-muted-foreground"
-                            >
-                                No image
-                            </div>
-                        </div>
-
-                        <div class="p-5">
-                            <div class="mb-3 flex flex-wrap gap-2">
-                                <span
-                                    v-if="post.is_featured"
-                                    class="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
-                                >
-                                    Featured
-                                </span>
-
-                                <span
-                                    v-for="category in post.categories.slice(0, 2)"
-                                    :key="category.id"
-                                    class="rounded-full bg-muted px-2.5 py-1 text-xs"
-                                >
-                                    {{ category.name }}
-                                </span>
-                            </div>
-
-                            <h3 class="line-clamp-2 text-xl font-bold group-hover:text-primary">
-                                {{ post.title }}
-                            </h3>
-
-                            <p
-                                v-if="post.excerpt"
-                                class="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground"
-                            >
-                                {{ post.excerpt }}
-                            </p>
-
-                            <div class="mt-5 flex items-center justify-between text-xs text-muted-foreground">
-                                <span>
-                                    {{ post.author?.name ?? 'Unclad Collection' }}
-                                </span>
-
-                                <span>
-                                    {{ formatDate(post.published_at) }}
-                                </span>
-                            </div>
-                        </div>
-                    </Link>
+                        :post="post"
+                    />
                 </div>
 
                 <EmptyState
