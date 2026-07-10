@@ -1,167 +1,72 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+
+import PurchasedAssetCard from '@/Components/Purchases/PurchasedAssetCard.vue';
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 
-type PurchasedImage = {
-    id: number;
-    license_key: string;
-    license_name: string;
-    downloads_used: number;
-    download_limit: number | null;
-    starts_at: string | null;
-    expires_at: string | null;
-
-    image: {
-        id: number;
-        title: string;
-        slug: string;
-        photographer: string | null;
-        thumbnail_url: string | null;
-        icon_url: string | null;
-        is_ai_generated: boolean;
-        favorites_count: number;
-        downloads_count: number;
-        purchases_count: number;
-        views_count: number;
-    };
-
-    order: {
-        id: number | null;
-        order_number: string | null;
-        paid_at: string | null;
-        total_formatted: string | null;
-    };
-};
+import type { PaginatedPurchases } from '@/types/purchase';
 
 defineProps<{
-    licenses: {
-        data: PurchasedImage[];
-        links: any[];
-        meta: any;
-    };
+    licenses: PaginatedPurchases;
 }>();
-
-function downloadLabel(license: PurchasedImage): string {
-    if (license.download_limit === null) {
-        return `${license.downloads_used} / Unlimited`;
-    }
-
-    return `${license.downloads_used} / ${license.download_limit}`;
-}
 </script>
 
 <template>
     <Head title="My Purchases" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">
-                My Purchases
-            </h1>
-
-            <p class="mt-1 text-muted-foreground">
-                View and download your licensed images.
-            </p>
-        </div>
+        <PageHeader
+            title="My Purchases"
+            description="View and download your licensed images."
+        />
 
         <div
             v-if="licenses.data.length"
             class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-            <div
+            <PurchasedAssetCard
                 v-for="license in licenses.data"
                 :key="license.id"
-                class="overflow-hidden rounded-lg border bg-card shadow-sm"
-            >
-                <Link :href="`/purchases/${license.image.slug}`">
-                    <div class="aspect-square bg-muted">
-                        <img
-                            v-if="license.image.thumbnail_url"
-                            :src="license.image.thumbnail_url"
-                            :alt="license.image.title"
-                            class="h-full w-full object-cover transition hover:scale-105"
-                        />
-
-                        <div
-                            v-else
-                            class="flex h-full items-center justify-center text-sm text-muted-foreground"
-                        >
-                            No Preview
-                        </div>
-                    </div>
-                </Link>
-
-                <div class="space-y-4 p-4">
-                    <div>
-                        <Link
-                            :href="`/purchases/${license.image.slug}`"
-                            class="font-semibold hover:underline"
-                        >
-                            {{ license.image.title }}
-                        </Link>
-
-                        <p class="text-sm text-muted-foreground">
-                            {{ license.license_name }}
-                        </p>
-                    </div>
-
-                    <div class="space-y-1 text-xs text-muted-foreground">
-                        <div>
-                            Order:
-                            {{ license.order.order_number ?? '—' }}
-                        </div>
-
-                        <div>
-                            Purchased:
-                            {{ license.order.paid_at ?? '—' }}
-                        </div>
-
-                        <div>
-                            Downloads:
-                            {{ downloadLabel(license) }}
-                        </div>
-
-                        <div>
-                            Expires:
-                            {{ license.expires_at ?? 'Never' }}
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <Button as-child class="flex-1">
-                            <a :href="`/images/${license.image.id}/download`">
-                                Download
-                            </a>
-                        </Button>
-
-                        <Button variant="outline" as-child>
-                            <Link :href="`/purchases/${license.image.slug}`">
-                                Details
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-            </div>
+                :license="license"
+            />
         </div>
 
-        <div
+        <EmptyState
             v-else
-            class="rounded-lg border bg-card p-12 text-center"
+            title="No purchases yet"
+            description="You have not purchased any images yet."
         >
-            <h2 class="text-lg font-semibold">
-                No Purchases Yet
-            </h2>
+            <template #actions>
+                <Button as-child variant="outline">
+                    <Link href="/images">
+                        Browse Images
+                    </Link>
+                </Button>
+            </template>
+        </EmptyState>
 
-            <p class="mt-2 text-muted-foreground">
-                You have not purchased any images yet.
-            </p>
-
+        <div
+            v-if="licenses.links?.length > 3"
+            class="flex flex-wrap justify-center gap-2"
+        >
             <Link
-                href="/images"
-                class="mt-4 inline-block text-primary hover:underline"
-            >
-                Browse Images
-            </Link>
+                v-for="link in licenses.links"
+                :key="link.label"
+                :href="link.url ?? '#'"
+                preserve-scroll
+                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
+                :class="[
+                    link.active
+                        ? 'bg-primary text-primary-foreground hover:bg-primary'
+                        : '',
+                    !link.url
+                        ? 'pointer-events-none opacity-50'
+                        : '',
+                ]"
+                v-html="link.label"
+            />
         </div>
     </div>
 </template>

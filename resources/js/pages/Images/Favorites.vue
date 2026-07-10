@@ -1,137 +1,51 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 
-type Option = {
-    id: number;
-    name: string;
-};
+import AssetCard from '@/Components/Assets/AssetCard.vue';
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import { Button } from '@/components/ui/button';
 
-type ImageCard = {
-    id: number;
-    title: string;
-    slug: string;
-    thumbnail_url: string | null;
-    is_ai_generated: boolean;
-    favorites_count: number;
-    views_count: number;
-    collection: Option | null;
-    categories: Option[];
-};
-
-type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-type PaginatedImages = {
-    data: ImageCard[];
-    links: PaginationLink[];
-    from: number | null;
-    to: number | null;
-    total: number;
-};
+import type { PaginatedFavoriteAssets } from '@/types/asset';
 
 defineProps<{
-    images: PaginatedImages;
+    images: PaginatedFavoriteAssets;
 }>();
-
-function formatNumber(value: number): string {
-    return Number(value ?? 0).toLocaleString();
-}
 </script>
 
 <template>
     <Head title="My Favorites" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">My Favorites</h1>
-
-            <p class="text-sm text-muted-foreground">
-                Images you have saved to your favorites.
-            </p>
-        </div>
+        <PageHeader
+            title="My Favorites"
+            description="Images you have saved to your favorites."
+        />
 
         <div
             v-if="images.data.length"
             class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-            <Link
+            <AssetCard
                 v-for="image in images.data"
                 :key="image.id"
-                :href="`/images/${image.slug}`"
-                class="group overflow-hidden rounded-lg border bg-card shadow-sm transition hover:shadow-md"
-            >
-                <div class="aspect-square bg-muted">
-                    <img
-                        v-if="image.thumbnail_url"
-                        :src="image.thumbnail_url"
-                        :alt="image.title"
-                        class="h-full w-full object-cover transition group-hover:scale-105"
-                    />
-
-                    <div
-                        v-else
-                        class="flex h-full items-center justify-center text-sm text-muted-foreground"
-                    >
-                        No preview
-                    </div>
-                </div>
-
-                <div class="space-y-3 p-4">
-                    <div>
-                        <h2 class="line-clamp-1 font-semibold">
-                            {{ image.title }}
-                        </h2>
-
-                        <p class="line-clamp-1 text-xs text-muted-foreground">
-                            {{ image.collection?.name ?? 'Unassigned' }}
-                        </p>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2">
-                        <span
-                            v-if="image.is_ai_generated"
-                            class="rounded-full border px-2 py-0.5 text-xs"
-                        >
-                            AI
-                        </span>
-
-                        <span
-                            v-for="category in image.categories.slice(0, 2)"
-                            :key="category.id"
-                            class="rounded-full border px-2 py-0.5 text-xs"
-                        >
-                            {{ category.name }}
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between text-xs text-muted-foreground">
-                        <span>{{ formatNumber(image.views_count) }} views</span>
-                        <span>{{ formatNumber(image.favorites_count) }} favorites</span>
-                    </div>
-                </div>
-            </Link>
+                :asset="image"
+            />
         </div>
 
-        <div
+        <EmptyState
             v-else
-            class="rounded-lg border bg-card p-12 text-center"
+            title="No favorites yet"
+            description="Browse the image library and click the heart icon to save images here."
         >
-            <h2 class="text-lg font-semibold">No favorites yet</h2>
-
-            <p class="mt-2 text-sm text-muted-foreground">
-                Browse the image library and click the heart icon to save images here.
-            </p>
-
-            <Link
-                href="/images"
-                class="mt-4 inline-flex rounded-md border px-4 py-2 text-sm font-medium"
-            >
-                Browse Images
-            </Link>
-        </div>
+            <template #actions>
+                <Button as-child variant="outline">
+                    <Link href="/images">
+                        Browse Images
+                    </Link>
+                </Button>
+            </template>
+        </EmptyState>
 
         <div
             v-if="images.links.length > 3"
@@ -142,10 +56,14 @@ function formatNumber(value: number): string {
                 :key="link.label"
                 :href="link.url ?? '#'"
                 preserve-scroll
-                class="rounded-md border px-3 py-2 text-sm"
+                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
                 :class="[
-                    link.active ? 'bg-primary text-primary-foreground' : '',
-                    !link.url ? 'pointer-events-none opacity-50' : '',
+                    link.active
+                        ? 'bg-primary text-primary-foreground hover:bg-primary'
+                        : '',
+                    !link.url
+                        ? 'pointer-events-none opacity-50'
+                        : '',
                 ]"
                 v-html="link.label"
             />

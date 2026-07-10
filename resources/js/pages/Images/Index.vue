@@ -1,50 +1,23 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+
+import AssetCard from '@/Components/Assets/AssetCard.vue';
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-type Option = {
-    id: number;
-    name: string;
-};
-
-type ImageCard = {
-    id: number;
-    title: string;
-    slug: string;
-    photographer: string | null;
-    thumbnail_url: string | null;
-    icon_url: string | null;
-    is_ai_generated: boolean;
-    favorites_count: number;
-    downloads_count: number;
-    purchases_count: number;
-    views_count: number;
-    collection: Option | null;
-    categories: Option[];
-    tags: Option[];
-};
-
-type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-type PaginatedImages = {
-    data: ImageCard[];
-    links: PaginationLink[];
-    from: number | null;
-    to: number | null;
-    total: number;
-};
+import type {
+    AssetOption,
+    PaginatedAssets,
+} from '@/types/asset';
 
 const props = defineProps<{
-    images: PaginatedImages;
-    collections: Option[];
-    categories: Option[];
-    tags: Option[];
+    images: PaginatedAssets;
+    collections: AssetOption[];
+    categories: AssetOption[];
+    tags: AssetOption[];
     filters: {
         search: string;
         category_id: string;
@@ -63,17 +36,22 @@ const aiGenerated = ref(props.filters.ai_generated ?? '');
 const sort = ref(props.filters.sort ?? 'newest');
 
 function reload() {
-    router.get('/images', {
-        search: search.value,
-        category_id: categoryId.value,
-        tag_id: tagId.value,
-        collection_id: collectionId.value,
-        ai_generated: aiGenerated.value,
-        sort: sort.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/images',
+        {
+            search: search.value || undefined,
+            category_id: categoryId.value || undefined,
+            tag_id: tagId.value || undefined,
+            collection_id: collectionId.value || undefined,
+            ai_generated: aiGenerated.value || undefined,
+            sort: sort.value || undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function resetFilters() {
@@ -84,14 +62,15 @@ function resetFilters() {
     aiGenerated.value = '';
     sort.value = 'newest';
 
-    router.get('/images', {}, {
-        preserveState: true,
-        replace: true,
-    });
-}
-
-function formatNumber(value: number): string {
-    return Number(value ?? 0).toLocaleString();
+    router.get(
+        '/images',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 </script>
 
@@ -99,15 +78,12 @@ function formatNumber(value: number): string {
     <Head title="Images" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">Image Library</h1>
+        <PageHeader
+            title="Image Library"
+            description="Search and browse images available from Unclad Collection."
+        />
 
-            <p class="text-sm text-muted-foreground">
-                Search and browse images available from Unclad Collection.
-            </p>
-        </div>
-
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
+        <section class="rounded-lg border bg-card p-6 shadow-sm">
             <div class="grid gap-4 lg:grid-cols-6">
                 <div class="lg:col-span-2">
                     <Input
@@ -197,7 +173,7 @@ function formatNumber(value: number): string {
                     Reset
                 </Button>
             </div>
-        </div>
+        </section>
 
         <div class="flex items-center justify-between text-sm text-muted-foreground">
             <div>
@@ -215,70 +191,24 @@ function formatNumber(value: number): string {
             v-if="images.data.length"
             class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-            <Link
+            <AssetCard
                 v-for="image in images.data"
                 :key="image.id"
-                :href="`/images/${image.slug}`"
-                class="group overflow-hidden rounded-lg border bg-card shadow-sm transition hover:shadow-md"
-            >
-                <div class="aspect-square bg-muted">
-                    <img
-                        v-if="image.thumbnail_url"
-                        :src="image.thumbnail_url"
-                        :alt="image.title"
-                        class="h-full w-full object-cover transition group-hover:scale-105"
-                    />
-
-                    <div
-                        v-else
-                        class="flex h-full items-center justify-center text-sm text-muted-foreground"
-                    >
-                        No preview
-                    </div>
-                </div>
-
-                <div class="space-y-3 p-4">
-                    <div>
-                        <h2 class="line-clamp-1 font-semibold">
-                            {{ image.title }}
-                        </h2>
-
-                        <p class="line-clamp-1 text-xs text-muted-foreground">
-                            {{ image.collection?.name ?? 'Unassigned' }}
-                        </p>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2">
-                        <span
-                            v-if="image.is_ai_generated"
-                            class="rounded-full border px-2 py-0.5 text-xs"
-                        >
-                            AI
-                        </span>
-
-                        <span
-                            v-for="category in image.categories.slice(0, 2)"
-                            :key="category.id"
-                            class="rounded-full border px-2 py-0.5 text-xs"
-                        >
-                            {{ category.name }}
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between text-xs text-muted-foreground">
-                        <span>{{ formatNumber(image.views_count) }} views</span>
-                        <span>{{ formatNumber(image.favorites_count) }} favorites</span>
-                    </div>
-                </div>
-            </Link>
+                :asset="image"
+            />
         </div>
 
-        <div
+        <EmptyState
             v-else
-            class="rounded-lg border bg-card p-12 text-center text-muted-foreground"
+            title="No images matched your search"
+            description="Try changing or resetting the current filters."
         >
-            No images matched your search.
-        </div>
+            <template #actions>
+                <Button type="button" variant="outline" @click="resetFilters">
+                    Reset Filters
+                </Button>
+            </template>
+        </EmptyState>
 
         <div
             v-if="images.links.length > 3"
@@ -289,9 +219,9 @@ function formatNumber(value: number): string {
                 :key="link.label"
                 :href="link.url ?? '#'"
                 preserve-scroll
-                class="rounded-md border px-3 py-2 text-sm"
+                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
                 :class="[
-                    link.active ? 'bg-primary text-primary-foreground' : '',
+                    link.active ? 'bg-primary text-primary-foreground hover:bg-primary' : '',
                     !link.url ? 'pointer-events-none opacity-50' : '',
                 ]"
                 v-html="link.label"
