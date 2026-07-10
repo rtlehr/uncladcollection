@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import BlogPostCard from '@/Components/Blog/BlogPostCard.vue';
 import EmptyState from '@/Components/Shared/EmptyState.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
 import SectionHeader from '@/Components/Shared/SectionHeader.vue';
 
 import { contentImage } from '@/lib/contentImages';
@@ -280,22 +281,10 @@ function clearFilters() {
                 />
             </section>
 
-            <div
-                v-if="posts.links?.length"
-                class="flex flex-wrap justify-center gap-2 pt-4"
-            >
-                <Link
-                    v-for="link in posts.links"
-                    :key="link.label"
-                    :href="link.url || ''"
-                    v-html="link.label"
-                    class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
-                    :class="{
-                        'bg-primary text-primary-foreground hover:bg-primary': link.active,
-                        'pointer-events-none opacity-50': !link.url,
-                    }"
-                />
-            </div>
+            <Pagination
+                :links="posts.links"
+                item-label="articles"
+            />
         </main>
     </div>
 </template>

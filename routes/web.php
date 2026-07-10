@@ -3,6 +3,7 @@
 use App\Models\BlogPost;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Dev\ComponentShowcaseController;
 
 Route::get('/', function () {
     $latestArticles = BlogPost::query()
@@ -21,6 +22,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 
+Route::get('/dev/components', ComponentShowcaseController::class)
+    ->middleware(['auth', 'can:view_admin'])
+    ->name('dev.components');
+    
 require __DIR__.'/settings.php';  
 require __DIR__.'/admin.php'; 
 require __DIR__.'/favorite.php'; 

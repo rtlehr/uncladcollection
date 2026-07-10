@@ -4,6 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import PurchasedAssetCard from '@/Components/Purchases/PurchasedAssetCard.vue';
 import EmptyState from '@/Components/Shared/EmptyState.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
 import { Button } from '@/components/ui/button';
 
 import type { PaginatedPurchases } from '@/types/purchase';
@@ -47,26 +48,9 @@ defineProps<{
             </template>
         </EmptyState>
 
-        <div
-            v-if="licenses.links?.length > 3"
-            class="flex flex-wrap justify-center gap-2"
-        >
-            <Link
-                v-for="link in licenses.links"
-                :key="link.label"
-                :href="link.url ?? '#'"
-                preserve-scroll
-                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
-                :class="[
-                    link.active
-                        ? 'bg-primary text-primary-foreground hover:bg-primary'
-                        : '',
-                    !link.url
-                        ? 'pointer-events-none opacity-50'
-                        : '',
-                ]"
-                v-html="link.label"
-            />
-        </div>
+        <Pagination
+            :links="licenses.links"
+            item-label="purchases"
+        />
     </div>
 </template>

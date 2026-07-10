@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 import AssetCard from '@/Components/Assets/AssetCard.vue';
 import EmptyState from '@/Components/Shared/EmptyState.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -210,22 +211,13 @@ function resetFilters() {
             </template>
         </EmptyState>
 
-        <div
-            v-if="images.links.length > 3"
-            class="flex flex-wrap justify-center gap-2"
-        >
-            <Link
-                v-for="link in images.links"
-                :key="link.label"
-                :href="link.url ?? '#'"
-                preserve-scroll
-                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted"
-                :class="[
-                    link.active ? 'bg-primary text-primary-foreground hover:bg-primary' : '',
-                    !link.url ? 'pointer-events-none opacity-50' : '',
-                ]"
-                v-html="link.label"
-            />
-        </div>
+        <Pagination
+            :links="images.links"
+            :from="images.from"
+            :to="images.to"
+            :total="images.total"
+            item-label="images"
+            show-summary
+        />
     </div>
 </template>
