@@ -21,21 +21,21 @@ class CommentPolicy
 
     public function hide(User $user, Comment $comment): bool
     {
-        return $user->can('manage_blog_posts');
+        return $user->hasPermission('manage_comments');
     }
 
     public function restore(User $user, Comment $comment): bool
     {
-        return $user->can('manage_blog_posts');
+        return $user->hasPermission('manage_comments');
     }
 
     public function pin(User $user, Comment $comment): bool
     {
-        return $user->can('manage_blog_posts');
+        return $user->hasPermission('manage_comments');
     }
 
     public function moderate(User $user): bool
     {
-        return $user->can('manage_blog_posts');
+        return $user->hasPermission('manage_comments');
     }
 }

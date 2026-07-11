@@ -1,12 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ImageFavoriteController;
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/images/{image}/favorite', [ImageFavoriteController::class, 'store'])
-        ->name('images.favorite');
-
-    Route::delete('/images/{image}/favorite', [ImageFavoriteController::class, 'destroy'])
-        ->name('images.unfavorite');
-});
+/*
+|--------------------------------------------------------------------------
+| Deprecated route file
+|--------------------------------------------------------------------------
+|
+| Favorite routes are defined in routes/user-images.php.
+|
+| This file intentionally contains no routes. It remains in place so older
+| deployments that still require it from routes/web.php do not fail while
+| avoiding duplicate URIs and duplicate route names.
+|
+*/

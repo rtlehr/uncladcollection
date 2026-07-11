@@ -2,24 +2,22 @@
 
 namespace App\Services;
 
+use App\Models\CartItem;
 use App\Models\Image;
 use App\Models\License;
 use App\Models\LicenseType;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\CartItem;
 
 class PurchaseService
 {
-    /**
-     * Create a pending order with one image/license item.
-     */
     public function createPendingOrder(
         User $user,
         Image $image,
-        LicenseType $licenseType
+        LicenseType $licenseType,
     ): Order {
         return DB::transaction(function () use ($user, $image, $licenseType) {
             $order = Order::create([
@@ -30,7 +28,7 @@ class PurchaseService
                 'tax_cents' => 0,
                 'total_cents' => $licenseType->price_cents,
                 'currency' => $licenseType->currency,
-                'payment_provider' => Order::PAYMENT_PROVIDER_MANUAL,
+                'payment_provider' => Order::PAYMENT_PROVIDER_STRIPE,
             ]);
 
             OrderItem::create([
@@ -50,11 +48,10 @@ class PurchaseService
         });
     }
 
-    /**
-     * Create a pending order from multiple cart items.
-     */
-    public function createPendingOrderFromCart(User $user, $cartItems): Order
-    {
+    public function createPendingOrderFromCart(
+        User $user,
+        Collection $cartItems,
+    ): Order {
         return DB::transaction(function () use ($user, $cartItems) {
             $subtotalCents = $cartItems->sum('price_cents');
             $currency = $cartItems->first()->currency ?? 'USD';
@@ -67,7 +64,7 @@ class PurchaseService
                 'tax_cents' => 0,
                 'total_cents' => $subtotalCents,
                 'currency' => $currency,
-                'payment_provider' => Order::PAYMENT_PROVIDER_MANUAL,
+                'payment_provider' => Order::PAYMENT_PROVIDER_STRIPE,
             ]);
 
             foreach ($cartItems as $cartItem) {
@@ -89,50 +86,71 @@ class PurchaseService
         });
     }
 
-    /**
-     * Mark an order as paid and create licenses for each order item.
-     */
     public function markOrderPaid(Order $order): Order
     {
         return DB::transaction(function () use ($order) {
-            
-            $order->loadMissing('items.licenseType', 'items.image');
+            $lockedOrder = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            $order->update([
+            if ($lockedOrder->status === Order::STATUS_PAID) {
+                return $lockedOrder->load(['items', 'licenses']);
+            }
+
+            if (
+                ! in_array(
+                    $lockedOrder->status,
+                    [Order::STATUS_PENDING, Order::STATUS_FAILED],
+                    true,
+                )
+            ) {
+                return $lockedOrder->load(['items', 'licenses']);
+            }
+
+            $lockedOrder->loadMissing('items.licenseType', 'items.image');
+
+            $lockedOrder->update([
                 'status' => Order::STATUS_PAID,
-                'paid_at' => now(),
+                'paid_at' => $lockedOrder->paid_at ?? now(),
             ]);
 
-            foreach ($order->items as $item) {
+            foreach ($lockedOrder->items as $item) {
+                $license = $this->createLicenseFromOrderItem(
+                    $lockedOrder,
+                    $item,
+                );
+
                 $item->update([
                     'status' => OrderItem::STATUS_ACTIVE,
                 ]);
 
-                $this->createLicenseFromOrderItem($order, $item);
-
-                $item->image?->increment('purchases_count');
+                if ($license->wasRecentlyCreated) {
+                    $item->image?->increment('purchases_count');
+                }
             }
 
             CartItem::query()
-                ->where('user_id', $order->user_id)
-                ->whereIn('image_id', $order->items->pluck('image_id'))
+                ->where('user_id', $lockedOrder->user_id)
+                ->whereIn(
+                    'image_id',
+                    $lockedOrder->items->pluck('image_id'),
+                )
                 ->delete();
 
-            return $order->fresh(['items', 'licenses']);
-        });
+            return $lockedOrder->fresh(['items', 'licenses']);
+        }, attempts: 3);
     }
 
-    /**
-     * Create a license from an order item.
-     */
-    protected function createLicenseFromOrderItem(Order $order, OrderItem $item): License
-    {
+    protected function createLicenseFromOrderItem(
+        Order $order,
+        OrderItem $item,
+    ): License {
         $licenseType = $item->licenseType;
-
         $startsAt = now();
 
         $expiresAt = $licenseType->expires_after_days
-            ? $startsAt->copy()->addDays($licenseType->expires_after_days)
+            ? $startsAt->addDays($licenseType->expires_after_days)
             : null;
 
         return License::firstOrCreate(
@@ -151,15 +169,14 @@ class PurchaseService
                 'downloads_used' => 0,
                 'license_name' => $item->license_name,
                 'license_terms' => $item->license_terms,
-            ]
+            ],
         );
     }
 
-    /**
-     * Check if a user has an active license for an image.
-     */
-    public function userHasPurchasedImage(User $user, Image $image): bool
-    {
+    public function userHasPurchasedImage(
+        User $user,
+        Image $image,
+    ): bool {
         return License::query()
             ->where('user_id', $user->id)
             ->where('image_id', $image->id)
@@ -172,11 +189,10 @@ class PurchaseService
             ->exists();
     }
 
-    /**
-     * Get the user's active license for an image.
-     */
-    public function getActiveLicenseForImage(User $user, Image $image): ?License
-    {
+    public function getActiveLicenseForImage(
+        User $user,
+        Image $image,
+    ): ?License {
         return License::query()
             ->where('user_id', $user->id)
             ->where('image_id', $image->id)

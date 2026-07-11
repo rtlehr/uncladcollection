@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,11 +32,26 @@ class Image extends Model
         'is_ai_generated',
     ];
 
-    protected $casts = [
-        'collection_id' => 'integer',
-        'sort_order' => 'integer',
-        'is_active' => 'boolean',
+    protected $appends = [
+        'original_url',
+        'high_res_url',
+        'thumbnail_url',
+        'icon_url',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'collection_id' => 'integer',
+            'sort_order' => 'integer',
+            'is_active' => 'boolean',
+            'is_ai_generated' => 'boolean',
+            'downloads_count' => 'integer',
+            'favorites_count' => 'integer',
+            'purchases_count' => 'integer',
+            'views_count' => 'integer',
+        ];
+    }
 
     public function collection(): BelongsTo
     {
@@ -55,19 +70,6 @@ class Image extends Model
             ->withTimestamps();
     }
 
-    public function getActivityName(): string
-    {
-        return $this->title;
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'is_active' => 'boolean',
-            'is_ai_generated' => 'boolean',
-        ];
-    }
-
     public function favorites(): HasMany
     {
         return $this->hasMany(ImageFavorite::class);
@@ -83,12 +85,10 @@ class Image extends Model
         return $this->hasMany(Download::class);
     }
 
-    protected $appends = [
-        'original_url',
-        'high_res_url',
-        'thumbnail_url',
-        'icon_url',
-    ];
+    public function getActivityName(): string
+    {
+        return $this->title;
+    }
 
     public function getOriginalUrlAttribute(): ?string
     {
@@ -117,5 +117,4 @@ class Image extends Model
             ? Storage::url($this->icon_path)
             : null;
     }
-
 }
