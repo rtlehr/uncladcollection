@@ -12,7 +12,7 @@ withDefaults(
 <template>
     <div
         :class="[
-            'flex flex-col gap-3 sm:flex-row sm:items-center',
+            'flex min-h-10 flex-col gap-3 sm:flex-row sm:items-center',
             align === 'start'
                 ? 'sm:justify-start'
                 : align === 'end'
@@ -22,14 +22,14 @@ withDefaults(
     >
         <div
             v-if="$slots.primary"
-            class="flex flex-wrap items-center gap-2"
+            class="flex min-w-0 flex-1 flex-wrap items-center gap-2"
         >
             <slot name="primary" />
         </div>
 
         <div
             v-if="$slots.secondary"
-            class="flex flex-wrap items-center gap-2"
+            class="flex shrink-0 flex-wrap items-center gap-2"
         >
             <slot name="secondary" />
         </div>

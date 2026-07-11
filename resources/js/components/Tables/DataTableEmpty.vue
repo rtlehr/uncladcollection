@@ -14,9 +14,17 @@ withDefaults(
     <tr>
         <td
             :colspan="colspan"
-            class="p-8 text-center text-muted-foreground"
+            class="px-6 py-14 text-center"
         >
-            {{ message }}
+            <div class="mx-auto max-w-md">
+                <p class="text-sm font-medium text-foreground">
+                    {{ message }}
+                </p>
+
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Try adjusting your filters or adding a new record.
+                </p>
+            </div>
         </td>
     </tr>
 </template>

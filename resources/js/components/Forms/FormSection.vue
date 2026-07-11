@@ -14,25 +14,25 @@ withDefaults(
 </script>
 
 <template>
-    <section class="overflow-hidden rounded-lg border bg-card shadow-sm">
+    <section class="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
         <div
             v-if="title || description || $slots.headerActions"
             :class="[
-                'flex flex-col gap-3 border-b sm:flex-row sm:items-start sm:justify-between',
-                compact ? 'p-4' : 'p-6',
+                'flex flex-col gap-3 border-b border-border/70 bg-muted/10 sm:flex-row sm:items-start sm:justify-between',
+                compact ? 'px-4 py-4' : 'px-5 py-5 sm:px-6',
             ]"
         >
-            <div>
+            <div class="min-w-0">
                 <h2
                     v-if="title"
-                    class="text-lg font-semibold"
+                    class="text-base font-semibold tracking-tight text-foreground sm:text-lg"
                 >
                     {{ title }}
                 </h2>
 
                 <p
                     v-if="description"
-                    class="mt-1 text-sm leading-6 text-muted-foreground"
+                    class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground"
                 >
                     {{ description }}
                 </p>
@@ -46,15 +46,15 @@ withDefaults(
             </div>
         </div>
 
-        <div :class="compact ? 'p-4' : 'p-6'">
+        <div :class="compact ? 'p-4' : 'p-5 sm:p-6'">
             <slot />
         </div>
 
         <div
             v-if="$slots.footer"
             :class="[
-                'border-t bg-muted/20',
-                compact ? 'p-4' : 'p-6',
+                'border-t border-border/70 bg-muted/15',
+                compact ? 'p-4' : 'p-5 sm:p-6',
             ]"
         >
             <slot name="footer" />

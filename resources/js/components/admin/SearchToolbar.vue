@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Search, X } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { Button } from '@/components/ui/button';
@@ -40,21 +41,29 @@ function handleReset() {
 </script>
 
 <template>
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Input
-            v-model="value"
-            :placeholder="placeholder"
-            :disabled="disabled"
-            class="sm:max-w-xl"
-            @keyup.enter="emit('search')"
-        />
+    <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative min-w-0 flex-1">
+            <Search
+                class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+            />
 
-        <div class="flex flex-wrap gap-2">
+            <Input
+                v-model="value"
+                :placeholder="placeholder"
+                :disabled="disabled"
+                class="w-full pl-9 sm:min-w-64"
+                @keyup.enter="emit('search')"
+            />
+        </div>
+
+        <div class="flex shrink-0 flex-wrap gap-2">
             <Button
                 type="button"
                 :disabled="disabled"
                 @click="emit('search')"
             >
+                <Search class="mr-2 h-4 w-4" />
                 {{ searchLabel }}
             </Button>
 
@@ -65,6 +74,7 @@ function handleReset() {
                 :disabled="disabled"
                 @click="handleReset"
             >
+                <X class="mr-2 h-4 w-4" />
                 {{ resetLabel }}
             </Button>
 

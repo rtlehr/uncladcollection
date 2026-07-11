@@ -31,9 +31,9 @@ const emit = defineEmits<{
 <template>
     <div
         :class="[
-            'flex flex-col-reverse gap-3 border-t bg-background/95 pt-6 sm:flex-row sm:items-center sm:justify-between',
+            'flex flex-col-reverse gap-3 border-t border-border/70 pt-5 sm:flex-row sm:items-center sm:justify-between',
             sticky
-                ? 'sticky bottom-0 z-10 -mx-6 px-6 pb-6 backdrop-blur'
+                ? 'sticky bottom-0 z-20 -mx-4 border-y bg-background/90 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] backdrop-blur sm:-mx-6 sm:px-6'
                 : '',
         ]"
     >

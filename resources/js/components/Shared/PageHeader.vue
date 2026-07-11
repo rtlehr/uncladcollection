@@ -1,44 +1,55 @@
 <script setup lang="ts">
-defineProps<{
-    eyebrow?: string;
-    title: string;
-    description?: string | null;
-    align?: 'left' | 'center';
-}>();
+withDefaults(
+    defineProps<{
+        eyebrow?: string;
+        title: string;
+        description?: string | null;
+        align?: 'left' | 'center';
+    }>(),
+    {
+        eyebrow: undefined,
+        description: null,
+        align: 'left',
+    },
+);
 </script>
 
 <template>
     <header
         :class="[
-            'mx-auto',
-            align === 'center' ? 'max-w-4xl text-center' : 'max-w-7xl',
+            'min-w-0',
+            align === 'center'
+                ? 'mx-auto max-w-4xl text-center'
+                : 'w-full',
         ]"
     >
         <slot name="before" />
 
         <p
             v-if="eyebrow"
-            class="text-sm font-semibold uppercase tracking-wide text-primary"
+            class="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary"
         >
             {{ eyebrow }}
         </p>
 
         <h1
-            :class="[
-                eyebrow ? 'mt-2' : '',
-                'text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl',
-            ]"
+            class="break-words text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
         >
             {{ title }}
         </h1>
 
         <p
             v-if="description"
-            class="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground"
+            :class="[
+                'mt-2 text-sm leading-6 text-muted-foreground sm:text-base',
+                align === 'center' ? 'mx-auto max-w-3xl' : 'max-w-4xl',
+            ]"
         >
             {{ description }}
         </p>
 
-        <slot />
+        <div v-if="$slots.default" class="mt-4">
+            <slot />
+        </div>
     </header>
 </template>

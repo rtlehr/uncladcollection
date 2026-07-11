@@ -1,11 +1,18 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ columns?: 1 | 2 | 3 }>(), { columns: 2 });
+withDefaults(
+    defineProps<{
+        columns?: 1 | 2 | 3;
+    }>(),
+    {
+        columns: 2,
+    },
+);
 </script>
 
 <template>
     <div
         :class="[
-            'grid gap-4',
+            'grid gap-x-6 gap-y-5',
             columns === 1
                 ? 'grid-cols-1'
                 : columns === 3
