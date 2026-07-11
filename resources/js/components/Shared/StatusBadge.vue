@@ -12,11 +12,13 @@ const props = withDefaults(
         label?: string;
         tone?: StatusBadgeTone;
         size?: 'sm' | 'md';
+        context?: string;
     }>(),
     {
         label: undefined,
         tone: undefined,
         size: 'sm',
+        context: 'Status',
     },
 );
 
@@ -53,6 +55,10 @@ const dotClasses: Record<StatusBadgeTone, string> = {
             toneClasses[displayTone],
         ]"
     >
+        <span class="sr-only">
+            {{ context }}:
+        </span>
+
         <span
             :class="[
                 'rounded-full',

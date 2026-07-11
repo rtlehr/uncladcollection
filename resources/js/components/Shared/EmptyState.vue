@@ -6,10 +6,15 @@ defineProps<{
 </script>
 
 <template>
-    <div class="rounded-xl border border-dashed border-border bg-muted/15 px-6 py-12 text-center sm:px-10">
+    <div
+        class="rounded-xl border border-dashed border-border bg-muted/15 px-6 py-12 text-center sm:px-10"
+        role="status"
+        aria-live="polite"
+    >
         <div
             v-if="$slots.icon"
             class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-border/70 bg-background text-muted-foreground shadow-sm"
+            aria-hidden="true"
         >
             <slot name="icon" />
         </div>

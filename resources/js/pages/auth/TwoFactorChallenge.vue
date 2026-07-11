@@ -69,6 +69,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                             v-model="code"
                             :maxlength="6"
                             :disabled="processing"
+                :aria-busy="processing"
                             autofocus
                         >
                             <InputOTPGroup>
@@ -83,6 +84,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     <InputError :message="errors.code" />
                 </div>
                 <Button type="submit" class="w-full" :disabled="processing"
+                :aria-busy="processing"
                     >Continue</Button
                 >
                 <div class="text-center text-sm text-muted-foreground">
@@ -114,6 +116,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 />
                 <InputError :message="errors.recovery_code" />
                 <Button type="submit" class="w-full" :disabled="processing"
+                :aria-busy="processing"
                     >Continue</Button
                 >
 

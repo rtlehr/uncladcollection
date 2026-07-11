@@ -135,7 +135,10 @@ const editor = useEditor({
     ],
     editorProps: {
         attributes: {
-            class: 'blog-content prose prose-neutral dark:prose-invert max-w-none min-h-[520px] rounded-b-md bg-background px-8 py-8 text-base leading-7 focus:outline-none',
+            class: 'blog-content prose prose-neutral dark:prose-invert max-w-none min-h-[520px] rounded-b-md bg-background px-8 py-8 text-base leading-7 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+            role: 'textbox',
+            'aria-multiline': 'true',
+            'aria-label': 'Blog post content editor',
         },
 
         handleClickOn(view, pos, node) {
@@ -463,63 +466,66 @@ function insertLibraryImage(image: LibraryImage) {
 <template>
     <div class="overflow-hidden rounded-md border bg-background">
         <div v-if="editor" class="space-y-3 border-b bg-muted/30 p-3">
-            <div class="flex flex-wrap items-center gap-1.5">
+            <p id="editor-toolbar-help" class="sr-only">
+                Use the formatting toolbar or standard keyboard shortcuts to edit the article content.
+            </p>
+            <div class="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Text formatting toolbar" aria-describedby="editor-toolbar-help">
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Bold" @click="editor.chain().focus().toggleBold().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Bold" :aria-pressed="editor.isActive('bold')" @click="editor.chain().focus().toggleBold().run()" aria-label="Bold">
                         <Bold class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Italic" @click="editor.chain().focus().toggleItalic().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Italic" :aria-pressed="editor.isActive('italic')" @click="editor.chain().focus().toggleItalic().run()" aria-label="Italic">
                         <Italic class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Underline" @click="editor.chain().focus().toggleUnderline().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Underline" :aria-pressed="editor.isActive('underline')" @click="editor.chain().focus().toggleUnderline().run()" aria-label="Underline">
                         <UnderlineIcon class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Strikethrough" @click="editor.chain().focus().toggleStrike().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Strikethrough" :aria-pressed="editor.isActive('strike')" @click="editor.chain().focus().toggleStrike().run()" aria-label="Strikethrough">
                         <Strikethrough class="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Heading 1" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()">
+                    <Button type="button" size="icon" variant="ghost" title="Heading 1" :aria-pressed="editor.isActive('heading', { level: 1 })" @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" aria-label="Heading 1">
                         <Heading1 class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Heading 2" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()">
+                    <Button type="button" size="icon" variant="ghost" title="Heading 2" :aria-pressed="editor.isActive('heading', { level: 2 })" @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" aria-label="Heading 2">
                         <Heading2 class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Heading 3" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()">
+                    <Button type="button" size="icon" variant="ghost" title="Heading 3" :aria-pressed="editor.isActive('heading', { level: 3 })" @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" aria-label="Heading 3">
                         <Heading3 class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Paragraph" @click="editor.chain().focus().setParagraph().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Paragraph" :aria-pressed="editor.isActive('paragraph')" @click="editor.chain().focus().setParagraph().run()" aria-label="Paragraph">
                         <Pilcrow class="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Bullet List" @click="editor.chain().focus().toggleBulletList().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Bullet List" :aria-pressed="editor.isActive('bulletList')" @click="editor.chain().focus().toggleBulletList().run()" aria-label="Bullet List">
                         <List class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Numbered List" @click="editor.chain().focus().toggleOrderedList().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Numbered List" :aria-pressed="editor.isActive('orderedList')" @click="editor.chain().focus().toggleOrderedList().run()" aria-label="Numbered List">
                         <ListOrdered class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Quote" @click="editor.chain().focus().toggleBlockquote().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Quote" :aria-pressed="editor.isActive('blockquote')" @click="editor.chain().focus().toggleBlockquote().run()" aria-label="Quote">
                         <Quote class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Code Block" @click="editor.chain().focus().toggleCodeBlock().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Code Block" :aria-pressed="editor.isActive('codeBlock')" @click="editor.chain().focus().toggleCodeBlock().run()" aria-label="Code Block">
                         <Code class="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Highlight" @click="editor.chain().focus().toggleHighlight().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Highlight" :aria-pressed="editor.isActive('highlight')" @click="editor.chain().focus().toggleHighlight().run()" aria-label="Highlight">
                         <Highlighter class="h-4 w-4" />
                     </Button>
 
@@ -530,7 +536,7 @@ function insertLibraryImage(image: LibraryImage) {
                         title="Upload Image"
                         :disabled="uploadingImage"
                         @click="uploadImage"
-                    >
+                     aria-label="Upload Image">
                         <ImageIcon class="h-4 w-4" />
                     </Button>
 
@@ -540,43 +546,43 @@ function insertLibraryImage(image: LibraryImage) {
                         variant="ghost"
                         title="Insert From Library"
                         @click="openImageLibrary"
-                    >
+                     aria-label="Insert From Library">
                         <Images class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Add Link" @click="setLink">
+                    <Button type="button" size="icon" variant="ghost" title="Add Link" @click="setLink" aria-label="Add Link">
                         <LinkIcon class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Remove Link" @click="editor.chain().focus().unsetLink().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Remove Link" @click="editor.chain().focus().unsetLink().run()" aria-label="Remove Link">
                         <RemoveFormatting class="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Text Left" @click="editor.chain().focus().setTextAlign('left').run()">
+                    <Button type="button" size="icon" variant="ghost" title="Text Left" @click="editor.chain().focus().setTextAlign('left').run()" aria-label="Text Left">
                         <AlignLeft class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Text Center" @click="editor.chain().focus().setTextAlign('center').run()">
+                    <Button type="button" size="icon" variant="ghost" title="Text Center" @click="editor.chain().focus().setTextAlign('center').run()" aria-label="Text Center">
                         <AlignCenter class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Text Right" @click="editor.chain().focus().setTextAlign('right').run()">
+                    <Button type="button" size="icon" variant="ghost" title="Text Right" @click="editor.chain().focus().setTextAlign('right').run()" aria-label="Text Right">
                         <AlignRight class="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div class="flex flex-wrap gap-1.5 rounded-md border bg-background p-1">
-                    <Button type="button" size="icon" variant="ghost" title="Undo" @click="editor.chain().focus().undo().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Undo" @click="editor.chain().focus().undo().run()" aria-label="Undo">
                         <Undo2 class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="icon" variant="ghost" title="Redo" @click="editor.chain().focus().redo().run()">
+                    <Button type="button" size="icon" variant="ghost" title="Redo" @click="editor.chain().focus().redo().run()" aria-label="Redo">
                         <Redo2 class="h-4 w-4" />
                     </Button>
 
-                    <Button type="button" size="sm" variant="ghost" title="HTML View" @click="toggleCodeView">
+                    <Button type="button" size="sm" variant="ghost" title="HTML View" @click="toggleCodeView" aria-label="HTML View">
                         {{ codeView ? 'WYSIWYG' : 'HTML' }}
                     </Button>
                 </div>
@@ -584,7 +590,7 @@ function insertLibraryImage(image: LibraryImage) {
 
             <div
                 v-if="uploadingImage"
-                class="rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground"
+                class="rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground" role="status" aria-live="polite"
             >
                 Uploading image...
             </div>
@@ -638,8 +644,12 @@ function insertLibraryImage(image: LibraryImage) {
             </div>
         </div>
 
+        <label v-if="codeView" for="blog-html-source" class="sr-only">Blog post HTML source</label>
+
         <textarea
             v-if="codeView"
+            id="blog-html-source"
+            aria-label="Blog post HTML source"
             :value="htmlCode"
             class="min-h-[520px] w-full border-0 bg-background px-6 py-6 font-mono text-sm focus:outline-none"
             @input="updateCode(($event.target as HTMLTextAreaElement).value)"
@@ -647,7 +657,7 @@ function insertLibraryImage(image: LibraryImage) {
 
         <EditorContent v-else :editor="editor" />
 
-        <div class="flex flex-wrap justify-between gap-3 border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
+        <div class="flex flex-wrap justify-between gap-3 border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground" role="status" aria-live="polite">
             <span>{{ wordCount }} words</span>
             <span>{{ characterCount }} characters</span>
             <span>{{ readingTime }} min read</span>

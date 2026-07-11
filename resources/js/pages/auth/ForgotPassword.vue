@@ -50,9 +50,10 @@ defineProps<{
                 <Button
                     class="w-full"
                     :disabled="processing"
+                :aria-busy="processing"
                     data-test="email-password-reset-link-button"
                 >
-                    <Spinner v-if="processing" />
+                    <Spinner v-if="processing" aria-hidden="true" />
                     Email password reset link
                 </Button>
             </div>

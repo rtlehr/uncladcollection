@@ -95,9 +95,10 @@ defineProps<{
                 class="mt-4 w-full"
                 :tabindex="4"
                 :disabled="processing"
+                :aria-busy="processing"
                 data-test="login-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" aria-hidden="true" />
                 Log in
             </Button>
         </div>

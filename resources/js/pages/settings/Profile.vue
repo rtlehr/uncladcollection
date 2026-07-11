@@ -102,7 +102,7 @@ const user = computed(() => page.props.auth.user);
                     />
                 </div>
 
-                <p class="text-xs text-muted-foreground">
+                <p id="avatar-help" class="text-xs text-muted-foreground">
                     Recommended: square image, 256×256 or larger. JPG, PNG, or WebP.
                 </p>
 
@@ -112,7 +112,7 @@ const user = computed(() => page.props.auth.user);
             <div class="grid gap-2">
                 <Label>Member Role</Label>
 
-                <div class="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                <div class="rounded-md border bg-muted/40 px-3 py-2 text-sm" role="status" aria-live="polite">
                     <span v-if="user.roles?.length">
                         {{ user.roles.join(', ') }}
                     </span>
@@ -157,6 +157,8 @@ const user = computed(() => page.props.auth.user);
                 <div
                     v-if="page.props.status === 'verification-link-sent'"
                     class="mt-2 text-sm font-medium text-green-600"
+                    role="status"
+                    aria-live="polite"
                 >
                     A new verification link has been sent to your email address.
                 </div>
@@ -206,7 +208,7 @@ const user = computed(() => page.props.auth.user);
             </div>
 
             <div class="flex items-center gap-4">
-                <Button :disabled="processing" data-test="update-profile-button"
+                <Button :disabled="processing" :aria-busy="processing" data-test="update-profile-button"
                     >Save</Button
                 >
             </div>

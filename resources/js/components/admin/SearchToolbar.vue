@@ -13,6 +13,7 @@ const props = withDefaults(
         resetLabel?: string;
         disabled?: boolean;
         showReset?: boolean;
+        inputLabel?: string;
     }>(),
     {
         placeholder: 'Search...',
@@ -20,6 +21,7 @@ const props = withDefaults(
         resetLabel: 'Reset',
         disabled: false,
         showReset: true,
+        inputLabel: 'Search records',
     },
 );
 
@@ -41,14 +43,22 @@ function handleReset() {
 </script>
 
 <template>
-    <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+    <div
+        class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center"
+        role="search"
+    >
         <div class="relative min-w-0 flex-1">
+            <label class="sr-only" :for="`search-${inputLabel.replace(/\s+/g, '-').toLowerCase()}`">
+                {{ inputLabel }}
+            </label>
+
             <Search
                 class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden="true"
             />
 
             <Input
+                :id="`search-${inputLabel.replace(/\s+/g, '-').toLowerCase()}`"
                 v-model="value"
                 :placeholder="placeholder"
                 :disabled="disabled"
@@ -63,7 +73,7 @@ function handleReset() {
                 :disabled="disabled"
                 @click="emit('search')"
             >
-                <Search class="mr-2 h-4 w-4" />
+                <Search class="mr-2 h-4 w-4" aria-hidden="true" />
                 {{ searchLabel }}
             </Button>
 
@@ -74,7 +84,7 @@ function handleReset() {
                 :disabled="disabled"
                 @click="handleReset"
             >
-                <X class="mr-2 h-4 w-4" />
+                <X class="mr-2 h-4 w-4" aria-hidden="true" />
                 {{ resetLabel }}
             </Button>
 

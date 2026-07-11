@@ -16,7 +16,11 @@ withDefaults(
             :colspan="colspan"
             class="px-6 py-14 text-center"
         >
-            <div class="mx-auto max-w-md">
+            <div
+                class="mx-auto max-w-md"
+                role="status"
+                aria-live="polite"
+            >
                 <p class="text-sm font-medium text-foreground">
                     {{ message }}
                 </p>

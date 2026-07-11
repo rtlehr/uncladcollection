@@ -110,9 +110,10 @@ defineOptions({
                 class="mt-2 w-full"
                 tabindex="6"
                 :disabled="processing"
+                :aria-busy="processing"
                 data-test="register-user-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" aria-hidden="true" />
                 Create account
             </Button>
 

@@ -80,9 +80,10 @@ const inputEmail = ref(props.email);
                 type="submit"
                 class="mt-4 w-full"
                 :disabled="processing"
+                :aria-busy="processing"
                 data-test="reset-password-button"
             >
-                <Spinner v-if="processing" />
+                <Spinner v-if="processing" aria-hidden="true" />
                 Reset password
             </Button>
         </div>

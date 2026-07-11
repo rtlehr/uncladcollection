@@ -4,17 +4,24 @@ withDefaults(
         minWidth?: string;
         stickyHeader?: boolean;
         compact?: boolean;
+        caption?: string;
     }>(),
     {
         minWidth: '900px',
         stickyHeader: false,
         compact: false,
+        caption: undefined,
     },
 );
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+    <div
+        class="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm"
+        role="region"
+        :aria-label="caption ?? 'Data table'"
+        tabindex="0"
+    >
         <div class="overflow-x-auto">
             <table
                 :class="[
@@ -26,6 +33,10 @@ withDefaults(
                 ]"
                 :style="{ minWidth }"
             >
+                <caption v-if="caption" class="sr-only">
+                    {{ caption }}
+                </caption>
+
                 <slot />
             </table>
         </div>

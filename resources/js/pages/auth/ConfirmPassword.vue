@@ -58,9 +58,10 @@ defineOptions({
                 <Button
                     class="w-full"
                     :disabled="processing"
+                :aria-busy="processing"
                     data-test="confirm-password-button"
                 >
-                    <Spinner v-if="processing" />
+                    <Spinner v-if="processing" aria-hidden="true" />
                     Confirm password
                 </Button>
             </div>
