@@ -30,22 +30,18 @@ const { isMobile, state } = useSidebar();
                         size="lg"
                         class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         data-test="sidebar-menu-button"
+                        aria-label="Open user menu"
                     >
                         <UserInfo :user="user" />
                         <ChevronsUpDown class="ml-auto size-4" />
                     </SidebarMenuButton>
                 </DropdownMenuTrigger>
+
                 <DropdownMenuContent
                     class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                    :side="
-                        isMobile
-                            ? 'bottom'
-                            : state === 'collapsed'
-                              ? 'left'
-                              : 'bottom'
-                    "
+                    :side="isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'"
                     align="end"
-                    :side-offset="4"
+                    :side-offset="6"
                 >
                     <UserMenuContent :user="user" />
                 </DropdownMenuContent>

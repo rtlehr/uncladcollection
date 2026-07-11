@@ -1,35 +1,34 @@
 <script setup lang="ts">
+import { Loader2Icon, TriangleAlert } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
-withDefaults(
-    defineProps<{
-        open: boolean;
-        title: string;
-        description?: string | null;
-        confirmLabel?: string;
-        cancelLabel?: string;
-        destructive?: boolean;
-        loading?: boolean;
-        disabled?: boolean;
-    }>(),
-    {
-        description: null,
-        confirmLabel: 'Confirm',
-        cancelLabel: 'Cancel',
-        destructive: false,
-        loading: false,
-        disabled: false,
-    },
-);
+const props = withDefaults(defineProps<{
+    open: boolean;
+    title: string;
+    description?: string | null;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    processingLabel?: string;
+    destructive?: boolean;
+    loading?: boolean;
+    disabled?: boolean;
+}>(), {
+    description: null,
+    confirmLabel: 'Confirm',
+    cancelLabel: 'Cancel',
+    processingLabel: 'Working...',
+    destructive: false,
+    loading: false,
+    disabled: false,
+});
 
 const emit = defineEmits<{
     'update:open': [value: boolean];
@@ -37,57 +36,60 @@ const emit = defineEmits<{
     cancel: [];
 }>();
 
-function handleConfirm() {
-    emit('confirm');
+function handleOpenChange(value: boolean): void {
+    if (props.loading && !value) return;
+    emit('update:open', value);
+    if (!value) emit('cancel');
 }
 
-function handleCancel() {
+function handleConfirm(): void {
+    if (!props.loading && !props.disabled) emit('confirm');
+}
+
+function handleCancel(): void {
+    if (props.loading) return;
     emit('cancel');
     emit('update:open', false);
 }
 </script>
 
 <template>
-    <Dialog
-        :open="open"
-        @update:open="emit('update:open', $event)"
-    >
+    <Dialog :open="open" @update:open="handleOpenChange">
         <slot name="trigger" />
 
-        <DialogContent class="sm:max-w-md">
+        <DialogContent
+            class="sm:max-w-md"
+            @escape-key-down="loading ? $event.preventDefault() : undefined"
+            @pointer-down-outside="loading ? $event.preventDefault() : undefined"
+        >
             <DialogHeader>
-                <DialogTitle>
-                    {{ title }}
-                </DialogTitle>
+                <div
+                    v-if="destructive"
+                    class="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+                >
+                    <TriangleAlert class="h-5 w-5" />
+                </div>
 
-                <DialogDescription v-if="description">
-                    {{ description }}
-                </DialogDescription>
+                <DialogTitle>{{ title }}</DialogTitle>
+                <DialogDescription v-if="description">{{ description }}</DialogDescription>
             </DialogHeader>
 
-            <div v-if="$slots.default" class="py-2">
-                <slot />
-            </div>
+            <div v-if="$slots.default" class="py-2"><slot /></div>
 
-            <DialogFooter class="gap-2 sm:gap-0">
-                <DialogClose as-child>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        :disabled="loading"
-                        @click="handleCancel"
-                    >
-                        {{ cancelLabel }}
-                    </Button>
-                </DialogClose>
+            <DialogFooter class="gap-2 sm:gap-2">
+                <Button type="button" variant="outline" :disabled="loading" @click="handleCancel">
+                    {{ cancelLabel }}
+                </Button>
 
                 <Button
                     type="button"
                     :variant="destructive ? 'destructive' : 'default'"
                     :disabled="disabled || loading"
+                    :aria-busy="loading"
                     @click="handleConfirm"
                 >
-                    {{ loading ? 'Working...' : confirmLabel }}
+                    <Loader2Icon v-if="loading" class="h-4 w-4 animate-spin" />
+                    {{ loading ? processingLabel : confirmLabel }}
                 </Button>
             </DialogFooter>
         </DialogContent>

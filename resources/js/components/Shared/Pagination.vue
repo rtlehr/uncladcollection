@@ -1,56 +1,47 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-
 import type { PaginationLink } from '@/types/common';
 
-withDefaults(
-    defineProps<{
-        links: PaginationLink[];
-        from?: number | null;
-        to?: number | null;
-        total?: number | null;
-        itemLabel?: string;
-        showSummary?: boolean;
-        preserveScroll?: boolean;
-    }>(),
-    {
-        from: null,
-        to: null,
-        total: null,
-        itemLabel: 'items',
-        showSummary: false,
-        preserveScroll: true,
-    },
-);
+withDefaults(defineProps<{
+    links: PaginationLink[];
+    from?: number | null;
+    to?: number | null;
+    total?: number | null;
+    itemLabel?: string;
+    showSummary?: boolean;
+    preserveScroll?: boolean;
+    preserveState?: boolean;
+}>(), {
+    from: null,
+    to: null,
+    total: null,
+    itemLabel: 'items',
+    showSummary: false,
+    preserveScroll: true,
+    preserveState: true,
+});
 </script>
 
 <template>
-    <div v-if="links.length > 3" class="space-y-4">
-        <p
-            v-if="showSummary && total !== null"
-            class="text-center text-sm text-muted-foreground"
-        >
-            Showing
-            <span class="font-medium text-foreground">{{ from ?? 0 }}</span>
-            –
-            <span class="font-medium text-foreground">{{ to ?? 0 }}</span>
-            of
-            <span class="font-medium text-foreground">{{ total }}</span>
+    <div v-if="links.length > 3" class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p v-if="showSummary && total !== null" class="text-sm text-muted-foreground">
+            Showing <span class="font-medium text-foreground">{{ from ?? 0 }}</span>
+            – <span class="font-medium text-foreground">{{ to ?? 0 }}</span>
+            of <span class="font-medium text-foreground">{{ total }}</span>
             {{ itemLabel }}
         </p>
 
-        <nav aria-label="Pagination" class="flex flex-wrap justify-center gap-2">
+        <nav aria-label="Pagination" class="flex flex-wrap items-center justify-center gap-1 sm:ml-auto">
             <Link
                 v-for="link in links"
                 :key="`${link.label}-${link.url}`"
                 :href="link.url ?? '#'"
                 :preserve-scroll="preserveScroll"
-                class="rounded-md border px-3 py-2 text-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                :preserve-state="preserveState"
                 :class="[
-                    link.active
-                        ? 'bg-primary text-primary-foreground hover:bg-primary'
-                        : '',
-                    !link.url ? 'pointer-events-none opacity-50' : '',
+                    'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    link.active ? 'border-primary bg-primary text-primary-foreground shadow-sm' : 'border-border bg-background hover:bg-muted',
+                    !link.url ? 'pointer-events-none opacity-45' : '',
                 ]"
                 :aria-current="link.active ? 'page' : undefined"
                 :aria-disabled="!link.url ? 'true' : undefined"
