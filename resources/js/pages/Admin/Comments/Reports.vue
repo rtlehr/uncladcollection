@@ -1,62 +1,50 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Flag } from '@lucide/vue';
+import { ref } from 'vue';
 
+import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import CommentReportCard from '@/Components/Admin/CommentReportCard.vue';
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import EmptyState from '@/Components/Shared/EmptyState.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 
-type User = {
-    id: number;
-    name: string;
-    username?: string | null;
-    email?: string | null;
-};
-
-type Comment = {
-    id: number;
-    body: string;
-    status: string;
-    user?: User | null;
-};
-
-type Report = {
-    id: number;
-    reason: string | null;
-    details: string | null;
-    status: string;
-    created_at: string;
-    user?: User | null;
-    reviewer?: User | null;
-    comment?: Comment | null;
-};
-
-type PaginationLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
+import type {
+    AdminCommentReport,
+    AdminCommentReportFilters,
+    PaginatedAdminCommentReports,
+} from '@/types/adminComment';
 
 const props = defineProps<{
-    reports: {
-        data: Report[];
-        links: PaginationLink[];
-    };
-    filters: {
-        status?: string;
-    };
+    reports: PaginatedAdminCommentReports;
+    filters: AdminCommentReportFilters;
     statuses: string[];
 }>();
 
-function updateStatus(status: string) {
+const status = ref(props.filters.status ?? '');
+
+const selectedReport = ref<AdminCommentReport | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
+
+function reload() {
     router.get('/admin/comments/reports', {
-        status,
+        status: status.value || undefined,
     }, {
         preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function resetFilters() {
+    status.value = '';
+
+    router.get('/admin/comments/reports', {}, {
+        preserveState: true,
+        preserveScroll: true,
         replace: true,
     });
 }
@@ -67,8 +55,24 @@ function patch(url: string) {
     });
 }
 
-function formatDate(date: string) {
-    return new Date(date).toLocaleString();
+function requestDelete(report: AdminCommentReport) {
+    selectedReport.value = report;
+    deleteDialogOpen.value = true;
+}
+
+function confirmDelete() {
+    if (!selectedReport.value?.comment) return;
+
+    deleting.value = true;
+
+    router.delete(`/admin/comments/${selectedReport.value.comment.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deleting.value = false;
+            deleteDialogOpen.value = false;
+            selectedReport.value = null;
+        },
+    });
 }
 </script>
 
@@ -76,161 +80,102 @@ function formatDate(date: string) {
     <Head title="Comment Reports" />
 
     <AppLayout>
-        <div class="space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold tracking-tight">
-                        Comment Reports
-                    </h1>
+        <div class="space-y-6 p-6">
+            <PageHeader
+                title="Comment Reports"
+                description="Review reports submitted by members."
+            />
 
-                    <p class="text-muted-foreground">
-                        Review reports submitted by members.
-                    </p>
-                </div>
+            <ActionToolbar align="end">
+                <template #secondary>
+                    <Button variant="outline" as-child>
+                        <Link href="/admin/comments">
+                            Back to Comments
+                        </Link>
+                    </Button>
+                </template>
+            </ActionToolbar>
 
-                <Button variant="outline" as-child>
-                    <Link href="/admin/comments">
-                        Back to Comments
-                    </Link>
-                </Button>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Filters</CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                    <select
-                        :value="filters.status"
-                        class="h-10 w-full rounded-md border bg-background px-3 text-sm md:w-64"
-                        @change="updateStatus(($event.target as HTMLSelectElement).value)"
-                    >
-                        <option value="">All Reports</option>
-
-                        <option
-                            v-for="status in statuses"
-                            :key="status"
-                            :value="status"
-                        >
-                            {{ status }}
-                        </option>
-                    </select>
-                </CardContent>
-            </Card>
-
-            <div class="space-y-4">
-                <Card
-                    v-for="report in reports.data"
-                    :key="report.id"
+            <FilterToolbar :columns="1" compact>
+                <select
+                    v-model="status"
+                    class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    @change="reload"
                 >
-                    <CardContent class="p-5">
-                        <div class="flex gap-4">
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                                <Flag class="h-5 w-5 text-muted-foreground" />
-                            </div>
+                    <option value="">All Reports</option>
 
-                            <div class="min-w-0 flex-1 space-y-3">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="font-medium">
-                                        Reported by {{ report.user?.username || report.user?.name || 'Unknown User' }}
-                                    </span>
+                    <option
+                        v-for="item in statuses"
+                        :key="item"
+                        :value="item"
+                    >
+                        {{ item }}
+                    </option>
+                </select>
 
-                                    <span class="text-xs text-muted-foreground">
-                                        {{ formatDate(report.created_at) }}
-                                    </span>
+                <template #actions>
+                    <Button type="button" @click="reload">
+                        Apply Filters
+                    </Button>
 
-                                    <span class="rounded-full bg-muted px-2 py-0.5 text-xs">
-                                        {{ report.status }}
-                                    </span>
-
-                                    <span class="rounded-full bg-muted px-2 py-0.5 text-xs">
-                                        {{ report.reason || 'other' }}
-                                    </span>
-                                </div>
-
-                                <div
-                                    v-if="report.details"
-                                    class="rounded-md border bg-muted/30 p-3 text-sm"
-                                >
-                                    {{ report.details }}
-                                </div>
-
-                                <div
-                                    v-if="report.comment"
-                                    class="rounded-md border p-3"
-                                >
-                                    <div class="mb-2 text-xs text-muted-foreground">
-                                        Comment by {{ report.comment.user?.username || report.comment.user?.name || 'Unknown User' }}
-                                    </div>
-
-                                    <div class="whitespace-pre-line text-sm leading-6">
-                                        {{ report.comment.body }}
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    <Button
-                                        size="sm"
-                                        @click="patch(`/admin/comment-reports/${report.id}/reviewed`)"
-                                    >
-                                        Mark Reviewed
-                                    </Button>
-
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        @click="patch(`/admin/comment-reports/${report.id}/dismiss`)"
-                                    >
-                                        Dismiss
-                                    </Button>
-
-                                    <Button
-                                        v-if="report.comment"
-                                        size="sm"
-                                        variant="outline"
-                                        @click="patch(`/admin/comments/${report.comment.id}/hide`)"
-                                    >
-                                        Hide Comment
-                                    </Button>
-
-                                    <Button
-                                        v-if="report.comment"
-                                        size="sm"
-                                        variant="destructive"
-                                        @click="router.delete(`/admin/comments/${report.comment.id}`, { preserveScroll: true })"
-                                    >
-                                        Delete Comment
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card v-if="reports.data.length === 0">
-                    <CardContent class="p-8 text-center text-muted-foreground">
-                        No reports found.
-                    </CardContent>
-                </Card>
-            </div>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="resetFilters"
+                    >
+                        Reset
+                    </Button>
+                </template>
+            </FilterToolbar>
 
             <div
-                v-if="reports.links.length > 3"
-                class="flex flex-wrap justify-center gap-2"
+                v-if="reports.data.length"
+                class="space-y-4"
             >
-                <Link
-                    v-for="link in reports.links"
-                    :key="link.label"
-                    :href="link.url || '#'"
-                    class="rounded-md border px-3 py-2 text-sm"
-                    :class="{
-                        'bg-primary text-primary-foreground': link.active,
-                        'pointer-events-none opacity-50': !link.url,
-                    }"
-                    v-html="link.label"
+                <CommentReportCard
+                    v-for="report in reports.data"
+                    :key="report.id"
+                    :report="report"
+                    @reviewed="patch(`/admin/comment-reports/${$event.id}/reviewed`)"
+                    @dismiss="patch(`/admin/comment-reports/${$event.id}/dismiss`)"
+                    @hide-comment="
+                        $event.comment
+                            ? patch(`/admin/comments/${$event.comment.id}/hide`)
+                            : undefined
+                    "
+                    @delete-comment="requestDelete"
                 />
             </div>
+
+            <EmptyState
+                v-else
+                title="No reports found"
+                description="There are no comment reports matching the current filter."
+            />
+
+            <Pagination
+                :links="reports.links"
+                :from="reports.from ?? null"
+                :to="reports.to ?? null"
+                :total="reports.total ?? null"
+                item-label="reports"
+                :show-summary="reports.total !== undefined"
+            />
+
+            <ConfirmActionDialog
+                v-model:open="deleteDialogOpen"
+                title="Delete reported comment?"
+                :description="
+                    selectedReport?.comment
+                        ? `Delete comment #${selectedReport.comment.id}? This action cannot be undone.`
+                        : 'This action cannot be undone.'
+                "
+                confirm-label="Delete Comment"
+                destructive
+                :loading="deleting"
+                @confirm="confirmDelete"
+                @cancel="selectedReport = null"
+            />
         </div>
     </AppLayout>
 </template>

@@ -1,244 +1,286 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
+
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-type DownloadRecord = {
-    id: number;
-    download_type: string;
-    ip_address: string | null;
-    downloaded_at: string | null;
-
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    } | null;
-
-    image: {
-        id: number;
-        title: string;
-        slug: string;
-    } | null;
-
-    license: {
-        id: number;
-        license_key: string;
-        license_name: string;
-    } | null;
-
-    order: {
-        id: number;
-        order_number: string;
-    } | null;
-};
+import type {
+    AdminDownloadFilters,
+    PaginatedAdminDownloads,
+} from '@/types/downloadList';
 
 const props = defineProps<{
-    downloads: {
-        data: DownloadRecord[];
-        links: any[];
-        meta: any;
-    };
-    filters: {
-        search: string;
-    };
+    downloads: PaginatedAdminDownloads;
+    filters: AdminDownloadFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
 
-watch(search, () => {
-    router.get('/admin/downloads', {
-        search: search.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
-});
+function reload() {
+    router.get(
+        '/admin/downloads',
+        {
+            search: search.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function resetFilters() {
+    search.value = '';
+
+    router.get(
+        '/admin/downloads',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function sortBy(column: string) {
+    const direction =
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    router.get(
+        '/admin/downloads',
+        {
+            search: search.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
 </script>
 
 <template>
     <Head title="Downloads" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">
-                Downloads
-            </h1>
+        <PageHeader
+            title="Downloads"
+            description="View customer image download history."
+        />
 
-            <p class="mt-1 text-muted-foreground">
-                View customer image download history.
-            </p>
-        </div>
-
-        <div class="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
+        <FilterToolbar :columns="1" compact>
+            <SearchToolbar
                 v-model="search"
                 placeholder="Search downloads, users, images, licenses, or orders..."
-                class="md:max-w-md"
+                :show-reset="false"
+                @search="reload"
             />
-        </div>
 
-        <div class="overflow-x-auto rounded-lg border bg-card">
-            <table class="w-full text-sm">
-                <thead class="border-b bg-muted/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Downloaded
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            User
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Image
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            License
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Order
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Type
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            IP
-                        </th>
-                        <th class="px-4 py-3 text-right font-medium">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
+            <template #actions>
+                <Button
+                    type="button"
+                    @click="reload"
+                >
+                    Apply Filters
+                </Button>
 
-                <tbody>
-                    <tr
-                        v-for="download in downloads.data"
-                        :key="download.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="px-4 py-3">
-                            {{ download.downloaded_at || '—' }}
-                        </td>
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
 
-                        <td class="px-4 py-3">
-                            <div v-if="download.user">
-                                <div class="font-medium">
-                                    {{ download.user.name }}
-                                </div>
+        <DataTable min-width="1200px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell
+                        label="Downloaded"
+                        column="downloaded_at"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                                <div class="text-xs text-muted-foreground">
-                                    {{ download.user.email }}
-                                </div>
+                    <DataTableHeaderCell label="User" />
+                    <DataTableHeaderCell label="Image" />
+                    <DataTableHeaderCell label="License" />
+                    <DataTableHeaderCell label="Order" />
+
+                    <DataTableHeaderCell
+                        label="Type"
+                        column="download_type"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="IP"
+                        column="ip_address"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr
+                    v-for="download in downloads.data"
+                    :key="download.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4">
+                        {{ download.downloaded_at || '—' }}
+                    </td>
+
+                    <td class="p-4">
+                        <div v-if="download.user">
+                            <div class="font-medium">
+                                {{ download.user.name }}
                             </div>
 
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
+                            <div class="text-xs text-muted-foreground">
+                                {{ download.user.email }}
+                            </div>
+                        </div>
 
-                        <td class="px-4 py-3">
-                            <div v-if="download.image">
-                                <div class="font-medium">
-                                    {{ download.image.title }}
-                                </div>
+                        <span
+                            v-else
+                            class="text-muted-foreground"
+                        >
+                            —
+                        </span>
+                    </td>
 
-                                <Link
-                                    :href="`/images/${download.image.slug}`"
-                                    class="text-xs text-primary hover:underline"
-                                >
-                                    View Image
-                                </Link>
+                    <td class="p-4">
+                        <div v-if="download.image">
+                            <div class="font-medium">
+                                {{ download.image.title }}
                             </div>
 
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <div v-if="download.license">
-                                <Link
-                                    :href="`/admin/licenses/${download.license.id}`"
-                                    class="font-medium text-primary hover:underline"
-                                >
-                                    {{ download.license.license_name }}
-                                </Link>
-
-                                <div class="max-w-[220px] break-all text-xs text-muted-foreground">
-                                    {{ download.license.license_key }}
-                                </div>
-                            </div>
-
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
                             <Link
-                                v-if="download.order"
-                                :href="`/admin/orders/${download.order.id}`"
-                                class="text-primary hover:underline"
+                                :href="`/images/${download.image.slug}`"
+                                class="text-xs text-primary hover:underline"
                             >
-                                {{ download.order.order_number }}
+                                View Image
+                            </Link>
+                        </div>
+
+                        <span
+                            v-else
+                            class="text-muted-foreground"
+                        >
+                            —
+                        </span>
+                    </td>
+
+                    <td class="p-4">
+                        <div v-if="download.license">
+                            <Link
+                                :href="`/admin/licenses/${download.license.id}`"
+                                class="font-medium text-primary hover:underline"
+                            >
+                                {{ download.license.license_name }}
                             </Link>
 
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ download.download_type }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ download.ip_address || '—' }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <div class="flex justify-end">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/downloads/${download.id}`">
-                                        <Eye class="h-4 w-4" />
-                                    </Link>
-                                </Button>
+                            <div class="max-w-[220px] break-all font-mono text-xs text-muted-foreground">
+                                {{ download.license.license_key }}
                             </div>
-                        </td>
-                    </tr>
+                        </div>
 
-                    <tr v-if="downloads.data.length === 0">
-                        <td
-                            colspan="8"
-                            class="px-4 py-10 text-center text-muted-foreground"
+                        <span
+                            v-else
+                            class="text-muted-foreground"
                         >
-                            No downloads found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                            —
+                        </span>
+                    </td>
 
-        <div
-            v-if="downloads.links?.length"
-            class="flex flex-wrap gap-2"
-        >
-            <Link
-                v-for="link in downloads.links"
-                :key="link.label"
-                :href="link.url || '#'"
-                v-html="link.label"
-                class="rounded-md border px-3 py-2 text-sm"
-                :class="{
-                    'bg-primary text-primary-foreground': link.active,
-                    'pointer-events-none opacity-50': !link.url,
-                }"
-            />
-        </div>
+                    <td class="p-4">
+                        <Link
+                            v-if="download.order"
+                            :href="`/admin/orders/${download.order.id}`"
+                            class="text-primary hover:underline"
+                        >
+                            {{ download.order.order_number }}
+                        </Link>
+
+                        <span
+                            v-else
+                            class="text-muted-foreground"
+                        >
+                            —
+                        </span>
+                    </td>
+
+                    <td class="p-4 capitalize">
+                        {{ download.download_type }}
+                    </td>
+
+                    <td class="p-4 font-mono text-xs">
+                        {{ download.ip_address || '—' }}
+                    </td>
+
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                as-child
+                            >
+                                <Link :href="`/admin/downloads/${download.id}`">
+                                    View
+                                </Link>
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
+
+                <DataTableEmpty
+                    v-if="downloads.data.length === 0"
+                    :colspan="8"
+                    message="No downloads found."
+                />
+            </tbody>
+        </DataTable>
+
+        <Pagination
+            :links="downloads.links"
+            :from="downloads.from ?? null"
+            :to="downloads.to ?? null"
+            :total="downloads.total ?? null"
+            item-label="downloads"
+            :show-summary="downloads.total !== undefined"
+        />
     </div>
 </template>

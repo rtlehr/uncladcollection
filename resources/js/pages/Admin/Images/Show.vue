@@ -1,78 +1,68 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import {
+    Download,
+    Eye,
+    Heart,
+    ShoppingBag,
+} from '@lucide/vue';
+
 import ActivityLog from '@/components/admin/ActivityLog.vue';
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
+import ChipList from '@/Components/Shared/ChipList.vue';
+import DetailRow from '@/Components/Shared/DetailRow.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import { Button } from '@/components/ui/button';
 
-type Collection = {
-    id: number;
-    name: string;
-};
+import type {
+    AdminImageActivity,
+    AdminImageDetail,
+} from '@/types/adminImageDetail';
 
-type Option = {
-    id: number;
-    name: string;
-};
-
-type ImageRecord = {
-    id: number;
-    title: string;
-    slug: string;
-    description: string | null;
-    original_url: string | null;
-    high_res_url: string | null;
-    thumbnail_url: string | null;
-    icon_url: string | null;
-    photographer: string | null;
-    sort_order: number;
-    is_active: boolean;
-    is_ai_generated: boolean;
-    downloads_count: number;
-    favorites_count: number;
-    purchases_count: number;
-    views_count: number;
-    collection: Collection | null;
-    categories: Option[];
-    tags: Option[];
-    created_at: string | null;
-    updated_at: string | null;
-};
-
-type Activity = {
-    id: number;
-    admin_name: string;
-    action: string;
-    field_name: string | null;
-    old_value: string | null;
-    new_value: string | null;
-    description: string | null;
-    created_at: string | null;
-};
-
-defineProps<{
-    imageRecord: ImageRecord;
-    activities: Activity[];
+const props = defineProps<{
+    imageRecord: AdminImageDetail;
+    activities: AdminImageActivity[];
 }>();
 
 function formatNumber(value: number | null | undefined): string {
     return Number(value ?? 0).toLocaleString();
 }
+
+const previewUrl =
+    props.imageRecord.thumbnail_url
+    || props.imageRecord.original_url
+    || props.imageRecord.high_res_url
+    || props.imageRecord.icon_url;
 </script>
 
 <template>
     <Head :title="`Image: ${imageRecord.title}`" />
 
     <div class="space-y-6 p-6">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-semibold">Image Details</h1>
+        <ShowPageHeader
+            title="Image Details"
+            description="View image files, metadata, publishing status, statistics, and change history."
+            eyebrow="Marketplace"
+        >
+            <template #actions>
+                <StatusBadge
+                    :status="imageRecord.is_active ? 'active' : 'inactive'"
+                    size="md"
+                />
 
-                <p class="text-sm text-muted-foreground">
-                    View image details, file links, metadata, statistics, and change history.
-                </p>
-            </div>
+                <StatusBadge
+                    v-if="imageRecord.is_ai_generated"
+                    status="ai_generated"
+                    size="md"
+                />
 
-            <div class="flex gap-2">
-                <Button variant="outline" as-child>
+                <Button
+                    variant="outline"
+                    as-child
+                >
                     <Link href="/admin/images">
                         Back
                     </Link>
@@ -83,22 +73,23 @@ function formatNumber(value: number | null | undefined): string {
                         Edit Image
                     </Link>
                 </Button>
-            </div>
-        </div>
+            </template>
+        </ShowPageHeader>
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="space-y-6 lg:col-span-2">
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">Image Preview</h2>
-
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+            <div class="space-y-6">
+                <ShowSection
+                    title="Image Preview"
+                    description="Preview the best available generated image file."
+                >
                     <div
-                        v-if="imageRecord.thumbnail_url || imageRecord.original_url || imageRecord.high_res_url"
+                        v-if="previewUrl"
                         class="rounded-lg border bg-muted p-4"
                     >
                         <img
-                            :src="imageRecord.thumbnail_url || imageRecord.original_url || imageRecord.high_res_url || ''"
+                            :src="previewUrl"
                             :alt="imageRecord.title"
-                            class="max-h-[600px] w-full rounded object-contain"
+                            class="max-h-[650px] w-full rounded-md object-contain"
                         />
                     </div>
 
@@ -116,7 +107,11 @@ function formatNumber(value: number | null | undefined): string {
                             size="sm"
                             as-child
                         >
-                            <a :href="imageRecord.original_url" target="_blank">
+                            <a
+                                :href="imageRecord.original_url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 Open Original
                             </a>
                         </Button>
@@ -127,7 +122,11 @@ function formatNumber(value: number | null | undefined): string {
                             size="sm"
                             as-child
                         >
-                            <a :href="imageRecord.high_res_url" target="_blank">
+                            <a
+                                :href="imageRecord.high_res_url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 Open High Res
                             </a>
                         </Button>
@@ -138,7 +137,11 @@ function formatNumber(value: number | null | undefined): string {
                             size="sm"
                             as-child
                         >
-                            <a :href="imageRecord.thumbnail_url" target="_blank">
+                            <a
+                                :href="imageRecord.thumbnail_url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 Open Thumbnail
                             </a>
                         </Button>
@@ -149,46 +152,37 @@ function formatNumber(value: number | null | undefined): string {
                             size="sm"
                             as-child
                         >
-                            <a :href="imageRecord.icon_url" target="_blank">
+                            <a
+                                :href="imageRecord.icon_url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
                                 Open Icon
                             </a>
                         </Button>
                     </div>
-                </div>
+                </ShowSection>
 
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">Image Information</h2>
+                <ShowSection
+                    title="Image Information"
+                    description="Public-facing image title, attribution, and description."
+                >
+                    <ShowDetailsGrid :columns="2">
+                        <DetailRow
+                            label="Title"
+                            :value="imageRecord.title"
+                        />
 
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Title
-                            </div>
+                        <DetailRow
+                            label="Slug"
+                            :value="imageRecord.slug"
+                            break-all
+                        />
 
-                            <div class="mt-1">
-                                {{ imageRecord.title }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Slug
-                            </div>
-
-                            <div class="mt-1 font-mono text-sm">
-                                {{ imageRecord.slug }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Photographer
-                            </div>
-
-                            <div class="mt-1">
-                                {{ imageRecord.photographer || '—' }}
-                            </div>
-                        </div>
+                        <DetailRow
+                            label="Photographer"
+                            :value="imageRecord.photographer"
+                        />
 
                         <div>
                             <div class="text-sm font-medium text-muted-foreground">
@@ -196,7 +190,23 @@ function formatNumber(value: number | null | undefined): string {
                             </div>
 
                             <div class="mt-1">
-                                {{ imageRecord.is_ai_generated ? 'Yes' : 'No' }}
+                                <StatusBadge
+                                    :status="
+                                        imageRecord.is_ai_generated
+                                            ? 'ai_generated'
+                                            : 'non_ai'
+                                    "
+                                    :label="
+                                        imageRecord.is_ai_generated
+                                            ? 'Yes'
+                                            : 'No'
+                                    "
+                                    :tone="
+                                        imageRecord.is_ai_generated
+                                            ? 'info'
+                                            : 'neutral'
+                                    "
+                                />
                             </div>
                         </div>
 
@@ -205,222 +215,191 @@ function formatNumber(value: number | null | undefined): string {
                                 Description
                             </div>
 
-                            <div class="mt-1 whitespace-pre-line">
+                            <div class="mt-1 whitespace-pre-line leading-7">
                                 {{ imageRecord.description || '—' }}
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </ShowDetailsGrid>
+                </ShowSection>
 
                 <div class="grid gap-6 lg:grid-cols-2">
-                    <div class="rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="mb-4 text-lg font-semibold">Categories</h2>
+                    <ShowSection
+                        title="Categories"
+                        description="Categories assigned to this image."
+                    >
+                        <ChipList
+                            v-if="imageRecord.categories.length"
+                            :items="imageRecord.categories"
+                        />
 
-                        <div v-if="imageRecord.categories.length" class="flex flex-wrap gap-2">
-                            <span
-                                v-for="category in imageRecord.categories"
-                                :key="category.id"
-                                class="rounded-md border px-3 py-1 text-sm"
-                            >
-                                {{ category.name }}
-                            </span>
-                        </div>
-
-                        <p v-else class="text-sm text-muted-foreground">
+                        <p
+                            v-else
+                            class="text-sm text-muted-foreground"
+                        >
                             No categories assigned.
                         </p>
-                    </div>
+                    </ShowSection>
 
-                    <div class="rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="mb-4 text-lg font-semibold">Tags</h2>
+                    <ShowSection
+                        title="Tags"
+                        description="Search and discovery tags assigned to this image."
+                    >
+                        <ChipList
+                            v-if="imageRecord.tags.length"
+                            :items="imageRecord.tags"
+                        />
 
-                        <div v-if="imageRecord.tags.length" class="flex flex-wrap gap-2">
-                            <span
-                                v-for="tag in imageRecord.tags"
-                                :key="tag.id"
-                                class="rounded-md border px-3 py-1 text-sm"
-                            >
-                                {{ tag.name }}
-                            </span>
-                        </div>
-
-                        <p v-else class="text-sm text-muted-foreground">
+                        <p
+                            v-else
+                            class="text-sm text-muted-foreground"
+                        >
                             No tags assigned.
                         </p>
-                    </div>
+                    </ShowSection>
                 </div>
             </div>
 
             <div class="space-y-6">
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">Publishing</h2>
-
-                    <div class="space-y-4">
+                <ShowSection
+                    title="Publishing"
+                    description="Marketplace visibility and organization."
+                >
+                    <ShowDetailsGrid :columns="1">
                         <div>
                             <div class="text-sm font-medium text-muted-foreground">
                                 Status
                             </div>
 
                             <div class="mt-1">
-                                <span
-                                    :class="imageRecord.is_active
-                                        ? 'font-medium text-green-600'
-                                        : 'font-medium text-red-600'"
-                                >
-                                    {{ imageRecord.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                <StatusBadge
+                                    :status="imageRecord.is_active ? 'active' : 'inactive'"
+                                />
                             </div>
                         </div>
 
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Collection
-                            </div>
+                        <DetailRow
+                            label="Collection"
+                            :value="imageRecord.collection?.name"
+                        />
 
-                            <div class="mt-1">
-                                {{ imageRecord.collection?.name ?? '—' }}
-                            </div>
+                        <DetailRow
+                            label="Sort Order"
+                            :value="imageRecord.sort_order"
+                        />
+                    </ShowDetailsGrid>
+                </ShowSection>
+
+                <ShowSection
+                    title="Statistics"
+                    description="Marketplace engagement and purchase activity."
+                >
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <MetricCard
+                            label="Downloads"
+                            :value="formatNumber(imageRecord.downloads_count)"
+                            size="sm"
+                        >
+                            <template #icon>
+                                <Download class="h-5 w-5" />
+                            </template>
+                        </MetricCard>
+
+                        <MetricCard
+                            label="Favorites"
+                            :value="formatNumber(imageRecord.favorites_count)"
+                            size="sm"
+                        >
+                            <template #icon>
+                                <Heart class="h-5 w-5" />
+                            </template>
+                        </MetricCard>
+
+                        <MetricCard
+                            label="Purchases"
+                            :value="formatNumber(imageRecord.purchases_count)"
+                            size="sm"
+                        >
+                            <template #icon>
+                                <ShoppingBag class="h-5 w-5" />
+                            </template>
+                        </MetricCard>
+
+                        <MetricCard
+                            label="Views"
+                            :value="formatNumber(imageRecord.views_count)"
+                            size="sm"
+                        >
+                            <template #icon>
+                                <Eye class="h-5 w-5" />
+                            </template>
+                        </MetricCard>
+                    </div>
+                </ShowSection>
+
+                <ShowSection
+                    title="File Status"
+                    description="Availability of generated image variants."
+                >
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-4 rounded-md border p-3">
+                            <span class="text-sm font-medium">Original</span>
+                            <StatusBadge
+                                :status="imageRecord.original_url ? 'available' : 'missing'"
+                                :label="imageRecord.original_url ? 'Available' : 'Missing'"
+                                :tone="imageRecord.original_url ? 'success' : 'danger'"
+                            />
                         </div>
 
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Sort Order
-                            </div>
+                        <div class="flex items-center justify-between gap-4 rounded-md border p-3">
+                            <span class="text-sm font-medium">High Res</span>
+                            <StatusBadge
+                                :status="imageRecord.high_res_url ? 'available' : 'missing'"
+                                :label="imageRecord.high_res_url ? 'Available' : 'Missing'"
+                                :tone="imageRecord.high_res_url ? 'success' : 'danger'"
+                            />
+                        </div>
 
-                            <div class="mt-1">
-                                {{ imageRecord.sort_order }}
-                            </div>
+                        <div class="flex items-center justify-between gap-4 rounded-md border p-3">
+                            <span class="text-sm font-medium">Thumbnail</span>
+                            <StatusBadge
+                                :status="imageRecord.thumbnail_url ? 'available' : 'missing'"
+                                :label="imageRecord.thumbnail_url ? 'Available' : 'Missing'"
+                                :tone="imageRecord.thumbnail_url ? 'success' : 'danger'"
+                            />
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 rounded-md border p-3">
+                            <span class="text-sm font-medium">Icon</span>
+                            <StatusBadge
+                                :status="imageRecord.icon_url ? 'available' : 'missing'"
+                                :label="imageRecord.icon_url ? 'Available' : 'Missing'"
+                                :tone="imageRecord.icon_url ? 'success' : 'danger'"
+                            />
                         </div>
                     </div>
-                </div>
+                </ShowSection>
 
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">Statistics</h2>
+                <ShowSection
+                    title="Metadata"
+                    description="Administrative timestamps and identifiers."
+                >
+                    <ShowDetailsGrid :columns="1">
+                        <DetailRow
+                            label="Created"
+                            :value="imageRecord.created_at"
+                        />
 
-                    <div class="grid gap-4">
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Downloads
-                            </div>
+                        <DetailRow
+                            label="Last Updated"
+                            :value="imageRecord.updated_at"
+                        />
 
-                            <div class="mt-1 text-2xl font-semibold">
-                                {{ formatNumber(imageRecord.downloads_count) }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Favorites
-                            </div>
-
-                            <div class="mt-1 text-2xl font-semibold">
-                                {{ formatNumber(imageRecord.favorites_count) }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Purchases
-                            </div>
-
-                            <div class="mt-1 text-2xl font-semibold">
-                                {{ formatNumber(imageRecord.purchases_count) }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Views
-                            </div>
-
-                            <div class="mt-1 text-2xl font-semibold">
-                                {{ formatNumber(imageRecord.views_count) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">File Status</h2>
-
-                    <div class="grid gap-4">
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Original
-                            </div>
-
-                            <div class="mt-1 font-medium">
-                                {{ imageRecord.original_url ? 'Available' : 'Missing' }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                High Res
-                            </div>
-
-                            <div class="mt-1 font-medium">
-                                {{ imageRecord.high_res_url ? 'Available' : 'Missing' }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Thumbnail
-                            </div>
-
-                            <div class="mt-1 font-medium">
-                                {{ imageRecord.thumbnail_url ? 'Available' : 'Missing' }}
-                            </div>
-                        </div>
-
-                        <div class="rounded-md border p-4">
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Icon
-                            </div>
-
-                            <div class="mt-1 font-medium">
-                                {{ imageRecord.icon_url ? 'Available' : 'Missing' }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-lg border bg-card p-6 shadow-sm">
-                    <h2 class="mb-4 text-lg font-semibold">Metadata</h2>
-
-                    <div class="space-y-4">
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Created
-                            </div>
-
-                            <div class="mt-1">
-                                {{ imageRecord.created_at || '—' }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Last Updated
-                            </div>
-
-                            <div class="mt-1">
-                                {{ imageRecord.updated_at || '—' }}
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="text-sm font-medium text-muted-foreground">
-                                Image ID
-                            </div>
-
-                            <div class="mt-1 font-mono text-sm">
-                                {{ imageRecord.id }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <DetailRow
+                            label="Image ID"
+                            :value="imageRecord.id"
+                        />
+                    </ShowDetailsGrid>
+                </ShowSection>
             </div>
         </div>
 

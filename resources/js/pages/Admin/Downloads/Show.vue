@@ -1,136 +1,166 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import {
+    Download,
+    FileKey,
+    Globe2,
+    Receipt,
+} from '@lucide/vue';
 
-type DownloadRecord = {
-    id: number;
-    download_type: string;
-    ip_address: string | null;
-    user_agent: string | null;
-    downloaded_at: string | null;
-    created_at: string | null;
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
+import DetailRow from '@/Components/Shared/DetailRow.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import { Button } from '@/components/ui/button';
 
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    } | null;
-
-    image: {
-        id: number;
-        title: string;
-        slug: string;
-        photographer: string | null;
-        icon_url: string | null;
-    } | null;
-
-    license: {
-        id: number;
-        license_key: string;
-        license_name: string;
-        status: string;
-        downloads_used: number;
-        download_limit: number | null;
-        order_id: number | null;
-    } | null;
-
-    order: {
-        id: number;
-        order_number: string;
-        status: string;
-        total_formatted: string;
-        paid_at: string | null;
-    } | null;
-};
+import type { AdminDownloadDetail } from '@/types/downloadDetail';
 
 defineProps<{
-    downloadRecord: DownloadRecord;
+    downloadRecord: AdminDownloadDetail;
 }>();
+
+function downloadUsageLabel(
+    downloadsUsed: number,
+    downloadLimit: number | null,
+): string {
+    return downloadLimit === null
+        ? `${downloadsUsed} / Unlimited`
+        : `${downloadsUsed} / ${downloadLimit}`;
+}
 </script>
 
 <template>
     <Head :title="`Download #${downloadRecord.id}`" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <Link
-                href="/admin/downloads"
-                class="text-sm text-muted-foreground hover:underline"
+        <ShowPageHeader
+            title="Download Details"
+            :description="`Download record #${downloadRecord.id}`"
+            eyebrow="Commerce"
+        >
+            <template #actions>
+                <Button
+                    variant="outline"
+                    as-child
+                >
+                    <Link href="/admin/downloads">
+                        Back to Downloads
+                    </Link>
+                </Button>
+            </template>
+        </ShowPageHeader>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+                label="Download Type"
+                :value="downloadRecord.download_type"
             >
-                ← Back to Downloads
-            </Link>
+                <template #icon>
+                    <Download class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-            <h1 class="mt-2 text-3xl font-semibold">
-                Download Details
-            </h1>
+            <MetricCard
+                label="License Usage"
+                :value="
+                    downloadRecord.license
+                        ? downloadUsageLabel(
+                            downloadRecord.license.downloads_used,
+                            downloadRecord.license.download_limit,
+                        )
+                        : '—'
+                "
+            >
+                <template #icon>
+                    <FileKey class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-            <p class="mt-1 text-muted-foreground">
-                Download record #{{ downloadRecord.id }}
-            </p>
+            <MetricCard
+                label="Order Total"
+                :value="downloadRecord.order?.total_formatted ?? '—'"
+                emphasized
+            >
+                <template #icon>
+                    <Receipt class="h-5 w-5" />
+                </template>
+            </MetricCard>
+
+            <MetricCard
+                label="IP Address"
+                :value="downloadRecord.ip_address ?? '—'"
+                size="sm"
+            >
+                <template #icon>
+                    <Globe2 class="h-5 w-5" />
+                </template>
+            </MetricCard>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-3">
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Download
-                </h2>
+            <ShowSection
+                title="Download"
+                description="Core download metadata."
+            >
+                <ShowDetailsGrid :columns="1">
+                    <DetailRow
+                        label="Downloaded"
+                        :value="downloadRecord.downloaded_at"
+                    />
 
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Downloaded</span>
-                        <span>{{ downloadRecord.downloaded_at || '—' }}</span>
-                    </div>
+                    <DetailRow
+                        label="Type"
+                        :value="downloadRecord.download_type"
+                    />
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Type</span>
-                        <span>{{ downloadRecord.download_type }}</span>
-                    </div>
+                    <DetailRow
+                        label="IP Address"
+                        :value="downloadRecord.ip_address"
+                    />
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">IP Address</span>
-                        <span>{{ downloadRecord.ip_address || '—' }}</span>
-                    </div>
+                    <DetailRow
+                        label="Created"
+                        :value="downloadRecord.created_at"
+                    />
+                </ShowDetailsGrid>
+            </ShowSection>
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Created</span>
-                        <span>{{ downloadRecord.created_at || '—' }}</span>
-                    </div>
-                </div>
-            </div>
+            <ShowSection
+                title="User"
+                description="User account associated with this download."
+            >
+                <ShowDetailsGrid :columns="1">
+                    <DetailRow
+                        label="Name"
+                        :value="downloadRecord.user?.name"
+                        fallback="No user attached"
+                    />
 
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    User
-                </h2>
+                    <DetailRow
+                        label="Email"
+                        :value="downloadRecord.user?.email"
+                    />
+                </ShowDetailsGrid>
+            </ShowSection>
 
-                <div v-if="downloadRecord.user" class="space-y-2">
-                    <div class="font-medium">
-                        {{ downloadRecord.user.name }}
-                    </div>
+            <ShowSection
+                title="Image"
+                description="Marketplace image associated with this download."
+            >
+                <div v-if="downloadRecord.image" class="space-y-4">
+                    <ShowDetailsGrid :columns="1">
+                        <DetailRow
+                            label="Title"
+                            :value="downloadRecord.image.title"
+                        />
 
-                    <div class="text-sm text-muted-foreground">
-                        {{ downloadRecord.user.email }}
-                    </div>
-                </div>
-
-                <div v-else class="text-muted-foreground">
-                    No user attached.
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Image
-                </h2>
-
-                <div v-if="downloadRecord.image" class="space-y-3">
-                    <div class="font-medium">
-                        {{ downloadRecord.image.title }}
-                    </div>
-
-                    <div class="text-sm text-muted-foreground">
-                        Photographer:
-                        {{ downloadRecord.image.photographer || '—' }}
-                    </div>
+                        <DetailRow
+                            label="Photographer"
+                            :value="downloadRecord.image.photographer"
+                        />
+                    </ShowDetailsGrid>
 
                     <img
                         v-if="downloadRecord.image.icon_url"
@@ -139,128 +169,157 @@ defineProps<{
                         class="h-32 w-auto rounded-md border object-contain"
                     />
 
-                    <Link
-                        :href="`/images/${downloadRecord.image.slug}`"
-                        class="text-sm text-primary hover:underline"
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as-child
                     >
-                        View Public Image
-                    </Link>
+                        <Link :href="`/images/${downloadRecord.image.slug}`">
+                            View Public Image
+                        </Link>
+                    </Button>
                 </div>
 
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No image attached.
-                </div>
-            </div>
+                </p>
+            </ShowSection>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    License
-                </h2>
+            <ShowSection
+                title="License"
+                description="License used for this download."
+            >
+                <div v-if="downloadRecord.license" class="space-y-4">
+                    <ShowDetailsGrid :columns="2">
+                        <DetailRow
+                            label="License Type"
+                            :value="downloadRecord.license.license_name"
+                        />
 
-                <div v-if="downloadRecord.license" class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">License Type</span>
+                        <div>
+                            <div class="text-sm font-medium text-muted-foreground">
+                                Status
+                            </div>
 
-                        <Link
-                            :href="`/admin/licenses/${downloadRecord.license.id}`"
-                            class="text-primary hover:underline"
-                        >
-                            {{ downloadRecord.license.license_name }}
+                            <div class="mt-1">
+                                <StatusBadge
+                                    :status="downloadRecord.license.status"
+                                />
+                            </div>
+                        </div>
+
+                        <DetailRow
+                            label="Downloads Used"
+                            :value="
+                                downloadUsageLabel(
+                                    downloadRecord.license.downloads_used,
+                                    downloadRecord.license.download_limit,
+                                )
+                            "
+                        />
+
+                        <DetailRow
+                            label="License Key"
+                            :value="downloadRecord.license.license_key"
+                            break-all
+                        />
+                    </ShowDetailsGrid>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as-child
+                    >
+                        <Link :href="`/admin/licenses/${downloadRecord.license.id}`">
+                            View License
                         </Link>
-                    </div>
-
-                    <div class="space-y-1">
-                        <div class="text-muted-foreground">
-                            License Key
-                        </div>
-
-                        <div class="break-all text-xs">
-                            {{ downloadRecord.license.license_key }}
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Status</span>
-                        <span>{{ downloadRecord.license.status }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Downloads Used</span>
-                        <span>
-                            {{ downloadRecord.license.downloads_used }}
-
-                            <template v-if="downloadRecord.license.download_limit !== null">
-                                / {{ downloadRecord.license.download_limit }}
-                            </template>
-
-                            <template v-else>
-                                / Unlimited
-                            </template>
-                        </span>
-                    </div>
+                    </Button>
                 </div>
 
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No license attached.
-                </div>
-            </div>
+                </p>
+            </ShowSection>
 
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Order
-                </h2>
+            <ShowSection
+                title="Order"
+                description="Order associated with this download."
+            >
+                <div v-if="downloadRecord.order" class="space-y-4">
+                    <ShowDetailsGrid :columns="2">
+                        <DetailRow
+                            label="Order Number"
+                            :value="downloadRecord.order.order_number"
+                        />
 
-                <div v-if="downloadRecord.order" class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Order Number</span>
+                        <div>
+                            <div class="text-sm font-medium text-muted-foreground">
+                                Status
+                            </div>
 
-                        <Link
-                            :href="`/admin/orders/${downloadRecord.order.id}`"
-                            class="text-primary hover:underline"
-                        >
-                            {{ downloadRecord.order.order_number }}
+                            <div class="mt-1">
+                                <StatusBadge
+                                    :status="downloadRecord.order.status"
+                                />
+                            </div>
+                        </div>
+
+                        <DetailRow
+                            label="Paid"
+                            :value="downloadRecord.order.paid_at"
+                        />
+
+                        <DetailRow
+                            label="Total"
+                            :value="downloadRecord.order.total_formatted"
+                        />
+                    </ShowDetailsGrid>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as-child
+                    >
+                        <Link :href="`/admin/orders/${downloadRecord.order.id}`">
+                            View Order
                         </Link>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Status</span>
-                        <span>{{ downloadRecord.order.status }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Paid</span>
-                        <span>{{ downloadRecord.order.paid_at || '—' }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Total</span>
-                        <span>{{ downloadRecord.order.total_formatted }}</span>
-                    </div>
+                    </Button>
                 </div>
 
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No order attached.
-                </div>
-            </div>
+                </p>
+            </ShowSection>
         </div>
 
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
-            <h2 class="mb-4 text-lg font-semibold">
-                User Agent
-            </h2>
-
+        <ShowSection
+            title="User Agent"
+            description="Browser and device information recorded with the download."
+        >
             <div
                 v-if="downloadRecord.user_agent"
-                class="break-words rounded-md border bg-muted/40 p-4 text-sm"
+                class="break-words rounded-md border bg-muted/40 p-4 font-mono text-xs leading-6"
             >
                 {{ downloadRecord.user_agent }}
             </div>
 
-            <p v-else class="text-sm text-muted-foreground">
+            <p
+                v-else
+                class="text-sm text-muted-foreground"
+            >
                 No user agent recorded.
             </p>
-        </div>
+        </ShowSection>
     </div>
 </template>

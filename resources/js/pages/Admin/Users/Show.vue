@@ -1,69 +1,41 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
 
 import ActivityLog from '@/components/admin/ActivityLog.vue';
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
+import ShowSummaryGrid from '@/Components/Show/ShowSummaryGrid.vue';
+import DetailRow from '@/Components/Shared/DetailRow.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import StatCard from '@/Components/Shared/StatCard.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
 
-type Role = {
-    id: number;
-    name: string;
-    label: string;
-};
-
-type Permission = {
-    id: number;
-    name: string;
-    label: string;
-    group_name: string | null;
-};
-
-type UserRecord = {
-    id: number;
-    name: string;
-    username: string | null;
-    email: string;
-    is_disabled: boolean;
-    roles: Role[];
-    permissions: Permission[];
-    all_permissions_count: number;
-    created_at: string | null;
-    updated_at: string | null;
-};
-
-type Activity = {
-    id: number;
-    admin_name: string;
-    action: string;
-    field_name: string | null;
-    old_value: string | null;
-    new_value: string | null;
-    description: string | null;
-    created_at: string | null;
-};
+import type {
+    AdminActivityRecord,
+    AdminUserRecord,
+} from '@/types/adminUser';
 
 defineProps<{
-    userRecord: UserRecord;
-    activities: Activity[];
+    userRecord: AdminUserRecord;
+    activities: AdminActivityRecord[];
 }>();
 </script>
 
 <template>
     <Head :title="`User: ${userRecord.name}`" />
 
-    <div class="p-6 space-y-6">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-semibold">User Details</h1>
-                <p class="text-sm text-muted-foreground">
-                    View account information, roles, permissions, and change history.
-                </p>
-            </div>
-
-            <div class="flex gap-2">
+    <div class="space-y-6 p-6">
+        <ShowPageHeader
+            title="User Details"
+            description="View account information, roles, permissions, and change history."
+        >
+            <template #actions>
                 <Button variant="outline" as-child>
-                    <Link href="/admin/users">
-                        Back
-                    </Link>
+                    <Link href="/admin/users">Back</Link>
                 </Button>
 
                 <Button as-child>
@@ -71,120 +43,48 @@ defineProps<{
                         Edit User
                     </Link>
                 </Button>
-            </div>
-        </div>
+            </template>
+        </ShowPageHeader>
 
         <div class="grid gap-6 lg:grid-cols-3">
-            <div class="rounded-lg border bg-card p-6 shadow-sm lg:col-span-2">
-                <h2 class="mb-4 text-lg font-semibold">Account Information</h2>
+            <ShowSection title="Account Information" class="lg:col-span-2">
+                <ShowDetailsGrid :columns="2">
+                    <DetailRow label="Name" :value="userRecord.name" />
+                    <DetailRow label="Username" :value="userRecord.username" />
+                    <DetailRow label="Email" :value="userRecord.email" />
 
-                <div class="grid gap-4 md:grid-cols-2">
                     <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Name
-                        </div>
+                        <div class="text-sm font-medium text-muted-foreground">Status</div>
                         <div class="mt-1">
-                            {{ userRecord.name }}
+                            <StatusBadge
+                                :status="userRecord.is_disabled ? 'disabled' : 'active'"
+                                size="md"
+                            />
                         </div>
                     </div>
 
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Username
-                        </div>
-                        <div class="mt-1">
-                            {{ userRecord.username || '—' }}
-                        </div>
-                    </div>
+                    <DetailRow label="Created" :value="userRecord.created_at" />
+                    <DetailRow label="Last Updated" :value="userRecord.updated_at" />
+                </ShowDetailsGrid>
+            </ShowSection>
 
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Email
-                        </div>
-                        <div class="mt-1">
-                            {{ userRecord.email }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Status
-                        </div>
-                        <div class="mt-1">
-                            <span
-                                :class="userRecord.is_disabled ? 'font-medium text-red-600' : 'font-medium text-green-600'"
-                            >
-                                {{ userRecord.is_disabled ? 'Disabled' : 'Active' }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Created
-                        </div>
-                        <div class="mt-1">
-                            {{ userRecord.created_at || '—' }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Last Updated
-                        </div>
-                        <div class="mt-1">
-                            {{ userRecord.updated_at || '—' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">Summary</h2>
-
-                <div class="space-y-4">
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Roles
-                        </div>
-                        <div class="mt-1 text-2xl font-semibold">
-                            {{ userRecord.roles.length }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Direct Permissions
-                        </div>
-                        <div class="mt-1 text-2xl font-semibold">
-                            {{ userRecord.permissions.length }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-sm font-medium text-muted-foreground">
-                            Total Permissions
-                        </div>
-                        <div class="mt-1 text-2xl font-semibold">
-                            {{ userRecord.all_permissions_count }}
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <ShowSection title="Summary">
+                <ShowSummaryGrid :columns="1">
+                    <StatCard label="Roles" :value="userRecord.roles.length" />
+                    <StatCard label="Direct Permissions" :value="userRecord.permissions.length" />
+                    <StatCard label="Total Permissions" :value="userRecord.all_permissions_count" />
+                </ShowSummaryGrid>
+            </ShowSection>
         </div>
 
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
-            <h2 class="mb-4 text-lg font-semibold">Roles</h2>
-
-            <div v-if="userRecord.roles.length" class="flex flex-wrap gap-2">
+        <ShowSection title="Roles" description="Roles assigned directly to this user.">
+            <div v-if="userRecord.roles.length" class="flex flex-wrap gap-3">
                 <div
                     v-for="role in userRecord.roles"
                     :key="role.id"
                     class="rounded-md border px-3 py-2 text-sm"
                 >
-                    <div class="font-medium">
-                        {{ role.label }}
-                    </div>
+                    <div class="font-medium">{{ role.label }}</div>
                     <div class="font-mono text-xs text-muted-foreground">
                         {{ role.name }}
                     </div>
@@ -194,49 +94,41 @@ defineProps<{
             <p v-else class="text-sm text-muted-foreground">
                 This user does not have any assigned roles.
             </p>
-        </div>
+        </ShowSection>
 
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
-            <h2 class="mb-4 text-lg font-semibold">Direct Permissions</h2>
+        <ShowSection
+            title="Direct Permissions"
+            description="Permissions assigned directly to this user, excluding role-based permissions."
+        >
+            <DataTable min-width="700px">
+                <thead>
+                    <tr class="border-b bg-muted/30">
+                        <DataTableHeaderCell label="Permission" />
+                        <DataTableHeaderCell label="Name" />
+                        <DataTableHeaderCell label="Group" />
+                    </tr>
+                </thead>
 
-            <div v-if="userRecord.permissions.length" class="overflow-hidden rounded-md border">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b text-left">
-                            <th class="p-3">Permission</th>
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Group</th>
-                        </tr>
-                    </thead>
+                <tbody>
+                    <tr
+                        v-for="permission in userRecord.permissions"
+                        :key="permission.id"
+                        class="border-b last:border-0 hover:bg-muted/20"
+                    >
+                        <td class="p-4 font-medium">{{ permission.label }}</td>
+                        <td class="p-4 font-mono text-xs">{{ permission.name }}</td>
+                        <td class="p-4">{{ permission.group_name || 'Ungrouped' }}</td>
+                    </tr>
 
-                    <tbody>
-                        <tr
-                            v-for="permission in userRecord.permissions"
-                            :key="permission.id"
-                            class="border-b last:border-0"
-                        >
-                            <td class="p-3 font-medium">
-                                {{ permission.label }}
-                            </td>
-
-                            <td class="p-3 font-mono text-xs">
-                                {{ permission.name }}
-                            </td>
-
-                            <td class="p-3">
-                                {{ permission.group_name || 'Ungrouped' }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <p v-else class="text-sm text-muted-foreground">
-                This user does not have any direct permissions.
-            </p>
-        </div>
+                    <DataTableEmpty
+                        v-if="userRecord.permissions.length === 0"
+                        :colspan="3"
+                        message="This user does not have any direct permissions."
+                    />
+                </tbody>
+            </DataTable>
+        </ShowSection>
 
         <ActivityLog :activities="activities" />
-        
     </div>
 </template>

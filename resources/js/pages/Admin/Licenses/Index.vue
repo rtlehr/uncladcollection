@@ -1,93 +1,123 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
+
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-type LicenseRecord = {
-    id: number;
-    license_key: string;
-    status: string;
-    license_name: string;
-    downloads_used: number;
-    download_limit: number | null;
-    downloads_count: number;
-    starts_at: string | null;
-    expires_at: string | null;
-    created_at: string | null;
-
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    } | null;
-
-    image: {
-        id: number;
-        title: string;
-        slug: string;
-    } | null;
-
-    order: {
-        id: number;
-        order_number: string;
-    } | null;
-};
+import type {
+    AdminLicenseFilters,
+    PaginatedAdminLicenses,
+} from '@/types/licenseList';
 
 const props = defineProps<{
-    licenses: {
-        data: LicenseRecord[];
-        links: any[];
-        meta: any;
-    };
-    filters: {
-        search: string;
-        status: string;
-    };
+    licenses: PaginatedAdminLicenses;
+    filters: AdminLicenseFilters;
     statuses: string[];
 }>();
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 
-watch([search, status], () => {
-    router.get('/admin/licenses', {
-        search: search.value,
-        status: status.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
-});
+function reload() {
+    router.get(
+        '/admin/licenses',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function resetFilters() {
+    search.value = '';
+    status.value = '';
+
+    router.get(
+        '/admin/licenses',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function sortBy(column: string) {
+    const direction =
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    router.get(
+        '/admin/licenses',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function downloadLabel(
+    downloadsUsed: number,
+    downloadLimit: number | null,
+): string {
+    if (downloadLimit === null) {
+        return `${downloadsUsed} / Unlimited`;
+    }
+
+    return `${downloadsUsed} / ${downloadLimit}`;
+}
 </script>
 
 <template>
     <Head title="Licenses" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">
-                Licenses
-            </h1>
+        <PageHeader
+            title="Licenses"
+            description="View customer image licenses and download usage."
+        />
 
-            <p class="mt-1 text-muted-foreground">
-                View customer image licenses and download usage.
-            </p>
-        </div>
-
-        <div class="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
+        <FilterToolbar :columns="2" compact>
+            <SearchToolbar
                 v-model="search"
                 placeholder="Search license, user, image, or order..."
-                class="md:max-w-sm"
+                :show-reset="false"
+                @search="reload"
             />
 
             <select
                 v-model="status"
                 class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                @change="reload"
             >
-                <option value="">All Statuses</option>
+                <option value="">
+                    All Statuses
+                </option>
 
                 <option
                     v-for="licenseStatus in statuses"
@@ -97,175 +127,209 @@ watch([search, status], () => {
                     {{ licenseStatus }}
                 </option>
             </select>
-        </div>
 
-        <div class="overflow-x-auto rounded-lg border bg-card">
-            <table class="w-full text-sm">
-                <thead class="border-b bg-muted/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium">
-                            License
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            User
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Image
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Order
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Status
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Downloads
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Expires
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Created
-                        </th>
-                        <th class="px-4 py-3 text-right font-medium">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
+            <template #actions>
+                <Button
+                    type="button"
+                    @click="reload"
+                >
+                    Apply Filters
+                </Button>
 
-                <tbody>
-                    <tr
-                        v-for="license in licenses.data"
-                        :key="license.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="px-4 py-3">
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
+
+        <DataTable min-width="1200px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell
+                        label="License"
+                        column="license_key"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell label="User" />
+                    <DataTableHeaderCell label="Image" />
+                    <DataTableHeaderCell label="Order" />
+
+                    <DataTableHeaderCell
+                        label="Status"
+                        column="status"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Downloads"
+                        column="downloads_used"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Expires"
+                        column="expires_at"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Created"
+                        column="created_at"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr
+                    v-for="license in licenses.data"
+                    :key="license.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4">
+                        <div class="font-medium">
+                            {{ license.license_name }}
+                        </div>
+
+                        <div class="max-w-[240px] break-all font-mono text-xs text-muted-foreground">
+                            {{ license.license_key }}
+                        </div>
+                    </td>
+
+                    <td class="p-4">
+                        <div v-if="license.user">
                             <div class="font-medium">
-                                {{ license.license_name }}
+                                {{ license.user.name }}
                             </div>
 
-                            <div class="max-w-[240px] break-all text-xs text-muted-foreground">
-                                {{ license.license_key }}
+                            <div class="text-xs text-muted-foreground">
+                                {{ license.user.email }}
                             </div>
-                        </td>
+                        </div>
 
-                        <td class="px-4 py-3">
-                            <div v-if="license.user">
-                                <div class="font-medium">
-                                    {{ license.user.name }}
-                                </div>
-
-                                <div class="text-xs text-muted-foreground">
-                                    {{ license.user.email }}
-                                </div>
-                            </div>
-
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <div v-if="license.image">
-                                <div class="font-medium">
-                                    {{ license.image.title }}
-                                </div>
-
-                                <Link
-                                    :href="`/images/${license.image.slug}`"
-                                    class="text-xs text-primary hover:underline"
-                                >
-                                    View Image
-                                </Link>
-                            </div>
-
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <Link
-                                v-if="license.order"
-                                :href="`/admin/orders/${license.order.id}`"
-                                class="text-primary hover:underline"
-                            >
-                                {{ license.order.order_number }}
-                            </Link>
-
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <span class="rounded-full border px-2 py-1 text-xs">
-                                {{ license.status }}
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ license.downloads_used }}
-
-                            <span v-if="license.download_limit !== null">
-                                / {{ license.download_limit }}
-                            </span>
-
-                            <span v-else>
-                                / Unlimited
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ license.expires_at || 'Never' }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ license.created_at || '—' }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <div class="flex justify-end">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/licenses/${license.id}`">
-                                        <Eye class="h-4 w-4" />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr v-if="licenses.data.length === 0">
-                        <td
-                            colspan="9"
-                            class="px-4 py-10 text-center text-muted-foreground"
+                        <span
+                            v-else
+                            class="text-muted-foreground"
                         >
-                            No licenses found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                            —
+                        </span>
+                    </td>
 
-        <div
-            v-if="licenses.links?.length"
-            class="flex flex-wrap gap-2"
-        >
-            <Link
-                v-for="link in licenses.links"
-                :key="link.label"
-                :href="link.url || '#'"
-                v-html="link.label"
-                class="rounded-md border px-3 py-2 text-sm"
-                :class="{
-                    'bg-primary text-primary-foreground': link.active,
-                    'pointer-events-none opacity-50': !link.url,
-                }"
-            />
-        </div>
+                    <td class="p-4">
+                        <div v-if="license.image">
+                            <div class="font-medium">
+                                {{ license.image.title }}
+                            </div>
+
+                            <Link
+                                :href="`/images/${license.image.slug}`"
+                                class="text-xs text-primary hover:underline"
+                            >
+                                View Image
+                            </Link>
+                        </div>
+
+                        <span
+                            v-else
+                            class="text-muted-foreground"
+                        >
+                            —
+                        </span>
+                    </td>
+
+                    <td class="p-4">
+                        <Link
+                            v-if="license.order"
+                            :href="`/admin/orders/${license.order.id}`"
+                            class="text-primary hover:underline"
+                        >
+                            {{ license.order.order_number }}
+                        </Link>
+
+                        <span
+                            v-else
+                            class="text-muted-foreground"
+                        >
+                            —
+                        </span>
+                    </td>
+
+                    <td class="p-4">
+                        <StatusBadge :status="license.status" />
+                    </td>
+
+                    <td class="p-4">
+                        {{
+                            downloadLabel(
+                                license.downloads_used,
+                                license.download_limit,
+                            )
+                        }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ license.expires_at || 'Never' }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ license.created_at || '—' }}
+                    </td>
+
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                as-child
+                            >
+                                <Link :href="`/admin/licenses/${license.id}`">
+                                    View
+                                </Link>
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
+
+                <DataTableEmpty
+                    v-if="licenses.data.length === 0"
+                    :colspan="9"
+                    message="No licenses found."
+                />
+            </tbody>
+        </DataTable>
+
+        <Pagination
+            :links="licenses.links"
+            :from="licenses.from ?? null"
+            :to="licenses.to ?? null"
+            :total="licenses.total ?? null"
+            item-label="licenses"
+            :show-summary="licenses.total !== undefined"
+        />
     </div>
 </template>

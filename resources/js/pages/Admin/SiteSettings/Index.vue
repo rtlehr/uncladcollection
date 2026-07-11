@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { computed } from 'vue';
 
-type SiteSetting = {
-    id: number;
-    group_name: string;
-    setting_key: string;
-    setting_value: string | null;
-    setting_type: string;
-    description: string | null;
-    is_public: boolean;
-};
+import SiteSettingField from '@/Components/Admin/SiteSettingField.vue';
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+
+import type {
+    GroupedSiteSettings,
+    SiteSettingFormValue,
+} from '@/types/siteSetting';
 
 const props = defineProps<{
-    settings: Record<string, SiteSetting[]>;
+    settings: GroupedSiteSettings;
 }>();
 
-const form = useForm({
+const form = useForm<{
+    settings: SiteSettingFormValue[];
+}>({
     settings: Object.values(props.settings)
         .flat()
         .map((setting) => ({
@@ -27,16 +27,48 @@ const form = useForm({
         })),
 });
 
+const formValuesById = computed(() => {
+    return new Map(
+        form.settings.map((setting, index) => [
+            setting.id,
+            index,
+        ]),
+    );
+});
+
 function groupLabel(groupName: string): string {
     return groupName
         .replaceAll('_', ' ')
         .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function settingLabel(settingKey: string): string {
-    return settingKey
-        .replaceAll('_', ' ')
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+function settingValue(settingId: number): string {
+    const index = formValuesById.value.get(settingId);
+
+    return index === undefined
+        ? ''
+        : form.settings[index].setting_value;
+}
+
+function updateSettingValue(
+    settingId: number,
+    value: string,
+) {
+    const index = formValuesById.value.get(settingId);
+
+    if (index === undefined) {
+        return;
+    }
+
+    form.settings[index].setting_value = value;
+}
+
+function settingError(settingId: number): string | undefined {
+    return (
+        form.errors[`settings.${settingId}.setting_value`]
+        ?? form.errors[`settings.${settingId}`]
+        ?? undefined
+    );
 }
 
 function submit() {
@@ -49,112 +81,41 @@ function submit() {
 <template>
     <Head title="Site Settings" />
 
-    <div class="p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Site Settings</h1>
-            <p class="text-sm text-muted-foreground">
-                Manage branding, contact information, theme settings, SEO, social links, and public site configuration.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Site Settings"
+            description="Manage branding, contact information, theme settings, SEO, social links, and public site configuration."
+        />
 
-        <form @submit.prevent="submit" class="space-y-8">
-            <div
+        <form class="space-y-8" @submit.prevent="submit">
+            <FormSection
                 v-for="(groupSettings, groupName) in settings"
                 :key="groupName"
-                class="rounded-lg border bg-card p-6 shadow-sm"
+                :title="groupLabel(String(groupName))"
+                :description="`${groupSettings.length} setting${groupSettings.length === 1 ? '' : 's'} in this group.`"
             >
-                <h2 class="mb-4 text-lg font-semibold">
-                    {{ groupLabel(String(groupName)) }}
-                </h2>
-
-                <div class="grid gap-5">
-                    <div
+                <div class="grid gap-6 lg:grid-cols-2">
+                    <SiteSettingField
                         v-for="setting in groupSettings"
                         :key="setting.id"
-                        class="grid gap-2"
-                    >
-                        <template
-                            v-for="formSetting in form.settings"
-                            :key="formSetting.id"
-                        >
-                            <div
-                                v-if="formSetting.id === setting.id"
-                                class="grid gap-2"
-                            >
-                                <Label :for="`setting-${setting.id}`">
-                                    {{ settingLabel(setting.setting_key) }}
-                                </Label>
-
-                                <div
-                                    v-if="setting.setting_type === 'boolean'"
-                                    class="flex items-center gap-3"
-                                >
-                                    <input
-                                        :id="`setting-${setting.id}`"
-                                        v-model="formSetting.setting_value"
-                                        type="checkbox"
-                                        true-value="true"
-                                        false-value="false"
-                                        class="h-4 w-4 rounded border-gray-300"
-                                    />
-
-                                    <span class="text-sm text-muted-foreground">
-                                        Enabled
-                                    </span>
-                                </div>
-
-                                <textarea
-                                    v-else-if="setting.setting_type === 'textarea'"
-                                    :id="`setting-${setting.id}`"
-                                    v-model="formSetting.setting_value"
-                                    rows="4"
-                                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-                                />
-
-                                <Input
-                                    v-else
-                                    :id="`setting-${setting.id}`"
-                                    v-model="formSetting.setting_value"
-                                    :type="
-                                        setting.setting_type === 'email'
-                                            ? 'email'
-                                            : setting.setting_type === 'url'
-                                                ? 'url'
-                                                : setting.setting_type === 'color'
-                                                    ? 'color'
-                                                    : 'text'
-                                    "
-                                    :placeholder="
-                                        setting.setting_type === 'image'
-                                            ? 'Image path or URL'
-                                            : ''
-                                    "
-                                />
-
-                                <p
-                                    v-if="setting.setting_type === 'image'"
-                                    class="text-xs text-muted-foreground"
-                                >
-                                    For now, enter an image path or URL. We can add file upload support later.
-                                </p>
-
-                                <p
-                                    v-if="setting.description"
-                                    class="text-xs text-muted-foreground"
-                                >
-                                    {{ setting.description }}
-                                </p>
-                            </div>
-                        </template>
-                    </div>
+                        :setting="setting"
+                        :model-value="settingValue(setting.id)"
+                        :error="settingError(setting.id)"
+                        @update:model-value="
+                            updateSettingValue(setting.id, $event)
+                        "
+                    />
                 </div>
-            </div>
+            </FormSection>
 
-            <div class="flex justify-end">
-                <Button type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Saving...' : 'Save Settings' }}
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Save Settings"
+                processing-label="Saving..."
+                :processing="form.processing"
+                :disabled="!form.isDirty"
+                :show-cancel="false"
+                @submit="submit"
+            />
         </form>
     </div>
 </template>

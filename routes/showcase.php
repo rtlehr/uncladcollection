@@ -25,3 +25,9 @@ Route::get('/dev/confirm-dialog', function () {
 })
     ->middleware(['auth', 'can:view_admin'])
     ->name('dev.form-framework');
+
+Route::get('/dev/metric-card', function () {
+    return Inertia::render('Dev/MetricCardShowcase');
+})
+    ->middleware(['auth', 'can:view_admin'])
+    ->name('dev.metric-card');

@@ -15,21 +15,46 @@ class AdminDownloadController extends Controller
     {
         $search = $request->string('search')->toString();
 
+        $sort = $request->string('sort')->toString() ?: 'downloaded_at';
+        $direction = $request->string('direction')->toString() ?: 'desc';
+
+        $allowedSorts = [
+            'downloaded_at',
+            'download_type',
+            'ip_address',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'downloaded_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
         $downloads = Download::query()
-            ->with(['user', 'image', 'license', 'orderItem.order'])
-            ->when($search, function ($query) use ($search) {
+            ->with([
+                'user',
+                'image',
+                'license',
+                'orderItem.order',
+            ])
+            ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('download_type', 'like', "%{$search}%")
+                    $query
+                        ->where('download_type', 'like', "%{$search}%")
                         ->orWhere('ip_address', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($query) use ($search) {
-                            $query->where('name', 'like', "%{$search}%")
+                            $query
+                                ->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
                         })
                         ->orWhereHas('image', function ($query) use ($search) {
                             $query->where('title', 'like', "%{$search}%");
                         })
                         ->orWhereHas('license', function ($query) use ($search) {
-                            $query->where('license_key', 'like', "%{$search}%")
+                            $query
+                                ->where('license_key', 'like', "%{$search}%")
                                 ->orWhere('license_name', 'like', "%{$search}%");
                         })
                         ->orWhereHas('orderItem.order', function ($query) use ($search) {
@@ -37,7 +62,7 @@ class AdminDownloadController extends Controller
                         });
                 });
             })
-            ->latest('downloaded_at')
+            ->orderBy($sort, $direction)
             ->paginate(20)
             ->withQueryString()
             ->through(fn (Download $download) => [
@@ -84,8 +109,11 @@ class AdminDownloadController extends Controller
 
         return Inertia::render('Admin/Downloads/Index', [
             'downloads' => $downloads,
+
             'filters' => [
                 'search' => $search,
+                'sort' => $sort,
+                'direction' => $direction,
             ],
         ]);
     }

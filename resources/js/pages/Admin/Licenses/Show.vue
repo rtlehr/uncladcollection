@@ -1,320 +1,381 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import {
+    Download,
+    FileKey,
+    Gauge,
+    History,
+} from '@lucide/vue';
 
-type DownloadRecord = {
-    id: number;
-    download_type: string;
-    ip_address: string | null;
-    user_agent: string | null;
-    downloaded_at: string | null;
-};
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
+import DetailRow from '@/Components/Shared/DetailRow.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
 
-type LicenseRecord = {
-    id: number;
-    license_key: string;
-    status: string;
-    license_name: string;
-    license_terms: string | null;
-    downloads_used: number;
-    download_limit: number | null;
-    starts_at: string | null;
-    expires_at: string | null;
-    created_at: string | null;
-
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    } | null;
-
-    image: {
-        id: number;
-        title: string;
-        slug: string;
-        photographer: string | null;
-        is_ai_generated: boolean;
-    } | null;
-
-    order: {
-        id: number;
-        order_number: string;
-        status: string;
-        total_formatted: string;
-        paid_at: string | null;
-    } | null;
-
-    order_item: {
-        id: number;
-        status: string;
-        unit_price_formatted: string;
-        total_price_formatted: string;
-    } | null;
-
-    downloads: DownloadRecord[];
-};
+import type { AdminLicenseDetail } from '@/types/licenseDetail';
 
 defineProps<{
-    licenseRecord: LicenseRecord;
+    licenseRecord: AdminLicenseDetail;
 }>();
+
+function downloadLimitLabel(limit: number | null): string {
+    return limit === null ? 'Unlimited' : String(limit);
+}
+
+function downloadUsageLabel(
+    downloadsUsed: number,
+    downloadLimit: number | null,
+): string {
+    return downloadLimit === null
+        ? `${downloadsUsed} / Unlimited`
+        : `${downloadsUsed} / ${downloadLimit}`;
+}
 </script>
 
 <template>
     <Head :title="`License ${licenseRecord.license_key}`" />
 
     <div class="space-y-6 p-6">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <Link
-                    href="/admin/licenses"
-                    class="text-sm text-muted-foreground hover:underline"
+        <ShowPageHeader
+            title="License Details"
+            :description="licenseRecord.license_key"
+            eyebrow="Commerce"
+        >
+            <template #actions>
+                <StatusBadge
+                    :status="licenseRecord.status"
+                    size="md"
+                />
+
+                <Button
+                    variant="outline"
+                    as-child
                 >
-                    ← Back to Licenses
-                </Link>
+                    <Link href="/admin/licenses">
+                        Back to Licenses
+                    </Link>
+                </Button>
+            </template>
+        </ShowPageHeader>
 
-                <h1 class="mt-2 text-3xl font-semibold">
-                    License Details
-                </h1>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+                label="Downloads Used"
+                :value="licenseRecord.downloads_used"
+            >
+                <template #icon>
+                    <Download class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-                <p class="mt-1 break-all text-muted-foreground">
-                    {{ licenseRecord.license_key }}
-                </p>
-            </div>
+            <MetricCard
+                label="Download Limit"
+                :value="downloadLimitLabel(licenseRecord.download_limit)"
+            >
+                <template #icon>
+                    <Gauge class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-            <span class="rounded-full border px-3 py-1 text-sm">
-                {{ licenseRecord.status }}
-            </span>
+            <MetricCard
+                label="Usage"
+                :value="
+                    downloadUsageLabel(
+                        licenseRecord.downloads_used,
+                        licenseRecord.download_limit,
+                    )
+                "
+                emphasized
+            >
+                <template #icon>
+                    <FileKey class="h-5 w-5" />
+                </template>
+            </MetricCard>
+
+            <MetricCard
+                label="Download Records"
+                :value="licenseRecord.downloads.length"
+            >
+                <template #icon>
+                    <History class="h-5 w-5" />
+                </template>
+            </MetricCard>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-3">
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    License
-                </h2>
+            <ShowSection
+                title="License"
+                description="Core license dates and terms."
+            >
+                <ShowDetailsGrid :columns="1">
+                    <DetailRow
+                        label="Type"
+                        :value="licenseRecord.license_name"
+                    />
 
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Type</span>
-                        <span>{{ licenseRecord.license_name }}</span>
-                    </div>
+                    <DetailRow
+                        label="Created"
+                        :value="licenseRecord.created_at"
+                    />
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Created</span>
-                        <span>{{ licenseRecord.created_at || '—' }}</span>
-                    </div>
+                    <DetailRow
+                        label="Starts"
+                        :value="licenseRecord.starts_at"
+                    />
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Starts</span>
-                        <span>{{ licenseRecord.starts_at || '—' }}</span>
-                    </div>
+                    <DetailRow
+                        label="Expires"
+                        :value="licenseRecord.expires_at || 'Never'"
+                    />
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Expires</span>
-                        <span>{{ licenseRecord.expires_at || 'Never' }}</span>
-                    </div>
+                    <DetailRow
+                        label="Downloads"
+                        :value="
+                            downloadUsageLabel(
+                                licenseRecord.downloads_used,
+                                licenseRecord.download_limit,
+                            )
+                        "
+                    />
+                </ShowDetailsGrid>
+            </ShowSection>
 
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Downloads</span>
-                        <span>
-                            {{ licenseRecord.downloads_used }}
-                            <template v-if="licenseRecord.download_limit !== null">
-                                / {{ licenseRecord.download_limit }}
-                            </template>
-                            <template v-else>
-                                / Unlimited
-                            </template>
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <ShowSection
+                title="Customer"
+                description="Customer account attached to this license."
+            >
+                <ShowDetailsGrid :columns="1">
+                    <DetailRow
+                        label="Name"
+                        :value="licenseRecord.user?.name"
+                        fallback="No user attached"
+                    />
 
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Customer
-                </h2>
+                    <DetailRow
+                        label="Email"
+                        :value="licenseRecord.user?.email"
+                    />
+                </ShowDetailsGrid>
+            </ShowSection>
 
-                <div v-if="licenseRecord.user" class="space-y-2">
-                    <div class="font-medium">
-                        {{ licenseRecord.user.name }}
-                    </div>
+            <ShowSection
+                title="Image"
+                description="Licensed marketplace image."
+            >
+                <div v-if="licenseRecord.image" class="space-y-4">
+                    <ShowDetailsGrid :columns="1">
+                        <DetailRow
+                            label="Title"
+                            :value="licenseRecord.image.title"
+                        />
 
-                    <div class="text-sm text-muted-foreground">
-                        {{ licenseRecord.user.email }}
-                    </div>
-                </div>
+                        <DetailRow
+                            label="Photographer"
+                            :value="licenseRecord.image.photographer"
+                        />
 
-                <div v-else class="text-muted-foreground">
-                    No user attached.
-                </div>
-            </div>
+                        <div>
+                            <div class="text-sm font-medium text-muted-foreground">
+                                AI Generated
+                            </div>
 
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Image
-                </h2>
+                            <div class="mt-1">
+                                <StatusBadge
+                                    :status="
+                                        licenseRecord.image.is_ai_generated
+                                            ? 'ai_generated'
+                                            : 'non_ai'
+                                    "
+                                    :label="
+                                        licenseRecord.image.is_ai_generated
+                                            ? 'Yes'
+                                            : 'No'
+                                    "
+                                    :tone="
+                                        licenseRecord.image.is_ai_generated
+                                            ? 'info'
+                                            : 'neutral'
+                                    "
+                                />
+                            </div>
+                        </div>
+                    </ShowDetailsGrid>
 
-                <div v-if="licenseRecord.image" class="space-y-2">
-                    <div class="font-medium">
-                        {{ licenseRecord.image.title }}
-                    </div>
-
-                    <div class="text-sm text-muted-foreground">
-                        Photographer:
-                        {{ licenseRecord.image.photographer || '—' }}
-                    </div>
-
-                    <div class="text-sm text-muted-foreground">
-                        AI Generated:
-                        {{ licenseRecord.image.is_ai_generated ? 'Yes' : 'No' }}
-                    </div>
-
-                    <Link
-                        :href="`/images/${licenseRecord.image.slug}`"
-                        class="text-sm text-primary hover:underline"
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as-child
                     >
-                        View Public Image
-                    </Link>
+                        <Link :href="`/images/${licenseRecord.image.slug}`">
+                            View Public Image
+                        </Link>
+                    </Button>
                 </div>
 
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No image attached.
-                </div>
-            </div>
+                </p>
+            </ShowSection>
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Order
-                </h2>
+            <ShowSection
+                title="Order"
+                description="Order that generated this license."
+            >
+                <div v-if="licenseRecord.order" class="space-y-4">
+                    <ShowDetailsGrid :columns="2">
+                        <DetailRow
+                            label="Order Number"
+                            :value="licenseRecord.order.order_number"
+                        />
 
-                <div v-if="licenseRecord.order" class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Order Number</span>
+                        <div>
+                            <div class="text-sm font-medium text-muted-foreground">
+                                Status
+                            </div>
 
-                        <Link
-                            :href="`/admin/orders/${licenseRecord.order.id}`"
-                            class="text-primary hover:underline"
-                        >
-                            {{ licenseRecord.order.order_number }}
+                            <div class="mt-1">
+                                <StatusBadge
+                                    :status="licenseRecord.order.status"
+                                />
+                            </div>
+                        </div>
+
+                        <DetailRow
+                            label="Paid"
+                            :value="licenseRecord.order.paid_at"
+                        />
+
+                        <DetailRow
+                            label="Total"
+                            :value="licenseRecord.order.total_formatted"
+                        />
+                    </ShowDetailsGrid>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as-child
+                    >
+                        <Link :href="`/admin/orders/${licenseRecord.order.id}`">
+                            View Order
                         </Link>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Status</span>
-                        <span>{{ licenseRecord.order.status }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Paid</span>
-                        <span>{{ licenseRecord.order.paid_at || '—' }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Total</span>
-                        <span>{{ licenseRecord.order.total_formatted }}</span>
-                    </div>
+                    </Button>
                 </div>
 
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No order attached.
+                </p>
+            </ShowSection>
+
+            <ShowSection
+                title="Order Item"
+                description="Order line item associated with this license."
+            >
+                <div v-if="licenseRecord.order_item">
+                    <ShowDetailsGrid :columns="2">
+                        <div>
+                            <div class="text-sm font-medium text-muted-foreground">
+                                Status
+                            </div>
+
+                            <div class="mt-1">
+                                <StatusBadge
+                                    :status="licenseRecord.order_item.status"
+                                />
+                            </div>
+                        </div>
+
+                        <DetailRow
+                            label="Unit Price"
+                            :value="licenseRecord.order_item.unit_price_formatted"
+                        />
+
+                        <DetailRow
+                            label="Total Price"
+                            :value="licenseRecord.order_item.total_price_formatted"
+                        />
+                    </ShowDetailsGrid>
                 </div>
-            </div>
 
-            <div class="rounded-lg border bg-card p-6 shadow-sm">
-                <h2 class="mb-4 text-lg font-semibold">
-                    Order Item
-                </h2>
-
-                <div v-if="licenseRecord.order_item" class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Status</span>
-                        <span>{{ licenseRecord.order_item.status }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Unit Price</span>
-                        <span>{{ licenseRecord.order_item.unit_price_formatted }}</span>
-                    </div>
-
-                    <div class="flex justify-between gap-4">
-                        <span class="text-muted-foreground">Total Price</span>
-                        <span>{{ licenseRecord.order_item.total_price_formatted }}</span>
-                    </div>
-                </div>
-
-                <div v-else class="text-muted-foreground">
+                <p
+                    v-else
+                    class="text-sm text-muted-foreground"
+                >
                     No order item attached.
-                </div>
-            </div>
+                </p>
+            </ShowSection>
         </div>
 
-        <div class="rounded-lg border bg-card shadow-sm">
-            <div class="border-b p-6">
-                <h2 class="text-lg font-semibold">
-                    Download History
-                </h2>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="border-b bg-muted/50">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium">Date</th>
-                            <th class="px-4 py-3 text-left font-medium">Type</th>
-                            <th class="px-4 py-3 text-left font-medium">IP Address</th>
-                            <th class="px-4 py-3 text-left font-medium">User Agent</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr
-                            v-for="download in licenseRecord.downloads"
-                            :key="download.id"
-                            class="border-b last:border-0"
-                        >
-                            <td class="px-4 py-3">
-                                {{ download.downloaded_at || '—' }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ download.download_type }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                {{ download.ip_address || '—' }}
-                            </td>
-
-                            <td class="px-4 py-3">
-                                <div class="max-w-xl break-words text-xs text-muted-foreground">
-                                    {{ download.user_agent || '—' }}
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr v-if="licenseRecord.downloads.length === 0">
-                            <td
-                                colspan="4"
-                                class="px-4 py-10 text-center text-muted-foreground"
-                            >
-                                No downloads recorded for this license.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div
-            v-if="licenseRecord.license_terms"
-            class="rounded-lg border bg-card p-6 shadow-sm"
+        <ShowSection
+            title="Download History"
+            description="Recorded downloads made under this license."
         >
-            <h2 class="mb-4 text-lg font-semibold">
-                License Terms
-            </h2>
+            <DataTable min-width="900px">
+                <thead>
+                    <tr class="border-b bg-muted/30">
+                        <DataTableHeaderCell label="Date" />
+                        <DataTableHeaderCell label="Type" />
+                        <DataTableHeaderCell label="IP Address" />
+                        <DataTableHeaderCell label="User Agent" />
+                    </tr>
+                </thead>
 
+                <tbody>
+                    <tr
+                        v-for="download in licenseRecord.downloads"
+                        :key="download.id"
+                        class="border-b last:border-0 hover:bg-muted/20"
+                    >
+                        <td class="p-4">
+                            {{ download.downloaded_at || '—' }}
+                        </td>
+
+                        <td class="p-4 capitalize">
+                            {{ download.download_type }}
+                        </td>
+
+                        <td class="p-4 font-mono text-xs">
+                            {{ download.ip_address || '—' }}
+                        </td>
+
+                        <td class="p-4">
+                            <div class="max-w-xl break-words text-xs text-muted-foreground">
+                                {{ download.user_agent || '—' }}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <DataTableEmpty
+                        v-if="licenseRecord.downloads.length === 0"
+                        :colspan="4"
+                        message="No downloads recorded for this license."
+                    />
+                </tbody>
+            </DataTable>
+        </ShowSection>
+
+        <ShowSection
+            v-if="licenseRecord.license_terms"
+            title="License Terms"
+            description="Terms attached to this license at the time of purchase."
+        >
             <div class="whitespace-pre-line text-sm leading-7">
                 {{ licenseRecord.license_terms }}
             </div>
-        </div>
+        </ShowSection>
     </div>
 </template>

@@ -15,14 +15,35 @@ class AdminOrderController extends Controller
         $search = $request->string('search')->toString();
         $status = $request->string('status')->toString();
 
+        $sort = $request->string('sort')->toString() ?: 'created_at';
+        $direction = $request->string('direction')->toString() ?: 'desc';
+
+        $allowedSorts = [
+            'order_number',
+            'status',
+            'total_cents',
+            'paid_at',
+            'created_at',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        if (! in_array($direction, ['asc', 'desc'], true)) {
+            $direction = 'desc';
+        }
+
         $orders = Order::query()
-            ->with(['user'])
+            ->with('user')
             ->withCount(['items', 'licenses'])
-            ->when($search, function ($query) use ($search) {
+            ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
-                    $query->where('order_number', 'like', "%{$search}%")
+                    $query
+                        ->where('order_number', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($query) use ($search) {
-                            $query->where('name', 'like', "%{$search}%")
+                            $query
+                                ->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
                         })
                         ->orWhereHas('items.image', function ($query) use ($search) {
@@ -33,7 +54,7 @@ class AdminOrderController extends Controller
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('status', $status);
             })
-            ->latest()
+            ->orderBy($sort, $direction)
             ->paginate(20)
             ->withQueryString()
             ->through(fn (Order $order) => [
@@ -59,10 +80,14 @@ class AdminOrderController extends Controller
 
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
+
             'filters' => [
                 'search' => $search,
                 'status' => $status,
+                'sort' => $sort,
+                'direction' => $direction,
             ],
+
             'statuses' => [
                 Order::STATUS_PENDING,
                 Order::STATUS_PAID,

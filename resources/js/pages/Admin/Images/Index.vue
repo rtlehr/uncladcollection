@@ -1,52 +1,54 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+
+import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-type Collection = {
-    id: number;
-    name: string;
-};
-
-type ImageRecord = {
-    id: number;
-    title: string;
-    slug: string;
-    thumbnail_url: string | null;
-    photographer: string | null;
-    sort_order: number;
-    is_active: boolean;
-    collection: Collection | null;
-};
+import type {
+    AdminImageCollection,
+    AdminImageListFilters,
+    AdminImageListItem,
+} from '@/types/adminImageList';
 
 const props = defineProps<{
-    images: ImageRecord[];
-    collections: Collection[];
-    filters: {
-        search: string;
-        status: string;
-        collection_id: string;
-        sort: string;
-        direction: string;
-    };
+    images: AdminImageListItem[];
+    collections: AdminImageCollection[];
+    filters: AdminImageListFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 const collectionId = ref(props.filters.collection_id ?? '');
 
+const selectedImage = ref<AdminImageListItem | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
+
 function reload() {
-    router.get('/admin/images', {
-        search: search.value,
-        status: status.value,
-        collection_id: collectionId.value,
-        sort: props.filters.sort,
-        direction: props.filters.direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/images',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            collection_id: collectionId.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function resetFilters() {
@@ -54,47 +56,65 @@ function resetFilters() {
     status.value = '';
     collectionId.value = '';
 
-    router.get('/admin/images', {}, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/images',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function sortBy(column: string) {
     const direction =
-        props.filters.sort === column && props.filters.direction === 'asc'
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
             ? 'desc'
             : 'asc';
 
-    router.get('/admin/images', {
-        search: search.value,
-        status: status.value,
-        collection_id: collectionId.value,
-        sort: column,
-        direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/images',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            collection_id: collectionId.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
-function sortIndicator(column: string) {
-    if (props.filters.sort !== column) {
-        return '↕';
-    }
-
-    return props.filters.direction === 'asc'
-        ? '↑'
-        : '↓';
+function requestDelete(image: AdminImageListItem) {
+    selectedImage.value = image;
+    deleteDialogOpen.value = true;
 }
 
-function deleteImage(image: ImageRecord) {
-    if (!confirm(`Delete image "${image.title}"?`)) {
+function cancelDelete() {
+    selectedImage.value = null;
+    deleteDialogOpen.value = false;
+}
+
+function confirmDelete() {
+    if (!selectedImage.value) {
         return;
     }
 
-    router.delete(`/admin/images/${image.id}`, {
+    deleting.value = true;
+
+    router.delete(`/admin/images/${selectedImage.value.id}`, {
         preserveScroll: true,
+        onFinish: () => {
+            deleting.value = false;
+            selectedImage.value = null;
+            deleteDialogOpen.value = false;
+        },
     });
 }
 </script>
@@ -102,34 +122,33 @@ function deleteImage(image: ImageRecord) {
 <template>
     <Head title="Images" />
 
-    <div class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold">Images</h1>
+    <div class="space-y-6 p-6">
+        <PageHeader
+            title="Images"
+            description="Manage image uploads and collections."
+        />
 
-                <p class="text-sm text-muted-foreground">
-                    Manage image uploads and collections.
-                </p>
-            </div>
+        <ActionToolbar align="end">
+            <template #secondary>
+                <Button as-child>
+                    <Link href="/admin/images/create">
+                        Add Image
+                    </Link>
+                </Button>
+            </template>
+        </ActionToolbar>
 
-            <Button as-child>
-                <Link href="/admin/images/create">
-                    Add Image
-                </Link>
-            </Button>
-        </div>
-
-        <div class="mb-4 flex flex-wrap gap-3">
-            <Input
+        <FilterToolbar :columns="3" compact>
+            <SearchToolbar
                 v-model="search"
-                class="max-w-sm"
                 placeholder="Search title, slug, photographer..."
-                @keyup.enter="reload"
+                :show-reset="false"
+                @search="reload"
             />
 
             <select
                 v-model="collectionId"
-                class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 @change="reload"
             >
                 <option value="">
@@ -147,7 +166,7 @@ function deleteImage(image: ImageRecord) {
 
             <select
                 v-model="status"
-                class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 @change="reload"
             >
                 <option value="">
@@ -163,161 +182,167 @@ function deleteImage(image: ImageRecord) {
                 </option>
             </select>
 
-            <Button @click="reload">
-                Search
-            </Button>
+            <template #actions>
+                <Button type="button" @click="reload">
+                    Apply Filters
+                </Button>
 
-            <Button
-                variant="outline"
-                @click="resetFilters"
-            >
-                Reset
-            </Button>
-        </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
 
-        <div class="overflow-hidden rounded-lg border bg-card shadow-sm">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b text-left">
-                        <th class="p-4">
-                            Preview
-                        </th>
+        <DataTable min-width="1050px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell label="Preview" />
 
-                        <th
-                            class="cursor-pointer p-4"
-                            @click="sortBy('title')"
+                    <DataTableHeaderCell
+                        label="Title"
+                        column="title"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell label="Collection" />
+
+                    <DataTableHeaderCell
+                        label="Photographer"
+                        column="photographer"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Sort"
+                        column="sort_order"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Status"
+                        column="is_active"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr
+                    v-for="image in images"
+                    :key="image.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4">
+                        <img
+                            v-if="image.thumbnail_url"
+                            :src="image.thumbnail_url"
+                            :alt="image.title"
+                            class="h-16 w-16 rounded border object-cover"
+                        />
+
+                        <div
+                            v-else
+                            class="flex h-16 w-16 items-center justify-center rounded border text-xs text-muted-foreground"
                         >
-                            Title {{ sortIndicator('title') }}
-                        </th>
+                            No Image
+                        </div>
+                    </td>
 
-                        <th class="p-4">
-                            Collection
-                        </th>
+                    <td class="p-4">
+                        <div class="font-medium">
+                            {{ image.title }}
+                        </div>
 
-                        <th
-                            class="cursor-pointer p-4"
-                            @click="sortBy('photographer')"
-                        >
-                            Photographer {{ sortIndicator('photographer') }}
-                        </th>
+                        <div class="font-mono text-xs text-muted-foreground">
+                            {{ image.slug }}
+                        </div>
+                    </td>
 
-                        <th
-                            class="cursor-pointer p-4"
-                            @click="sortBy('sort_order')"
-                        >
-                            Sort {{ sortIndicator('sort_order') }}
-                        </th>
+                    <td class="p-4">
+                        {{ image.collection?.name ?? '—' }}
+                    </td>
 
-                        <th
-                            class="cursor-pointer p-4"
-                            @click="sortBy('is_active')"
-                        >
-                            Status {{ sortIndicator('is_active') }}
-                        </th>
+                    <td class="p-4">
+                        {{ image.photographer ?? '—' }}
+                    </td>
 
-                        <th class="p-4 text-right">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
+                    <td class="p-4">
+                        {{ image.sort_order }}
+                    </td>
 
-                <tbody>
-                    <tr
-                        v-for="image in images"
-                        :key="image.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="p-4">
-                            <img
-                                v-if="image.thumbnail_url"
-                                :src="image.thumbnail_url"
-                                :alt="image.title"
-                                class="h-16 w-16 rounded object-cover border"
-                            />
+                    <td class="p-4">
+                        <StatusBadge
+                            :status="image.is_active ? 'active' : 'inactive'"
+                        />
+                    </td>
 
-                            <div
-                                v-else
-                                class="flex h-16 w-16 items-center justify-center rounded border text-xs text-muted-foreground"
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" as-child>
+                                <Link :href="`/admin/images/${image.id}`">
+                                    View
+                                </Link>
+                            </Button>
+
+                            <Button size="sm" variant="outline" as-child>
+                                <Link :href="`/admin/images/${image.id}/edit`">
+                                    Edit
+                                </Link>
+                            </Button>
+
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                @click="requestDelete(image)"
                             >
-                                No Image
-                            </div>
-                        </td>
+                                Delete
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
 
-                        <td class="p-4">
-                            <div class="font-medium">
-                                {{ image.title }}
-                            </div>
+                <DataTableEmpty
+                    v-if="images.length === 0"
+                    :colspan="7"
+                    message="No images found."
+                />
+            </tbody>
+        </DataTable>
 
-                            <div class="font-mono text-xs text-muted-foreground">
-                                {{ image.slug }}
-                            </div>
-                        </td>
-
-                        <td class="p-4">
-                            {{ image.collection?.name ?? '—' }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ image.photographer ?? '—' }}
-                        </td>
-
-                        <td class="p-4">
-                            {{ image.sort_order }}
-                        </td>
-
-                        <td class="p-4">
-                            <span
-                                :class="image.is_active
-                                    ? 'font-medium text-green-600'
-                                    : 'font-medium text-red-600'"
-                            >
-                                {{ image.is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-
-                        <td class="p-4">
-                            <div class="flex justify-end gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/images/${image.id}`">
-                                        View
-                                    </Link>
-                                </Button>
-
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/images/${image.id}/edit`">
-                                        Edit
-                                    </Link>
-                                </Button>
-
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    @click="deleteImage(image)"
-                                >
-                                    Delete
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr v-if="images.length === 0">
-                        <td
-                            colspan="7"
-                            class="p-6 text-center text-muted-foreground"
-                        >
-                            No images found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <ConfirmActionDialog
+            v-model:open="deleteDialogOpen"
+            title="Delete image?"
+            :description="
+                selectedImage
+                    ? `Delete the image '${selectedImage.title}'? This action cannot be undone.`
+                    : 'This action cannot be undone.'
+            "
+            confirm-label="Delete Image"
+            destructive
+            :loading="deleting"
+            @confirm="confirmDelete"
+            @cancel="cancelDelete"
+        />
     </div>
 </template>

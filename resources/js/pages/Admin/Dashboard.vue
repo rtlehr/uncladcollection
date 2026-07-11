@@ -1,227 +1,246 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import {
+    BadgeDollarSign,
+    CircleDollarSign,
+    Download,
+    Image,
+    Images,
+    KeyRound,
+    ShoppingCart,
+    Users,
+} from '@lucide/vue';
+
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
+
+import type {
+    AdminDashboardDownload,
+    AdminDashboardImage,
+    AdminDashboardOrder,
+    AdminDashboardStats,
+} from '@/types/adminDashboard';
 
 defineProps<{
-    stats: {
-        total_revenue_formatted: string;
-        total_orders: number;
-        paid_orders: number;
-        active_licenses: number;
-        total_downloads: number;
-        total_images: number;
-        active_images: number;
-        total_users: number;
-    };
-
-    recentOrders: Array<{
-        id: number;
-        order_number: string;
-        status: string;
-        total_formatted: string;
-        created_at: string | null;
-        user: {
-            name: string;
-            email: string;
-        } | null;
-    }>;
-
-    recentDownloads: Array<{
-        id: number;
-        download_type: string;
-        downloaded_at: string | null;
-        user: {
-            name: string;
-            email: string;
-        } | null;
-        image: {
-            title: string;
-            slug: string;
-        } | null;
-        license: {
-            id: number;
-            license_name: string;
-        } | null;
-    }>;
-
-    topPurchasedImages: Array<{
-        id: number;
-        title: string;
-        slug: string;
-        purchases_count: number;
-        downloads_count: number;
-    }>;
-
-    topDownloadedImages: Array<{
-        id: number;
-        title: string;
-        slug: string;
-        purchases_count: number;
-        downloads_count: number;
-    }>;
+    stats: AdminDashboardStats;
+    recentOrders: AdminDashboardOrder[];
+    recentDownloads: AdminDashboardDownload[];
+    topPurchasedImages: AdminDashboardImage[];
+    topDownloadedImages: AdminDashboardImage[];
 }>();
+
+function formatDownloadType(value: string): string {
+    return value
+        .replaceAll('_', ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase());
+}
 </script>
 
 <template>
     <Head title="Admin Dashboard" />
 
-    <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">
-                Admin Dashboard
-            </h1>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Admin Dashboard"
+            description="Monitor sales, licenses, downloads, image performance, and user activity."
+        />
 
-            <p class="mt-1 text-muted-foreground">
-                Overview of sales, licenses, downloads, and site activity.
-            </p>
-        </div>
+        <section class="grid gap-4 xl:grid-cols-4">
+            <MetricCard
+                label="Total Revenue"
+                :value="stats.total_revenue_formatted"
+                description="All paid image-license orders"
+                emphasized
+                size="lg"
+                class="xl:col-span-2"
+            >
+                <template #icon>
+                    <BadgeDollarSign class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-        <!-- Stats Cards -->
+            <MetricCard
+                label="Total Orders"
+                :value="stats.total_orders.toLocaleString()"
+                description="All order records"
+                size="lg"
+            >
+                <template #icon>
+                    <ShoppingCart class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Total Revenue
-                </div>
+            <MetricCard
+                label="Paid Orders"
+                :value="stats.paid_orders.toLocaleString()"
+                description="Successfully completed purchases"
+                size="lg"
+            >
+                <template #icon>
+                    <CircleDollarSign class="h-5 w-5" />
+                </template>
+            </MetricCard>
+        </section>
 
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.total_revenue_formatted }}
-                </div>
-            </div>
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+                label="Active Licenses"
+                :value="stats.active_licenses.toLocaleString()"
+            >
+                <template #icon>
+                    <KeyRound class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Total Orders
-                </div>
+            <MetricCard
+                label="Total Downloads"
+                :value="stats.total_downloads.toLocaleString()"
+            >
+                <template #icon>
+                    <Download class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.total_orders }}
-                </div>
-            </div>
+            <MetricCard
+                label="Total Images"
+                :value="stats.total_images.toLocaleString()"
+            >
+                <template #icon>
+                    <Images class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Paid Orders
-                </div>
+            <MetricCard
+                label="Active Images"
+                :value="stats.active_images.toLocaleString()"
+            >
+                <template #icon>
+                    <Image class="h-5 w-5" />
+                </template>
+            </MetricCard>
 
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.paid_orders }}
-                </div>
-            </div>
+            <MetricCard
+                label="Total Users"
+                :value="stats.total_users.toLocaleString()"
+                class="sm:col-span-2 xl:col-span-1"
+            >
+                <template #icon>
+                    <Users class="h-5 w-5" />
+                </template>
+            </MetricCard>
+        </section>
 
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Active Licenses
-                </div>
-
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.active_licenses }}
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Total Downloads
-                </div>
-
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.total_downloads }}
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Total Images
-                </div>
-
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.total_images }}
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Active Images
-                </div>
-
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.active_images }}
-                </div>
-            </div>
-
-            <div class="rounded-lg border bg-card p-5">
-                <div class="text-sm text-muted-foreground">
-                    Total Users
-                </div>
-
-                <div class="mt-2 text-3xl font-bold">
-                    {{ stats.total_users }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Links -->
-
-        <div class="rounded-lg border bg-card p-6">
-            <h2 class="mb-4 text-lg font-semibold">
-                Quick Access
-            </h2>
-
-            <div class="flex flex-wrap gap-3">
-                <Link
-                    href="/admin/orders"
-                    class="rounded-md border px-4 py-2 hover:bg-muted"
+        <ShowSection
+            title="Quick Access"
+            description="Open the most frequently used administration areas."
+        >
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
                 >
-                    Orders
-                </Link>
+                    <Link href="/admin/orders">
+                        <ShoppingCart class="h-5 w-5" />
 
-                <Link
-                    href="/admin/licenses"
-                    class="rounded-md border px-4 py-2 hover:bg-muted"
-                >
-                    Licenses
-                </Link>
+                        <span class="text-left">
+                            <span class="block font-medium">Orders</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Review purchases
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
 
-                <Link
-                    href="/admin/downloads"
-                    class="rounded-md border px-4 py-2 hover:bg-muted"
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
                 >
-                    Downloads
-                </Link>
+                    <Link href="/admin/licenses">
+                        <KeyRound class="h-5 w-5" />
 
-                <Link
-                    href="/admin/images"
-                    class="rounded-md border px-4 py-2 hover:bg-muted"
-                >
-                    Images
-                </Link>
+                        <span class="text-left">
+                            <span class="block font-medium">Licenses</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Manage usage rights
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
 
-                <Link
-                    href="/admin/users"
-                    class="rounded-md border px-4 py-2 hover:bg-muted"
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
                 >
-                    Users
-                </Link>
+                    <Link href="/admin/downloads">
+                        <Download class="h-5 w-5" />
+
+                        <span class="text-left">
+                            <span class="block font-medium">Downloads</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Review download history
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
+
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
+                >
+                    <Link href="/admin/images">
+                        <Images class="h-5 w-5" />
+
+                        <span class="text-left">
+                            <span class="block font-medium">Images</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Manage marketplace assets
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
+
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
+                >
+                    <Link href="/admin/users">
+                        <Users class="h-5 w-5" />
+
+                        <span class="text-left">
+                            <span class="block font-medium">Users</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Manage accounts
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
             </div>
-        </div>
+        </ShowSection>
 
-        <!-- Recent Orders -->
-
-        <div class="rounded-lg border bg-card">
-            <div class="border-b p-6">
-                <h2 class="text-lg font-semibold">
-                    Recent Orders
-                </h2>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="border-b bg-muted/50">
-                        <tr>
-                            <th class="px-4 py-3 text-left">Order</th>
-                            <th class="px-4 py-3 text-left">Customer</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3 text-left">Total</th>
-                            <th class="px-4 py-3 text-left">Date</th>
+        <div class="grid gap-6 2xl:grid-cols-2">
+            <ShowSection
+                title="Recent Orders"
+                description="The newest customer orders."
+            >
+                <DataTable min-width="720px">
+                    <thead>
+                        <tr class="border-b bg-muted/30">
+                            <DataTableHeaderCell label="Order" />
+                            <DataTableHeaderCell label="Customer" />
+                            <DataTableHeaderCell label="Status" />
+                            <DataTableHeaderCell label="Total" />
+                            <DataTableHeaderCell label="Created" />
                         </tr>
                     </thead>
 
@@ -229,55 +248,68 @@ defineProps<{
                         <tr
                             v-for="order in recentOrders"
                             :key="order.id"
-                            class="border-b"
+                            class="border-b last:border-0 hover:bg-muted/20"
                         >
-                            <td class="px-4 py-3">
+                            <td class="p-4">
                                 <Link
                                     :href="`/admin/orders/${order.id}`"
-                                    class="text-primary hover:underline"
+                                    class="font-medium text-primary hover:underline"
                                 >
                                     {{ order.order_number }}
                                 </Link>
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ order.user?.name || '—' }}
+                            <td class="p-4">
+                                <div v-if="order.user">
+                                    <div class="font-medium">
+                                        {{ order.user.name }}
+                                    </div>
+
+                                    <div class="text-xs text-muted-foreground">
+                                        {{ order.user.email }}
+                                    </div>
+                                </div>
+
+                                <span v-else class="text-muted-foreground">
+                                    —
+                                </span>
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ order.status }}
+                            <td class="p-4">
+                                <StatusBadge :status="order.status" />
                             </td>
 
-                            <td class="px-4 py-3">
+                            <td class="p-4 font-medium">
                                 {{ order.total_formatted }}
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ order.created_at }}
+                            <td class="p-4">
+                                {{ order.created_at || '—' }}
                             </td>
                         </tr>
+
+                        <DataTableEmpty
+                            v-if="recentOrders.length === 0"
+                            :colspan="5"
+                            message="No recent orders found."
+                        />
                     </tbody>
-                </table>
-            </div>
-        </div>
+                </DataTable>
+            </ShowSection>
 
-        <!-- Recent Downloads -->
-
-        <div class="rounded-lg border bg-card">
-            <div class="border-b p-6">
-                <h2 class="text-lg font-semibold">
-                    Recent Downloads
-                </h2>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="border-b bg-muted/50">
-                        <tr>
-                            <th class="px-4 py-3 text-left">Image</th>
-                            <th class="px-4 py-3 text-left">User</th>
-                            <th class="px-4 py-3 text-left">License</th>
-                            <th class="px-4 py-3 text-left">Date</th>
+            <ShowSection
+                title="Recent Downloads"
+                description="The newest licensed image downloads."
+            >
+                <DataTable min-width="760px">
+                    <thead>
+                        <tr class="border-b bg-muted/30">
+                            <DataTableHeaderCell label="Image" />
+                            <DataTableHeaderCell label="User" />
+                            <DataTableHeaderCell label="License" />
+                            <DataTableHeaderCell label="Type" />
+                            <DataTableHeaderCell label="Downloaded" />
+                            <DataTableHeaderCell label="Actions" align="right" />
                         </tr>
                     </thead>
 
@@ -285,79 +317,163 @@ defineProps<{
                         <tr
                             v-for="download in recentDownloads"
                             :key="download.id"
-                            class="border-b"
+                            class="border-b last:border-0 hover:bg-muted/20"
                         >
-                            <td class="px-4 py-3">
-                                {{ download.image?.title || '—' }}
+                            <td class="p-4">
+                                <Link
+                                    v-if="download.image"
+                                    :href="`/images/${download.image.slug}`"
+                                    class="font-medium text-primary hover:underline"
+                                >
+                                    {{ download.image.title }}
+                                </Link>
+
+                                <span v-else class="text-muted-foreground">
+                                    —
+                                </span>
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ download.user?.name || '—' }}
+                            <td class="p-4">
+                                <div v-if="download.user">
+                                    <div class="font-medium">
+                                        {{ download.user.name }}
+                                    </div>
+
+                                    <div class="text-xs text-muted-foreground">
+                                        {{ download.user.email }}
+                                    </div>
+                                </div>
+
+                                <span v-else class="text-muted-foreground">
+                                    —
+                                </span>
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ download.license?.license_name || '—' }}
+                            <td class="p-4">
+                                <Link
+                                    v-if="download.license"
+                                    :href="`/admin/licenses/${download.license.id}`"
+                                    class="text-primary hover:underline"
+                                >
+                                    {{ download.license.license_name }}
+                                </Link>
+
+                                <span v-else class="text-muted-foreground">
+                                    —
+                                </span>
                             </td>
 
-                            <td class="px-4 py-3">
-                                {{ download.downloaded_at }}
+                            <td class="p-4">
+                                {{ formatDownloadType(download.download_type) }}
+                            </td>
+
+                            <td class="p-4">
+                                {{ download.downloaded_at || '—' }}
+                            </td>
+
+                            <td class="p-4">
+                                <div class="flex justify-end">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        as-child
+                                    >
+                                        <Link :href="`/admin/downloads/${download.id}`">
+                                            View
+                                        </Link>
+                                    </Button>
+                                </div>
                             </td>
                         </tr>
+
+                        <DataTableEmpty
+                            v-if="recentDownloads.length === 0"
+                            :colspan="6"
+                            message="No recent downloads found."
+                        />
                     </tbody>
-                </table>
-            </div>
+                </DataTable>
+            </ShowSection>
         </div>
 
-        <!-- Top Images -->
-
         <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-lg border bg-card">
-                <div class="border-b p-6">
-                    <h2 class="text-lg font-semibold">
-                        Top Purchased Images
-                    </h2>
+            <ShowSection
+                title="Top Purchased Images"
+                description="Images ranked by completed purchases."
+            >
+                <div
+                    v-if="topPurchasedImages.length"
+                    class="divide-y overflow-hidden rounded-md border"
+                >
+                    <Link
+                        v-for="(image, index) in topPurchasedImages"
+                        :key="image.id"
+                        :href="`/images/${image.slug}`"
+                        class="flex items-center gap-4 p-4 transition hover:bg-muted/30"
+                    >
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+                            {{ index + 1 }}
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="truncate font-medium">
+                                {{ image.title }}
+                            </div>
+
+                            <div class="text-xs text-muted-foreground">
+                                {{ image.downloads_count.toLocaleString() }} downloads
+                            </div>
+                        </div>
+
+                        <div class="text-lg font-semibold">
+                            {{ image.purchases_count.toLocaleString() }}
+                        </div>
+                    </Link>
                 </div>
 
-                <div class="p-6">
-                    <ul class="space-y-3">
-                        <li
-                            v-for="image in topPurchasedImages"
-                            :key="image.id"
-                            class="flex justify-between"
-                        >
-                            <span>{{ image.title }}</span>
+                <p v-else class="text-sm text-muted-foreground">
+                    No purchased-image statistics are available.
+                </p>
+            </ShowSection>
 
-                            <span class="font-medium">
-                                {{ image.purchases_count }}
-                            </span>
-                        </li>
-                    </ul>
+            <ShowSection
+                title="Top Downloaded Images"
+                description="Images ranked by download activity."
+            >
+                <div
+                    v-if="topDownloadedImages.length"
+                    class="divide-y overflow-hidden rounded-md border"
+                >
+                    <Link
+                        v-for="(image, index) in topDownloadedImages"
+                        :key="image.id"
+                        :href="`/images/${image.slug}`"
+                        class="flex items-center gap-4 p-4 transition hover:bg-muted/30"
+                    >
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+                            {{ index + 1 }}
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="truncate font-medium">
+                                {{ image.title }}
+                            </div>
+
+                            <div class="text-xs text-muted-foreground">
+                                {{ image.purchases_count.toLocaleString() }} purchases
+                            </div>
+                        </div>
+
+                        <div class="text-lg font-semibold">
+                            {{ image.downloads_count.toLocaleString() }}
+                        </div>
+                    </Link>
                 </div>
-            </div>
 
-            <div class="rounded-lg border bg-card">
-                <div class="border-b p-6">
-                    <h2 class="text-lg font-semibold">
-                        Top Downloaded Images
-                    </h2>
-                </div>
-
-                <div class="p-6">
-                    <ul class="space-y-3">
-                        <li
-                            v-for="image in topDownloadedImages"
-                            :key="image.id"
-                            class="flex justify-between"
-                        >
-                            <span>{{ image.title }}</span>
-
-                            <span class="font-medium">
-                                {{ image.downloads_count }}
-                            </span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+                <p v-else class="text-sm text-muted-foreground">
+                    No downloaded-image statistics are available.
+                </p>
+            </ShowSection>
         </div>
     </div>
 </template>

@@ -1,30 +1,14 @@
 <script setup lang="ts">
-import LicenseTypeForm from '@/components/admin/LicenseTypeForm.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 
-interface LicenseType {
-    id: number;
-    name: string;
-    slug: string;
-    description: string | null;
-    price: string;
-    currency: string;
-    download_limit: number | null;
-    expires_after_days: number | null;
-    max_resolution: string;
-    usage_terms: string | null;
-    is_active: boolean;
-    sort_order: number;
-}
+import LicenseTypeForm from '@/components/admin/LicenseTypeForm.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+
+import type { EditableAdminLicenseType } from '@/types/licenseType';
 
 const props = defineProps<{
-    licenseType: LicenseType;
+    licenseType: EditableAdminLicenseType;
 }>();
 
 const form = useForm({
@@ -42,7 +26,9 @@ const form = useForm({
 });
 
 function submit() {
-    form.put(`/admin/license-types/${props.licenseType.id}`);
+    form.put(`/admin/license-types/${props.licenseType.id}`, {
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -51,33 +37,21 @@ function submit() {
 
     <AppLayout>
         <div class="space-y-6 p-6">
+            <PageHeader
+                title="Edit License Type"
+                description="Update this licensing option."
+            />
 
-            <div>
-                <h1 class="text-2xl font-bold">
-                    Edit License Type
-                </h1>
-
-                <p class="text-muted-foreground">
-                    Update this licensing option.
-                </p>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        License Details
-                    </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                    <LicenseTypeForm
-                        :form="form"
-                        submit-label="Update License Type"
-                        @submit="submit"
-                    />
-                </CardContent>
-            </Card>
-
+            <FormSection
+                title="License Details"
+                description="Update pricing, download limits, resolution, and usage terms."
+            >
+                <LicenseTypeForm
+                    :form="form"
+                    submit-label="Update License Type"
+                    @submit="submit"
+                />
+            </FormSection>
         </div>
     </AppLayout>
 </template>

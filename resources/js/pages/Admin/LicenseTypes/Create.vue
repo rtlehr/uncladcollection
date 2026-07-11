@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import LicenseTypeForm from '@/components/admin/LicenseTypeForm.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+
+import LicenseTypeForm from '@/components/admin/LicenseTypeForm.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
 
 const form = useForm({
     name: '',
@@ -23,7 +20,9 @@ const form = useForm({
 });
 
 function submit() {
-    form.post('/admin/license-types');
+    form.post('/admin/license-types', {
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -32,33 +31,21 @@ function submit() {
 
     <AppLayout>
         <div class="space-y-6 p-6">
+            <PageHeader
+                title="Create License Type"
+                description="Create a new image licensing option."
+            />
 
-            <div>
-                <h1 class="text-2xl font-bold">
-                    Create License Type
-                </h1>
-
-                <p class="text-muted-foreground">
-                    Create a new image licensing option.
-                </p>
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        License Details
-                    </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                    <LicenseTypeForm
-                        :form="form"
-                        submit-label="Create License Type"
-                        @submit="submit"
-                    />
-                </CardContent>
-            </Card>
-
+            <FormSection
+                title="License Details"
+                description="Configure pricing, download limits, resolution, and usage terms."
+            >
+                <LicenseTypeForm
+                    :form="form"
+                    submit-label="Create License Type"
+                    @submit="submit"
+                />
+            </FormSection>
         </div>
     </AppLayout>
 </template>

@@ -1,81 +1,112 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Eye } from '@lucide/vue';
-import { ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { ref } from 'vue';
 
-type Order = {
-    id: number;
-    order_number: string;
-    status: string;
-    total_formatted: string;
-    currency: string;
-    payment_provider: string | null;
-    paid_at: string | null;
-    created_at: string | null;
-    items_count: number;
-    licenses_count: number;
-    user: {
-        id: number;
-        name: string;
-        email: string;
-    } | null;
-};
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import Pagination from '@/Components/Shared/Pagination.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
+
+import type {
+    AdminOrderFilters,
+    PaginatedAdminOrders,
+} from '@/types/orderList';
 
 const props = defineProps<{
-    orders: {
-        data: Order[];
-        links: any[];
-        meta: any;
-    };
-    filters: {
-        search: string;
-        status: string;
-    };
+    orders: PaginatedAdminOrders;
+    filters: AdminOrderFilters;
     statuses: string[];
 }>();
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 
-watch([search, status], () => {
-    router.get('/admin/orders', {
-        search: search.value,
-        status: status.value,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
-});
+function reload() {
+    router.get(
+        '/admin/orders',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function resetFilters() {
+    search.value = '';
+    status.value = '';
+
+    router.get(
+        '/admin/orders',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
+
+function sortBy(column: string) {
+    const direction =
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
+            ? 'desc'
+            : 'asc';
+
+    router.get(
+        '/admin/orders',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+}
 </script>
 
 <template>
     <Head title="Orders" />
 
     <div class="space-y-6 p-6">
-        <div>
-            <h1 class="text-3xl font-semibold">
-                Orders
-            </h1>
+        <PageHeader
+            title="Orders"
+            description="View customer image license purchases."
+        />
 
-            <p class="mt-1 text-muted-foreground">
-                View customer image license purchases.
-            </p>
-        </div>
-
-        <div class="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
+        <FilterToolbar :columns="2" compact>
+            <SearchToolbar
                 v-model="search"
                 placeholder="Search orders, users, or images..."
-                class="md:max-w-sm"
+                :show-reset="false"
+                @search="reload"
             />
 
             <select
                 v-model="status"
                 class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                @change="reload"
             >
-                <option value="">All Statuses</option>
+                <option value="">
+                    All Statuses
+                </option>
 
                 <option
                     v-for="orderStatus in statuses"
@@ -85,135 +116,168 @@ watch([search, status], () => {
                     {{ orderStatus }}
                 </option>
             </select>
-        </div>
 
-        <div class="overflow-x-auto rounded-lg border bg-card">
-            <table class="w-full text-sm">
-                <thead class="border-b bg-muted/50">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Order
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            User
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Status
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Total
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Items
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Licenses
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Paid
-                        </th>
-                        <th class="px-4 py-3 text-left font-medium">
-                            Created
-                        </th>
-                        <th class="px-4 py-3 text-right font-medium">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
+            <template #actions>
+                <Button
+                    type="button"
+                    @click="reload"
+                >
+                    Apply Filters
+                </Button>
 
-                <tbody>
-                    <tr
-                        v-for="order in orders.data"
-                        :key="order.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="px-4 py-3 font-medium">
-                            {{ order.order_number }}
-                        </td>
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
 
-                        <td class="px-4 py-3">
-                            <div v-if="order.user">
-                                <div class="font-medium">
-                                    {{ order.user.name }}
-                                </div>
-                                <div class="text-xs text-muted-foreground">
-                                    {{ order.user.email }}
-                                </div>
+        <DataTable min-width="1100px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell
+                        label="Order"
+                        column="order_number"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell label="User" />
+
+                    <DataTableHeaderCell
+                        label="Status"
+                        column="status"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Total"
+                        column="total_cents"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell label="Items" />
+                    <DataTableHeaderCell label="Licenses" />
+
+                    <DataTableHeaderCell
+                        label="Paid"
+                        column="paid_at"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Created"
+                        column="created_at"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
+
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr
+                    v-for="order in orders.data"
+                    :key="order.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4 font-medium">
+                        {{ order.order_number }}
+                    </td>
+
+                    <td class="p-4">
+                        <div v-if="order.user">
+                            <div class="font-medium">
+                                {{ order.user.name }}
                             </div>
 
-                            <span v-else class="text-muted-foreground">
-                                —
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <span class="rounded-full border px-2 py-1 text-xs">
-                                {{ order.status }}
-                            </span>
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ order.total_formatted }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ order.items_count }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ order.licenses_count }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ order.paid_at ?? '—' }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            {{ order.created_at ?? '—' }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <div class="flex justify-end">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/orders/${order.id}`">
-                                        <Eye class="h-4 w-4" />
-                                    </Link>
-                                </Button>
+                            <div class="text-xs text-muted-foreground">
+                                {{ order.user.email }}
                             </div>
-                        </td>
-                    </tr>
+                        </div>
 
-                    <tr v-if="orders.data.length === 0">
-                        <td
-                            colspan="9"
-                            class="px-4 py-10 text-center text-muted-foreground"
+                        <span
+                            v-else
+                            class="text-muted-foreground"
                         >
-                            No orders found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                            —
+                        </span>
+                    </td>
 
-        <div
-            v-if="orders.links?.length"
-            class="flex flex-wrap gap-2"
-        >
-            <Link
-                v-for="link in orders.links"
-                :key="link.label"
-                :href="link.url || '#'"
-                v-html="link.label"
-                class="rounded-md border px-3 py-2 text-sm"
-                :class="{
-                    'bg-primary text-primary-foreground': link.active,
-                    'pointer-events-none opacity-50': !link.url,
-                }"
-            />
-        </div>
+                    <td class="p-4">
+                        <StatusBadge :status="order.status" />
+                    </td>
+
+                    <td class="p-4 font-medium">
+                        {{ order.total_formatted }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ order.items_count }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ order.licenses_count }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ order.paid_at ?? '—' }}
+                    </td>
+
+                    <td class="p-4">
+                        {{ order.created_at ?? '—' }}
+                    </td>
+
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                as-child
+                            >
+                                <Link :href="`/admin/orders/${order.id}`">
+                                    View
+                                </Link>
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
+
+                <DataTableEmpty
+                    v-if="orders.data.length === 0"
+                    :colspan="9"
+                    message="No orders found."
+                />
+            </tbody>
+        </DataTable>
+
+        <Pagination
+            :links="orders.links"
+            :from="orders.from ?? null"
+            :to="orders.to ?? null"
+            :total="orders.total ?? null"
+            item-label="orders"
+            :show-summary="orders.total !== undefined"
+        />
     </div>
 </template>

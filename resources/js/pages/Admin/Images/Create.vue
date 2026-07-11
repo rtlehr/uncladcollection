@@ -1,25 +1,28 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { onBeforeUnmount, ref } from 'vue';
+
+import OptionChecklist from '@/Components/Admin/OptionChecklist.vue';
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
-type Option = {
-    id: number;
-    name: string;
-};
+import type { AdminImageOption } from '@/types/adminImageForm';
 
-const props = defineProps<{
-    collections: Option[];
-    categories: Option[];
-    tags: Option[];
+defineProps<{
+    collections: AdminImageOption[];
+    categories: AdminImageOption[];
+    tags: AdminImageOption[];
 }>();
 
 const previewUrl = ref<string | null>(null);
 
 const form = useForm({
-    collection_id: '',
+    collection_id: '' as string | number,
     title: '',
     description: '',
     photographer: '',
@@ -31,28 +34,29 @@ const form = useForm({
     tags: [] as number[],
 });
 
+function revokePreview() {
+    if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value);
+        previewUrl.value = null;
+    }
+}
+
 function handleImageChange(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
 
+    revokePreview();
     form.image = file;
-
-    if (previewUrl.value) {
-        URL.revokeObjectURL(previewUrl.value);
-    }
-
     previewUrl.value = file ? URL.createObjectURL(file) : null;
 }
 
-function toggleCategory(categoryId: number, checked: boolean) {
-    form.categories = checked
-        ? [...form.categories, categoryId]
-        : form.categories.filter((id) => id !== categoryId);
-}
-
-function toggleTag(tagId: number, checked: boolean) {
-    form.tags = checked
-        ? [...form.tags, tagId]
-        : form.tags.filter((id) => id !== tagId);
+function toggleSelection(
+    field: 'categories' | 'tags',
+    id: number,
+    checked: boolean,
+) {
+    form[field] = checked
+        ? [...form[field], id]
+        : form[field].filter((selectedId) => selectedId !== id);
 }
 
 function submit() {
@@ -64,260 +68,224 @@ function submit() {
         preserveScroll: true,
     });
 }
+
+function cancel() {
+    router.visit('/admin/images');
+}
+
+onBeforeUnmount(revokePreview);
 </script>
 
 <template>
     <Head title="Create Image" />
 
-    <div class="p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Create Image</h1>
-
-            <p class="text-sm text-muted-foreground">
-                Upload a new image and assign it to collections, categories, and tags.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Create Image"
+            description="Upload a new image and assign it to collections, categories, and tags."
+        />
 
         <form class="space-y-8" @submit.prevent="submit">
-            <div class="grid gap-6 lg:grid-cols-3">
-                <div class="space-y-6 lg:col-span-2">
-                    <div class="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="text-lg font-semibold">Image Details</h2>
+            <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+                <div class="space-y-6">
+                    <FormSection
+                        title="Image Details"
+                        description="Public-facing image title, attribution, and description."
+                    >
+                        <FormGrid :columns="2">
+                            <FormField
+                                label="Title"
+                                for-id="title"
+                                required
+                                :error="form.errors.title"
+                            >
+                                <Input
+                                    id="title"
+                                    v-model="form.title"
+                                    placeholder="Enter image title"
+                                />
+                            </FormField>
 
-                        <div class="space-y-2">
-                            <Label for="title">Title</Label>
+                            <FormField
+                                label="Photographer"
+                                for-id="photographer"
+                                :error="form.errors.photographer"
+                            >
+                                <Input
+                                    id="photographer"
+                                    v-model="form.photographer"
+                                    placeholder="Optional photographer name"
+                                />
+                            </FormField>
+                        </FormGrid>
 
-                            <Input
-                                id="title"
-                                v-model="form.title"
-                                placeholder="Enter image title"
-                            />
-
-                            <p v-if="form.errors.title" class="text-sm text-red-600">
-                                {{ form.errors.title }}
-                            </p>
+                        <div class="mt-6">
+                            <FormField
+                                label="Description"
+                                for-id="description"
+                                :error="form.errors.description"
+                            >
+                                <textarea
+                                    id="description"
+                                    v-model="form.description"
+                                    rows="5"
+                                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    placeholder="Optional image description"
+                                />
+                            </FormField>
                         </div>
+                    </FormSection>
 
-                        <div class="space-y-2">
-                            <Label for="description">Description</Label>
-
-                            <textarea
-                                id="description"
-                                v-model="form.description"
-                                rows="5"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="Optional image description"
-                            />
-
-                            <p v-if="form.errors.description" class="text-sm text-red-600">
-                                {{ form.errors.description }}
-                            </p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="photographer">Photographer</Label>
-
-                            <Input
-                                id="photographer"
-                                v-model="form.photographer"
-                                placeholder="Optional photographer name"
-                            />
-
-                            <p v-if="form.errors.photographer" class="text-sm text-red-600">
-                                {{ form.errors.photographer }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="text-lg font-semibold">Upload</h2>
-
-                        <div class="space-y-2">
-                            <Label for="image">Image File</Label>
-
+                    <FormSection
+                        title="Upload"
+                        description="Upload the source image used to generate marketplace variants."
+                    >
+                        <FormField
+                            label="Image File"
+                            for-id="image"
+                            required
+                            description="The physical file is stored on the server; the database stores file paths."
+                            :error="form.errors.image"
+                        >
                             <Input
                                 id="image"
                                 type="file"
                                 accept="image/*"
                                 @change="handleImageChange"
                             />
+                        </FormField>
 
-                            <p class="text-xs text-muted-foreground">
-                                The physical file will be stored on the server. The database stores only file paths.
-                            </p>
-
-                            <p v-if="form.errors.image" class="text-sm text-red-600">
-                                {{ form.errors.image }}
-                            </p>
-                        </div>
-
-                        <div v-if="previewUrl" class="space-y-2">
-                            <Label>Preview</Label>
+                        <div v-if="previewUrl" class="mt-6">
+                            <div class="mb-2 text-sm font-medium">
+                                Preview
+                            </div>
 
                             <div class="rounded-lg border bg-muted p-4">
                                 <img
                                     :src="previewUrl"
                                     alt="Image preview"
-                                    class="max-h-80 w-full rounded object-contain"
+                                    class="max-h-96 w-full rounded object-contain"
                                 />
                             </div>
                         </div>
-                    </div>
+                    </FormSection>
 
-                    <div class="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="text-lg font-semibold">Categories</h2>
+                    <FormSection
+                        title="Categories"
+                        description="Select the image categories used for browsing."
+                    >
+                        <OptionChecklist
+                            :options="categories"
+                            :selected-ids="form.categories"
+                            empty-message="No image categories are available."
+                            :disabled="form.processing"
+                            @toggle="(id, checked) => toggleSelection('categories', id, checked)"
+                        />
+                    </FormSection>
 
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <label
-                                v-for="category in categories"
-                                :key="category.id"
-                                class="flex items-center gap-3 rounded-md border p-3"
-                            >
-                                <input
-                                    type="checkbox"
-                                    class="h-4 w-4 rounded border-gray-300"
-                                    :checked="form.categories.includes(category.id)"
-                                    @change="toggleCategory(
-                                        category.id,
-                                        ($event.target as HTMLInputElement).checked
-                                    )"
-                                />
-
-                                <span class="text-sm font-medium">
-                                    {{ category.name }}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="text-lg font-semibold">Tags</h2>
-
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <label
-                                v-for="tag in tags"
-                                :key="tag.id"
-                                class="flex items-center gap-3 rounded-md border p-3"
-                            >
-                                <input
-                                    type="checkbox"
-                                    class="h-4 w-4 rounded border-gray-300"
-                                    :checked="form.tags.includes(tag.id)"
-                                    @change="toggleTag(
-                                        tag.id,
-                                        ($event.target as HTMLInputElement).checked
-                                    )"
-                                />
-
-                                <span class="text-sm font-medium">
-                                    {{ tag.name }}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
+                    <FormSection
+                        title="Tags"
+                        description="Select search and discovery tags."
+                    >
+                        <OptionChecklist
+                            :options="tags"
+                            :selected-ids="form.tags"
+                            empty-message="No image tags are available."
+                            :disabled="form.processing"
+                            @toggle="(id, checked) => toggleSelection('tags', id, checked)"
+                        />
+                    </FormSection>
                 </div>
 
                 <div class="space-y-6">
-                    <div class="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-                        <h2 class="text-lg font-semibold">Publishing</h2>
-
-                        <div class="space-y-2">
-                            <Label for="collection_id">Collection</Label>
-
-                            <select
-                                id="collection_id"
-                                v-model="form.collection_id"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    <FormSection
+                        title="Publishing"
+                        description="Control image organization and public visibility."
+                    >
+                        <div class="space-y-6">
+                            <FormField
+                                label="Collection"
+                                for-id="collection_id"
+                                :error="form.errors.collection_id"
                             >
-                                <option value="">No Collection</option>
-
-                                <option
-                                    v-for="collection in collections"
-                                    :key="collection.id"
-                                    :value="collection.id"
+                                <select
+                                    id="collection_id"
+                                    v-model="form.collection_id"
+                                    class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 >
-                                    {{ collection.name }}
-                                </option>
-                            </select>
+                                    <option value="">
+                                        No Collection
+                                    </option>
 
-                            <p v-if="form.errors.collection_id" class="text-sm text-red-600">
-                                {{ form.errors.collection_id }}
-                            </p>
-                        </div>
+                                    <option
+                                        v-for="collection in collections"
+                                        :key="collection.id"
+                                        :value="collection.id"
+                                    >
+                                        {{ collection.name }}
+                                    </option>
+                                </select>
+                            </FormField>
 
-                        <div class="space-y-2">
-                            <Label for="sort_order">Sort Order</Label>
+                            <FormField
+                                label="Sort Order"
+                                for-id="sort_order"
+                                description="Lower numbers appear first."
+                                :error="form.errors.sort_order"
+                            >
+                                <Input
+                                    id="sort_order"
+                                    v-model="form.sort_order"
+                                    type="number"
+                                    min="0"
+                                />
+                            </FormField>
 
-                            <Input
-                                id="sort_order"
-                                v-model="form.sort_order"
-                                type="number"
-                                min="0"
-                            />
+                            <label class="flex items-start gap-3 rounded-md border p-4">
+                                <Checkbox
+                                    :checked="form.is_active"
+                                    @update:checked="form.is_active = Boolean($event)"
+                                />
 
-                            <p v-if="form.errors.sort_order" class="text-sm text-red-600">
-                                {{ form.errors.sort_order }}
-                            </p>
-                        </div>
+                                <div>
+                                    <div class="text-sm font-medium">
+                                        Active
+                                    </div>
 
-                        <label class="flex items-start gap-3 rounded-md border p-3">
-                            <input
-                                v-model="form.is_active"
-                                type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-input"
-                            />
-
-                            <div>
-                                <div class="text-sm font-medium">
-                                    Active
+                                    <p class="text-xs text-muted-foreground">
+                                        Active images can be displayed on the public site.
+                                    </p>
                                 </div>
+                            </label>
 
-                                <p class="text-xs text-muted-foreground">
-                                    Active images can be displayed on the public site.
-                                </p>
-                            </div>
-                        </label>
+                            <label class="flex items-start gap-3 rounded-md border p-4">
+                                <Checkbox
+                                    :checked="form.is_ai_generated"
+                                    @update:checked="form.is_ai_generated = Boolean($event)"
+                                />
 
-                        <p v-if="form.errors.is_active" class="text-sm text-red-600">
-                            {{ form.errors.is_active }}
-                        </p>
+                                <div>
+                                    <div class="text-sm font-medium">
+                                        AI Generated
+                                    </div>
 
-                        <label class="flex items-start gap-3 rounded-md border p-3">
-                            <input
-                                v-model="form.is_ai_generated"
-                                type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-input"
-                            />
-
-                            <div>
-                                <div class="text-sm font-medium">
-                                    AI Generated
+                                    <p class="text-xs text-muted-foreground">
+                                        Mark images created or significantly assisted by AI.
+                                    </p>
                                 </div>
-
-                                <p class="text-xs text-muted-foreground">
-                                    Check this if the image was created or significantly assisted by AI.
-                                </p>
-                            </div>
-                        </label>
-
-                        <p v-if="form.errors.is_ai_generated" class="text-sm text-red-600">
-                            {{ form.errors.is_ai_generated }}
-                        </p>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <Button type="submit" :disabled="form.processing">
-                            {{ form.processing ? 'Uploading...' : 'Create Image' }}
-                        </Button>
-
-                        <Button type="button" variant="outline" as-child>
-                            <Link href="/admin/images">
-                                Cancel
-                            </Link>
-                        </Button>
-                    </div>
+                            </label>
+                        </div>
+                    </FormSection>
                 </div>
             </div>
+
+            <FormActions
+                submit-label="Create Image"
+                processing-label="Uploading..."
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>
