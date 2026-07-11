@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import { Head, router, useForm } from '@inertiajs/vue3';
+
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 
 const form = useForm({
@@ -11,92 +17,112 @@ const form = useForm({
 });
 
 function submit() {
-    form.post('/admin/collections');
+    form.post('/admin/collections', {
+        preserveScroll: true,
+    });
+}
+
+function cancel() {
+    router.visit('/admin/collections');
 }
 </script>
 
 <template>
     <Head title="Create Collection" />
 
-    <div class="max-w-3xl p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Create Collection</h1>
-            <p class="text-sm text-muted-foreground">
-                Create a new image collection.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Create Collection"
+            description="Create a new image collection."
+        />
 
         <form
-            class="space-y-6 rounded-lg border bg-card p-6"
+            class="space-y-8"
             @submit.prevent="submit"
         >
-            <div class="space-y-2">
-                <label class="text-sm font-medium">Name</label>
+            <FormSection
+                title="Collection Details"
+                description="Define the collection name, description, display order, and active state."
+            >
+                <FormGrid :columns="2">
+                    <FormField
+                        label="Name"
+                        for-id="name"
+                        required
+                        :error="form.errors.name"
+                    >
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            placeholder="Enter collection name"
+                        />
+                    </FormField>
 
-                <Input
-                    v-model="form.name"
-                    placeholder="Enter collection name"
-                />
+                    <FormField
+                        label="Sort Order"
+                        for-id="sort_order"
+                        description="Lower numbers appear first."
+                        :error="form.errors.sort_order"
+                    >
+                        <Input
+                            id="sort_order"
+                            v-model="form.sort_order"
+                            type="number"
+                            min="0"
+                        />
+                    </FormField>
+                </FormGrid>
 
-                <p v-if="form.errors.name" class="text-sm text-red-600">
-                    {{ form.errors.name }}
-                </p>
-            </div>
+                <div class="mt-6">
+                    <FormField
+                        label="Description"
+                        for-id="description"
+                        :error="form.errors.description"
+                    >
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Optional description"
+                        />
+                    </FormField>
+                </div>
 
-            <div class="space-y-2">
-                <label class="text-sm font-medium">Description</label>
+                <div class="mt-6 rounded-lg border bg-muted/20 p-4">
+                    <label class="flex items-start gap-3">
+                        <Checkbox
+                            :checked="form.is_active"
+                            @update:checked="form.is_active = Boolean($event)"
+                        />
 
-                <textarea
-                    v-model="form.description"
-                    rows="4"
-                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Optional description"
-                />
+                        <div>
+                            <div class="font-medium">
+                                Active
+                            </div>
 
-                <p v-if="form.errors.description" class="text-sm text-red-600">
-                    {{ form.errors.description }}
-                </p>
-            </div>
+                            <div class="text-sm text-muted-foreground">
+                                Active collections will be available throughout the site.
+                            </div>
+                        </div>
+                    </label>
 
-            <div class="space-y-2">
-                <label class="text-sm font-medium">Sort Order</label>
+                    <p
+                        v-if="form.errors.is_active"
+                        class="mt-2 text-sm text-destructive"
+                    >
+                        {{ form.errors.is_active }}
+                    </p>
+                </div>
+            </FormSection>
 
-                <Input
-                    v-model="form.sort_order"
-                    type="number"
-                    min="0"
-                />
-
-                <p v-if="form.errors.sort_order" class="text-sm text-red-600">
-                    {{ form.errors.sort_order }}
-                </p>
-            </div>
-
-            <label class="flex items-center gap-2 text-sm font-medium">
-                <input
-                    v-model="form.is_active"
-                    type="checkbox"
-                    class="h-4 w-4 rounded border-input"
-                />
-
-                Active
-            </label>
-
-            <p v-if="form.errors.is_active" class="text-sm text-red-600">
-                {{ form.errors.is_active }}
-            </p>
-
-            <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">
-                    Create Collection
-                </Button>
-
-                <Button type="button" variant="outline" as-child>
-                    <Link href="/admin/collections">
-                        Cancel
-                    </Link>
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Create Collection"
+                processing-label="Creating..."
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>

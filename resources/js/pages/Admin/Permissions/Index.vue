@@ -1,127 +1,108 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import PermissionTableGroup from '@/Components/Admin/PermissionTableGroup.vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 
-type Permission = {
-    id: number;
-    name: string;
-    label: string;
-    group_name: string | null;
-    description: string | null;
-    is_system: boolean;
-    is_locked: boolean;
-};
+import type {
+    AdminPermission,
+    GroupedAdminPermissions,
+} from '@/types/permission';
 
 defineProps<{
-    permissions: Record<string, Permission[]>;
+    permissions: GroupedAdminPermissions;
 }>();
+
+const selectedPermission = ref<AdminPermission | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
 
 function groupLabel(groupName: string): string {
     return groupName || 'Ungrouped';
 }
 
-function deletePermission(permission: Permission) {
-    if (!confirm(`Delete permission "${permission.label}"?`)) {
+function requestDelete(permission: AdminPermission) {
+    if (permission.is_locked) {
         return;
     }
 
-    router.delete(`/admin/permissions/${permission.id}`, {
-        preserveScroll: true,
-    });
+    selectedPermission.value = permission;
+    deleteDialogOpen.value = true;
+}
+
+function cancelDelete() {
+    deleteDialogOpen.value = false;
+    selectedPermission.value = null;
+}
+
+function confirmDelete() {
+    if (!selectedPermission.value || selectedPermission.value.is_locked) {
+        return;
+    }
+
+    deleting.value = true;
+
+    router.delete(
+        `/admin/permissions/${selectedPermission.value.id}`,
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                deleting.value = false;
+                deleteDialogOpen.value = false;
+                selectedPermission.value = null;
+            },
+        },
+    );
 }
 </script>
 
 <template>
     <Head title="Permissions" />
 
-    <div class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold">Permissions</h1>
-                <p class="text-sm text-muted-foreground">
-                    Manage application permissions.
-                </p>
-            </div>
+    <div class="space-y-6 p-6">
+        <PageHeader
+            title="Permissions"
+            description="Manage application permissions."
+        />
 
-            <Button as-child>
-                <Link href="/admin/permissions/create">
-                    Add Permission
-                </Link>
-            </Button>
-        </div>
+        <ActionToolbar align="end">
+            <template #secondary>
+                <Button as-child>
+                    <Link href="/admin/permissions/create">
+                        Add Permission
+                    </Link>
+                </Button>
+            </template>
+        </ActionToolbar>
 
-        <div class="space-y-6">
-            <div
+        <div class="space-y-8">
+            <PermissionTableGroup
                 v-for="(groupPermissions, groupName) in permissions"
                 :key="groupName"
-                class="rounded-lg border bg-card p-6 shadow-sm"
-            >
-                <h2 class="mb-4 text-lg font-semibold">
-                    {{ groupLabel(String(groupName)) }}
-                </h2>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b text-left">
-                                <th class="py-2 pr-4">Label</th>
-                                <th class="py-2 pr-4">Name</th>
-                                <th class="py-2 pr-4">Description</th>
-                                <th class="py-2 pr-4">System</th>
-                                <th class="py-2 pr-4">Locked</th>
-                                <th class="py-2 text-right">Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            <tr
-                                v-for="permission in groupPermissions"
-                                :key="permission.id"
-                                class="border-b last:border-0"
-                            >
-                                <td class="py-3 pr-4 font-medium">
-                                    {{ permission.label }}
-                                </td>
-
-                                <td class="py-3 pr-4 font-mono text-xs">
-                                    {{ permission.name }}
-                                </td>
-
-                                <td class="py-3 pr-4 text-muted-foreground">
-                                    {{ permission.description }}
-                                </td>
-
-                                <td class="py-3 pr-4">
-                                    {{ permission.is_system ? 'Yes' : 'No' }}
-                                </td>
-
-                                <td class="py-3 pr-4">
-                                    {{ permission.is_locked ? 'Yes' : 'No' }}
-                                </td>
-
-                                <td class="py-3 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <Button size="sm" variant="outline" as-child>
-                                            <Link :href="`/admin/permissions/${permission.id}/edit`">
-                                                Edit
-                                            </Link>
-                                        </Button>
-
-                                        <Button
-                                            size="sm"
-                                            variant="destructive"
-                                            :disabled="permission.is_locked"
-                                            @click="deletePermission(permission)"
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                :title="groupLabel(String(groupName))"
+                :permissions="groupPermissions"
+                @delete="requestDelete"
+            />
         </div>
+
+        <ConfirmActionDialog
+            v-model:open="deleteDialogOpen"
+            title="Delete permission?"
+            :description="
+                selectedPermission
+                    ? `Delete the permission '${selectedPermission.label}'? This action cannot be undone.`
+                    : 'This action cannot be undone.'
+            "
+            confirm-label="Delete Permission"
+            destructive
+            :loading="deleting"
+            :disabled="selectedPermission?.is_locked ?? true"
+            @confirm="confirmDelete"
+            @cancel="cancelDelete"
+        />
     </div>
 </template>

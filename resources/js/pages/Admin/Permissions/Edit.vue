@@ -1,21 +1,19 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Head, router, useForm } from '@inertiajs/vue3';
 
-type Permission = {
-    id: number;
-    name: string;
-    label: string;
-    group_name: string | null;
-    description: string | null;
-    is_system: boolean;
-    is_locked: boolean;
-};
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+
+import type { AdminPermission } from '@/types/permission';
 
 const props = defineProps<{
-    permission: Permission;
+    permission: AdminPermission;
 }>();
 
 const form = useForm({
@@ -32,74 +30,112 @@ function submit() {
         preserveScroll: true,
     });
 }
+
+function cancel() {
+    router.visit('/admin/permissions');
+}
 </script>
 
 <template>
     <Head title="Edit Permission" />
 
-    <div class="p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Edit Permission</h1>
-            <p class="text-sm text-muted-foreground">
-                Update an application permission.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Edit Permission"
+            description="Update an application permission."
+        />
 
-        <form @submit.prevent="submit" class="max-w-2xl space-y-6">
-            <div class="grid gap-2">
-                <Label for="label">Label</Label>
-                <Input id="label" v-model="form.label" />
-                <p v-if="form.errors.label" class="text-sm text-red-600">
-                    {{ form.errors.label }}
-                </p>
-            </div>
+        <form
+            class="space-y-8"
+            @submit.prevent="submit"
+        >
+            <FormSection
+                title="Permission Details"
+                description="Update the permission's label, internal name, group, and purpose."
+            >
+                <FormGrid :columns="2">
+                    <FormField
+                        label="Label"
+                        for-id="label"
+                        required
+                        :error="form.errors.label"
+                    >
+                        <Input
+                            id="label"
+                            v-model="form.label"
+                        />
+                    </FormField>
 
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input id="name" v-model="form.name" />
-                <p v-if="form.errors.name" class="text-sm text-red-600">
-                    {{ form.errors.name }}
-                </p>
-            </div>
+                    <FormField
+                        label="Name"
+                        for-id="name"
+                        required
+                        :error="form.errors.name"
+                    >
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                        />
+                    </FormField>
 
-            <div class="grid gap-2">
-                <Label for="group_name">Group</Label>
-                <Input id="group_name" v-model="form.group_name" />
-            </div>
+                    <FormField
+                        label="Group"
+                        for-id="group_name"
+                        :error="form.errors.group_name"
+                    >
+                        <Input
+                            id="group_name"
+                            v-model="form.group_name"
+                        />
+                    </FormField>
+                </FormGrid>
 
-            <div class="grid gap-2">
-                <Label for="description">Description</Label>
-                <textarea
-                    id="description"
-                    v-model="form.description"
-                    rows="4"
-                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-                />
-            </div>
+                <div class="mt-6">
+                    <FormField
+                        label="Description"
+                        for-id="description"
+                        :error="form.errors.description"
+                    >
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                        />
+                    </FormField>
+                </div>
 
-            <div class="flex gap-6">
-                <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.is_system" type="checkbox" />
-                    System
-                </label>
+                <div class="mt-6 flex flex-wrap items-center gap-6">
+                    <label class="flex items-center gap-2 text-sm">
+                        <Checkbox
+                            :checked="form.is_system"
+                            @update:checked="form.is_system = Boolean($event)"
+                        />
+                        System
+                    </label>
 
-                <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.is_locked" type="checkbox" />
-                    Locked
-                </label>
-            </div>
+                    <label class="flex items-center gap-2 text-sm">
+                        <Checkbox
+                            :checked="form.is_locked"
+                            @update:checked="form.is_locked = Boolean($event)"
+                        />
+                        Locked
+                    </label>
 
-            <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Saving...' : 'Save Permission' }}
-                </Button>
+                    <StatusBadge
+                        :status="permission.is_locked ? 'locked' : 'unlocked'"
+                        :label="permission.is_locked ? 'Currently Locked' : 'Currently Unlocked'"
+                        :tone="permission.is_locked ? 'warning' : 'neutral'"
+                    />
+                </div>
+            </FormSection>
 
-                <Button variant="outline" as-child>
-                    <Link href="/admin/permissions">
-                        Cancel
-                    </Link>
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Save Permission"
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>

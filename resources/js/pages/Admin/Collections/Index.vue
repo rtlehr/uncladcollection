@@ -1,86 +1,114 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-type Collection = {
-    id: number;
-    name: string;
-    slug: string;
-    description: string | null;
-    sort_order: number;
-    is_active: boolean;
-    created_at: string;
-};
+import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
+
+import type {
+    AdminCollection,
+    AdminCollectionFilters,
+} from '@/types/collection';
 
 const props = defineProps<{
-    collections: Collection[];
-    filters: {
-        search: string;
-        status: string;
-        sort: string;
-        direction: string;
-    };
+    collections: AdminCollection[];
+    filters: AdminCollectionFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 
+const selectedCollection = ref<AdminCollection | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
+
 function reload() {
-    router.get('/admin/collections', {
-        search: search.value,
-        status: status.value,
-        sort: props.filters.sort,
-        direction: props.filters.direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/collections',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function resetFilters() {
     search.value = '';
     status.value = '';
 
-    router.get('/admin/collections', {}, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/collections',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function sortBy(column: string) {
     const direction =
-        props.filters.sort === column && props.filters.direction === 'asc'
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
             ? 'desc'
             : 'asc';
 
-    router.get('/admin/collections', {
-        search: search.value,
-        status: status.value,
-        sort: column,
-        direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/collections',
+        {
+            search: search.value || undefined,
+            status: status.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
-function sortIndicator(column: string) {
-    if (props.filters.sort !== column) {
-        return '↕';
-    }
-
-    return props.filters.direction === 'asc' ? '↑' : '↓';
+function requestDelete(collection: AdminCollection) {
+    selectedCollection.value = collection;
+    deleteDialogOpen.value = true;
 }
 
-function deleteCollection(collection: Collection) {
-    if (!confirm(`Delete collection "${collection.name}"?`)) {
+function cancelDelete() {
+    deleteDialogOpen.value = false;
+    selectedCollection.value = null;
+}
+
+function confirmDelete() {
+    if (!selectedCollection.value) {
         return;
     }
 
-    router.delete(`/admin/collections/${collection.id}`, {
+    deleting.value = true;
+
+    router.delete(`/admin/collections/${selectedCollection.value.id}`, {
         preserveScroll: true,
+        onFinish: () => {
+            deleting.value = false;
+            deleteDialogOpen.value = false;
+            selectedCollection.value = null;
+        },
     });
 }
 </script>
@@ -88,33 +116,33 @@ function deleteCollection(collection: Collection) {
 <template>
     <Head title="Collections" />
 
-    <div class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold">Collections</h1>
-                <p class="text-sm text-muted-foreground">
-                    Manage image collections.
-                </p>
-            </div>
+    <div class="space-y-6 p-6">
+        <PageHeader
+            title="Collections"
+            description="Manage image collections."
+        />
 
-            <Button as-child>
-                <Link href="/admin/collections/create">
-                    Add Collection
-                </Link>
-            </Button>
-        </div>
+        <ActionToolbar align="end">
+            <template #secondary>
+                <Button as-child>
+                    <Link href="/admin/collections/create">
+                        Add Collection
+                    </Link>
+                </Button>
+            </template>
+        </ActionToolbar>
 
-        <div class="mb-4 flex flex-wrap gap-3">
-            <Input
+        <FilterToolbar :columns="2" compact>
+            <SearchToolbar
                 v-model="search"
-                class="max-w-sm"
                 placeholder="Search name, slug, or description..."
-                @keyup.enter="reload"
+                :show-reset="false"
+                @search="reload"
             />
 
             <select
                 v-model="status"
-                class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 @change="reload"
             >
                 <option value="">
@@ -130,107 +158,144 @@ function deleteCollection(collection: Collection) {
                 </option>
             </select>
 
-            <Button type="button" @click="reload">
-                Search
-            </Button>
+            <template #actions>
+                <Button
+                    type="button"
+                    @click="reload"
+                >
+                    Apply Filters
+                </Button>
 
-            <Button type="button" variant="outline" @click="resetFilters">
-                Reset
-            </Button>
-        </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
 
-        <div class="rounded-lg border bg-card shadow-sm">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b text-left">
-                        <th class="cursor-pointer p-4" @click="sortBy('name')">
-                            Name {{ sortIndicator('name') }}
-                        </th>
+        <DataTable min-width="900px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell
+                        label="Name"
+                        column="name"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="cursor-pointer p-4" @click="sortBy('slug')">
-                            Slug {{ sortIndicator('slug') }}
-                        </th>
+                    <DataTableHeaderCell
+                        label="Slug"
+                        column="slug"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="p-4">
-                            Description
-                        </th>
+                    <DataTableHeaderCell label="Description" />
 
-                        <th class="cursor-pointer p-4" @click="sortBy('sort_order')">
-                            Sort {{ sortIndicator('sort_order') }}
-                        </th>
+                    <DataTableHeaderCell
+                        label="Sort"
+                        column="sort_order"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="cursor-pointer p-4" @click="sortBy('is_active')">
-                            Status {{ sortIndicator('is_active') }}
-                        </th>
+                    <DataTableHeaderCell
+                        label="Status"
+                        column="is_active"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="p-4 text-right">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
 
-                <tbody>
-                    <tr
-                        v-for="collection in collections"
-                        :key="collection.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="p-4 font-medium">
-                            {{ collection.name }}
-                        </td>
+            <tbody>
+                <tr
+                    v-for="collection in collections"
+                    :key="collection.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4 font-medium">
+                        {{ collection.name }}
+                    </td>
 
-                        <td class="p-4 font-mono text-xs">
-                            {{ collection.slug }}
-                        </td>
+                    <td class="p-4 font-mono text-xs">
+                        {{ collection.slug }}
+                    </td>
 
-                        <td class="p-4 text-muted-foreground">
-                            {{ collection.description || '—' }}
-                        </td>
+                    <td class="max-w-md p-4 text-muted-foreground">
+                        {{ collection.description || '—' }}
+                    </td>
 
-                        <td class="p-4">
-                            {{ collection.sort_order }}
-                        </td>
+                    <td class="p-4">
+                        {{ collection.sort_order }}
+                    </td>
 
-                        <td class="p-4">
-                            <span
-                                :class="collection.is_active
-                                    ? 'font-medium text-green-600'
-                                    : 'font-medium text-red-600'"
+                    <td class="p-4">
+                        <StatusBadge
+                            :status="collection.is_active ? 'active' : 'inactive'"
+                        />
+                    </td>
+
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                as-child
                             >
-                                {{ collection.is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
+                                <Link :href="`/admin/collections/${collection.id}/edit`">
+                                    Edit
+                                </Link>
+                            </Button>
 
-                        <td class="p-4">
-                            <div class="flex justify-end gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    as-child
-                                >
-                                    <Link :href="`/admin/collections/${collection.id}/edit`">
-                                        Edit
-                                    </Link>
-                                </Button>
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                @click="requestDelete(collection)"
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
 
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    @click="deleteCollection(collection)"
-                                >
-                                    Delete
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
+                <DataTableEmpty
+                    v-if="collections.length === 0"
+                    :colspan="6"
+                    message="No collections found."
+                />
+            </tbody>
+        </DataTable>
 
-                    <tr v-if="collections.length === 0">
-                        <td colspan="6" class="p-6 text-center text-muted-foreground">
-                            No collections found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <ConfirmActionDialog
+            v-model:open="deleteDialogOpen"
+            title="Delete collection?"
+            :description="
+                selectedCollection
+                    ? `Delete the collection '${selectedCollection.name}'? This action cannot be undone.`
+                    : 'This action cannot be undone.'
+            "
+            confirm-label="Delete Collection"
+            destructive
+            :loading="deleting"
+            @confirm="confirmDelete"
+            @cancel="cancelDelete"
+        />
     </div>
 </template>

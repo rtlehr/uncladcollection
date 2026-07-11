@@ -1,38 +1,33 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Head, router, useForm } from '@inertiajs/vue3';
+
+import PermissionGroupCard from '@/Components/Admin/PermissionGroupCard.vue';
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import SectionHeader from '@/Components/Shared/SectionHeader.vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
-type Permission = {
-    id: number;
-    name: string;
-    label: string;
-    group_name: string | null;
-    description: string | null;
-};
-
-type Role = {
-    id: number;
-    name: string;
-    label: string;
-    description: string | null;
-    is_system: boolean;
-    is_locked: boolean;
-    permissions: Permission[];
-};
+import type {
+    AdminRoleDetail,
+    GroupedPermissions,
+} from '@/types/role';
 
 const props = defineProps<{
-    role: Role;
-    permissions: Record<string, Permission[]>;
+    role: AdminRoleDetail;
+    permissions: GroupedPermissions;
 }>();
 
 const form = useForm({
     name: props.role.name,
     label: props.role.label,
     description: props.role.description ?? '',
-    permissions: props.role.permissions.map((permission) => permission.id),
+    permissions: props.role.permissions.map(
+        (permission) => permission.id,
+    ),
 });
 
 function togglePermission(permissionId: number, checked: boolean) {
@@ -40,9 +35,13 @@ function togglePermission(permissionId: number, checked: boolean) {
         if (!form.permissions.includes(permissionId)) {
             form.permissions.push(permissionId);
         }
-    } else {
-        form.permissions = form.permissions.filter((id) => id !== permissionId);
+
+        return;
     }
+
+    form.permissions = form.permissions.filter(
+        (id) => id !== permissionId,
+    );
 }
 
 function submit() {
@@ -50,118 +49,112 @@ function submit() {
         preserveScroll: true,
     });
 }
+
+function cancel() {
+    router.visit('/admin/roles');
+}
 </script>
 
 <template>
     <Head title="Edit Role" />
 
-    <div class="p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Edit Role</h1>
-            <p class="text-sm text-muted-foreground">
-                Update role details and assigned permissions.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Edit Role"
+            description="Update role details and assigned permissions."
+        />
 
-        <form @submit.prevent="submit" class="space-y-8">
-            <div class="max-w-2xl space-y-5 rounded-lg border bg-card p-6 shadow-sm">
-                <div class="grid gap-2">
-                    <Label for="label">Label</Label>
-                    <Input id="label" v-model="form.label" />
-                    <p v-if="form.errors.label" class="text-sm text-red-600">
-                        {{ form.errors.label }}
-                    </p>
+        <form
+            class="space-y-8"
+            @submit.prevent="submit"
+        >
+            <FormSection
+                title="Role Details"
+                description="Update the role's label, internal name, and purpose."
+            >
+                <FormGrid :columns="2">
+                    <FormField
+                        label="Label"
+                        for-id="label"
+                        required
+                        :error="form.errors.label"
+                    >
+                        <Input
+                            id="label"
+                            v-model="form.label"
+                        />
+                    </FormField>
+
+                    <FormField
+                        label="Name"
+                        for-id="name"
+                        required
+                        :error="form.errors.name"
+                    >
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                        />
+                    </FormField>
+                </FormGrid>
+
+                <div class="mt-6">
+                    <FormField
+                        label="Description"
+                        for-id="description"
+                        :error="form.errors.description"
+                    >
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                        />
+                    </FormField>
                 </div>
 
-                <div class="grid gap-2">
-                    <Label for="name">Name</Label>
-                    <Input id="name" v-model="form.name" />
-                    <p v-if="form.errors.name" class="text-sm text-red-600">
-                        {{ form.errors.name }}
-                    </p>
-                </div>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <StatusBadge
+                        :status="role.is_system ? 'system' : 'custom'"
+                        :label="role.is_system ? 'System Role' : 'Custom Role'"
+                        :tone="role.is_system ? 'info' : 'neutral'"
+                        size="md"
+                    />
 
-                <div class="grid gap-2">
-                    <Label for="description">Description</Label>
-                    <textarea
-                        id="description"
-                        v-model="form.description"
-                        rows="4"
-                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                    <StatusBadge
+                        :status="role.is_locked ? 'locked' : 'unlocked'"
+                        :label="role.is_locked ? 'Locked' : 'Unlocked'"
+                        :tone="role.is_locked ? 'warning' : 'neutral'"
+                        size="md"
                     />
                 </div>
+            </FormSection>
 
-                <div class="flex gap-6 text-sm text-muted-foreground">
-                    <span>System: {{ role.is_system ? 'Yes' : 'No' }}</span>
-                    <span>Locked: {{ role.is_locked ? 'Yes' : 'No' }}</span>
+            <section>
+                <SectionHeader
+                    title="Permissions"
+                    description="Select the permissions this role should have."
+                />
+
+                <div class="space-y-6">
+                    <PermissionGroupCard
+                        v-for="(groupPermissions, groupName) in permissions"
+                        :key="groupName"
+                        :title="String(groupName || 'Ungrouped')"
+                        :permissions="groupPermissions"
+                        :selected-permission-ids="form.permissions"
+                        :disabled="form.processing"
+                        @toggle="togglePermission"
+                    />
                 </div>
-            </div>
+            </section>
 
-            <div class="space-y-6">
-                <div>
-                    <h2 class="text-lg font-semibold">Permissions</h2>
-                    <p class="text-sm text-muted-foreground">
-                        Select the permissions this role should have.
-                    </p>
-                </div>
-
-                <div
-                    v-for="(groupPermissions, groupName) in permissions"
-                    :key="groupName"
-                    class="rounded-lg border bg-card p-6 shadow-sm"
-                >
-                    <h3 class="mb-4 font-semibold">
-                        {{ groupName || 'Ungrouped' }}
-                    </h3>
-
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <label
-                            v-for="permission in groupPermissions"
-                            :key="permission.id"
-                            class="flex items-start gap-3 rounded-md border p-3"
-                        >
-                            <input
-                                type="checkbox"
-                                class="mt-1 h-4 w-4 rounded border-gray-300"
-                                :checked="form.permissions.includes(permission.id)"
-                                @change="togglePermission(
-                                    permission.id,
-                                    ($event.target as HTMLInputElement).checked
-                                )"
-                            />
-
-                            <div>
-                                <div class="font-medium">
-                                    {{ permission.label }}
-                                </div>
-
-                                <div class="font-mono text-xs text-muted-foreground">
-                                    {{ permission.name }}
-                                </div>
-
-                                <p
-                                    v-if="permission.description"
-                                    class="mt-1 text-xs text-muted-foreground"
-                                >
-                                    {{ permission.description }}
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Saving...' : 'Save Role' }}
-                </Button>
-
-                <Button variant="outline" as-child>
-                    <Link href="/admin/roles">
-                        Cancel
-                    </Link>
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Save Role"
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>

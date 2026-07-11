@@ -1,86 +1,115 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-type Tag = {
-    id: number;
-    name: string;
-    slug: string;
-    description: string | null;
-    tag_type: string;
-    created_at: string;
-};
+import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
+import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import DataTable from '@/Components/Tables/DataTable.vue';
+import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
+import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
+import { Button } from '@/components/ui/button';
+
+import type {
+    AdminTag,
+    AdminTagFilters,
+    TagTypes,
+} from '@/types/tag';
 
 const props = defineProps<{
-    tags: Tag[];
-    filters: {
-        search: string;
-        type: string;
-        sort: string;
-        direction: string;
-    };
-    tagTypes: Record<string, string>;
+    tags: AdminTag[];
+    filters: AdminTagFilters;
+    tagTypes: TagTypes;
 }>();
 
 const search = ref(props.filters.search ?? '');
 const type = ref(props.filters.type ?? '');
 
+const selectedTag = ref<AdminTag | null>(null);
+const deleteDialogOpen = ref(false);
+const deleting = ref(false);
+
 function reload() {
-    router.get('/admin/tags', {
-        search: search.value,
-        type: type.value,
-        sort: props.filters.sort,
-        direction: props.filters.direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/tags',
+        {
+            search: search.value || undefined,
+            type: type.value || undefined,
+            sort: props.filters.sort,
+            direction: props.filters.direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function resetFilters() {
     search.value = '';
     type.value = '';
 
-    router.get('/admin/tags', {}, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/tags',
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
 function sortBy(column: string) {
     const direction =
-        props.filters.sort === column && props.filters.direction === 'asc'
+        props.filters.sort === column
+        && props.filters.direction === 'asc'
             ? 'desc'
             : 'asc';
 
-    router.get('/admin/tags', {
-        search: search.value,
-        type: type.value,
-        sort: column,
-        direction,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/admin/tags',
+        {
+            search: search.value || undefined,
+            type: type.value || undefined,
+            sort: column,
+            direction,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
 }
 
-function sortIndicator(column: string) {
-    if (props.filters.sort !== column) {
-        return '↕';
-    }
-
-    return props.filters.direction === 'asc' ? '↑' : '↓';
+function requestDelete(tag: AdminTag) {
+    selectedTag.value = tag;
+    deleteDialogOpen.value = true;
 }
 
-function deleteTag(tag: Tag) {
-    if (!confirm(`Delete tag "${tag.name}"?`)) {
+function cancelDelete() {
+    deleteDialogOpen.value = false;
+    selectedTag.value = null;
+}
+
+function confirmDelete() {
+    if (!selectedTag.value) {
         return;
     }
 
-    router.delete(`/admin/tags/${tag.id}`, {
+    deleting.value = true;
+
+    router.delete(`/admin/tags/${selectedTag.value.id}`, {
         preserveScroll: true,
+        onFinish: () => {
+            deleting.value = false;
+            deleteDialogOpen.value = false;
+            selectedTag.value = null;
+        },
     });
 }
 </script>
@@ -88,36 +117,39 @@ function deleteTag(tag: Tag) {
 <template>
     <Head title="Tags" />
 
-    <div class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold">Tags</h1>
-                <p class="text-sm text-muted-foreground">
-                    Manage image and blog tags.
-                </p>
-            </div>
+    <div class="space-y-6 p-6">
+        <PageHeader
+            title="Tags"
+            description="Manage image and blog tags."
+        />
 
-            <Button as-child>
-                <Link href="/admin/tags/create">
-                    Add Tag
-                </Link>
-            </Button>
-        </div>
+        <ActionToolbar align="end">
+            <template #secondary>
+                <Button as-child>
+                    <Link href="/admin/tags/create">
+                        Add Tag
+                    </Link>
+                </Button>
+            </template>
+        </ActionToolbar>
 
-        <div class="mb-4 flex flex-wrap gap-3">
-            <Input
+        <FilterToolbar :columns="2" compact>
+            <SearchToolbar
                 v-model="search"
-                class="max-w-sm"
                 placeholder="Search name, slug, or description..."
-                @keyup.enter="reload"
+                :show-reset="false"
+                @search="reload"
             />
 
             <select
                 v-model="type"
-                class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 @change="reload"
             >
-                <option value="">All Types</option>
+                <option value="">
+                    All Types
+                </option>
+
                 <option
                     v-for="(label, value) in tagTypes"
                     :key="value"
@@ -127,85 +159,129 @@ function deleteTag(tag: Tag) {
                 </option>
             </select>
 
-            <Button type="button" @click="reload">
-                Search
-            </Button>
+            <template #actions>
+                <Button
+                    type="button"
+                    @click="reload"
+                >
+                    Apply Filters
+                </Button>
 
-            <Button type="button" variant="outline" @click="resetFilters">
-                Reset
-            </Button>
-        </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    @click="resetFilters"
+                >
+                    Reset
+                </Button>
+            </template>
+        </FilterToolbar>
 
-        <div class="rounded-lg border bg-card shadow-sm">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b text-left">
-                        <th class="cursor-pointer p-4" @click="sortBy('name')">
-                            Name {{ sortIndicator('name') }}
-                        </th>
+        <DataTable min-width="850px">
+            <thead>
+                <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell
+                        label="Name"
+                        column="name"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="cursor-pointer p-4" @click="sortBy('tag_type')">
-                            Type {{ sortIndicator('tag_type') }}
-                        </th>
+                    <DataTableHeaderCell
+                        label="Type"
+                        column="tag_type"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="cursor-pointer p-4" @click="sortBy('slug')">
-                            Slug {{ sortIndicator('slug') }}
-                        </th>
+                    <DataTableHeaderCell
+                        label="Slug"
+                        column="slug"
+                        sortable
+                        :current-sort="filters.sort"
+                        :current-direction="filters.direction"
+                        @sort="sortBy"
+                    />
 
-                        <th class="p-4">Description</th>
+                    <DataTableHeaderCell label="Description" />
 
-                        <th class="p-4 text-right">Actions</th>
-                    </tr>
-                </thead>
+                    <DataTableHeaderCell
+                        label="Actions"
+                        align="right"
+                    />
+                </tr>
+            </thead>
 
-                <tbody>
-                    <tr
-                        v-for="tag in tags"
-                        :key="tag.id"
-                        class="border-b last:border-0"
-                    >
-                        <td class="p-4 font-medium">
-                            {{ tag.name }}
-                        </td>
+            <tbody>
+                <tr
+                    v-for="tag in tags"
+                    :key="tag.id"
+                    class="border-b last:border-0 hover:bg-muted/20"
+                >
+                    <td class="p-4 font-medium">
+                        {{ tag.name }}
+                    </td>
 
-                        <td class="p-4 capitalize">
-                            {{ tag.tag_type }}
-                        </td>
+                    <td class="p-4 capitalize">
+                        {{ tag.tag_type }}
+                    </td>
 
-                        <td class="p-4 font-mono text-xs">
-                            {{ tag.slug }}
-                        </td>
+                    <td class="p-4 font-mono text-xs">
+                        {{ tag.slug }}
+                    </td>
 
-                        <td class="p-4 text-muted-foreground">
-                            {{ tag.description || '—' }}
-                        </td>
+                    <td class="max-w-md p-4 text-muted-foreground">
+                        {{ tag.description || '—' }}
+                    </td>
 
-                        <td class="p-4">
-                            <div class="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" as-child>
-                                    <Link :href="`/admin/tags/${tag.id}/edit`">
-                                        Edit
-                                    </Link>
-                                </Button>
+                    <td class="p-4">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                as-child
+                            >
+                                <Link :href="`/admin/tags/${tag.id}/edit`">
+                                    Edit
+                                </Link>
+                            </Button>
 
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    @click="deleteTag(tag)"
-                                >
-                                    Delete
-                                </Button>
-                            </div>
-                        </td>
-                    </tr>
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                @click="requestDelete(tag)"
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </td>
+                </tr>
 
-                    <tr v-if="tags.length === 0">
-                        <td colspan="5" class="p-6 text-center text-muted-foreground">
-                            No tags found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <DataTableEmpty
+                    v-if="tags.length === 0"
+                    :colspan="5"
+                    message="No tags found."
+                />
+            </tbody>
+        </DataTable>
+
+        <ConfirmActionDialog
+            v-model:open="deleteDialogOpen"
+            title="Delete tag?"
+            :description="
+                selectedTag
+                    ? `Delete the tag '${selectedTag.name}'? This action cannot be undone.`
+                    : 'This action cannot be undone.'
+            "
+            confirm-label="Delete Tag"
+            destructive
+            :loading="deleting"
+            @confirm="confirmDelete"
+            @cancel="cancelDelete"
+        />
     </div>
 </template>

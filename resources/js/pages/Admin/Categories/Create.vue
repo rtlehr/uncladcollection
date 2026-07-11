@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import { Head, router, useForm } from '@inertiajs/vue3';
+
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 const form = useForm({
     name: '',
@@ -26,130 +31,137 @@ function submit() {
         preserveScroll: true,
     });
 }
+
+function cancel() {
+    router.visit('/admin/categories');
+}
 </script>
 
 <template>
     <Head title="Create Category" />
 
-    <div class="p-6">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Create Category</h1>
-            <p class="text-sm text-muted-foreground">
-                Create a new image or blog category.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Create Category"
+            description="Create a new image or blog category."
+        />
 
-        <form @submit.prevent="submit" class="max-w-2xl space-y-6">
-            <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
-                    v-model="form.name"
-                    placeholder="Category name"
-                    @blur="generateSlug"
-                />
-                <p v-if="form.errors.name" class="text-sm text-red-600">
-                    {{ form.errors.name }}
-                </p>
-            </div>
+        <form
+            class="space-y-8"
+            @submit.prevent="submit"
+        >
+            <FormSection
+                title="Category Details"
+                description="Define the category name, URL slug, content type, and display order."
+            >
+                <FormGrid :columns="2">
+                    <FormField
+                        label="Name"
+                        for-id="name"
+                        required
+                        :error="form.errors.name"
+                    >
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            placeholder="Category name"
+                            @blur="generateSlug"
+                        />
+                    </FormField>
 
-            <div class="grid gap-2">
-                <Label for="slug">Slug</Label>
-                <Input
-                    id="slug"
-                    v-model="form.slug"
-                    placeholder="category-slug"
-                />
-                <p class="text-xs text-muted-foreground">
-                    Used in URLs. Example: image-lifestyle or blog-travel.
-                </p>
-                <p v-if="form.errors.slug" class="text-sm text-red-600">
-                    {{ form.errors.slug }}
-                </p>
-            </div>
+                    <FormField
+                        label="Slug"
+                        for-id="slug"
+                        required
+                        description="Used in URLs. Example: image-lifestyle or blog-travel."
+                        :error="form.errors.slug"
+                    >
+                        <Input
+                            id="slug"
+                            v-model="form.slug"
+                            placeholder="category-slug"
+                        />
+                    </FormField>
 
-            <div class="grid gap-2">
-                <Label for="category_type">Type</Label>
-                <select
-                    id="category_type"
-                    v-model="form.category_type"
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                    <option value="image">Image</option>
-                    <option value="blog">Blog</option>
-                </select>
+                    <FormField
+                        label="Type"
+                        for-id="category_type"
+                        required
+                        :error="form.errors.category_type"
+                    >
+                        <select
+                            id="category_type"
+                            v-model="form.category_type"
+                            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="image">
+                                Image
+                            </option>
 
-                <p v-if="form.errors.category_type" class="text-sm text-red-600">
-                    {{ form.errors.category_type }}
-                </p>
-            </div>
+                            <option value="blog">
+                                Blog
+                            </option>
+                        </select>
+                    </FormField>
 
-            <div class="grid gap-2">
-                <Label for="description">Description</Label>
+                    <FormField
+                        label="Sort Order"
+                        for-id="sort_order"
+                        description="Lower numbers appear first."
+                        :error="form.errors.sort_order"
+                    >
+                        <Input
+                            id="sort_order"
+                            v-model="form.sort_order"
+                            type="number"
+                            min="0"
+                        />
+                    </FormField>
+                </FormGrid>
 
-                <textarea
-                    id="description"
-                    v-model="form.description"
-                    rows="4"
-                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-                    placeholder="Optional category description"
-                />
+                <div class="mt-6">
+                    <FormField
+                        label="Description"
+                        for-id="description"
+                        :error="form.errors.description"
+                    >
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                            placeholder="Optional category description"
+                        />
+                    </FormField>
+                </div>
 
-                <p v-if="form.errors.description" class="text-sm text-red-600">
-                    {{ form.errors.description }}
-                </p>
-            </div>
+                <div class="mt-6 rounded-lg border bg-muted/20 p-4">
+                    <label class="flex items-start gap-3">
+                        <Checkbox
+                            :checked="form.is_active"
+                            @update:checked="form.is_active = Boolean($event)"
+                        />
 
-            <div class="grid gap-2">
-                <Label for="sort_order">Sort Order</Label>
+                        <div>
+                            <div class="font-medium">
+                                Active
+                            </div>
 
-                <Input
-                    id="sort_order"
-                    v-model="form.sort_order"
-                    type="number"
-                    min="0"
-                />
-
-                <p class="text-xs text-muted-foreground">
-                    Lower numbers appear first.
-                </p>
-
-                <p v-if="form.errors.sort_order" class="text-sm text-red-600">
-                    {{ form.errors.sort_order }}
-                </p>
-            </div>
-
-            <div class="rounded-lg border bg-card p-4">
-                <label class="flex items-start gap-3">
-                    <input
-                        v-model="form.is_active"
-                        type="checkbox"
-                        class="mt-1 h-4 w-4 rounded border-gray-300"
-                    />
-
-                    <div>
-                        <div class="font-medium">
-                            Active
+                            <div class="text-sm text-muted-foreground">
+                                Active categories will be available throughout the site.
+                            </div>
                         </div>
+                    </label>
+                </div>
+            </FormSection>
 
-                        <div class="text-sm text-muted-foreground">
-                            Active categories will be available throughout the site.
-                        </div>
-                    </div>
-                </label>
-            </div>
-
-            <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">
-                    {{ form.processing ? 'Creating...' : 'Create Category' }}
-                </Button>
-
-                <Button variant="outline" as-child>
-                    <Link href="/admin/categories">
-                        Cancel
-                    </Link>
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Create Category"
+                processing-label="Creating..."
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>

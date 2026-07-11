@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
+import { Head, router, useForm } from '@inertiajs/vue3';
+
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormGrid from '@/Components/Forms/FormGrid.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Input } from '@/components/ui/input';
 
 const form = useForm({
@@ -10,107 +15,93 @@ const form = useForm({
 });
 
 function submit() {
-    form.post('/admin/tags');
+    form.post('/admin/tags', {
+        preserveScroll: true,
+    });
+}
+
+function cancel() {
+    router.visit('/admin/tags');
 }
 </script>
 
 <template>
     <Head title="Create Tag" />
 
-    <div class="p-6 max-w-3xl">
-        <div class="mb-6">
-            <h1 class="text-2xl font-semibold">Create Tag</h1>
-            <p class="text-sm text-muted-foreground">
-                Create a new image or blog tag.
-            </p>
-        </div>
+    <div class="space-y-8 p-6">
+        <PageHeader
+            title="Create Tag"
+            description="Create a new image or blog tag."
+        />
 
         <form
-            class="space-y-6 rounded-lg border bg-card p-6"
+            class="space-y-8"
             @submit.prevent="submit"
         >
-            <div class="space-y-2">
-                <label class="text-sm font-medium">
-                    Name
-                </label>
+            <FormSection
+                title="Tag Details"
+                description="Define the tag name, content type, and optional description."
+            >
+                <FormGrid :columns="2">
+                    <FormField
+                        label="Name"
+                        for-id="name"
+                        required
+                        :error="form.errors.name"
+                    >
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            placeholder="Enter tag name"
+                        />
+                    </FormField>
 
-                <Input
-                    v-model="form.name"
-                    placeholder="Enter tag name"
-                />
+                    <FormField
+                        label="Type"
+                        for-id="tag_type"
+                        required
+                        :error="form.errors.tag_type"
+                    >
+                        <select
+                            id="tag_type"
+                            v-model="form.tag_type"
+                            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                            <option value="image">
+                                Image
+                            </option>
 
-                <p
-                    v-if="form.errors.name"
-                    class="text-sm text-red-600"
-                >
-                    {{ form.errors.name }}
-                </p>
-            </div>
+                            <option value="blog">
+                                Blog
+                            </option>
+                        </select>
+                    </FormField>
+                </FormGrid>
 
-            <div class="space-y-2">
-                <label class="text-sm font-medium">
-                    Type
-                </label>
+                <div class="mt-6">
+                    <FormField
+                        label="Description"
+                        for-id="description"
+                        :error="form.errors.description"
+                    >
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder="Optional description"
+                        />
+                    </FormField>
+                </div>
+            </FormSection>
 
-                <select
-                    v-model="form.tag_type"
-                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                    <option value="image">
-                        Image
-                    </option>
-
-                    <option value="blog">
-                        Blog
-                    </option>
-                </select>
-
-                <p
-                    v-if="form.errors.tag_type"
-                    class="text-sm text-red-600"
-                >
-                    {{ form.errors.tag_type }}
-                </p>
-            </div>
-
-            <div class="space-y-2">
-                <label class="text-sm font-medium">
-                    Description
-                </label>
-
-                <textarea
-                    v-model="form.description"
-                    rows="4"
-                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Optional description"
-                />
-
-                <p
-                    v-if="form.errors.description"
-                    class="text-sm text-red-600"
-                >
-                    {{ form.errors.description }}
-                </p>
-            </div>
-
-            <div class="flex gap-3">
-                <Button
-                    type="submit"
-                    :disabled="form.processing"
-                >
-                    Create Tag
-                </Button>
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    as-child
-                >
-                    <Link href="/admin/tags">
-                        Cancel
-                    </Link>
-                </Button>
-            </div>
+            <FormActions
+                submit-label="Create Tag"
+                processing-label="Creating..."
+                :processing="form.processing"
+                @submit="submit"
+                @cancel="cancel"
+            />
         </form>
     </div>
 </template>
