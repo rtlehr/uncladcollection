@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 
 import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
 import PermissionTableGroup from '@/Components/Admin/PermissionTableGroup.vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 
 import type {
     AdminPermission,
@@ -17,46 +17,33 @@ defineProps<{
     permissions: GroupedAdminPermissions;
 }>();
 
-const selectedPermission = ref<AdminPermission | null>(null);
-const deleteDialogOpen = ref(false);
-const deleting = ref(false);
+const deletion = useDeleteConfirmation<AdminPermission>();
 
 function groupLabel(groupName: string): string {
     return groupName || 'Ungrouped';
 }
 
 function requestDelete(permission: AdminPermission) {
-    if (permission.is_locked) {
-        return;
+    if (!permission.is_locked) {
+        deletion.requestDelete(permission);
     }
-
-    selectedPermission.value = permission;
-    deleteDialogOpen.value = true;
-}
-
-function cancelDelete() {
-    deleteDialogOpen.value = false;
-    selectedPermission.value = null;
 }
 
 function confirmDelete() {
-    if (!selectedPermission.value || selectedPermission.value.is_locked) {
-        return;
-    }
+    deletion.runDelete((permission, finish) => {
+        if (permission.is_locked) {
+            finish();
+            return;
+        }
 
-    deleting.value = true;
-
-    router.delete(
-        `/admin/permissions/${selectedPermission.value.id}`,
-        {
-            preserveScroll: true,
-            onFinish: () => {
-                deleting.value = false;
-                deleteDialogOpen.value = false;
-                selectedPermission.value = null;
+        router.delete(
+            `/admin/permissions/${permission.id}`,
+            {
+                preserveScroll: true,
+                onFinish: finish,
             },
-        },
-    );
+        );
+    });
 }
 </script>
 
@@ -79,7 +66,10 @@ function confirmDelete() {
             </template>
         </ActionToolbar>
 
-        <div class="space-y-8">
+        <div
+            v-if="Object.keys(permissions).length"
+            class="space-y-8"
+        >
             <PermissionTableGroup
                 v-for="(groupPermissions, groupName) in permissions"
                 :key="groupName"
@@ -89,20 +79,31 @@ function confirmDelete() {
             />
         </div>
 
+        <div
+            v-else
+            class="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground"
+            role="status"
+        >
+            No permissions found.
+        </div>
+
         <ConfirmActionDialog
-            v-model:open="deleteDialogOpen"
+            v-model:open="deletion.open.value"
             title="Delete permission?"
             :description="
-                selectedPermission
-                    ? `Delete the permission '${selectedPermission.label}'? This action cannot be undone.`
+                deletion.selected.value
+                    ? `Delete the permission '${deletion.selected.value.label}'? This action cannot be undone.`
                     : 'This action cannot be undone.'
             "
             confirm-label="Delete Permission"
             destructive
-            :loading="deleting"
-            :disabled="selectedPermission?.is_locked ?? true"
+            :loading="deletion.processing.value"
+            :disabled="
+                deletion.selected.value?.is_locked
+                ?? true
+            "
             @confirm="confirmDelete"
-            @cancel="cancelDelete"
+            @cancel="deletion.cancelDelete"
         />
     </div>
 </template>

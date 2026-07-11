@@ -7,7 +7,6 @@ import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
-import SectionHeader from '@/Components/Shared/SectionHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import { Input } from '@/components/ui/input';
 
@@ -30,7 +29,10 @@ const form = useForm({
     ),
 });
 
-function togglePermission(permissionId: number, checked: boolean) {
+function togglePermission(
+    permissionId: number,
+    checked: boolean,
+) {
     if (checked) {
         if (!form.permissions.includes(permissionId)) {
             form.permissions.push(permissionId);
@@ -78,10 +80,13 @@ function cancel() {
                         for-id="label"
                         required
                         :error="form.errors.label"
+                        v-slot="{ errorId, invalid }"
                     >
                         <Input
                             id="label"
                             v-model="form.label"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="errorId"
                         />
                     </FormField>
 
@@ -90,10 +95,13 @@ function cancel() {
                         for-id="name"
                         required
                         :error="form.errors.name"
+                        v-slot="{ errorId, invalid }"
                     >
                         <Input
                             id="name"
                             v-model="form.name"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="errorId"
                         />
                     </FormField>
                 </FormGrid>
@@ -103,12 +111,15 @@ function cancel() {
                         label="Description"
                         for-id="description"
                         :error="form.errors.description"
+                        v-slot="{ errorId, invalid }"
                     >
                         <textarea
                             id="description"
                             v-model="form.description"
                             rows="4"
                             class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                            :aria-invalid="invalid || undefined"
+                            :aria-describedby="errorId"
                         />
                     </FormField>
                 </div>
@@ -116,26 +127,32 @@ function cancel() {
                 <div class="mt-6 flex flex-wrap gap-3">
                     <StatusBadge
                         :status="role.is_system ? 'system' : 'custom'"
-                        :label="role.is_system ? 'System Role' : 'Custom Role'"
+                        :label="
+                            role.is_system
+                                ? 'System Role'
+                                : 'Custom Role'
+                        "
                         :tone="role.is_system ? 'info' : 'neutral'"
                         size="md"
                     />
 
                     <StatusBadge
                         :status="role.is_locked ? 'locked' : 'unlocked'"
-                        :label="role.is_locked ? 'Locked' : 'Unlocked'"
+                        :label="
+                            role.is_locked
+                                ? 'Locked'
+                                : 'Unlocked'
+                        "
                         :tone="role.is_locked ? 'warning' : 'neutral'"
                         size="md"
                     />
                 </div>
             </FormSection>
 
-            <section>
-                <SectionHeader
-                    title="Permissions"
-                    description="Select the permissions this role should have."
-                />
-
+            <FormSection
+                title="Permissions"
+                description="Select the permissions this role should have."
+            >
                 <div class="space-y-6">
                     <PermissionGroupCard
                         v-for="(groupPermissions, groupName) in permissions"
@@ -147,10 +164,11 @@ function cancel() {
                         @toggle="togglePermission"
                     />
                 </div>
-            </section>
+            </FormSection>
 
             <FormActions
-                submit-label="Save Role"
+                submit-label="Save Changes"
+                processing-label="Saving Role..."
                 :processing="form.processing"
                 @submit="submit"
                 @cancel="cancel"

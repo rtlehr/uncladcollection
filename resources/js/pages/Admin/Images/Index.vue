@@ -3,8 +3,10 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
+import AdminRowActions from '@/Components/Admin/AdminRowActions.vue';
 import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
 import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
+import AssetThumbnail from '@/Components/Shared/AssetThumbnail.vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
@@ -12,6 +14,7 @@ import DataTable from '@/Components/Tables/DataTable.vue';
 import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
 import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
 import { Button } from '@/components/ui/button';
+import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 
 import type {
     AdminImageCollection,
@@ -29,9 +32,7 @@ const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 const collectionId = ref(props.filters.collection_id ?? '');
 
-const selectedImage = ref<AdminImageListItem | null>(null);
-const deleteDialogOpen = ref(false);
-const deleting = ref(false);
+const deletion = useDeleteConfirmation<AdminImageListItem>();
 
 function reload() {
     router.get(
@@ -91,30 +92,12 @@ function sortBy(column: string) {
     );
 }
 
-function requestDelete(image: AdminImageListItem) {
-    selectedImage.value = image;
-    deleteDialogOpen.value = true;
-}
-
-function cancelDelete() {
-    selectedImage.value = null;
-    deleteDialogOpen.value = false;
-}
-
 function confirmDelete() {
-    if (!selectedImage.value) {
-        return;
-    }
-
-    deleting.value = true;
-
-    router.delete(`/admin/images/${selectedImage.value.id}`, {
-        preserveScroll: true,
-        onFinish: () => {
-            deleting.value = false;
-            selectedImage.value = null;
-            deleteDialogOpen.value = false;
-        },
+    deletion.runDelete((image, finish) => {
+        router.delete(`/admin/images/${image.id}`, {
+            preserveScroll: true,
+            onFinish: finish,
+        });
     });
 }
 </script>
@@ -141,46 +124,57 @@ function confirmDelete() {
         <FilterToolbar :columns="3" compact>
             <SearchToolbar
                 v-model="search"
+                input-label="Search images"
                 placeholder="Search title, slug, photographer..."
                 :show-reset="false"
                 @search="reload"
             />
 
-            <select
-                v-model="collectionId"
-                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                @change="reload"
-            >
-                <option value="">
-                    All Collections
-                </option>
+            <label class="grid gap-1.5 text-sm font-medium">
+                <span class="sr-only">Collection</span>
 
-                <option
-                    v-for="collection in collections"
-                    :key="collection.id"
-                    :value="collection.id"
+                <select
+                    v-model="collectionId"
+                    class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    aria-label="Filter by collection"
+                    @change="reload"
                 >
-                    {{ collection.name }}
-                </option>
-            </select>
+                    <option value="">
+                        All Collections
+                    </option>
 
-            <select
-                v-model="status"
-                class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                @change="reload"
-            >
-                <option value="">
-                    All Statuses
-                </option>
+                    <option
+                        v-for="collection in collections"
+                        :key="collection.id"
+                        :value="collection.id"
+                    >
+                        {{ collection.name }}
+                    </option>
+                </select>
+            </label>
 
-                <option value="1">
-                    Active
-                </option>
+            <label class="grid gap-1.5 text-sm font-medium">
+                <span class="sr-only">Status</span>
 
-                <option value="0">
-                    Inactive
-                </option>
-            </select>
+                <select
+                    v-model="status"
+                    class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    aria-label="Filter by status"
+                    @change="reload"
+                >
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    <option value="1">
+                        Active
+                    </option>
+
+                    <option value="0">
+                        Inactive
+                    </option>
+                </select>
+            </label>
 
             <template #actions>
                 <Button type="button" @click="reload">
@@ -197,7 +191,10 @@ function confirmDelete() {
             </template>
         </FilterToolbar>
 
-        <DataTable min-width="1050px">
+        <DataTable
+            min-width="1050px"
+            caption="Administrative image list"
+        >
             <thead>
                 <tr class="border-b bg-muted/30">
                     <DataTableHeaderCell label="Preview" />
@@ -254,21 +251,11 @@ function confirmDelete() {
                     class="border-b last:border-0 hover:bg-muted/20"
                 >
                     <td class="p-4">
-                        <img
-                        loading="lazy"
-                        decoding="async"
-                            v-if="image.thumbnail_url"
+                        <AssetThumbnail
                             :src="image.thumbnail_url"
                             :alt="image.title"
-                            class="h-16 w-16 rounded border object-cover"
+                            fallback="No image"
                         />
-
-                        <div
-                            v-else
-                            class="flex h-16 w-16 items-center justify-center rounded border text-xs text-muted-foreground"
-                        >
-                            No Image
-                        </div>
                     </td>
 
                     <td class="p-4">
@@ -300,27 +287,12 @@ function confirmDelete() {
                     </td>
 
                     <td class="p-4">
-                        <div class="flex justify-end gap-2">
-                            <Button size="sm" variant="outline" as-child>
-                                <Link :href="`/admin/images/${image.id}`">
-                                    View
-                                </Link>
-                            </Button>
-
-                            <Button size="sm" variant="outline" as-child>
-                                <Link :href="`/admin/images/${image.id}/edit`">
-                                    Edit
-                                </Link>
-                            </Button>
-
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                @click="requestDelete(image)"
-                            >
-                                Delete
-                            </Button>
-                        </div>
+                        <AdminRowActions
+                            compact
+                            :view-href="`/admin/images/${image.id}`"
+                            :edit-href="`/admin/images/${image.id}/edit`"
+                            @delete="deletion.requestDelete(image)"
+                        />
                     </td>
                 </tr>
 
@@ -333,18 +305,18 @@ function confirmDelete() {
         </DataTable>
 
         <ConfirmActionDialog
-            v-model:open="deleteDialogOpen"
+            v-model:open="deletion.open.value"
             title="Delete image?"
             :description="
-                selectedImage
-                    ? `Delete the image '${selectedImage.title}'? This action cannot be undone.`
+                deletion.selected.value
+                    ? `Delete the image '${deletion.selected.value.title}'? This action cannot be undone.`
                     : 'This action cannot be undone.'
             "
             confirm-label="Delete Image"
             destructive
-            :loading="deleting"
+            :loading="deletion.processing.value"
             @confirm="confirmDelete"
-            @cancel="cancelDelete"
+            @cancel="deletion.cancelDelete"
         />
     </div>
 </template>

@@ -4,9 +4,10 @@ import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
-import Heading from '@/components/Heading.vue';
+import ReadOnlySetting from '@/components/settings/ReadOnlySetting.vue';
+import SettingsSaveButton from '@/components/settings/SettingsSaveButton.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
@@ -33,11 +34,10 @@ const user = computed(() => page.props.auth.user);
     <h1 class="sr-only">Profile settings</h1>
 
     <div class="flex flex-col space-y-6">
-        <Heading
-            variant="small"
+        <SettingsSection
             title="Profile"
-            description="Update your name, username, and email address"
-        />
+            description="Update your name, username, and email address."
+        >
 
         <Form
             v-bind="ProfileController.update.form()"
@@ -109,23 +109,12 @@ const user = computed(() => page.props.auth.user);
                 <InputError class="mt-2" :message="errors.avatar" />
             </div>
 
-            <div class="grid gap-2">
-                <Label>Member Role</Label>
-
-                <div class="rounded-md border bg-muted/40 px-3 py-2 text-sm" role="status" aria-live="polite">
-                    <span v-if="user.roles?.length">
-                        {{ user.roles.join(', ') }}
-                    </span>
-
-                    <span v-else class="text-muted-foreground">
-                        No role assigned
-                    </span>
-                </div>
-
-                <p class="text-xs text-muted-foreground">
-                    Roles are managed by site administrators.
-                </p>
-            </div>
+            <ReadOnlySetting
+                label="Member Role"
+                :value="user.roles"
+                empty-label="No role assigned"
+                description="Roles are managed by site administrators."
+            />
 
             <div class="grid gap-2">
                 <Label for="email">Email address</Label>
@@ -163,14 +152,12 @@ const user = computed(() => page.props.auth.user);
                     A new verification link has been sent to your email address.
                 </div>
             </div>
-            
-            <div class="border-t pt-6">
-                <Heading
-                    variant="small"
-                    title="Author Profile"
-                    description="Optional information shown on your public blog articles"
-                />
-            </div>
+
+            <SettingsSection
+                title="Author Profile"
+                description="Optional information shown on your public blog articles."
+                divided
+            >
 
             <div class="grid gap-2">
                 <Label for="author_title">Author Title</Label>
@@ -207,12 +194,16 @@ const user = computed(() => page.props.auth.user);
                 <InputError class="mt-2" :message="errors.author_website_url" />
             </div>
 
-            <div class="flex items-center gap-4">
-                <Button :disabled="processing" :aria-busy="processing" data-test="update-profile-button"
-                    >Save</Button
-                >
-            </div>
+            </SettingsSection>
+
+            <SettingsSaveButton
+                :processing="processing"
+                processing-label="Saving profile..."
+                test-id="update-profile-button"
+            />
         </Form>
+
+        </SettingsSection>
     </div>
 
     <DeleteUser />
