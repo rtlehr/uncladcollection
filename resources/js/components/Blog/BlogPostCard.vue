@@ -40,6 +40,8 @@ const props = withDefaults(
             ]"
         >
             <img
+                        loading="lazy"
+                        decoding="async"
                 v-if="contentImage(post)"
                 :src="contentImage(post)!"
                 :alt="post.title"

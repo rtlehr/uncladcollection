@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Tag;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,38 +14,40 @@ class BlogController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = $request->string('search')->toString();
+        $search = trim($request->string('search')->toString());
         $categoryId = $request->integer('category_id') ?: null;
         $tagId = $request->integer('tag_id') ?: null;
 
-        $featuredPosts = BlogPost::query()
+        $featuredPosts = $this->blogCardQuery()
             ->published()
-            ->with(['author:id,name', 'categories:id,name', 'tags:id,name'])
             ->where('is_featured', true)
             ->latest('published_at')
-            ->take(3)
+            ->limit(3)
             ->get();
 
-        $posts = BlogPost::query()
+        $posts = $this->blogCardQuery()
             ->published()
-            ->with(['author:id,name', 'categories:id,name', 'tags:id,name'])
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('title', 'like', "%{$search}%")
-                        ->orWhere('excerpt', 'like', "%{$search}%")
-                        ->orWhere('content', 'like', "%{$search}%");
+            ->when($search !== '', function (Builder $query) use ($search) {
+                $query->where(function (Builder $query) use ($search) {
+                    $query
+                        ->where('title', 'like', "%{$search}%")
+                        ->orWhere('excerpt', 'like', "%{$search}%");
                 });
             })
-            ->when($categoryId, function ($query) use ($categoryId) {
-                $query->whereHas('categories', function ($query) use ($categoryId) {
-                    $query->where('categories.id', $categoryId);
-                });
-            })
-            ->when($tagId, function ($query) use ($tagId) {
-                $query->whereHas('tags', function ($query) use ($tagId) {
-                    $query->where('tags.id', $tagId);
-                });
-            })
+            ->when(
+                $categoryId,
+                fn (Builder $query) => $query->whereHas(
+                    'categories',
+                    fn (Builder $query) => $query->whereKey($categoryId),
+                ),
+            )
+            ->when(
+                $tagId,
+                fn (Builder $query) => $query->whereHas(
+                    'tags',
+                    fn (Builder $query) => $query->whereKey($tagId),
+                ),
+            )
             ->latest('published_at')
             ->paginate(9)
             ->withQueryString();
@@ -84,30 +87,28 @@ class BlogController extends Controller
             'tags:id,name,slug',
         ]);
 
-        $relatedPosts = BlogPost::query()
+        $categoryIds = $blogPost->categories->modelKeys();
+
+        $relatedPosts = $this->blogCardQuery()
             ->published()
             ->whereKeyNot($blogPost->id)
-            ->with(['author:id,name', 'categories:id,name', 'tags:id,name'])
-            ->where(function ($query) use ($blogPost) {
-                $categoryIds = $blogPost->categories->pluck('id');
-
-                if ($categoryIds->isNotEmpty()) {
-                    $query->whereHas('categories', function ($query) use ($categoryIds) {
-                        $query->whereIn('categories.id', $categoryIds);
-                    });
-                }
-            })
+            ->when(
+                $categoryIds !== [],
+                fn (Builder $query) => $query->whereHas(
+                    'categories',
+                    fn (Builder $query) => $query->whereKey($categoryIds),
+                ),
+            )
             ->latest('published_at')
-            ->take(3)
+            ->limit(3)
             ->get();
 
-        $authorPosts = BlogPost::query()
+        $authorPosts = $this->blogCardQuery(includeAuthor: false)
             ->published()
             ->whereKeyNot($blogPost->id)
             ->where('user_id', $blogPost->user_id)
-            ->with(['categories:id,name,slug'])
             ->latest('published_at')
-            ->take(4)
+            ->limit(4)
             ->get();
 
         $comments = collect();
@@ -115,12 +116,27 @@ class BlogController extends Controller
         if ($blogPost->comments_visible) {
             $comments = $blogPost->approvedComments()
                 ->root()
+                ->select([
+                    'id',
+                    'commentable_type',
+                    'commentable_id',
+                    'user_id',
+                    'parent_id',
+                    'body',
+                    'status',
+                    'depth',
+                    'likes_count',
+                    'reports_count',
+                    'is_pinned',
+                    'is_edited',
+                    'created_at',
+                    'updated_at',
+                ])
                 ->with([
                     'user:id,name,username,avatar_path',
                     'approvedReplies.user:id,name,username,avatar_path',
                     'approvedReplies.approvedReplies.user:id,name,username,avatar_path',
                 ])
-                ->withCount('likes')
                 ->pinnedFirst()
                 ->latest()
                 ->paginate(10)
@@ -133,5 +149,37 @@ class BlogController extends Controller
             'authorPosts' => $authorPosts,
             'comments' => $comments,
         ]);
+    }
+
+    private function blogCardQuery(bool $includeAuthor = true): Builder
+    {
+        $query = BlogPost::query()
+            ->select([
+                'id',
+                'user_id',
+                'title',
+                'slug',
+                'excerpt',
+                'featured_image_path',
+                'header_image_path',
+                'icon_image_path',
+                'status',
+                'published_at',
+                'expires_at',
+                'is_featured',
+                'is_active',
+                'views_count',
+                'created_at',
+            ])
+            ->with([
+                'categories:id,name,slug',
+                'tags:id,name,slug',
+            ]);
+
+        if ($includeAuthor) {
+            $query->with('author:id,name');
+        }
+
+        return $query;
     }
 }

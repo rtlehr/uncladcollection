@@ -8,6 +8,7 @@ use App\Models\Image;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,12 +16,86 @@ class AdminDashboardController extends Controller
 {
     public function __invoke(): Response
     {
-        $totalRevenueCents = Order::query()
-            ->where('status', Order::STATUS_PAID)
-            ->sum('total_cents');
+        $dashboardSummary = Cache::remember(
+            key: 'admin-dashboard:summary',
+            ttl: now()->addSeconds(60),
+            callback: function (): array {
+                $totalRevenueCents = Order::query()
+                    ->where('status', Order::STATUS_PAID)
+                    ->sum('total_cents');
+
+                return [
+                    'stats' => [
+                        'total_revenue_formatted' => '$' . number_format($totalRevenueCents / 100, 2),
+                        'total_orders' => Order::query()->count(),
+                        'paid_orders' => Order::query()
+                            ->where('status', Order::STATUS_PAID)
+                            ->count(),
+                        'active_licenses' => License::query()
+                            ->where('status', License::STATUS_ACTIVE)
+                            ->count(),
+                        'total_downloads' => Download::query()->count(),
+                        'total_images' => Image::query()->count(),
+                        'active_images' => Image::query()
+                            ->where('is_active', true)
+                            ->count(),
+                        'total_users' => User::query()->count(),
+                    ],
+
+                    'topPurchasedImages' => Image::query()
+                        ->where('purchases_count', '>', 0)
+                        ->orderByDesc('purchases_count')
+                        ->limit(5)
+                        ->get([
+                            'id',
+                            'title',
+                            'slug',
+                            'purchases_count',
+                            'downloads_count',
+                        ])
+                        ->map(fn (Image $image) => [
+                            'id' => $image->id,
+                            'title' => $image->title,
+                            'slug' => $image->slug,
+                            'purchases_count' => $image->purchases_count,
+                            'downloads_count' => $image->downloads_count,
+                        ])
+                        ->values(),
+
+                    'topDownloadedImages' => Image::query()
+                        ->where('downloads_count', '>', 0)
+                        ->orderByDesc('downloads_count')
+                        ->limit(5)
+                        ->get([
+                            'id',
+                            'title',
+                            'slug',
+                            'purchases_count',
+                            'downloads_count',
+                        ])
+                        ->map(fn (Image $image) => [
+                            'id' => $image->id,
+                            'title' => $image->title,
+                            'slug' => $image->slug,
+                            'purchases_count' => $image->purchases_count,
+                            'downloads_count' => $image->downloads_count,
+                        ])
+                        ->values(),
+                ];
+            },
+        );
 
         $recentOrders = Order::query()
-            ->with('user')
+            ->select([
+                'id',
+                'user_id',
+                'order_number',
+                'status',
+                'total_cents',
+                'currency',
+                'created_at',
+            ])
+            ->with('user:id,name,email')
             ->latest()
             ->limit(5)
             ->get()
@@ -36,10 +111,23 @@ class AdminDashboardController extends Controller
                         'email' => $order->user->email,
                     ]
                     : null,
-            ]);
+            ])
+            ->values();
 
         $recentDownloads = Download::query()
-            ->with(['user', 'image', 'license'])
+            ->select([
+                'id',
+                'user_id',
+                'image_id',
+                'license_id',
+                'download_type',
+                'downloaded_at',
+            ])
+            ->with([
+                'user:id,name,email',
+                'image:id,title,slug',
+                'license:id,license_name',
+            ])
             ->latest('downloaded_at')
             ->limit(5)
             ->get()
@@ -65,49 +153,15 @@ class AdminDashboardController extends Controller
                         'license_name' => $download->license->license_name,
                     ]
                     : null,
-            ]);
-
-        $topPurchasedImages = Image::query()
-            ->where('purchases_count', '>', 0)
-            ->orderByDesc('purchases_count')
-            ->limit(5)
-            ->get(['id', 'title', 'slug', 'purchases_count', 'downloads_count'])
-            ->map(fn (Image $image) => [
-                'id' => $image->id,
-                'title' => $image->title,
-                'slug' => $image->slug,
-                'purchases_count' => $image->purchases_count,
-                'downloads_count' => $image->downloads_count,
-            ]);
-
-        $topDownloadedImages = Image::query()
-            ->where('downloads_count', '>', 0)
-            ->orderByDesc('downloads_count')
-            ->limit(5)
-            ->get(['id', 'title', 'slug', 'purchases_count', 'downloads_count'])
-            ->map(fn (Image $image) => [
-                'id' => $image->id,
-                'title' => $image->title,
-                'slug' => $image->slug,
-                'purchases_count' => $image->purchases_count,
-                'downloads_count' => $image->downloads_count,
-            ]);
+            ])
+            ->values();
 
         return Inertia::render('Admin/Dashboard', [
-            'stats' => [
-                'total_revenue_formatted' => '$' . number_format($totalRevenueCents / 100, 2),
-                'total_orders' => Order::count(),
-                'paid_orders' => Order::where('status', Order::STATUS_PAID)->count(),
-                'active_licenses' => License::where('status', License::STATUS_ACTIVE)->count(),
-                'total_downloads' => Download::count(),
-                'total_images' => Image::count(),
-                'active_images' => Image::where('is_active', true)->count(),
-                'total_users' => User::count(),
-            ],
+            'stats' => $dashboardSummary['stats'],
             'recentOrders' => $recentOrders,
             'recentDownloads' => $recentDownloads,
-            'topPurchasedImages' => $topPurchasedImages,
-            'topDownloadedImages' => $topDownloadedImages,
+            'topPurchasedImages' => $dashboardSummary['topPurchasedImages'],
+            'topDownloadedImages' => $dashboardSummary['topDownloadedImages'],
         ]);
     }
 }

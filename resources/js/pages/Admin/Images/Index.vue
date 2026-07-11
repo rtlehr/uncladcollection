@@ -255,6 +255,8 @@ function confirmDelete() {
                 >
                     <td class="p-4">
                         <img
+                        loading="lazy"
+                        decoding="async"
                             v-if="image.thumbnail_url"
                             :src="image.thumbnail_url"
                             :alt="image.title"
