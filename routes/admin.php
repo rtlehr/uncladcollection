@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\CommentModerationController;
@@ -67,6 +68,30 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_collections');
 
         Route::resource('images', ImageController::class)
+            ->middleware('permission:manage_images');
+
+        Route::post('/assets/{asset}/files', [AssetController::class, 'addFiles'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.store');
+
+        Route::put('/assets/{asset}/files/order', [AssetController::class, 'reorderFiles'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.order');
+
+        Route::patch('/assets/{asset}/files/{assetFile}', [AssetController::class, 'updateFile'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.update');
+
+        Route::post('/assets/{asset}/files/{assetFile}/replace', [AssetController::class, 'replaceFile'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.replace');
+
+        Route::delete('/assets/{asset}/files/{assetFile}', [AssetController::class, 'destroyFile'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.destroy');
+
+        Route::resource('assets', AssetController::class)
+            ->except(['show'])
             ->middleware('permission:manage_images');
 
         Route::resource('license-types', LicenseTypeController::class)

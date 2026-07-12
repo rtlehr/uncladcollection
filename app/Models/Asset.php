@@ -4,40 +4,28 @@ namespace App\Models;
 
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
+use App\Observers\AssetObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy([AssetObserver::class])]
 class Asset extends Model
 {
     use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
-        'uuid',
-        'legacy_image_id',
-        'collection_id',
-        'title',
-        'slug',
-        'description',
-        'asset_type',
-        'status',
-        'photographer',
-        'sort_order',
-        'is_active',
-        'is_featured',
-        'is_ai_generated',
-        'downloads_count',
-        'favorites_count',
-        'purchases_count',
-        'views_count',
-        'published_at',
-        'metadata',
-        'primary_preview_file_id',
-        'poster_file_id',
+        'uuid', 'legacy_image_id', 'collection_id', 'title', 'slug', 'description',
+        'asset_type', 'status', 'photographer', 'sort_order', 'is_active',
+        'is_featured', 'is_ai_generated', 'downloads_count', 'favorites_count',
+        'purchases_count', 'views_count', 'published_at', 'metadata',
+        'primary_preview_file_id', 'poster_file_id',
     ];
 
     protected function casts(): array
@@ -80,14 +68,14 @@ class Asset extends Model
         return $this->files()->where('is_active', true);
     }
 
-    public function primaryPreviewFile(): BelongsTo
+    public function primaryPreviewFile(): HasOne
     {
-        return $this->belongsTo(AssetFile::class, 'primary_preview_file_id');
+        return $this->hasOne(AssetFile::class, 'id', 'primary_preview_file_id');
     }
 
-    public function posterFile(): BelongsTo
+    public function posterFile(): HasOne
     {
-        return $this->belongsTo(AssetFile::class, 'poster_file_id');
+        return $this->hasOne(AssetFile::class, 'id', 'poster_file_id');
     }
 
     public function scopePublished(Builder $query): Builder

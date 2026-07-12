@@ -56,7 +56,10 @@ if (can('manage_users')) adminNavItems.push({ title: 'Users', href: '/admin/user
 if (can('manage_categories')) adminNavItems.push({ title: 'Categories', href: '/admin/categories', icon: Tags });
 if (can('manage_tags')) adminNavItems.push({ title: 'Tags', href: '/admin/tags', icon: Tag });
 if (can('manage_collections')) adminNavItems.push({ title: 'Collections', href: '/admin/collections', icon: Images });
-if (can('manage_images')) adminNavItems.push({ title: 'Images', href: '/admin/images', icon: ImageIcon });
+if (can('manage_images')) {
+    adminNavItems.push({ title: 'Assets', href: '/admin/assets', icon: FolderGit2 });
+    adminNavItems.push({ title: 'Legacy Images', href: '/admin/images', icon: ImageIcon });
+}
 if (can('manage_license_types')) adminNavItems.push({ title: 'License Types', href: '/admin/license-types', icon: BadgeDollarSign });
 if (can('manage_orders')) adminNavItems.push({ title: 'Orders', href: '/admin/orders', icon: ClipboardList });
 if (can('manage_licenses')) adminNavItems.push({ title: 'Licenses', href: '/admin/licenses', icon: KeyRound });

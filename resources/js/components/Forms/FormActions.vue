@@ -23,7 +23,6 @@ withDefaults(
 );
 
 const emit = defineEmits<{
-    submit: [];
     cancel: [];
 }>();
 </script>
@@ -55,9 +54,8 @@ const emit = defineEmits<{
             <slot name="secondary" />
 
             <Button
-                type="button"
+                type="submit"
                 :disabled="disabled || processing"
-                @click="emit('submit')"
             >
                 {{ processing ? processingLabel : submitLabel }}
             </Button>

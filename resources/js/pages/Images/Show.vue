@@ -63,6 +63,16 @@ const previewUrl = computed(() =>
     ?? null,
 );
 
+const downloadLimitReached = computed(() => {
+    const license = props.imageRecord.active_license;
+
+    return Boolean(
+        license
+        && license.download_limit !== null
+        && license.downloads_used >= license.download_limit,
+    );
+});
+
 const downloadSummary = computed(() => {
     const license = props.imageRecord.active_license;
 
@@ -348,11 +358,21 @@ function visitNext(): void {
                     <a
                         v-if="imageRecord.can_download"
                         :href="`/images/${imageRecord.id}/download`"
-                        class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
+                        class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white transition hover:opacity-90"
                     >
                         <Download class="h-4 w-4" />
                         Download Image
                     </a>
+
+                    <button
+                        v-else-if="downloadLimitReached"
+                        type="button"
+                        disabled
+                        class="mt-5 inline-flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-stone-200 px-5 text-sm font-semibold text-stone-500 dark:bg-stone-800 dark:text-stone-400"
+                    >
+                        <Download class="h-4 w-4" />
+                        Download Limit Reached
+                    </button>
                 </div>
 
                 <div class="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
