@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
-import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
+import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
+import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
+import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const props = defineProps<{
     assetRecord: AdminAsset;
@@ -21,6 +23,7 @@ const props = defineProps<{
     fileRoles: SelectOption[];
     acceptedExtensions: string[];
     maxUploadKilobytes: number;
+    licenseTypes: LicenseTypeOption[];
 }>();
 
 const form = useForm({
@@ -39,7 +42,24 @@ const form = useForm({
 const pendingFiles = ref<PendingAssetFile[]>([]);
 const uploadForm = useForm({ files: [] as File[], file_roles: [] as string[], file_downloadable: [] as number[] });
 const replacingId = ref<number | null>(null);
+const offeringForm = useForm({ offerings: (props.assetRecord.offerings ?? []) as AdminAssetOffering[] });
 const deletion = useDeleteConfirmation<AdminAssetFile>();
+
+const canViewPublicPage = computed(
+    () => props.assetRecord.status === 'published' && props.assetRecord.is_active,
+);
+
+function viewPublicPage(): void {
+    if (!canViewPublicPage.value) {
+        return;
+    }
+
+    window.open(
+        `/assets/${encodeURIComponent(props.assetRecord.slug)}`,
+        '_blank',
+        'noopener,noreferrer',
+    );
+}
 
 function updateAsset() {
     form.transform((data) => ({ ...data, collection_id: data.collection_id === '' ? null : data.collection_id }))
@@ -91,6 +111,10 @@ function confirmRemoveFile(): void {
     });
 }
 
+function saveOfferings(): void {
+    offeringForm.put(`/admin/assets/${props.assetRecord.id}/offerings`, { preserveScroll: true });
+}
+
 function moveFile(index: number, offset: number) {
     const files = [...(props.assetRecord.files ?? [])];
     const target = index + offset;
@@ -105,7 +129,29 @@ function moveFile(index: number, offset: number) {
 <template>
     <Head :title="`Edit ${assetRecord.title}`" />
     <div class="space-y-8 p-6">
-        <PageHeader :title="`Edit ${assetRecord.title}`" description="Manage asset details, associated files, previews, and revisions." />
+        <PageHeader
+            :title="`Edit ${assetRecord.title}`"
+            description="Manage asset details, associated files, previews, and revisions."
+        >
+            <div class="flex flex-wrap items-center gap-3">
+                <Button
+                    type="button"
+                    variant="outline"
+                    :disabled="!canViewPublicPage"
+                    :title="canViewPublicPage ? 'Open the public asset page in a new tab' : 'Publish and activate this asset before viewing its public page'"
+                    @click="viewPublicPage"
+                >
+                    View Public Page
+                </Button>
+
+                <span
+                    v-if="!canViewPublicPage"
+                    class="text-sm text-muted-foreground"
+                >
+                    Publish and activate this asset to enable the public page.
+                </span>
+            </div>
+        </PageHeader>
 
         <form class="space-y-6" @submit.prevent="updateAsset">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
@@ -172,6 +218,27 @@ function moveFile(index: number, offset: number) {
             @confirm="confirmRemoveFile"
             @cancel="deletion.cancelDelete"
         />
+
+        <FormSection title="License Offerings" description="Build customer packages, compare coverage, and review exactly what each license delivers.">
+            <form class="space-y-6" @submit.prevent="saveOfferings">
+                <AssetOfferingMatrix
+                    :files="assetRecord.files ?? []"
+                    :offerings="offeringForm.offerings"
+                />
+
+                <AssetOfferingBuilder
+                    v-model="offeringForm.offerings"
+                    :files="assetRecord.files ?? []"
+                    :license-types="licenseTypes"
+                />
+
+                <div class="sticky bottom-0 z-10 flex justify-end border-t bg-background/95 py-4 backdrop-blur">
+                    <Button type="submit" :disabled="offeringForm.processing">
+                        {{ offeringForm.processing ? 'Saving…' : 'Save Offerings' }}
+                    </Button>
+                </div>
+            </form>
+        </FormSection>
 
         <FormSection title="Add Files" description="Upload additional associated files to this existing asset.">
             <AssetFileDropzone v-model="pendingFiles" :roles="fileRoles" :accepted-extensions="acceptedExtensions" :max-upload-kilobytes="maxUploadKilobytes" :disabled="uploadForm.processing" />

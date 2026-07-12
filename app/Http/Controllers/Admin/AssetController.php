@@ -8,6 +8,8 @@ use App\Enums\AssetType;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Models\LicenseType;
+use App\Services\AssetOfferingService;
 use App\Models\Collection;
 use App\Services\AssetService;
 use Illuminate\Http\RedirectResponse;
@@ -97,11 +99,12 @@ class AssetController extends Controller
 
     public function edit(Asset $asset): Response
     {
-        $asset->load(['activeFiles', 'collection']);
+        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType']);
 
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
             'assetRecord' => $this->formatAsset($asset, detailed: true),
+            'licenseTypes' => LicenseType::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'description', 'price_cents', 'currency', 'download_limit', 'expires_after_days']),
         ]);
     }
 
@@ -229,6 +232,29 @@ class AssetController extends Controller
         return back()->with('success', 'File removed. The physical revision was retained.');
     }
 
+
+    public function updateOfferings(Request $request, Asset $asset, AssetOfferingService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'offerings' => ['array', 'max:50'],
+            'offerings.*.license_type_id' => ['required', 'integer', 'exists:license_types,id'],
+            'offerings.*.name' => ['required', 'string', 'max:255'],
+            'offerings.*.description' => ['nullable', 'string'],
+            'offerings.*.price_cents' => ['required', 'integer', 'min:0'],
+            'offerings.*.currency' => ['required', 'string', 'size:3'],
+            'offerings.*.download_limit' => ['nullable', 'integer', 'min:1'],
+            'offerings.*.expires_after_days' => ['nullable', 'integer', 'min:1'],
+            'offerings.*.include_all_active_files' => ['boolean'],
+            'offerings.*.is_active' => ['boolean'],
+            'offerings.*.file_ids' => ['array'],
+            'offerings.*.file_ids.*' => ['integer'],
+        ]);
+
+        $service->saveMany($asset, $validated['offerings'] ?? []);
+
+        return back()->with('success', 'Asset license offerings updated successfully.');
+    }
+
     public function destroy(Asset $asset): RedirectResponse
     {
         $asset->delete();
@@ -328,6 +354,19 @@ class AssetController extends Controller
                 'is_primary_preview' => $asset->primary_preview_file_id === $file->id,
                 'is_poster' => $asset->poster_file_id === $file->id,
                 'public_url' => $file->publicUrl(),
+            ])->values();
+            $data['offerings'] = $asset->offerings->map(fn ($offering) => [
+                'id' => $offering->id,
+                'license_type_id' => $offering->license_type_id,
+                'name' => $offering->name,
+                'description' => $offering->description,
+                'price_cents' => $offering->price_cents,
+                'currency' => $offering->currency,
+                'download_limit' => $offering->download_limit,
+                'expires_after_days' => $offering->expires_after_days,
+                'include_all_active_files' => $offering->include_all_active_files,
+                'is_active' => $offering->is_active,
+                'file_ids' => $offering->files->pluck('id')->values(),
             ])->values();
         }
 

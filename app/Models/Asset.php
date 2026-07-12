@@ -92,4 +92,9 @@ class Asset extends Model
     {
         return $this->title;
     }
+    public function offerings(): HasMany
+    {
+        return $this->hasMany(AssetOffering::class)->orderBy('sort_order');
+    }
+
 }

@@ -90,6 +90,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_images')
             ->name('assets.files.destroy');
 
+        Route::put('/assets/{asset}/offerings', [AssetController::class, 'updateOfferings'])
+            ->middleware('permission:manage_images')
+            ->name('assets.offerings.update');
+
         Route::resource('assets', AssetController::class)
             ->except(['show'])
             ->middleware('permission:manage_images');

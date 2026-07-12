@@ -44,4 +44,9 @@ class LicenseType extends Model
         return $this->hasMany(License::class);
     }
 
+    public function assetOfferings(): HasMany
+    {
+        return $this->hasMany(AssetOffering::class);
+    }
+
 }

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
@@ -79,4 +80,9 @@ class AssetFile extends Model
     {
         return $this->processing_status === AssetFileProcessingStatus::Ready;
     }
+    public function offerings(): BelongsToMany
+    {
+        return $this->belongsToMany(AssetOffering::class, 'asset_offering_files')->withTimestamps();
+    }
+
 }

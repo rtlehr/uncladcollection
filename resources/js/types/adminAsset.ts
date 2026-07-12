@@ -53,6 +53,7 @@ export interface AdminAsset {
     preview_url: string | null;
     legacy_image_id: number | null;
     files?: AdminAssetFile[];
+    offerings?: AdminAssetOffering[];
 }
 
 export interface PendingAssetFile {
@@ -61,4 +62,28 @@ export interface PendingAssetFile {
     role: string;
     downloadable: boolean;
     previewUrl: string | null;
+}
+
+export interface AdminAssetOffering {
+    id: number | null;
+    license_type_id: number;
+    name: string;
+    description: string | null;
+    price_cents: number;
+    currency: string;
+    download_limit: number | null;
+    expires_after_days: number | null;
+    include_all_active_files: boolean;
+    is_active: boolean;
+    file_ids: number[];
+}
+
+export interface LicenseTypeOption {
+    id: number;
+    name: string;
+    description: string | null;
+    price_cents: number;
+    currency: string;
+    download_limit: number | null;
+    expires_after_days: number | null;
 }
