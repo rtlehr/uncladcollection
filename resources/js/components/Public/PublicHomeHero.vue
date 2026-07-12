@@ -31,17 +31,17 @@ withDefaults(
     <section class="relative overflow-hidden border-b border-stone-200 dark:border-stone-800">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_12%_12%,color-mix(in_srgb,var(--brand-accent)_16%,transparent),transparent_34%),radial-gradient(circle_at_88%_14%,color-mix(in_srgb,var(--brand-secondary)_18%,transparent),transparent_38%)]" />
 
-        <div class="relative mx-auto grid min-h-[680px] max-w-[1440px] gap-12 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-12 lg:py-24">
+        <div class="relative mx-auto grid min-h-[680px] max-w-[1440px] gap-12 px-4 py-12 sm:px-8 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-12 lg:py-24">
             <div class="max-w-2xl">
                 <div
                     v-if="eyebrow"
-                    class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white/75 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)] backdrop-blur dark:border-stone-700 dark:bg-stone-900/75"
+                    class="inline-flex items-center gap-2 rounded-2xl border sm:rounded-full border-stone-300 bg-white/75 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)] backdrop-blur dark:border-stone-700 dark:bg-stone-900/75"
                 >
                     <Sparkles class="h-3.5 w-3.5" aria-hidden="true" />
                     {{ eyebrow }}
                 </div>
 
-                <h1 class="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
+                <h1 class="mt-6 break-words text-3xl font-semibold sm:text-4xl leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
                     {{ title }}
                 </h1>
 
@@ -55,7 +55,7 @@ withDefaults(
                 <form
                     action="/images"
                     method="get"
-                    class="mt-8 flex max-w-xl items-center gap-2 rounded-full border border-stone-300 bg-white p-2 shadow-xl shadow-stone-950/5 dark:border-stone-700 dark:bg-stone-900"
+                    class="mt-8 flex max-w-xl items-center gap-2 rounded-2xl border sm:rounded-full border-stone-300 bg-white p-2 shadow-xl shadow-stone-950/5 dark:border-stone-700 dark:bg-stone-900"
                     role="search"
                 >
                     <Search class="ml-3 h-5 w-5 shrink-0 text-stone-400" aria-hidden="true" />
@@ -86,7 +86,7 @@ withDefaults(
 
                     <Link
                         :href="secondaryHref"
-                        class="inline-flex h-12 items-center rounded-full border border-stone-300 bg-white/75 px-6 text-sm font-semibold transition hover:bg-white dark:border-stone-700 dark:bg-stone-900/75 dark:hover:bg-stone-900"
+                        class="inline-flex h-12 items-center rounded-2xl border sm:rounded-full border-stone-300 bg-white/75 px-6 text-sm font-semibold transition hover:bg-white dark:border-stone-700 dark:bg-stone-900/75 dark:hover:bg-stone-900"
                     >
                         {{ secondaryLabel }}
                     </Link>

@@ -90,7 +90,7 @@ const relatedLinks = [
         </PublicHero>
 
         <ContentSection>
-            <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div class="grid gap-8 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <article class="min-w-0">
                     <div
                         id="overview"

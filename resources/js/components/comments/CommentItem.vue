@@ -499,7 +499,7 @@ function performModerationAction() {
                     </div>
                 </div>
 
-                
+
                 <div
                     v-if="replyCount"
                     class="mt-3"
@@ -569,8 +569,8 @@ function performModerationAction() {
         :confirm-variant="moderationConfirmVariant"
         @confirm="performModerationAction"
     />
-    
-   
+
+
 
 </template>
 

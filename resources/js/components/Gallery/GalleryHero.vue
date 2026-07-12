@@ -24,13 +24,13 @@ function formatNumber(value: number): string {
     <section class="relative overflow-hidden bg-[var(--brand-primary)] text-white">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,color-mix(in_srgb,var(--brand-accent)_24%,transparent),transparent_30%),radial-gradient(circle_at_85%_10%,color-mix(in_srgb,var(--brand-secondary)_42%,transparent),transparent_38%)]" />
 
-        <div class="relative mx-auto max-w-[1440px] px-5 py-16 sm:px-8 sm:py-20 lg:px-12 lg:py-24">
+        <div class="relative mx-auto max-w-[1440px] px-4 py-12 sm:px-8 sm:py-20 lg:px-12 lg:py-24">
             <div class="max-w-4xl">
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-accent)]">
                     The image library
                 </p>
 
-                <h1 class="mt-5 text-4xl font-semibold leading-[1.06] tracking-[-0.04em] sm:text-6xl">
+                <h1 class="mt-5 break-words text-3xl font-semibold sm:text-4xl leading-[1.06] tracking-[-0.04em] sm:text-6xl">
                     Explore authentic imagery with purpose
                 </h1>
 
@@ -39,7 +39,7 @@ function formatNumber(value: number): string {
                 </p>
             </div>
 
-            <div class="mt-9 max-w-3xl">
+            <div class="mt-7 max-w-3xl sm:mt-9">
                 <GallerySearchBar
                     v-model="search"
                     :suggestions="suggestions"

@@ -31,7 +31,7 @@ function formatNumber(value: number): string {
     <section class="relative overflow-hidden bg-[var(--brand-primary)] text-white">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_srgb,var(--brand-accent)_24%,transparent),transparent_30%),radial-gradient(circle_at_86%_8%,color-mix(in_srgb,var(--brand-secondary)_44%,transparent),transparent_38%)]" />
 
-        <div class="relative mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-12 lg:py-16">
+        <div class="relative mx-auto grid max-w-[1440px] gap-8 px-4 py-10 sm:gap-10 sm:px-8 sm:py-12 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-12 lg:py-16">
             <div>
                 <nav
                     class="flex flex-wrap items-center gap-2 text-sm text-white/60"
@@ -58,7 +58,7 @@ function formatNumber(value: number): string {
                     Curated collection
                 </p>
 
-                <h1 class="mt-4 text-4xl font-semibold leading-[1.06] tracking-[-0.04em] sm:text-6xl">
+                <h1 class="mt-4 break-words text-3xl font-semibold sm:text-4xl leading-[1.06] tracking-[-0.04em] sm:text-6xl">
                     {{ collection.name }}
                 </h1>
 
@@ -73,7 +73,7 @@ function formatNumber(value: number): string {
                     <ImageShareActions :title="collection.name" />
                 </div>
 
-                <dl class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <dl class="mt-7 grid grid-cols-2 gap-4 sm:mt-8 sm:grid-cols-4">
                     <div>
                         <dt class="flex items-center gap-2 text-xs uppercase tracking-wider text-white/55">
                             <Images class="h-4 w-4" />
@@ -122,7 +122,7 @@ function formatNumber(value: number): string {
 
             <div
                 v-if="images.length"
-                class="grid h-[420px] grid-cols-2 grid-rows-2 gap-3 sm:h-[520px]"
+                class="grid h-[300px] grid-cols-2 grid-rows-2 gap-2 sm:h-[520px] sm:gap-3"
             >
                 <Link
                     v-for="(image, index) in images.slice(0, 5)"
@@ -147,7 +147,7 @@ function formatNumber(value: number): string {
 
                     <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
 
-                    <div class="absolute inset-x-0 bottom-0 p-4 text-sm font-semibold">
+                    <div class="absolute inset-x-0 bottom-0 line-clamp-2 p-3 text-xs font-semibold sm:p-4 sm:text-sm">
                         {{ image.title }}
                     </div>
                 </Link>

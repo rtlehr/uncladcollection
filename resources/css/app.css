@@ -597,3 +597,131 @@
         outline: 2px solid CanvasText;
     }
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| UC-P009 — Public Mobile UX
+|--------------------------------------------------------------------------
+*/
+
+@layer base {
+    html {
+        min-width: 320px;
+        scroll-padding-top: 5.5rem;
+        overflow-x: clip;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        min-width: 320px;
+        overflow-x: clip;
+        text-rendering: optimizeLegibility;
+    }
+
+    img,
+    video,
+    iframe,
+    svg {
+        max-width: 100%;
+    }
+
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    summary {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+@layer utilities {
+    .safe-bottom {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+
+    .safe-top {
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+    }
+
+    .public-touch-target {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .public-break-anywhere {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .public-scrollbar-hidden {
+        scrollbar-width: none;
+    }
+
+    .public-scrollbar-hidden::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@media (max-width: 639px) {
+    .prose {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+
+    .prose h1,
+    .prose h2,
+    .prose h3,
+    .prose h4 {
+        overflow-wrap: anywhere;
+    }
+
+    .prose pre,
+    .prose table {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .prose img,
+    .blog-content img {
+        height: auto;
+        max-width: 100%;
+    }
+
+    .uc-media-card-wrapper,
+    .uc-media-card {
+        max-width: 100%;
+    }
+
+    .uc-media-card-caption {
+        padding: 0.875rem;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    .public-mobile-menu {
+        max-height: calc(100dvh - 4.5rem);
+        overflow-y: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .public-motion,
+    .public-motion * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

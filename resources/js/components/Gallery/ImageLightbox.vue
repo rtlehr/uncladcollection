@@ -31,11 +31,12 @@ const emit = defineEmits<{
 
 const dialog = ref<HTMLElement | null>(null);
 const zoomed = ref(false);
+const touchStartX = ref<number | null>(null);
 
 const imageClass = computed(() =>
     zoomed.value
         ? 'max-w-none cursor-zoom-out scale-150'
-        : 'max-h-[88vh] max-w-[94vw] cursor-zoom-in',
+        : 'max-h-[calc(100dvh-7rem)] max-w-[96vw] cursor-zoom-in',
 );
 
 function close(): void {
@@ -43,9 +44,7 @@ function close(): void {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-    if (!props.open) {
-        return;
-    }
+    if (!props.open) return;
 
     if (event.key === 'Escape') {
         event.preventDefault();
@@ -57,6 +56,29 @@ function handleKeydown(event: KeyboardEvent): void {
     }
 
     if (event.key === 'ArrowRight' && props.nextHref) {
+        emit('next');
+    }
+}
+
+function handleTouchStart(event: TouchEvent): void {
+    touchStartX.value = event.touches[0]?.clientX ?? null;
+}
+
+function handleTouchEnd(event: TouchEvent): void {
+    if (touchStartX.value === null) return;
+
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX.value;
+    const distance = endX - touchStartX.value;
+
+    touchStartX.value = null;
+
+    if (Math.abs(distance) < 60) return;
+
+    if (distance > 0 && props.previousHref) {
+        emit('previous');
+    }
+
+    if (distance < 0 && props.nextHref) {
         emit('next');
     }
 }
@@ -93,32 +115,36 @@ onBeforeUnmount(() => {
             role="dialog"
             aria-modal="true"
             :aria-label="`Expanded view of ${title}`"
-            class="fixed inset-0 z-[120] flex items-center justify-center overflow-auto bg-black/95 p-4 outline-none"
+            class="safe-top safe-bottom fixed inset-0 z-[120] flex items-center justify-center overflow-auto bg-black/95 px-2 outline-none sm:p-4"
             @click.self="close"
+            @touchstart.passive="handleTouchStart"
+            @touchend.passive="handleTouchEnd"
         >
-            <button
-                type="button"
-                class="fixed right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
-                aria-label="Close expanded image"
-                @click="close"
-            >
-                <X class="h-5 w-5" />
-            </button>
+            <div class="fixed inset-x-0 top-0 z-10 flex items-center justify-end gap-2 bg-gradient-to-b from-black/80 to-transparent p-3 safe-top">
+                <button
+                    type="button"
+                    class="public-touch-target inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+                    :aria-label="zoomed ? 'Zoom out' : 'Zoom in'"
+                    @click="zoomed = !zoomed"
+                >
+                    <ZoomOut v-if="zoomed" class="h-5 w-5" />
+                    <ZoomIn v-else class="h-5 w-5" />
+                </button>
 
-            <button
-                type="button"
-                class="fixed right-16 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
-                :aria-label="zoomed ? 'Zoom out' : 'Zoom in'"
-                @click="zoomed = !zoomed"
-            >
-                <ZoomOut v-if="zoomed" class="h-5 w-5" />
-                <ZoomIn v-else class="h-5 w-5" />
-            </button>
+                <button
+                    type="button"
+                    class="public-touch-target inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+                    aria-label="Close expanded image"
+                    @click="close"
+                >
+                    <X class="h-5 w-5" />
+                </button>
+            </div>
 
             <button
                 v-if="previousHref"
                 type="button"
-                class="fixed left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
+                class="public-touch-target fixed bottom-4 left-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2"
                 aria-label="Previous image"
                 @click="emit('previous')"
             >
@@ -128,7 +154,7 @@ onBeforeUnmount(() => {
             <button
                 v-if="nextHref"
                 type="button"
-                class="fixed right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
+                class="public-touch-target fixed bottom-4 right-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2"
                 aria-label="Next image"
                 @click="emit('next')"
             >

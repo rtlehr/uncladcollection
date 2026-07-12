@@ -254,7 +254,7 @@ watch(
         </section>
 
         <article>
-            <header class="mx-auto max-w-5xl px-5 py-12 text-center sm:px-8 sm:py-16 lg:px-12">
+            <header class="mx-auto max-w-5xl px-4 py-10 sm:px-8 sm:py-12 text-center sm:px-8 sm:py-16 lg:px-12">
                 <div
                     v-if="blogPost.categories.length"
                     class="flex flex-wrap justify-center gap-2"
@@ -269,7 +269,7 @@ watch(
                     </Link>
                 </div>
 
-                <h1 class="mx-auto mt-6 max-w-4xl text-4xl font-semibold leading-[1.08] tracking-[-0.04em] sm:text-6xl">
+                <h1 class="mx-auto mt-6 max-w-4xl break-words text-3xl font-semibold sm:text-4xl leading-[1.08] tracking-[-0.04em] sm:text-6xl">
                     {{ blogPost.title }}
                 </h1>
 
@@ -315,8 +315,8 @@ watch(
                 </div>
             </section>
 
-            <section class="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
-                <div class="grid gap-10 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
+            <section class="mx-auto max-w-[1320px] px-4 py-10 sm:px-8 sm:py-12 sm:px-8 lg:px-12 lg:py-16">
+                <div class="grid gap-8 lg:gap-10 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center">
                     <div class="min-w-0">
                         <div
                             id="article-content"

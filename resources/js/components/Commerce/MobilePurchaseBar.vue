@@ -5,7 +5,7 @@ import {
     ShoppingCart,
 } from '@lucide/vue';
 
-const props = defineProps<{
+defineProps<{
     canPurchase: boolean;
     canDownload: boolean;
     imageId: number;
@@ -22,7 +22,10 @@ function scrollToPurchase(): void {
 </script>
 
 <template>
-    <div class="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 p-3 backdrop-blur lg:hidden dark:border-stone-800 dark:bg-stone-950/95">
+    <div
+        v-if="canDownload || canPurchase"
+        class="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-3 pt-3 backdrop-blur lg:hidden dark:border-stone-800 dark:bg-stone-950/95"
+    >
         <Link
             v-if="canDownload"
             :href="`/images/${imageId}/download`"
@@ -33,7 +36,7 @@ function scrollToPurchase(): void {
         </Link>
 
         <button
-            v-else-if="canPurchase"
+            v-else
             type="button"
             class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
             @click="scrollToPurchase"

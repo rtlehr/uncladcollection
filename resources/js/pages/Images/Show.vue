@@ -147,7 +147,7 @@ function visitNext(): void {
             </div>
         </section>
 
-        <section class="mx-auto grid max-w-[1440px] gap-8 px-5 py-8 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:px-12 lg:py-12 lg:pb-12">
+        <section class="mx-auto grid max-w-[1440px] gap-8 px-4 py-6 sm:px-8 sm:py-8 pb-28 sm:px-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:px-12 lg:py-12 lg:pb-12">
             <div class="min-w-0">
                 <div class="group relative overflow-hidden rounded-3xl border border-stone-200 bg-stone-100 dark:border-stone-800 dark:bg-stone-900">
                     <button

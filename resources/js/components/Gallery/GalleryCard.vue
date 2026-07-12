@@ -85,7 +85,7 @@ function toggleFavorite(): void {
 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-70 transition group-hover:opacity-95" />
 
-                <div class="absolute inset-x-0 bottom-0 translate-y-2 p-4 text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                <div class="absolute inset-x-0 bottom-0 hidden translate-y-2 p-4 text-white opacity-0 transition duration-300 sm:block sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
                     <span class="inline-flex items-center gap-1 text-xs font-semibold">
                         View image
                         <ArrowUpRight class="h-3.5 w-3.5" />
@@ -117,7 +117,7 @@ function toggleFavorite(): void {
             </span>
         </div>
 
-        <div class="p-5">
+        <div class="p-4 sm:p-5">
             <div
                 v-if="showCollection && image.collection"
                 class="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-accent)]"
@@ -127,16 +127,16 @@ function toggleFavorite(): void {
 
             <Link
                 :href="`/images/${image.slug}`"
-                class="block text-lg font-semibold leading-snug transition hover:text-[var(--brand-accent)]"
+                class="block line-clamp-2 text-base font-semibold leading-snug transition hover:text-[var(--brand-accent)] sm:text-lg"
             >
                 {{ image.title }}
             </Link>
 
-            <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">
+            <p class="mt-2 truncate text-sm text-stone-500 dark:text-stone-400">
                 {{ image.photographer ? `By ${image.photographer}` : 'Unclad Collection' }}
             </p>
 
-            <div class="mt-4 flex items-center justify-between border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+            <div class="mt-3 flex items-center justify-between border-t border-stone-100 pt-3 text-[11px] sm:mt-4 sm:pt-4 sm:text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
                 <span>{{ image.views_count.toLocaleString() }} views</span>
                 <span class="inline-flex items-center gap-1">
                     <Heart class="h-3.5 w-3.5" />

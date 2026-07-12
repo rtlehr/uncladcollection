@@ -69,8 +69,8 @@ withDefaults(
             :class="[
                 'flex flex-col',
                 variant === 'hero'
-                    ? 'justify-center p-7 sm:p-10'
-                    : 'p-6',
+                    ? 'justify-center p-5 sm:p-10'
+                    : 'p-5 sm:p-6',
             ]"
         >
             <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -94,7 +94,7 @@ withDefaults(
                 :class="[
                     'mt-4 font-semibold leading-tight tracking-tight transition group-hover:text-[var(--brand-accent)]',
                     variant === 'hero'
-                        ? 'text-3xl sm:text-4xl'
+                        ? 'text-2xl sm:text-4xl'
                         : 'text-xl sm:text-2xl',
                 ]"
             >
@@ -113,7 +113,7 @@ withDefaults(
                 {{ post.excerpt }}
             </p>
 
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400">
+            <div class="mt-5 flex flex-col items-start gap-3 text-xs sm:mt-6 sm:flex-row sm:items-center sm:justify-between text-stone-500 dark:text-stone-400">
                 <div class="flex flex-wrap items-center gap-3">
                     <span class="font-medium text-stone-800 dark:text-stone-200">
                         {{ post.author?.name ?? 'Unclad Collection' }}

@@ -31,7 +31,7 @@ defineProps<{
                     Saved for later
                 </p>
 
-                <h1 class="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                <h1 class="mt-4 break-words text-3xl font-semibold sm:text-4xl tracking-[-0.035em] sm:text-5xl">
                     My Favorites
                 </h1>
 
@@ -41,7 +41,7 @@ defineProps<{
             </div>
         </section>
 
-        <section class="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
+        <section class="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 sm:py-10 sm:px-8 lg:px-12 lg:py-14">
             <GalleryGrid
                 v-if="images.data.length"
                 :images="images.data"

@@ -188,7 +188,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
             @reset="resetFilters"
         />
 
-        <section class="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
+        <section class="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 sm:py-10 sm:px-8 lg:px-12 lg:py-14">
             <div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <PublicResultSummary
                     :from="images.from"

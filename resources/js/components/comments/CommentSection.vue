@@ -79,7 +79,7 @@ function submitComment(): void {
 </script>
 
 <template>
-    <section class="mt-14 border-t border-stone-200 pt-10 dark:border-stone-800">
+    <section class="mt-10 border-t sm:mt-14 border-stone-200 pt-10 dark:border-stone-800">
         <div class="flex items-start gap-3">
             <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--brand-accent)_12%,transparent)] text-[var(--brand-accent)]">
                 <MessageCircle class="h-5 w-5" />
@@ -98,7 +98,7 @@ function submitComment(): void {
 
         <div
             v-if="authUser && commentsEnabled"
-            class="mt-7 rounded-3xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900"
+            class="mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:mt-7 sm:rounded-3xl sm:p-5 dark:border-stone-800 dark:bg-stone-900"
         >
             <label
                 for="new-comment"
@@ -122,7 +122,7 @@ function submitComment(): void {
 
                 <button
                     type="button"
-                    class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white disabled:opacity-50"
+                    class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full sm:w-auto bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white disabled:opacity-50"
                     :disabled="processing || !body.trim()"
                     @click="submitComment"
                 >

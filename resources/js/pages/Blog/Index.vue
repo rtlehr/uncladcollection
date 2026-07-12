@@ -164,7 +164,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
             @reset="resetFilters"
         />
 
-        <main class="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
+        <main class="mx-auto max-w-[1440px] px-4 py-10 sm:px-8 sm:py-12 sm:px-8 lg:px-12 lg:py-16">
             <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <PublicResultSummary
                     :from="posts.from"
