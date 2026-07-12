@@ -27,4 +27,9 @@ class Collection extends Model
     {
         return $this->hasMany(Image::class);
     }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
+    }
 }

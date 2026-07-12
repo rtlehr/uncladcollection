@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {
     computed,
+    nextTick,
+    onMounted,
     ref,
 } from 'vue';
 
@@ -27,6 +29,19 @@ const props = withDefaults(defineProps<{
 });
 
 const loaded = ref(false);
+const imageElement = ref<HTMLImageElement | null>(null);
+
+function markLoaded(): void {
+    loaded.value = true;
+}
+
+onMounted(async () => {
+    await nextTick();
+
+    if (imageElement.value?.complete && imageElement.value.naturalWidth > 0) {
+        markLoaded();
+    }
+});
 
 const ratioStyle = computed(() => {
     if (!props.width || !props.height) {
@@ -49,6 +64,7 @@ const ratioStyle = computed(() => {
         :style="ratioStyle"
     >
         <img
+            ref="imageElement"
             :src="src"
             :alt="alt"
             :loading="loading"
@@ -62,7 +78,7 @@ const ratioStyle = computed(() => {
                 loaded ? 'opacity-100' : 'opacity-0',
                 imageClass,
             ]"
-            @load="loaded = true"
+            @load="markLoaded"
         />
     </span>
 </template>

@@ -345,14 +345,14 @@ function visitNext(): void {
                         </div>
                     </dl>
 
-                    <Link
+                    <a
                         v-if="imageRecord.can_download"
                         :href="`/images/${imageRecord.id}/download`"
                         class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
                     >
                         <Download class="h-4 w-4" />
                         Download Image
-                    </Link>
+                    </a>
                 </div>
 
                 <div class="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
