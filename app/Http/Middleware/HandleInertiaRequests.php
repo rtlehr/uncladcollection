@@ -49,16 +49,84 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
 
-            'site' => fn () => [
-                'name' => site_setting('general.site_name', 'Unclad Collection'),
-                'tagline' => site_setting('general.site_tagline'),
-                'theme' => site_setting('branding.active_theme', 'professional'),
-            ],
+            'site' => fn () => $this->sitePayload(),
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state')
                 || $request->cookie('sidebar_state') === 'true',
 
             'cart' => fn () => $this->cartPayload($user?->id),
+        ];
+    }
+
+    private function sitePayload(): array
+    {
+        $settings = public_site_settings();
+
+        return [
+            'name' => data_get(
+                $settings,
+                'general.site_name',
+                'Unclad Collection',
+            ),
+            'tagline' => data_get(
+                $settings,
+                'general.site_tagline',
+            ),
+            'contact_email' => data_get(
+                $settings,
+                'general.contact_email',
+            ),
+            'theme' => data_get(
+                $settings,
+                'branding.active_theme',
+                'professional',
+            ),
+            'logo_url' => data_get(
+                $settings,
+                'branding.site_logo',
+            ),
+            'primary_color' => data_get(
+                $settings,
+                'branding.primary_color',
+                '#1E2A38',
+            ),
+            'secondary_color' => data_get(
+                $settings,
+                'branding.secondary_color',
+                '#50634D',
+            ),
+            'accent_color' => data_get(
+                $settings,
+                'branding.accent_color',
+                '#D9824B',
+            ),
+            'footer_text' => data_get(
+                $settings,
+                'branding.footer_text',
+                '© Unclad Collection. All rights reserved.',
+            ),
+            'social' => [
+                'facebook_url' => data_get(
+                    $settings,
+                    'social.facebook_url',
+                ),
+                'instagram_url' => data_get(
+                    $settings,
+                    'social.instagram_url',
+                ),
+                'youtube_url' => data_get(
+                    $settings,
+                    'social.youtube_url',
+                ),
+                'pinterest_url' => data_get(
+                    $settings,
+                    'social.pinterest_url',
+                ),
+                'x_account_url' => data_get(
+                    $settings,
+                    'social.x_account_url',
+                ),
+            ],
         ];
     }
 
