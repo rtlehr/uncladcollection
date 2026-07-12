@@ -34,7 +34,7 @@ function closeMenu() {
             <nav class="hidden items-center gap-8 text-sm font-medium lg:flex" aria-label="Primary navigation">
                 <Link href="/images" class="transition hover:text-[var(--brand-accent)]">Images</Link>
                 <Link href="/blog" class="transition hover:text-[var(--brand-accent)]">Stories</Link>
-                <Link href="/demo/public-page" class="transition hover:text-[var(--brand-accent)]">About</Link>
+                <Link href="/public-page" class="transition hover:text-[var(--brand-accent)]">About</Link>
                 <Link v-if="isAuthenticated" href="/favorites" class="transition hover:text-[var(--brand-accent)]">Favorites</Link>
             </nav>
 
@@ -79,7 +79,7 @@ function closeMenu() {
             <nav class="grid gap-2" aria-label="Mobile navigation">
                 <Link href="/images" class="rounded-lg px-3 py-3 font-medium" @click="closeMenu">Images</Link>
                 <Link href="/blog" class="rounded-lg px-3 py-3 font-medium" @click="closeMenu">Stories</Link>
-                <Link href="/demo/public-page" class="rounded-lg px-3 py-3 font-medium" @click="closeMenu">About</Link>
+                <Link href="/public-page" class="rounded-lg px-3 py-3 font-medium" @click="closeMenu">About</Link>
                 <Link v-if="isAuthenticated" href="/favorites" class="rounded-lg px-3 py-3 font-medium" @click="closeMenu">Favorites</Link>
 
                 <Link

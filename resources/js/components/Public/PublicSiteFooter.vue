@@ -53,7 +53,7 @@ const socialLinks = computed(() => [
                 <nav class="mt-4 grid gap-3 text-sm text-stone-600 dark:text-stone-400">
                     <Link href="/images" class="hover:text-[var(--brand-accent)]">Image library</Link>
                     <Link href="/blog" class="hover:text-[var(--brand-accent)]">Stories</Link>
-                    <Link href="/demo/public-page" class="hover:text-[var(--brand-accent)]">About</Link>
+                    <Link href="/public-page" class="hover:text-[var(--brand-accent)]">About</Link>
                     <Link v-if="isAuthenticated" href="/favorites" class="hover:text-[var(--brand-accent)]">Favorites</Link>
                 </nav>
             </div>
