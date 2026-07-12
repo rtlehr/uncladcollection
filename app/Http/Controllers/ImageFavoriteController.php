@@ -11,6 +11,8 @@ class ImageFavoriteController extends Controller
 {
     public function store(Image $image): RedirectResponse
     {
+        abort_unless($image->is_active, 404);
+
         ImageFavorite::firstOrCreate([
             'user_id' => Auth::id(),
             'image_id' => $image->id,

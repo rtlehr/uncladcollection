@@ -128,17 +128,76 @@ class ImageBrowseController extends Controller
         abort_unless($image->is_active, 404);
 
         $image->load([
-            'collection:id,name',
+            'collection:id,name,slug,description',
             'categories:id,name',
             'tags:id,name',
         ]);
 
         $image->increment('views_count');
+        $image->views_count++;
 
         $user = Auth::user();
+
         $activeLicense = $user
-            ? app(PurchaseService::class)->getActiveLicenseForImage($user, $image)
+            ? app(PurchaseService::class)->getActiveLicenseForImage(
+                $user,
+                $image,
+            )
             : null;
+
+        $previousImage = Image::query()
+            ->where('is_active', true)
+            ->where('id', '<', $image->id)
+            ->orderByDesc('id')
+            ->first([
+                'id',
+                'title',
+                'slug',
+            ]);
+
+        $nextImage = Image::query()
+            ->where('is_active', true)
+            ->where('id', '>', $image->id)
+            ->orderBy('id')
+            ->first([
+                'id',
+                'title',
+                'slug',
+            ]);
+
+        $relatedImages = $this->imageCardQuery()
+            ->where('is_active', true)
+            ->whereKeyNot($image->id)
+            ->where(function (Builder $query) use ($image) {
+                $categoryIds = $image->categories->modelKeys();
+                $tagIds = $image->tags->modelKeys();
+
+                if ($image->collection_id) {
+                    $query->where('collection_id', $image->collection_id);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+
+                if ($categoryIds !== []) {
+                    $query->orWhereHas(
+                        'categories',
+                        fn (Builder $query) => $query->whereKey($categoryIds),
+                    );
+                }
+
+                if ($tagIds !== []) {
+                    $query->orWhereHas(
+                        'tags',
+                        fn (Builder $query) => $query->whereKey($tagIds),
+                    );
+                }
+            })
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('views_count')
+            ->limit(8)
+            ->get()
+            ->map(fn (Image $relatedImage) => $this->formatImageCard($relatedImage))
+            ->values();
 
         return Inertia::render('Images/Show', [
             'imageRecord' => [
@@ -151,14 +210,19 @@ class ImageBrowseController extends Controller
                     ? Storage::url($image->high_res_path)
                     : null,
                 'created_at' => $image->created_at?->format('Y-m-d'),
-                'is_favorited' => $user
-                    ? $image->favorites()
-                        ->where('user_id', $user->id)
-                        ->exists()
-                    : false,
                 'is_purchased' => $activeLicense !== null,
                 'can_purchase' => $activeLicense === null,
                 'can_download' => $activeLicense?->canDownload() ?? false,
+                'active_license' => $activeLicense
+                    ? [
+                        'id' => $activeLicense->id,
+                        'license_name' => $activeLicense->license_name,
+                        'status' => $activeLicense->status,
+                        'downloads_used' => $activeLicense->downloads_used,
+                        'download_limit' => $activeLicense->download_limit,
+                        'expires_at' => $activeLicense->expires_at?->format('Y-m-d'),
+                    ]
+                    : null,
             ],
 
             'licenseTypes' => LicenseType::query()
@@ -171,28 +235,28 @@ class ImageBrowseController extends Controller
                     'description',
                     'price_cents',
                     'currency',
+                    'download_limit',
+                    'expires_after_days',
+                    'max_resolution',
                 ]),
 
-            'relatedImages' => $this->imageCardQuery()
-                ->where('is_active', true)
-                ->whereKeyNot($image->id)
-                ->where(function (Builder $query) use ($image) {
-                    $categoryIds = $image->categories->modelKeys();
+            'relatedImages' => $relatedImages,
 
-                    $query->where('collection_id', $image->collection_id);
+            'previousImage' => $previousImage
+                ? [
+                    'id' => $previousImage->id,
+                    'title' => $previousImage->title,
+                    'slug' => $previousImage->slug,
+                ]
+                : null,
 
-                    if ($categoryIds !== []) {
-                        $query->orWhereHas(
-                            'categories',
-                            fn (Builder $query) => $query->whereKey($categoryIds),
-                        );
-                    }
-                })
-                ->latest()
-                ->limit(8)
-                ->get()
-                ->map(fn (Image $relatedImage) => $this->formatImageCard($relatedImage))
-                ->values(),
+            'nextImage' => $nextImage
+                ? [
+                    'id' => $nextImage->id,
+                    'title' => $nextImage->title,
+                    'slug' => $nextImage->slug,
+                ]
+                : null,
         ]);
     }
 
@@ -216,7 +280,7 @@ class ImageBrowseController extends Controller
 
     private function imageCardQuery(): Builder
     {
-        return Image::query()
+        $query = Image::query()
             ->select([
                 'id',
                 'collection_id',
@@ -238,6 +302,15 @@ class ImageBrowseController extends Controller
                 'categories:id,name',
                 'tags:id,name',
             ]);
+
+        if (Auth::check()) {
+            $query->withExists([
+                'favorites as is_favorited' => fn (Builder $query) => $query
+                    ->where('user_id', Auth::id()),
+            ]);
+        }
+
+        return $query;
     }
 
     private function formatImageCard(Image $image): array
@@ -254,6 +327,7 @@ class ImageBrowseController extends Controller
                 ? Storage::url($image->icon_path)
                 : null,
             'is_ai_generated' => $image->is_ai_generated,
+            'is_favorited' => (bool) ($image->is_favorited ?? false),
             'favorites_count' => $image->favorites_count,
             'downloads_count' => $image->downloads_count,
             'purchases_count' => $image->purchases_count,

@@ -1,60 +1,80 @@
+<script lang="ts">
+import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
+
+export default {
+    layout: PublicBlankLayout,
+};
+</script>
+
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { Heart } from '@lucide/vue';
 
-import AssetCard from '@/Components/Assets/AssetCard.vue';
-import EmptyState from '@/Components/Shared/EmptyState.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
-import Pagination from '@/Components/Shared/Pagination.vue';
-import { Button } from '@/components/ui/button';
+import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
+import PublicPagination from '@/components/Gallery/PublicPagination.vue';
+import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
-import type { PaginatedFavoriteAssets } from '@/types/asset';
+import type { PaginatedGalleryImages } from '@/types/gallery';
 
 defineProps<{
-    images: PaginatedFavoriteAssets;
+    images: PaginatedGalleryImages;
 }>();
 </script>
 
 <template>
     <Head title="My Favorites" />
 
-    <div class="space-y-6 p-6">
-        <PageHeader
-            title="My Favorites"
-            description="Images you have saved to your favorites."
-        />
+    <PublicPageLayout>
+        <section class="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+            <div class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 lg:px-12 lg:py-18">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+                    Saved for later
+                </p>
 
-        <div
-            v-if="images.data.length"
-            class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        >
-            <AssetCard
-                v-for="image in images.data"
-                :key="image.id"
-                :asset="image"
+                <h1 class="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
+                    My Favorites
+                </h1>
+
+                <p class="mt-4 max-w-2xl text-base leading-7 text-stone-600 dark:text-stone-400">
+                    Keep track of images you want to revisit, compare, or license later.
+                </p>
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
+            <GalleryGrid
+                v-if="images.data.length"
+                :images="images.data"
             />
-        </div>
 
-        <EmptyState
-            v-else
-            title="No favorites yet"
-            description="Browse the image library and click the heart icon to save images here."
-        >
-            <template #actions>
-                <Button as-child variant="outline">
-                    <Link href="/images">
-                        Browse Images
-                    </Link>
-                </Button>
-            </template>
-        </EmptyState>
+            <div
+                v-else
+                class="rounded-3xl border border-dashed border-stone-300 px-6 py-16 text-center dark:border-stone-700"
+            >
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-200 text-stone-500 dark:bg-stone-800">
+                    <Heart class="h-7 w-7" />
+                </div>
 
-        <Pagination
-            :links="images.links"
-            :from="images.from"
-            :to="images.to"
-            :total="images.total"
-            item-label="favorites"
-            show-summary
-        />
-    </div>
+                <h2 class="mt-5 text-xl font-semibold">
+                    No favorites yet
+                </h2>
+
+                <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-stone-600 dark:text-stone-400">
+                    Browse the image library and select the heart on any image you want to save.
+                </p>
+
+                <Link
+                    href="/images"
+                    class="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
+                >
+                    Browse Images
+                </Link>
+            </div>
+
+            <PublicPagination
+                class="mt-10"
+                :pagination="images"
+            />
+        </section>
+    </PublicPageLayout>
 </template>
