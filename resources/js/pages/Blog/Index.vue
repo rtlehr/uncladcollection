@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import {
     computed,
     ref,
@@ -19,6 +19,8 @@ import PublicBlogHero from '@/components/Blog/PublicBlogHero.vue';
 import PublicBlogPagination from '@/components/Blog/PublicBlogPagination.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 
 import type {
@@ -144,7 +146,26 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 </script>
 
 <template>
-    <Head title="Stories" />
+    <PublicSeoHead
+        title="Stories"
+        description="Read naturist experiences, practical guidance, advocacy, resort insights, and community perspectives."
+        canonical-path="/blog"
+        :robots="
+            activeFilters.length > 0 || posts.current_page > 1
+                ? 'noindex, follow, max-image-preview:large'
+                : 'index, follow, max-image-preview:large'
+        "
+/>
+
+
+    <StructuredData
+
+        :breadcrumbs="[
+            { name: 'Home', url: '/' },
+            { name: 'Stories', url: '/blog' },
+        ]"
+
+    />
 
     <PublicPageLayout>
         <PublicBlogHero

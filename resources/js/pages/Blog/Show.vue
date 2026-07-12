@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import {
     Clock3,
     Eye,
@@ -27,6 +27,8 @@ import PublicAuthorCard from '@/components/Blog/PublicAuthorCard.vue';
 import ReadingProgress from '@/components/Blog/ReadingProgress.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 
 import type {
     BlogNavigationPost,
@@ -212,30 +214,28 @@ watch(
 </script>
 
 <template>
-    <Head>
-        <title>{{ metaTitle }}</title>
+    <PublicSeoHead
+        :title="metaTitle"
+        :description="metaDescription"
+        :image="articleImage"
+        :canonical-path="`/blog/${blogPost.slug}`"
+        type="article"
+        :published-time="blogPost.published_at"
+        :author-name="blogPost.author?.name ?? 'Unclad Collection'"
+/>
 
-        <meta
-            v-if="metaDescription"
-            name="description"
-            :content="metaDescription"
-        />
 
-        <meta property="og:type" content="article" />
-        <meta property="og:title" :content="metaTitle" />
+    <StructuredData
 
-        <meta
-            v-if="metaDescription"
-            property="og:description"
-            :content="metaDescription"
-        />
+        :breadcrumbs="[
+            { name: 'Home', url: '/' },
+            { name: 'Stories', url: '/blog' },
+            { name: blogPost.title, url: `/blog/${blogPost.slug}` },
+        ]"
 
-        <meta
-            v-if="articleImage"
-            property="og:image"
-            :content="articleImage"
-        />
-    </Head>
+        :image="articleImage"
+
+    />
 
     <PublicPageLayout>
         <ReadingProgress />

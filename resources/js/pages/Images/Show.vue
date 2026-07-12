@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     Download,
@@ -28,6 +28,8 @@ import ImageNavigation from '@/components/Gallery/ImageNavigation.vue';
 import ImageShareActions from '@/components/Gallery/ImageShareActions.vue';
 import RecentlyViewedImages from '@/components/Gallery/RecentlyViewedImages.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 
 import type {
     GalleryImage,
@@ -120,17 +122,28 @@ function visitNext(): void {
 </script>
 
 <template>
-    <Head>
-        <title>{{ imageRecord.title }}</title>
+    <PublicSeoHead
+        :title="imageRecord.title"
+        :description="
+            imageRecord.description
+            || `${imageRecord.title} from the Unclad Collection image library.`
+        "
+        :image="previewUrl"
+        :canonical-path="`/images/${imageRecord.slug}`"
+/>
 
-        <meta
-            name="description"
-            :content="
-                imageRecord.description
-                || `${imageRecord.title} from the Unclad Collection image library.`
-            "
-        />
-    </Head>
+
+    <StructuredData
+
+        :breadcrumbs="[
+            { name: 'Home', url: '/' },
+            { name: 'Images', url: '/images' },
+            { name: imageRecord.title, url: `/images/${imageRecord.slug}` },
+        ]"
+
+        :image="previewUrl"
+
+    />
 
     <PublicPageLayout>
         <section class="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">

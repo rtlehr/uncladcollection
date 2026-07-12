@@ -19,3 +19,4 @@ require __DIR__.'/checkout.php';
 require __DIR__.'/user-blog.php';
 require __DIR__.'/showcase.php';
 require __DIR__.'/public-demo.php';
+require __DIR__.'/seo.php';

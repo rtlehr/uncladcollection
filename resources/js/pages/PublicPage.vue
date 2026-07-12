@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 
 import ContentSection from '@/components/Public/ContentSection.vue';
 import PublicBreadcrumbs from '@/components/Public/PublicBreadcrumbs.vue';
@@ -16,6 +16,8 @@ import PublicCTA from '@/components/Public/PublicCTA.vue';
 import PublicFAQ from '@/components/Public/PublicFAQ.vue';
 import PublicHero from '@/components/Public/PublicHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 import PublicRelatedLinks from '@/components/Public/PublicRelatedLinks.vue';
 import PublicSidebarCard from '@/components/Public/PublicSidebarCard.vue';
 
@@ -59,7 +61,21 @@ const relatedLinks = [
 </script>
 
 <template>
-    <Head title="Public Page Template" />
+    <PublicSeoHead
+        title="Public Page Template"
+        description="Learn about Unclad Collection, licensing, support, policies, and public resources."
+        canonical-path="/public-page"
+/>
+
+
+    <StructuredData
+
+        :breadcrumbs="[
+            { name: 'Home', url: '/' },
+            { name: 'Public Page Template', url: '/public-page' },
+        ]"
+
+    />
 
     <PublicPageLayout>
         <PublicHero

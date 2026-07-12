@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
     BookOpen,
@@ -22,6 +22,8 @@ import { computed } from 'vue';
 import PublicCTA from '@/components/Public/PublicCTA.vue';
 import PublicHomeHero from '@/components/Public/PublicHomeHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 import PublicSectionHeading from '@/components/Public/PublicSectionHeading.vue';
 
 import type {

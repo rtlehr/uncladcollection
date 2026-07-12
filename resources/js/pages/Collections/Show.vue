@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import {
     computed,
     ref,
@@ -22,6 +22,8 @@ import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
 import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 
 import type {
@@ -116,17 +118,33 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 </script>
 
 <template>
-    <Head>
-        <title>{{ collection.name }}</title>
+    <PublicSeoHead
+        :title="collection.name"
+        :description="
+            collection.description
+            || `Explore the ${collection.name} image collection.`
+        "
+        :image="heroImages[0]?.image_url ?? null"
+        :canonical-path="`/collections/${collection.slug}`"
+        :robots="
+            activeFilters.length > 0 || images.current_page > 1
+                ? 'noindex, follow, max-image-preview:large'
+                : 'index, follow, max-image-preview:large'
+        "
+/>
 
-        <meta
-            name="description"
-            :content="
-                collection.description
-                || `Explore the ${collection.name} image collection.`
-            "
-        />
-    </Head>
+
+    <StructuredData
+
+        :breadcrumbs="[
+            { name: 'Home', url: '/' },
+            { name: 'Images', url: '/images' },
+            { name: collection.name, url: `/collections/${collection.slug}` },
+        ]"
+
+        :image="heroImages[0]?.image_url ?? null"
+
+    />
 
     <PublicPageLayout>
         <CollectionHero

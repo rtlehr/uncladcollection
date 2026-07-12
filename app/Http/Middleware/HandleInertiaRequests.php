@@ -51,6 +51,8 @@ class HandleInertiaRequests extends Middleware
 
             'site' => fn () => $this->sitePayload(),
 
+            'seo' => fn () => $this->seoPayload(),
+
             'sidebarOpen' => ! $request->hasCookie('sidebar_state')
                 || $request->cookie('sidebar_state') === 'true',
 
@@ -127,6 +129,57 @@ class HandleInertiaRequests extends Middleware
                     'social.x_account_url',
                 ),
             ],
+        ];
+    }
+
+
+    private function seoPayload(): array
+    {
+        $settings = public_site_settings();
+
+        $xUrl = data_get($settings, 'social.x_account_url');
+        $xUsername = null;
+
+        if (is_string($xUrl) && $xUrl !== '') {
+            $path = trim((string) parse_url($xUrl, PHP_URL_PATH), '/');
+
+            if ($path !== '') {
+                $xUsername = '@'.ltrim($path, '@');
+            }
+        }
+
+        return [
+            'site_url' => rtrim(config('app.url'), '/'),
+            'site_name' => data_get(
+                $settings,
+                'general.site_name',
+                config('app.name'),
+            ),
+            'default_title' => data_get(
+                $settings,
+                'seo.default_title',
+                data_get(
+                    $settings,
+                    'general.site_name',
+                    config('app.name'),
+                ),
+            ),
+            'default_description' => data_get(
+                $settings,
+                'seo.default_description',
+                data_get(
+                    $settings,
+                    'general.site_tagline',
+                    'Licensed imagery and thoughtful stories for the nudist community.',
+                ),
+            ),
+            'default_image_url' => data_get(
+                $settings,
+                'seo.default_social_image',
+                data_get($settings, 'branding.site_logo'),
+            ),
+            'x_username' => $xUsername,
+            'locale' => str_replace('-', '_', app()->getLocale()),
         ];
     }
 
