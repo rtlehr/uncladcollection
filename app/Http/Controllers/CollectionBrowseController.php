@@ -1,0 +1,378 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\BlogPost;
+use App\Models\Collection;
+use App\Models\Image;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class CollectionBrowseController extends Controller
+{
+    public function show(
+        Request $request,
+        Collection $collection,
+    ): Response {
+        abort_unless($collection->is_active, 404);
+
+        $search = trim($request->string('search')->toString());
+        $sort = $request->string('sort', 'curated')->toString();
+
+        if (! in_array($sort, [
+            'curated',
+            'newest',
+            'oldest',
+            'most_viewed',
+            'most_favorited',
+            'most_downloaded',
+        ], true)) {
+            $sort = 'curated';
+        }
+
+        $collection->loadCount([
+            'images as images_count' => fn (Builder $query) => $query
+                ->where('is_active', true),
+        ]);
+
+        $images = $this->imageCardQuery()
+            ->where('is_active', true)
+            ->where('collection_id', $collection->id)
+            ->when($search !== '', function (Builder $query) use ($search) {
+                $query->where(function (Builder $query) use ($search) {
+                    $query
+                        ->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('photographer', 'like', "%{$search}%")
+                        ->orWhereHas(
+                            'categories',
+                            fn (Builder $query) => $query
+                                ->where('name', 'like', "%{$search}%"),
+                        )
+                        ->orWhereHas(
+                            'tags',
+                            fn (Builder $query) => $query
+                                ->where('name', 'like', "%{$search}%"),
+                        );
+                });
+            })
+            ->when(
+                $sort === 'curated',
+                fn (Builder $query) => $query
+                    ->orderBy('sort_order')
+                    ->orderByDesc('favorites_count')
+                    ->orderByDesc('views_count'),
+            )
+            ->when(
+                $sort === 'newest',
+                fn (Builder $query) => $query->latest(),
+            )
+            ->when(
+                $sort === 'oldest',
+                fn (Builder $query) => $query->oldest(),
+            )
+            ->when(
+                $sort === 'most_viewed',
+                fn (Builder $query) => $query
+                    ->orderByDesc('views_count'),
+            )
+            ->when(
+                $sort === 'most_favorited',
+                fn (Builder $query) => $query
+                    ->orderByDesc('favorites_count'),
+            )
+            ->when(
+                $sort === 'most_downloaded',
+                fn (Builder $query) => $query
+                    ->orderByDesc('downloads_count'),
+            )
+            ->paginate(24)
+            ->withQueryString()
+            ->through(
+                fn (Image $image) => $this->formatImageCard($image),
+            );
+
+        $heroImages = Image::query()
+            ->where('is_active', true)
+            ->where('collection_id', $collection->id)
+            ->orderBy('sort_order')
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('views_count')
+            ->limit(5)
+            ->get([
+                'id',
+                'title',
+                'slug',
+                'thumbnail_path',
+                'high_res_path',
+                'icon_path',
+            ])
+            ->map(fn (Image $image) => [
+                'id' => $image->id,
+                'title' => $image->title,
+                'slug' => $image->slug,
+                'image_url' => $image->high_res_url
+                    ?? $image->thumbnail_url
+                    ?? $image->icon_url,
+            ])
+            ->values();
+
+        $statistics = [
+            'images' => $collection->images_count,
+            'views' => Image::query()
+                ->where('collection_id', $collection->id)
+                ->where('is_active', true)
+                ->sum('views_count'),
+            'favorites' => Image::query()
+                ->where('collection_id', $collection->id)
+                ->where('is_active', true)
+                ->sum('favorites_count'),
+            'downloads' => Image::query()
+                ->where('collection_id', $collection->id)
+                ->where('is_active', true)
+                ->sum('downloads_count'),
+        ];
+
+        $categoryIds = Image::query()
+            ->where('collection_id', $collection->id)
+            ->where('is_active', true)
+            ->with('categories:id')
+            ->get(['id'])
+            ->flatMap(fn (Image $image) => $image->categories->modelKeys())
+            ->unique()
+            ->values();
+
+        $tagIds = Image::query()
+            ->where('collection_id', $collection->id)
+            ->where('is_active', true)
+            ->with('tags:id')
+            ->get(['id'])
+            ->flatMap(fn (Image $image) => $image->tags->modelKeys())
+            ->unique()
+            ->values();
+
+        $relatedArticles = BlogPost::query()
+            ->published()
+            ->with([
+                'author:id,name',
+                'categories:id,name,slug',
+                'tags:id,name,slug',
+            ])
+            ->where(function (Builder $query) use (
+                $collection,
+                $categoryIds,
+                $tagIds,
+            ) {
+                $query
+                    ->where('title', 'like', "%{$collection->name}%")
+                    ->orWhere('excerpt', 'like', "%{$collection->name}%")
+                    ->orWhere('content', 'like', "%{$collection->name}%");
+
+                if ($categoryIds->isNotEmpty()) {
+                    $query->orWhereHas(
+                        'categories',
+                        fn (Builder $query) => $query
+                            ->whereKey($categoryIds->all()),
+                    );
+                }
+
+                if ($tagIds->isNotEmpty()) {
+                    $query->orWhereHas(
+                        'tags',
+                        fn (Builder $query) => $query
+                            ->whereKey($tagIds->all()),
+                    );
+                }
+            })
+            ->orderByDesc('is_featured')
+            ->latest('published_at')
+            ->limit(3)
+            ->get([
+                'id',
+                'user_id',
+                'title',
+                'slug',
+                'excerpt',
+                'content',
+                'featured_image_path',
+                'header_image_path',
+                'icon_image_path',
+                'published_at',
+                'is_featured',
+                'views_count',
+            ]);
+
+        $relatedCollections = Collection::query()
+            ->where('is_active', true)
+            ->whereKeyNot($collection->id)
+            ->withCount([
+                'images as images_count' => fn (Builder $query) => $query
+                    ->where('is_active', true),
+            ])
+            ->whereHas('images', function (Builder $query) use (
+                $categoryIds,
+                $tagIds,
+            ) {
+                $query->where('is_active', true);
+
+                if ($categoryIds->isNotEmpty()) {
+                    $query->whereHas(
+                        'categories',
+                        fn (Builder $query) => $query
+                            ->whereKey($categoryIds->all()),
+                    );
+                }
+
+                if ($tagIds->isNotEmpty()) {
+                    $query->orWhereHas(
+                        'tags',
+                        fn (Builder $query) => $query
+                            ->whereKey($tagIds->all()),
+                    );
+                }
+            })
+            ->with([
+                'images' => function ($query) {
+                    $query
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->orderByDesc('favorites_count')
+                        ->limit(1)
+                        ->select([
+                            'id',
+                            'collection_id',
+                            'title',
+                            'slug',
+                            'thumbnail_path',
+                            'icon_path',
+                        ]);
+                },
+            ])
+            ->orderBy('sort_order')
+            ->limit(3)
+            ->get([
+                'id',
+                'name',
+                'slug',
+                'description',
+                'sort_order',
+            ])
+            ->map(function (Collection $relatedCollection) {
+                $cover = $relatedCollection->images->first();
+
+                return [
+                    'id' => $relatedCollection->id,
+                    'name' => $relatedCollection->name,
+                    'slug' => $relatedCollection->slug,
+                    'description' => $relatedCollection->description,
+                    'images_count' => $relatedCollection->images_count,
+                    'cover_image_url' => $cover
+                        ? ($cover->thumbnail_url ?? $cover->icon_url)
+                        : null,
+                ];
+            })
+            ->values();
+
+        return Inertia::render('Collections/Show', [
+            'collection' => [
+                'id' => $collection->id,
+                'name' => $collection->name,
+                'slug' => $collection->slug,
+                'description' => $collection->description,
+            ],
+            'images' => $images,
+            'heroImages' => $heroImages,
+            'statistics' => $statistics,
+            'relatedCollections' => $relatedCollections,
+            'relatedArticles' => $relatedArticles,
+            'filters' => [
+                'search' => $search,
+                'sort' => $sort,
+            ],
+        ]);
+    }
+
+    private function imageCardQuery(): Builder
+    {
+        $query = Image::query()
+            ->select([
+                'id',
+                'collection_id',
+                'title',
+                'slug',
+                'description',
+                'photographer',
+                'thumbnail_path',
+                'icon_path',
+                'is_ai_generated',
+                'favorites_count',
+                'downloads_count',
+                'purchases_count',
+                'views_count',
+                'sort_order',
+                'created_at',
+            ])
+            ->with([
+                'collection:id,name,slug',
+                'categories:id,name',
+                'tags:id,name',
+            ]);
+
+        if (Auth::check()) {
+            $query->withExists([
+                'favorites as is_favorited' => fn (Builder $query) => $query
+                    ->where('user_id', Auth::id()),
+            ]);
+        }
+
+        return $query;
+    }
+
+    private function formatImageCard(Image $image): array
+    {
+        return [
+            'id' => $image->id,
+            'title' => $image->title,
+            'slug' => $image->slug,
+            'photographer' => $image->photographer,
+            'thumbnail_url' => $image->thumbnail_path
+                ? Storage::url($image->thumbnail_path)
+                : null,
+            'icon_url' => $image->icon_path
+                ? Storage::url($image->icon_path)
+                : null,
+            'is_ai_generated' => $image->is_ai_generated,
+            'is_favorited' => (bool) ($image->is_favorited ?? false),
+            'favorites_count' => $image->favorites_count,
+            'downloads_count' => $image->downloads_count,
+            'purchases_count' => $image->purchases_count,
+            'views_count' => $image->views_count,
+
+            'collection' => $image->collection
+                ? [
+                    'id' => $image->collection->id,
+                    'name' => $image->collection->name,
+                    'slug' => $image->collection->slug,
+                ]
+                : null,
+
+            'categories' => $image->categories
+                ->map(fn ($category) => [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ])
+                ->values(),
+
+            'tags' => $image->tags
+                ->map(fn ($tag) => [
+                    'id' => $tag->id,
+                    'name' => $tag->name,
+                ])
+                ->values(),
+        ];
+    }
+}

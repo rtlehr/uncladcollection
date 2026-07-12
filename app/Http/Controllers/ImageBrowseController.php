@@ -298,7 +298,7 @@ class ImageBrowseController extends Controller
                 'created_at',
             ])
             ->with([
-                'collection:id,name',
+                'collection:id,name,slug',
                 'categories:id,name',
                 'tags:id,name',
             ]);
@@ -337,6 +337,7 @@ class ImageBrowseController extends Controller
                 ? [
                     'id' => $image->collection->id,
                     'name' => $image->collection->name,
+                    'slug' => $image->collection->slug,
                 ]
                 : null,
 

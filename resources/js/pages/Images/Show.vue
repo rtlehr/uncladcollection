@@ -190,7 +190,7 @@ function visitNext(): void {
                         <div class="max-w-3xl">
                             <Link
                                 v-if="imageRecord.collection"
-                                :href="`/images?collection_id=${imageRecord.collection.id}`"
+                                :href="imageRecord.collection.slug ? `/collections/${imageRecord.collection.slug}` : `/images?collection_id=${imageRecord.collection.id}`"
                                 class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-accent)]"
                             >
                                 <FolderOpen class="h-4 w-4" />

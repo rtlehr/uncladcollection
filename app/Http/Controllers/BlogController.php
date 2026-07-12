@@ -31,7 +31,12 @@ class BlogController extends Controller
                 $query->where(function (Builder $query) use ($search) {
                     $query
                         ->where('title', 'like', "%{$search}%")
-                        ->orWhere('excerpt', 'like', "%{$search}%");
+                        ->orWhere('excerpt', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhereHas(
+                            'author',
+                            fn (Builder $query) => $query->where('name', 'like', "%{$search}%"),
+                        );
                 });
             })
             ->when(
@@ -69,8 +74,8 @@ class BlogController extends Controller
 
             'filters' => [
                 'search' => $search,
-                'category_id' => $categoryId,
-                'tag_id' => $tagId,
+                'category_id' => $categoryId ? (string) $categoryId : '',
+                'tag_id' => $tagId ? (string) $tagId : '',
             ],
         ]);
     }
@@ -80,6 +85,7 @@ class BlogController extends Controller
         abort_unless($blogPost->isPublished(), 404);
 
         $blogPost->increment('views_count');
+        $blogPost->views_count++;
 
         $blogPost->load([
             'author:id,name,author_title,author_bio,author_website_url,avatar_path',
@@ -88,17 +94,29 @@ class BlogController extends Controller
         ]);
 
         $categoryIds = $blogPost->categories->modelKeys();
+        $tagIds = $blogPost->tags->modelKeys();
 
         $relatedPosts = $this->blogCardQuery()
             ->published()
             ->whereKeyNot($blogPost->id)
-            ->when(
-                $categoryIds !== [],
-                fn (Builder $query) => $query->whereHas(
-                    'categories',
-                    fn (Builder $query) => $query->whereKey($categoryIds),
-                ),
-            )
+            ->where(function (Builder $query) use ($categoryIds, $tagIds) {
+                if ($categoryIds !== []) {
+                    $query->whereHas(
+                        'categories',
+                        fn (Builder $query) => $query->whereKey($categoryIds),
+                    );
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+
+                if ($tagIds !== []) {
+                    $query->orWhereHas(
+                        'tags',
+                        fn (Builder $query) => $query->whereKey($tagIds),
+                    );
+                }
+            })
+            ->orderByDesc('views_count')
             ->latest('published_at')
             ->limit(3)
             ->get();
@@ -110,6 +128,26 @@ class BlogController extends Controller
             ->latest('published_at')
             ->limit(4)
             ->get();
+
+        $previousPost = BlogPost::query()
+            ->published()
+            ->where('published_at', '<', $blogPost->published_at)
+            ->latest('published_at')
+            ->first([
+                'id',
+                'title',
+                'slug',
+            ]);
+
+        $nextPost = BlogPost::query()
+            ->published()
+            ->where('published_at', '>', $blogPost->published_at)
+            ->oldest('published_at')
+            ->first([
+                'id',
+                'title',
+                'slug',
+            ]);
 
         $comments = collect();
 
@@ -147,6 +185,8 @@ class BlogController extends Controller
             'blogPost' => $blogPost,
             'relatedPosts' => $relatedPosts,
             'authorPosts' => $authorPosts,
+            'previousPost' => $previousPost,
+            'nextPost' => $nextPost,
             'comments' => $comments,
         ]);
     }
@@ -160,6 +200,7 @@ class BlogController extends Controller
                 'title',
                 'slug',
                 'excerpt',
+                'content',
                 'featured_image_path',
                 'header_image_path',
                 'icon_image_path',

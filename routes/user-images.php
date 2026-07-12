@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CollectionBrowseController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\ImageBrowseController;
 use App\Http\Controllers\ImageFavoriteController;
@@ -8,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/images', [ImageBrowseController::class, 'index'])
     ->name('images.index');
+
+Route::get('/collections/{collection:slug}', [CollectionBrowseController::class, 'show'])
+    ->name('collections.show');
 
 Route::get('/images/{image:slug}', [ImageBrowseController::class, 'show'])
     ->name('images.show');

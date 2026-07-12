@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import {
+    MessageCircle,
+    Send,
+} from '@lucide/vue';
+import {
+    computed,
+    ref,
+} from 'vue';
+
 import CommentItem from './CommentItem.vue';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 
 type CommentUser = {
     id: number;
@@ -40,19 +46,25 @@ const props = defineProps<{
 
 const page = usePage();
 
-const authUser = computed(() => (page.props.auth as any)?.user ?? null);
+const authUser = computed(() =>
+    (page.props.auth as any)?.user ?? null,
+);
 
 const body = ref('');
 const processing = ref(false);
 
-function submitComment() {
-    if (!body.value.trim()) return;
+function submitComment(): void {
+    if (!body.value.trim()) {
+        return;
+    }
 
     processing.value = true;
 
     router.post(
         `/blog/${props.blogPostSlug}/comments`,
-        { body: body.value },
+        {
+            body: body.value,
+        },
         {
             preserveScroll: true,
             onSuccess: () => {
@@ -67,56 +79,77 @@ function submitComment() {
 </script>
 
 <template>
-    <section class="mt-12 rounded-xl border bg-card p-6 shadow-sm">
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold tracking-tight">
-                Comments ({{ comments.length }})
-            </h2>
-
-            <p class="mt-1 text-sm text-muted-foreground">
-                Join the discussion with other members.
-            </p>
-        </div>
-
-        <div v-if="authUser && commentsEnabled" class="mb-8 space-y-3">
-            <Textarea
-                v-model="body"
-                rows="4"
-                placeholder="Write a comment..."
-                class="resize-none"
-            />
-
-            <div class="mt-2 text-xs text-muted-foreground">
-                Supports Markdown:
-                <code>**bold**</code>,
-                <code>*italic*</code>,
-                <code>- lists</code>,
-                <code>[links](https://...)</code>
+    <section class="mt-14 border-t border-stone-200 pt-10 dark:border-stone-800">
+        <div class="flex items-start gap-3">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--brand-accent)_12%,transparent)] text-[var(--brand-accent)]">
+                <MessageCircle class="h-5 w-5" />
             </div>
 
-            <div class="flex justify-end">
-                <Button
+            <div>
+                <h2 class="text-2xl font-semibold tracking-tight">
+                    Comments
+                </h2>
+
+                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                    Join the discussion with other members.
+                </p>
+            </div>
+        </div>
+
+        <div
+            v-if="authUser && commentsEnabled"
+            class="mt-7 rounded-3xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900"
+        >
+            <label
+                for="new-comment"
+                class="text-sm font-semibold"
+            >
+                Add your comment
+            </label>
+
+            <textarea
+                id="new-comment"
+                v-model="body"
+                rows="5"
+                placeholder="Write a thoughtful comment..."
+                class="mt-3 w-full resize-y rounded-2xl border border-stone-300 bg-transparent px-4 py-3 text-sm outline-none focus:border-[var(--brand-accent)] dark:border-stone-700"
+            />
+
+            <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-xs text-stone-500 dark:text-stone-400">
+                    Supports basic Markdown formatting.
+                </p>
+
+                <button
                     type="button"
+                    class="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white disabled:opacity-50"
                     :disabled="processing || !body.trim()"
                     @click="submitComment"
                 >
-                    Post Comment
-                </Button>
+                    <Send class="h-4 w-4" />
+                    {{ processing ? 'Posting...' : 'Post Comment' }}
+                </button>
             </div>
         </div>
 
         <div
             v-else-if="authUser && !commentsEnabled"
-            class="mb-8 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+            class="mt-7 rounded-2xl border border-stone-200 bg-stone-100 p-4 text-sm text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400"
         >
             Comments are closed for this article.
         </div>
 
-        <div v-else class="mb-8 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
+        <div
+            v-else
+            class="mt-7 rounded-2xl border border-stone-200 bg-stone-100 p-4 text-sm text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400"
+        >
             Please log in to post a comment. Guests can read the discussion.
         </div>
 
-        <div v-if="comments.length" class="space-y-6">
+        <div
+            v-if="comments.length"
+            class="mt-8 space-y-6"
+        >
             <CommentItem
                 v-for="comment in comments"
                 :key="comment.id"
@@ -127,26 +160,33 @@ function submitComment() {
             />
         </div>
 
-        <div v-else class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <div
+            v-else
+            class="mt-8 rounded-2xl border border-dashed border-stone-300 p-8 text-center text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400"
+        >
             No comments yet. Be the first to start the conversation.
         </div>
 
         <div
             v-if="commentsPagination?.next_page_url"
-            class="mt-6 flex justify-center"
+            class="mt-7 flex justify-center"
         >
-            <Button
+            <button
                 type="button"
-                variant="outline"
-                @click="router.visit(commentsPagination.next_page_url, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    only: ['comments'],
-                })"
+                class="inline-flex h-11 items-center rounded-full border border-stone-300 px-5 text-sm font-semibold dark:border-stone-700"
+                @click="
+                    router.visit(
+                        commentsPagination.next_page_url,
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                            only: ['comments'],
+                        },
+                    )
+                "
             >
                 Load More Comments
-            </Button>
+            </button>
         </div>
-
     </section>
 </template>

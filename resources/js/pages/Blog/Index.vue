@@ -1,61 +1,61 @@
+<script lang="ts">
+import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
+
+export default {
+    layout: PublicBlankLayout,
+};
+</script>
+
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-import BlogPostCard from '@/Components/Blog/BlogPostCard.vue';
-import EmptyState from '@/Components/Shared/EmptyState.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
-import Pagination from '@/Components/Shared/Pagination.vue';
-import SectionHeader from '@/Components/Shared/SectionHeader.vue';
+import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
+import PublicBlogFilters from '@/components/Blog/PublicBlogFilters.vue';
+import PublicBlogHero from '@/components/Blog/PublicBlogHero.vue';
+import PublicBlogPagination from '@/components/Blog/PublicBlogPagination.vue';
+import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
-import { contentImage } from '@/lib/contentImages';
-import { formatDate } from '@/lib/formatDate';
-
-import type { BlogPost, Category, Tag } from '@/types/blog';
+import type {
+    BlogFilters,
+    BlogPost,
+    Category,
+    PaginatedBlogPosts,
+    Tag,
+} from '@/types/blog';
 
 const props = defineProps<{
-    posts: {
-        data: BlogPost[];
-        links: any[];
-    };
-
+    posts: PaginatedBlogPosts;
     featuredPosts: BlogPost[];
-
     categories: Category[];
     tags: Tag[];
-
-    filters: {
-        search?: string;
-        category_id?: number | null;
-        tag_id?: number | null;
-    };
+    filters: BlogFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
-const categoryId = ref(props.filters.category_id?.toString() ?? '');
-const tagId = ref(props.filters.tag_id?.toString() ?? '');
+const categoryId = ref(props.filters.category_id ?? '');
+const tagId = ref(props.filters.tag_id ?? '');
 
-const heroPost = computed(() => props.featuredPosts[0] ?? props.posts.data[0] ?? null);
+const heroPost = computed(() =>
+    props.featuredPosts[0] ?? props.posts.data[0] ?? null,
+);
 
-const secondaryFeaturedPosts = computed(() => {
-    if (!heroPost.value) {
-        return props.featuredPosts.slice(0, 2);
-    }
-
-    return props.featuredPosts
+const secondaryFeaturedPosts = computed(() =>
+    props.featuredPosts
         .filter((post) => post.id !== heroPost.value?.id)
-        .slice(0, 2);
-});
+        .slice(0, 2),
+);
 
-const regularPosts = computed(() => {
-    if (!heroPost.value) {
-        return props.posts.data;
-    }
+const regularPosts = computed(() =>
+    props.posts.data.filter((post) =>
+        post.id !== heroPost.value?.id
+        && !secondaryFeaturedPosts.value.some(
+            (featured) => featured.id === post.id,
+        ),
+    ),
+);
 
-    return props.posts.data.filter((post) => post.id !== heroPost.value?.id);
-});
-
-function applyFilters() {
+function applyFilters(): void {
     router.get(
         '/blog',
         {
@@ -71,7 +71,7 @@ function applyFilters() {
     );
 }
 
-function clearFilters() {
+function resetFilters(): void {
     search.value = '';
     categoryId.value = '';
     tagId.value = '';
@@ -89,202 +89,112 @@ function clearFilters() {
 </script>
 
 <template>
-    <Head title="Blog" />
+    <Head title="Stories" />
 
-    <div class="min-h-screen bg-background">
-        <section class="border-b bg-muted/30">
-            <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-                <PageHeader
-                    eyebrow="Articles & Stories"
-                    title="Unclad Collection Blog"
-                    description="Photography insights, nudist lifestyle articles, community stories, and updates from Unclad Collection."
-                    align="center"
-                />
-            </div>
-        </section>
+    <PublicPageLayout>
+        <PublicBlogHero
+            v-model="search"
+            :total="posts.total"
+            @search="applyFilters"
+        />
 
-        <main class="mx-auto max-w-7xl space-y-12 px-4 py-10 sm:px-6 lg:px-8">
-            <section
-                v-if="heroPost"
-                class="grid overflow-hidden rounded-2xl border bg-card shadow-sm lg:grid-cols-5"
-            >
-                <Link
-                    :href="`/blog/${heroPost.slug}`"
-                    class="block overflow-hidden bg-muted lg:col-span-3"
-                >
-                    <img
-                        v-if="contentImage(heroPost)"
-                        :src="contentImage(heroPost)!"
-                        :alt="heroPost.title"
-                        class="aspect-[16/10] h-full w-full object-cover transition duration-300 hover:scale-105 lg:aspect-auto"
-                    />
+        <PublicBlogFilters
+            v-model:category-id="categoryId"
+            v-model:tag-id="tagId"
+            :categories="categories"
+            :tags="tags"
+            @apply="applyFilters"
+            @reset="resetFilters"
+        />
 
-                    <div
-                        v-else
-                        class="flex aspect-[16/10] h-full w-full items-center justify-center bg-muted text-muted-foreground"
-                    >
-                        No image
-                    </div>
-                </Link>
-
-                <div class="flex flex-col justify-center p-6 lg:col-span-2 lg:p-10">
-                    <div class="mb-4 flex flex-wrap gap-2">
-                        <span
-                            v-if="heroPost.is_featured"
-                            class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"
-                        >
-                            Featured
-                        </span>
-
-                        <span
-                            v-for="category in heroPost.categories.slice(0, 2)"
-                            :key="category.id"
-                            class="rounded-full bg-muted px-3 py-1 text-xs font-medium"
-                        >
-                            {{ category.name }}
-                        </span>
-                    </div>
-
-                    <Link :href="`/blog/${heroPost.slug}`">
-                        <h2 class="text-3xl font-bold tracking-tight hover:text-primary lg:text-4xl">
-                            {{ heroPost.title }}
-                        </h2>
-                    </Link>
-
-                    <p
-                        v-if="heroPost.excerpt"
-                        class="mt-4 line-clamp-4 text-base leading-7 text-muted-foreground"
-                    >
-                        {{ heroPost.excerpt }}
+        <main class="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
+            <section v-if="heroPost">
+                <div class="mb-7">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+                        Featured reading
                     </p>
 
-                    <div class="mt-6 flex items-center justify-between gap-4 text-sm text-muted-foreground">
-                        <div>
-                            <span class="font-medium text-foreground">
-                                {{ heroPost.author?.name ?? 'Unclad Collection' }}
-                            </span>
-
-                            <span v-if="heroPost.published_at">
-                                · {{ formatDate(heroPost.published_at) }}
-                            </span>
-                        </div>
-
-                        <Link
-                            :href="`/blog/${heroPost.slug}`"
-                            class="font-medium text-primary hover:underline"
-                        >
-                            Read article →
-                        </Link>
-                    </div>
+                    <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                        Start with something worth reading
+                    </h2>
                 </div>
+
+                <PublicArticleCard
+                    :post="heroPost"
+                    variant="hero"
+                />
             </section>
 
             <section
                 v-if="secondaryFeaturedPosts.length"
-                class="grid gap-6 md:grid-cols-2"
+                class="mt-8 grid gap-6 lg:grid-cols-2"
             >
-                <BlogPostCard
+                <PublicArticleCard
                     v-for="post in secondaryFeaturedPosts"
                     :key="post.id"
                     :post="post"
-                    variant="featured"
-                    :show-author="false"
+                    variant="horizontal"
                 />
             </section>
 
-            <section class="rounded-2xl border bg-card p-4 shadow-sm">
-                <div class="grid gap-4 md:grid-cols-4">
-                    <input
-                        v-model="search"
-                        placeholder="Search articles..."
-                        class="h-10 rounded-md border bg-background px-3 text-sm md:col-span-2"
-                        @keyup.enter="applyFilters"
-                    />
+            <section class="mt-16">
+                <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
+                            Latest from the community
+                        </p>
 
-                    <select
-                        v-model="categoryId"
-                        class="h-10 rounded-md border bg-background px-3 text-sm"
-                        @change="applyFilters"
-                    >
-                        <option value="">
-                            All Categories
-                        </option>
+                        <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                            Recent Articles
+                        </h2>
+                    </div>
 
-                        <option
-                            v-for="category in categories"
-                            :key="category.id"
-                            :value="category.id"
-                        >
-                            {{ category.name }}
-                        </option>
-                    </select>
-
-                    <select
-                        v-model="tagId"
-                        class="h-10 rounded-md border bg-background px-3 text-sm"
-                        @change="applyFilters"
-                    >
-                        <option value="">
-                            All Tags
-                        </option>
-
-                        <option
-                            v-for="tag in tags"
-                            :key="tag.id"
-                            :value="tag.id"
-                        >
-                            {{ tag.name }}
-                        </option>
-                    </select>
+                    <p class="text-sm text-stone-500 dark:text-stone-400">
+                        Showing {{ posts.from ?? 0 }}–{{ posts.to ?? 0 }}
+                        of {{ posts.total.toLocaleString() }}
+                    </p>
                 </div>
-
-                <div class="mt-4 flex justify-end gap-2">
-                    <button
-                        type="button"
-                        class="rounded-md border px-4 py-2 text-sm hover:bg-muted"
-                        @click="clearFilters"
-                    >
-                        Clear
-                    </button>
-
-                    <button
-                        type="button"
-                        class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-                        @click="applyFilters"
-                    >
-                        Search
-                    </button>
-                </div>
-            </section>
-
-            <section>
-                <SectionHeader
-                    title="Latest Articles"
-                    description="Browse the newest posts from Unclad Collection."
-                />
 
                 <div
                     v-if="regularPosts.length"
-                    class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                    class="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
                 >
-                    <BlogPostCard
+                    <PublicArticleCard
                         v-for="post in regularPosts"
                         :key="post.id"
                         :post="post"
                     />
                 </div>
 
-                <EmptyState
+                <div
                     v-else
-                    title="No blog posts found"
-                    description="Try changing your search, category, or tag filters."
+                    class="rounded-3xl border border-dashed border-stone-300 px-6 py-16 text-center dark:border-stone-700"
+                >
+                    <h2 class="text-xl font-semibold">
+                        No articles matched your search
+                    </h2>
+
+                    <p class="mt-2 text-sm text-stone-600 dark:text-stone-400">
+                        Try a broader search or remove one of the filters.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="mt-6 inline-flex h-11 items-center rounded-full border border-stone-300 px-5 text-sm font-semibold dark:border-stone-700"
+                        @click="resetFilters"
+                    >
+                        Reset Filters
+                    </button>
+                </div>
+
+                <PublicBlogPagination
+                    class="mt-10"
+                    :current-page="posts.current_page"
+                    :last-page="posts.last_page"
+                    :previous-url="posts.prev_page_url"
+                    :next-url="posts.next_page_url"
                 />
             </section>
-
-            <Pagination
-                :links="posts.links"
-                item-label="articles"
-            />
         </main>
-    </div>
+    </PublicPageLayout>
 </template>

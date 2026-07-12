@@ -44,20 +44,21 @@ function toggleFavorite(): void {
         favoriteCount.value + (wasFavorited ? -1 : 1),
     );
 
-    const method = wasFavorited ? 'delete' : 'post';
-
-    router[method](`/images/${props.image.id}/favorite`, {
-        preserveScroll: true,
-        preserveState: true,
-        only: [],
-        onError: () => {
-            favoriteState.value = wasFavorited;
-            favoriteCount.value = props.image.favorites_count;
-        },
-        onFinish: () => {
-            favoriteProcessing.value = false;
-        },
-    } as any);
+    router[wasFavorited ? 'delete' : 'post'](
+        `/images/${props.image.id}/favorite`,
+        {
+            preserveScroll: true,
+            preserveState: true,
+            only: [],
+            onError: () => {
+                favoriteState.value = wasFavorited;
+                favoriteCount.value = props.image.favorites_count;
+            },
+            onFinish: () => {
+                favoriteProcessing.value = false;
+            },
+        } as any,
+    );
 }
 </script>
 
@@ -118,12 +119,17 @@ function toggleFavorite(): void {
         </div>
 
         <div class="p-5">
-            <div
+            <Link
                 v-if="showCollection && image.collection"
-                class="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-accent)]"
+                :href="
+                    image.collection.slug
+                        ? `/collections/${image.collection.slug}`
+                        : `/images?collection_id=${image.collection.id}`
+                "
+                class="mb-2 inline-block text-xs font-semibold uppercase tracking-wider text-[var(--brand-accent)] hover:underline"
             >
                 {{ image.collection.name }}
-            </div>
+            </Link>
 
             <Link
                 :href="`/images/${image.slug}`"
@@ -138,6 +144,7 @@ function toggleFavorite(): void {
 
             <div class="mt-4 flex items-center justify-between border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
                 <span>{{ image.views_count.toLocaleString() }} views</span>
+
                 <span class="inline-flex items-center gap-1">
                     <Heart class="h-3.5 w-3.5" />
                     {{ favoriteCount.toLocaleString() }}

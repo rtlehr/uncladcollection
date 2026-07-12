@@ -19,6 +19,7 @@ export interface GalleryImage {
     collection: {
         id: number;
         name: string;
+        slug?: string | null;
     } | null;
     categories: GalleryOption[];
     tags: GalleryOption[];
