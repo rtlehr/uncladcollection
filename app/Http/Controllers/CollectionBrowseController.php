@@ -115,20 +115,20 @@ class CollectionBrowseController extends Controller
             ])
             ->values();
 
+        $statisticsRow = Image::query()
+            ->where('collection_id', $collection->id)
+            ->where('is_active', true)
+            ->selectRaw('COUNT(*) as images')
+            ->selectRaw('COALESCE(SUM(views_count), 0) as views')
+            ->selectRaw('COALESCE(SUM(favorites_count), 0) as favorites')
+            ->selectRaw('COALESCE(SUM(downloads_count), 0) as downloads')
+            ->first();
+
         $statistics = [
-            'images' => $collection->images_count,
-            'views' => Image::query()
-                ->where('collection_id', $collection->id)
-                ->where('is_active', true)
-                ->sum('views_count'),
-            'favorites' => Image::query()
-                ->where('collection_id', $collection->id)
-                ->where('is_active', true)
-                ->sum('favorites_count'),
-            'downloads' => Image::query()
-                ->where('collection_id', $collection->id)
-                ->where('is_active', true)
-                ->sum('downloads_count'),
+            'images' => (int) ($statisticsRow?->images ?? 0),
+            'views' => (int) ($statisticsRow?->views ?? 0),
+            'favorites' => (int) ($statisticsRow?->favorites ?? 0),
+            'downloads' => (int) ($statisticsRow?->downloads ?? 0),
         ];
 
         $categoryIds = Image::query()

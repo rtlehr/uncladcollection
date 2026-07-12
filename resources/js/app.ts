@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+
 import { initializeNavigationState } from '@/composables/useNavigationState';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -9,15 +10,34 @@ import { initializeFlashToast } from '@/lib/flashToast';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => {
+        if (!title) {
+            return appName;
+        }
+
+        return title
+            .toLowerCase()
+            .includes(appName.toLowerCase())
+            ? title
+            : `${title} - ${appName}`;
+    },
+
     layout: (name) => {
         switch (true) {
-            case name === 'Welcome': return null;
-            case name.startsWith('auth/'): return AuthLayout;
-            case name.startsWith('settings/'): return [AppLayout, SettingsLayout];
-            default: return AppLayout;
+            case name === 'Welcome':
+                return null;
+
+            case name.startsWith('auth/'):
+                return AuthLayout;
+
+            case name.startsWith('settings/'):
+                return [AppLayout, SettingsLayout];
+
+            default:
+                return AppLayout;
         }
     },
+
     progress: {
         color: '#4B5563',
         delay: 250,
@@ -29,3 +49,11 @@ createInertiaApp({
 initializeTheme();
 initializeNavigationState();
 initializeFlashToast();
+
+if (typeof document !== 'undefined') {
+    document.documentElement.classList.add('js');
+
+    requestAnimationFrame(() => {
+        document.body.dataset.pageReady = 'true';
+    });
+}

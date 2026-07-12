@@ -9,6 +9,7 @@ import {
 } from '@lucide/vue';
 
 import ImageShareActions from '@/components/Gallery/ImageShareActions.vue';
+import PerformanceImage from '@/components/Public/PerformanceImage.vue';
 
 import type {
     CollectionHeroImage,
@@ -138,11 +139,15 @@ function formatNumber(value: number): string {
                             : '',
                     ]"
                 >
-                    <img
+                    <PerformanceImage
                         v-if="image.image_url"
                         :src="image.image_url"
                         :alt="image.title"
-                        class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        :loading="index === 0 ? 'eager' : 'lazy'"
+                        :fetchpriority="index === 0 ? 'high' : 'low'"
+                        sizes="(min-width: 1024px) 40vw, 50vw"
+                        wrapper-class="h-full"
+                        image-class="object-cover transition duration-500 group-hover:scale-105"
                     />
 
                     <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />

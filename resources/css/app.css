@@ -725,3 +725,52 @@
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| UC-P011 — Performance & Core Web Vitals
+|--------------------------------------------------------------------------
+*/
+
+@layer utilities {
+    /*
+     * Skips rendering work for below-the-fold public sections until they
+     * approach the viewport, while reserving space to limit layout shifts.
+     */
+    .public-deferred-section {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 720px;
+    }
+
+    .public-deferred-section-sm {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 420px;
+    }
+
+    /*
+     * Stable media boxes prevent cards from changing height while images load.
+     */
+    .public-media-placeholder {
+        background:
+            linear-gradient(
+                110deg,
+                color-mix(in srgb, currentColor 5%, transparent) 8%,
+                color-mix(in srgb, currentColor 10%, transparent) 18%,
+                color-mix(in srgb, currentColor 5%, transparent) 33%
+            );
+        background-size: 200% 100%;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .public-media-placeholder {
+            animation: public-media-shimmer 1.4s linear infinite;
+        }
+    }
+}
+
+@keyframes public-media-shimmer {
+    to {
+        background-position-x: -200%;
+    }
+}

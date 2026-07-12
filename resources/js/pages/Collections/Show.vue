@@ -197,7 +197,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 
         <section
             v-if="relatedArticles.length"
-            class="border-y border-stone-200 bg-white py-16 dark:border-stone-800 dark:bg-stone-900"
+            class="public-deferred-section border-y border-stone-200 bg-white py-16 dark:border-stone-800 dark:bg-stone-900"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
                 <h2 class="text-3xl font-semibold tracking-tight">
@@ -216,7 +216,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 
         <section
             v-if="relatedCollections.length"
-            class="py-16"
+            class="public-deferred-section py-16"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
                 <h2 class="text-3xl font-semibold tracking-tight">

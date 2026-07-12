@@ -376,7 +376,7 @@ watch(
 
         <section
             v-if="relatedPosts.length"
-            class="border-t border-stone-200 bg-white py-16 dark:border-stone-800 dark:bg-stone-900"
+            class="public-deferred-section border-t border-stone-200 bg-white py-16 dark:border-stone-800 dark:bg-stone-900"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
                 <div class="mb-8">
@@ -401,7 +401,7 @@ watch(
 
         <section
             v-if="authorPosts.length"
-            class="border-t border-stone-200 py-16 dark:border-stone-800"
+            class="public-deferred-section border-t border-stone-200 py-16 dark:border-stone-800"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
                 <div class="mb-8">

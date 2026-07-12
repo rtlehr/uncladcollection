@@ -7,7 +7,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import {
     ArrowRight,
     BookOpen,
@@ -106,6 +106,15 @@ function collectionHref(collection: HomeCollection): string {
 
 <template>
     <Head>
+        <link
+            v-if="heroImage?.image_url"
+            rel="preload"
+            as="image"
+            :href="heroImage.image_url"
+            fetchpriority="high"
+        />
+    </Head>
+    <Head>
         <title>{{ stringSetting(seo.default_meta_title, siteName) }}</title>
         <meta
             name="description"
@@ -149,7 +158,7 @@ function collectionHref(collection: HomeCollection): string {
             </div>
         </section>
 
-        <section class="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+        <section class="public-deferred-section mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
             <div class="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
                 <PublicSectionHeading
                     eyebrow="Why Unclad Collection"

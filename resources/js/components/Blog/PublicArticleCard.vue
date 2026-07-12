@@ -6,6 +6,8 @@ import {
     Clock3,
 } from '@lucide/vue';
 
+import PerformanceImage from '@/components/Public/PerformanceImage.vue';
+
 import type { BlogPost } from '@/types/blog';
 import { contentImage } from '@/lib/contentImages';
 import { formatDate } from '@/lib/formatDate';
@@ -25,6 +27,7 @@ withDefaults(
 <template>
     <Link
         :href="`/blog/${post.slug}`"
+        prefetch="hover"
         :class="[
             'group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900',
             variant === 'horizontal'
@@ -36,20 +39,21 @@ withDefaults(
         ]"
     >
         <div class="overflow-hidden bg-stone-200 dark:bg-stone-800">
-            <img
+            <PerformanceImage
                 v-if="contentImage(post)"
                 :src="contentImage(post)!"
                 :alt="post.title"
-                :class="[
-                    'h-full w-full object-cover transition duration-500 group-hover:scale-105',
+                :loading="variant === 'hero' ? 'eager' : 'lazy'"
+                :fetchpriority="variant === 'hero' ? 'high' : 'low'"
+                sizes="(min-width: 1024px) 55vw, (min-width: 768px) 50vw, 100vw"
+                :wrapper-class="
                     variant === 'standard'
                         ? 'aspect-[16/10]'
                         : variant === 'hero'
                             ? 'min-h-[320px]'
-                            : 'min-h-[240px]',
-                ]"
-                loading="lazy"
-                decoding="async"
+                            : 'min-h-[240px]'
+                "
+                image-class="object-cover transition duration-500 group-hover:scale-105"
             />
 
             <div

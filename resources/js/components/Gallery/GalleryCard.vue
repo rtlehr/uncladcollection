@@ -7,6 +7,8 @@ import {
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 
+import PerformanceImage from '@/components/Public/PerformanceImage.vue';
+
 import type { GalleryImage } from '@/types/gallery';
 
 const props = withDefaults(defineProps<{
@@ -64,14 +66,16 @@ function toggleFavorite(): void {
 <template>
     <article class="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900">
         <div class="relative overflow-hidden bg-stone-200 dark:bg-stone-800">
-            <Link :href="`/images/${image.slug}`" class="block">
-                <img
+            <Link :href="`/images/${image.slug}`" class="block" prefetch="hover">
+                <PerformanceImage
                     v-if="image.thumbnail_url || image.icon_url"
                     :src="image.thumbnail_url ?? image.icon_url ?? ''"
                     :alt="image.title"
                     loading="lazy"
-                    decoding="async"
-                    class="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                    fetchpriority="low"
+                    sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 520px) 50vw, 100vw"
+                    wrapper-class="aspect-[4/3]"
+                    image-class="object-cover transition duration-500 group-hover:scale-105"
                 />
 
                 <div
@@ -127,6 +131,7 @@ function toggleFavorite(): void {
 
             <Link
                 :href="`/images/${image.slug}`"
+                prefetch="hover"
                 class="block line-clamp-2 text-base font-semibold leading-snug transition hover:text-[var(--brand-accent)] sm:text-lg"
             >
                 {{ image.title }}

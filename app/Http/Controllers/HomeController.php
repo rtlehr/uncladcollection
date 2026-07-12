@@ -7,6 +7,7 @@ use App\Models\Collection;
 use App\Models\Image;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -62,23 +63,27 @@ class HomeController extends Controller
 
             'latestArticles' => $latestArticles,
 
-            'statistics' => [
-                'images' => Image::query()
-                    ->where('is_active', true)
-                    ->count(),
+            'statistics' => Cache::remember(
+                'public.home.statistics',
+                now()->addMinutes(5),
+                fn () => [
+                    'images' => Image::query()
+                        ->where('is_active', true)
+                        ->count(),
 
-                'collections' => Collection::query()
-                    ->where('is_active', true)
-                    ->count(),
+                    'collections' => Collection::query()
+                        ->where('is_active', true)
+                        ->count(),
 
-                'articles' => BlogPost::query()
-                    ->published()
-                    ->count(),
+                    'articles' => BlogPost::query()
+                        ->published()
+                        ->count(),
 
-                'downloads' => Image::query()
-                    ->where('is_active', true)
-                    ->sum('downloads_count'),
-            ],
+                    'downloads' => Image::query()
+                        ->where('is_active', true)
+                        ->sum('downloads_count'),
+                ],
+            ),
         ]);
     }
 

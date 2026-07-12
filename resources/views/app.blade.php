@@ -3,6 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#171717" media="(prefers-color-scheme: dark)">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -41,7 +44,7 @@
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased" data-page-ready="false">
         <x-inertia::app />
     </body>
 </html>
