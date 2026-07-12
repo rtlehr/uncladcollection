@@ -67,7 +67,7 @@ function openPopup(url: string): void {
     >
         <button
             type="button"
-            class="inline-flex h-10 items-center gap-2 rounded-full border border-stone-300 px-4 text-sm font-semibold transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
+            class="public-icon-button inline-flex h-10 items-center gap-2 rounded-full border border-stone-300 px-4 text-sm font-semibold transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
             @click="nativeShare"
         >
             <Share2 class="h-4 w-4" />
@@ -102,7 +102,7 @@ function openPopup(url: string): void {
 
         <button
             type="button"
-            class="inline-flex h-10 items-center gap-2 rounded-full border border-stone-300 px-4 text-sm font-semibold transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
+            class="public-icon-button inline-flex h-10 items-center gap-2 rounded-full border border-stone-300 px-4 text-sm font-semibold transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
             @click="copyLink"
         >
             <Check

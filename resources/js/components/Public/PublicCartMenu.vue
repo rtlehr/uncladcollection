@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
                 ref="panelElement"
                 role="dialog"
                 aria-label="Shopping cart preview"
-                class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+                class="public-rise-enter overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl dark:border-stone-800 dark:bg-stone-900"
             >
                 <div class="flex items-center justify-between border-b border-stone-200 px-4 py-3 dark:border-stone-800">
                     <div>

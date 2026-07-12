@@ -26,7 +26,7 @@ defineProps<{
         <Link
             v-if="previousPost"
             :href="`/blog/${previousPost.slug}`"
-            class="group flex items-center gap-3 rounded-2xl border border-stone-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
+            class="public-card group flex items-center gap-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
         >
             <ChevronLeft class="h-5 w-5 shrink-0 text-stone-400 group-hover:text-[var(--brand-accent)]" />
 
@@ -46,7 +46,7 @@ defineProps<{
         <Link
             v-if="nextPost"
             :href="`/blog/${nextPost.slug}`"
-            class="group flex items-center justify-end gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-right transition hover:-translate-y-0.5 hover:shadow-md dark:border-stone-800 dark:bg-stone-900"
+            class="public-card group flex items-center justify-end gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-right dark:border-stone-800 dark:bg-stone-900"
         >
             <div class="min-w-0">
                 <div class="text-xs uppercase tracking-wider text-stone-500">

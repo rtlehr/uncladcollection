@@ -149,7 +149,7 @@ function checkout(): void {
                     <article
                         v-for="cartItem in cartItems"
                         :key="cartItem.id"
-                        class="grid gap-4 rounded-2xl border border-stone-200 bg-white p-4 sm:grid-cols-[150px_minmax(0,1fr)] sm:rounded-3xl dark:border-stone-800 dark:bg-stone-900"
+                        class="public-card-static grid gap-4 rounded-2xl border border-stone-200 bg-white p-4 sm:grid-cols-[150px_minmax(0,1fr)] sm:rounded-3xl dark:border-stone-800 dark:bg-stone-900"
                     >
                         <Link
                             :href="`/images/${cartItem.image.slug}`"
@@ -203,7 +203,7 @@ function checkout(): void {
                 </section>
 
                 <aside class="lg:sticky lg:top-24 lg:self-start">
-                    <div class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6 dark:border-stone-800 dark:bg-stone-900">
+                    <div class="public-card-static rounded-3xl border border-stone-200 bg-white p-5 sm:p-6 dark:border-stone-800 dark:bg-stone-900">
                         <h2 class="text-xl font-semibold">
                             Order Summary
                         </h2>
@@ -224,7 +224,7 @@ function checkout(): void {
                                 Total
                             </span>
 
-                            <span class="text-2xl font-semibold">
+                            <span class="public-price text-2xl font-semibold">
                                 {{ formatPrice(cartTotalCents) }}
                             </span>
                         </div>
@@ -252,7 +252,7 @@ function checkout(): void {
         >
             <button
                 type="button"
-                class="inline-flex h-12 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
+                class="public-button-primary inline-flex h-12 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
                 @click="checkout"
             >
                 Checkout · {{ formatPrice(cartTotalCents) }}

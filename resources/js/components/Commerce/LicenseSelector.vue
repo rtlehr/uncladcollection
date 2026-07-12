@@ -65,9 +65,9 @@ function expirationLabel(days: number | null): string {
                 v-for="license in licenses"
                 :key="license.id"
                 :class="[
-                    'relative block cursor-pointer rounded-2xl border p-4 transition',
+                    'public-transition-premium relative block cursor-pointer rounded-2xl border p-4',
                     model === license.id
-                        ? 'border-[var(--brand-accent)] bg-[color-mix(in_srgb,var(--brand-accent)_8%,transparent)] shadow-sm'
+                        ? 'border-[var(--brand-accent)] bg-[color-mix(in_srgb,var(--brand-accent)_8%,transparent)] shadow-sm -translate-y-0.5'
                         : 'border-stone-200 hover:border-stone-400 dark:border-stone-800 dark:hover:border-stone-600',
                 ]"
             >
@@ -91,7 +91,7 @@ function expirationLabel(days: number | null): string {
                     >
                         <Check
                             v-if="model === license.id"
-                            class="h-3.5 w-3.5"
+                            class="public-fade-enter h-3.5 w-3.5"
                         />
                     </span>
 
@@ -122,7 +122,7 @@ function expirationLabel(days: number | null): string {
 
                         <div
                             v-if="model === license.id"
-                            class="mt-4 grid gap-2 border-t border-stone-200 pt-4 text-xs text-stone-600 sm:grid-cols-2 dark:border-stone-700 dark:text-stone-400"
+                            class="public-fade-enter mt-4 grid gap-2 border-t border-stone-200 pt-4 text-xs text-stone-600 sm:grid-cols-2 dark:border-stone-700 dark:text-stone-400"
                         >
                             <div class="flex items-center gap-2">
                                 <ImageIcon class="h-4 w-4" />
@@ -162,7 +162,7 @@ function expirationLabel(days: number | null): string {
                     Price
                 </span>
 
-                <span class="text-xl font-semibold">
+                <span class="public-price text-xl font-semibold">
                     {{
                         formatPrice(
                             selectedLicense.price_cents,

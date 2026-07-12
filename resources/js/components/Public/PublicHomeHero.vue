@@ -84,7 +84,7 @@ withDefaults(
                 <div class="mt-6 flex flex-wrap gap-3">
                     <Link
                         :href="primaryHref"
-                        class="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90"
+                        class="public-button-primary inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-90"
                     >
                         {{ primaryLabel }}
                         <ArrowRight class="h-4 w-4" aria-hidden="true" />
@@ -103,7 +103,7 @@ withDefaults(
                 v-if="heroImage?.image_url"
                 :href="`/images/${heroImage.slug}`"
                 prefetch="hover"
-                class="group relative min-h-[420px] overflow-hidden rounded-[2.25rem] bg-stone-200 shadow-2xl shadow-stone-950/20 dark:bg-stone-800"
+                class="public-card-static group relative min-h-[420px] overflow-hidden rounded-[2.25rem] bg-stone-200 shadow-stone-950/20 dark:bg-stone-800"
             >
                 <PerformanceImage
                     :src="heroImage.image_url"
@@ -113,7 +113,7 @@ withDefaults(
                     decoding="async"
                     sizes="(min-width: 1024px) 55vw, 100vw"
                     wrapper-class="absolute inset-0"
-                    image-class="object-cover"
+                    image-class="public-image-zoom object-cover"
                 />
 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />

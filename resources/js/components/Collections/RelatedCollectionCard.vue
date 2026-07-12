@@ -15,7 +15,7 @@ defineProps<{
 <template>
     <Link
         :href="`/collections/${collection.slug}`"
-        class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900"
+        class="public-card group overflow-hidden rounded-3xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
     >
         <div class="overflow-hidden bg-stone-200 dark:bg-stone-800">
             <img
@@ -23,7 +23,7 @@ defineProps<{
                 :src="collection.cover_image_url"
                 :alt="collection.name"
                 loading="lazy"
-                class="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105"
+                class="public-image-zoom aspect-[16/10] w-full object-cover"
             />
 
             <div
@@ -52,7 +52,7 @@ defineProps<{
 
             <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--brand-accent)]">
                 Explore Collection
-                <ArrowRight class="h-4 w-4" />
+                <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </div>
         </div>
     </Link>

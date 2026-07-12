@@ -49,7 +49,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <header class="sticky top-0 z-50 border-b border-stone-200/80 bg-stone-50/95 backdrop-blur-xl dark:border-stone-800 dark:bg-stone-950/95">
+    <header class="public-glass sticky top-0 z-50 border-b border-stone-200/80 dark:border-stone-800 dark:bg-stone-950/95">
         <div class="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:h-18 sm:px-8 lg:px-12">
             <Link
                 href="/"

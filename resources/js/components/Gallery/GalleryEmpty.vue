@@ -7,8 +7,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div class="rounded-3xl border border-dashed border-stone-300 px-6 py-16 text-center dark:border-stone-700">
-        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-200 text-stone-500 dark:bg-stone-800">
+    <div class="public-empty-state public-rise-enter rounded-3xl border border-dashed border-stone-300 px-6 py-16 text-center dark:border-stone-700">
+        <div class="public-soft-ring mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[var(--brand-accent)] dark:bg-stone-900">
             <Images class="h-7 w-7" />
         </div>
 

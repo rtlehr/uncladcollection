@@ -58,7 +58,7 @@ const ratioStyle = computed(() => {
             :width="width ?? undefined"
             :height="height ?? undefined"
             :class="[
-                'h-full w-full transition-opacity duration-300',
+                'h-full w-full transition-[opacity,transform,filter] duration-500 ease-[cubic-bezier(.2,.8,.2,1)]',
                 loaded ? 'opacity-100' : 'opacity-0',
                 imageClass,
             ]"

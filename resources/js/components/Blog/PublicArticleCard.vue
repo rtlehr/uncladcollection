@@ -29,7 +29,7 @@ withDefaults(
         :href="`/blog/${post.slug}`"
         prefetch="hover"
         :class="[
-            'group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900',
+            'public-card group overflow-hidden rounded-3xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
             variant === 'horizontal'
                 ? 'grid md:grid-cols-[0.9fr_1.1fr]'
                 : '',
@@ -53,7 +53,7 @@ withDefaults(
                             ? 'min-h-[320px]'
                             : 'min-h-[240px]'
                 "
-                image-class="object-cover transition duration-500 group-hover:scale-105"
+                image-class="public-image-zoom object-cover"
             />
 
             <div
@@ -135,7 +135,7 @@ withDefaults(
 
                 <span class="inline-flex items-center gap-1 font-semibold text-[var(--brand-accent)]">
                     Read
-                    <ArrowRight class="h-4 w-4" />
+                    <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </span>
             </div>
         </div>

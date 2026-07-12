@@ -64,7 +64,7 @@ function toggleFavorite(): void {
 </script>
 
 <template>
-    <article class="group overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900">
+    <article class="public-card group overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
         <div class="relative overflow-hidden bg-stone-200 dark:bg-stone-800">
             <Link :href="`/images/${image.slug}`" class="block" prefetch="hover">
                 <PerformanceImage
@@ -75,7 +75,7 @@ function toggleFavorite(): void {
                     fetchpriority="low"
                     sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 520px) 50vw, 100vw"
                     wrapper-class="aspect-[4/3]"
-                    image-class="object-cover transition duration-500 group-hover:scale-105"
+                    image-class="public-image-zoom object-cover"
                 />
 
                 <div
@@ -99,7 +99,7 @@ function toggleFavorite(): void {
 
             <button
                 type="button"
-                class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/65 disabled:opacity-50"
+                class="public-icon-button absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur transition hover:bg-black/70 disabled:opacity-50"
                 :aria-label="favoriteState ? 'Remove from favorites' : 'Add to favorites'"
                 :aria-pressed="favoriteState"
                 :disabled="favoriteProcessing"

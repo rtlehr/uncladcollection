@@ -96,7 +96,7 @@ function buyNow(): void {
 </script>
 
 <template>
-    <div class="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+    <div class="public-card-static rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
         <h2 class="text-xl font-semibold">
             License this image
         </h2>
@@ -158,7 +158,7 @@ function buyNow(): void {
 
                 <button
                     type="button"
-                    class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="public-button-primary inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                     :disabled="
                         !selectedLicenseId
                         || addingToCart

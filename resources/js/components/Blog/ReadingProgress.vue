@@ -47,7 +47,7 @@ onBeforeUnmount(() => {
         aria-hidden="true"
     >
         <div
-            class="h-full bg-[var(--brand-accent)] transition-[width] duration-100"
+            class="h-full bg-[var(--brand-accent)] shadow-[0_0_12px_color-mix(in_srgb,var(--brand-accent)_55%,transparent)] transition-[width] duration-100"
             :style="{ width: `${progress}%` }"
         />
     </div>

@@ -98,7 +98,7 @@ function submitComment(): void {
 
         <div
             v-if="authUser && commentsEnabled"
-            class="mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:mt-7 sm:rounded-3xl sm:p-5 dark:border-stone-800 dark:bg-stone-900"
+            class="public-card-static mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:mt-7 sm:rounded-3xl sm:p-5 dark:border-stone-800 dark:bg-stone-900"
         >
             <label
                 for="new-comment"
