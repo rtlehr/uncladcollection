@@ -19,12 +19,27 @@ class ImageBrowseController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim($request->string('search')->toString());
-        $categoryId = $request->integer('category_id') ?: null;
-        $tagId = $request->integer('tag_id') ?: null;
-        $collectionId = $request->integer('collection_id') ?: null;
-        $aiGenerated = $request->string('ai_generated')->toString();
-        $sort = $request->string('sort', 'newest')->toString();
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'tag_id' => ['nullable', 'integer', 'exists:tags,id'],
+            'collection_id' => ['nullable', 'integer', 'exists:collections,id'],
+            'ai_generated' => ['nullable', 'in:0,1'],
+            'sort' => ['nullable', 'in:newest,oldest,most_viewed,most_favorited,most_downloaded'],
+        ]);
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        $categoryId = isset($validated['category_id'])
+            ? (int) $validated['category_id']
+            : null;
+        $tagId = isset($validated['tag_id'])
+            ? (int) $validated['tag_id']
+            : null;
+        $collectionId = isset($validated['collection_id'])
+            ? (int) $validated['collection_id']
+            : null;
+        $aiGenerated = (string) ($validated['ai_generated'] ?? '');
+        $sort = (string) ($validated['sort'] ?? 'newest');
 
         if (! in_array($sort, [
             'newest',
@@ -112,6 +127,8 @@ class ImageBrowseController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name']),
 
+            'suggestions' => $this->imageSearchSuggestions($search),
+
             'filters' => [
                 'search' => $search,
                 'category_id' => $categoryId ? (string) $categoryId : '',
@@ -121,6 +138,81 @@ class ImageBrowseController extends Controller
                 'sort' => $sort,
             ],
         ]);
+    }
+
+    private function imageSearchSuggestions(string $search): array
+    {
+        if (mb_strlen($search) < 2) {
+            return [];
+        }
+
+        $like = "%{$search}%";
+
+        return collect()
+            ->concat(
+                Category::query()
+                    ->where('category_type', 'image')
+                    ->where('is_active', true)
+                    ->where('name', 'like', $like)
+                    ->limit(3)
+                    ->get(['id', 'name'])
+                    ->map(fn (Category $item) => [
+                        'type' => 'category',
+                        'label' => $item->name,
+                        'value' => $item->name,
+                        'href' => "/images?category_id={$item->id}",
+                        'meta' => 'Image category',
+                    ]),
+            )
+            ->concat(
+                Tag::query()
+                    ->where('tag_type', 'image')
+                    ->where('name', 'like', $like)
+                    ->limit(3)
+                    ->get(['id', 'name'])
+                    ->map(fn (Tag $item) => [
+                        'type' => 'tag',
+                        'label' => $item->name,
+                        'value' => $item->name,
+                        'href' => "/images?tag_id={$item->id}",
+                        'meta' => 'Image tag',
+                    ]),
+            )
+            ->concat(
+                Collection::query()
+                    ->where('is_active', true)
+                    ->where('name', 'like', $like)
+                    ->limit(3)
+                    ->get(['id', 'name', 'slug'])
+                    ->map(fn (Collection $item) => [
+                        'type' => 'collection',
+                        'label' => $item->name,
+                        'value' => $item->name,
+                        'href' => "/collections/{$item->slug}",
+                        'meta' => 'Collection',
+                    ]),
+            )
+            ->concat(
+                Image::query()
+                    ->where('is_active', true)
+                    ->whereNotNull('photographer')
+                    ->where('photographer', 'like', $like)
+                    ->select('photographer')
+                    ->distinct()
+                    ->limit(3)
+                    ->get()
+                    ->map(fn (Image $item) => [
+                        'type' => 'photographer',
+                        'label' => $item->photographer,
+                        'value' => $item->photographer,
+                        'href' => null,
+                        'meta' => 'Photographer',
+                    ]),
+            )
+            ->unique(fn (array $item) => $item['type'].'|'.$item['label'])
+            ->take(8)
+            ->values()
+            ->all();
     }
 
     public function show(Image $image): Response

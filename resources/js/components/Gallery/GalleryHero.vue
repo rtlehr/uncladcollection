@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import GallerySearchBar from '@/components/Gallery/GallerySearchBar.vue';
 
+import type { PublicSearchSuggestion } from '@/types/publicSearch';
+
 const search = defineModel<string>('search', { required: true });
 
 defineProps<{
     total: number;
+    suggestions: PublicSearchSuggestion[];
 }>();
 
 const emit = defineEmits<{
     search: [];
+    suggestion: [suggestion: PublicSearchSuggestion];
 }>();
 
 function formatNumber(value: number): string {
@@ -31,19 +35,21 @@ function formatNumber(value: number): string {
                 </h1>
 
                 <p class="mt-5 max-w-2xl text-base leading-8 text-white/75 sm:text-lg">
-                    Browse respectful, community-centered photography created for publishers, resorts, clubs, advocates, and people who value honest representation.
+                    Search by subject, collection, category, tag, or photographer.
                 </p>
             </div>
 
             <div class="mt-9 max-w-3xl">
                 <GallerySearchBar
                     v-model="search"
+                    :suggestions="suggestions"
                     @search="emit('search')"
+                    @suggestion="emit('suggestion', $event)"
                 />
             </div>
 
             <p class="mt-5 text-sm text-white/65">
-                {{ formatNumber(total) }} active images available to explore
+                {{ formatNumber(total) }} active images available
             </p>
         </div>
     </section>

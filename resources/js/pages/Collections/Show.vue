@@ -8,7 +8,10 @@ export default {
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import {
+    computed,
+    ref,
+} from 'vue';
 
 import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import CollectionHero from '@/components/Collections/CollectionHero.vue';
@@ -17,7 +20,9 @@ import RelatedCollectionCard from '@/components/Collections/RelatedCollectionCar
 import GalleryEmpty from '@/components/Gallery/GalleryEmpty.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
+import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 
 import type {
     CollectionArticle,
@@ -28,6 +33,10 @@ import type {
     PublicCollection,
     RelatedCollection,
 } from '@/types/collection';
+import type {
+    PublicActiveFilter,
+    PublicSearchSuggestion,
+} from '@/types/publicSearch';
 
 const props = defineProps<{
     collection: PublicCollection;
@@ -36,40 +45,73 @@ const props = defineProps<{
     statistics: CollectionStatistics;
     relatedCollections: RelatedCollection[];
     relatedArticles: CollectionArticle[];
+    suggestions: PublicSearchSuggestion[];
     filters: CollectionFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
 const sort = ref(props.filters.sort ?? 'curated');
 
+const activeFilters = computed<PublicActiveFilter[]>(() => {
+    const items: PublicActiveFilter[] = [];
+
+    if (search.value) {
+        items.push({
+            key: 'search',
+            label: `Search: ${search.value}`,
+        });
+    }
+
+    if (sort.value !== 'curated') {
+        const labels: Record<string, string> = {
+            newest: 'Newest',
+            oldest: 'Oldest',
+            most_viewed: 'Most Viewed',
+            most_favorited: 'Most Favorited',
+            most_downloaded: 'Most Downloaded',
+        };
+
+        items.push({
+            key: 'sort',
+            label: `Sort: ${labels[sort.value] ?? sort.value}`,
+        });
+    }
+
+    return items;
+});
+
 function reload(): void {
-    router.get(
-        `/collections/${props.collection.slug}`,
-        {
-            search: search.value || undefined,
-            sort: sort.value || undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+    router.get(`/collections/${props.collection.slug}`, {
+        search: search.value || undefined,
+        sort: sort.value || undefined,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
 }
 
 function resetFilters(): void {
     search.value = '';
     sort.value = 'curated';
 
-    router.get(
-        `/collections/${props.collection.slug}`,
-        {},
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+    router.get(`/collections/${props.collection.slug}`, {}, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function removeFilter(key: string): void {
+    if (key === 'search') search.value = '';
+    if (key === 'sort') sort.value = 'curated';
+
+    reload();
+}
+
+function selectSuggestion(suggestion: PublicSearchSuggestion): void {
+    search.value = suggestion.value;
+    reload();
 }
 </script>
 
@@ -84,23 +126,6 @@ function resetFilters(): void {
                 || `Explore the ${collection.name} image collection.`
             "
         />
-
-        <meta property="og:type" content="website" />
-        <meta property="og:title" :content="collection.name" />
-
-        <meta
-            property="og:description"
-            :content="
-                collection.description
-                || `Explore the ${collection.name} image collection.`
-            "
-        />
-
-        <meta
-            v-if="heroImages[0]?.image_url"
-            property="og:image"
-            :content="heroImages[0].image_url!"
-        />
     </Head>
 
     <PublicPageLayout>
@@ -113,26 +138,27 @@ function resetFilters(): void {
         <CollectionToolbar
             v-model:search="search"
             v-model:sort="sort"
+            :suggestions="suggestions"
             @apply="reload"
             @reset="resetFilters"
+            @suggestion="selectSuggestion"
         />
 
         <section class="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
-            <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                        Curated gallery
-                    </p>
+            <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <PublicResultSummary
+                    :from="images.from"
+                    :to="images.to"
+                    :total="images.total"
+                    item-label="images"
+                    :filtered="activeFilters.length > 0"
+                />
 
-                    <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        Images in {{ collection.name }}
-                    </h2>
-                </div>
-
-                <p class="text-sm text-stone-500 dark:text-stone-400">
-                    Showing {{ images.from ?? 0 }}–{{ images.to ?? 0 }}
-                    of {{ images.total.toLocaleString() }}
-                </p>
+                <PublicActiveFilters
+                    :items="activeFilters"
+                    @remove="removeFilter"
+                    @clear="resetFilters"
+                />
             </div>
 
             <GalleryGrid
@@ -156,21 +182,11 @@ function resetFilters(): void {
             class="border-y border-stone-200 bg-white py-16 dark:border-stone-800 dark:bg-stone-900"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
-                <div class="mb-8">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                        Stories and context
-                    </p>
+                <h2 class="text-3xl font-semibold tracking-tight">
+                    Related Articles
+                </h2>
 
-                    <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        Related Articles
-                    </h2>
-
-                    <p class="mt-3 max-w-2xl text-sm leading-7 text-stone-600 dark:text-stone-400">
-                        Read community perspectives, practical guidance, and editorial content connected to this collection.
-                    </p>
-                </div>
-
-                <div class="grid gap-6 md:grid-cols-3">
+                <div class="mt-8 grid gap-6 md:grid-cols-3">
                     <PublicArticleCard
                         v-for="article in relatedArticles"
                         :key="article.id"
@@ -185,17 +201,11 @@ function resetFilters(): void {
             class="py-16"
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
-                <div class="mb-8">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                        Continue exploring
-                    </p>
+                <h2 class="text-3xl font-semibold tracking-tight">
+                    Related Collections
+                </h2>
 
-                    <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        Related Collections
-                    </h2>
-                </div>
-
-                <div class="grid gap-6 md:grid-cols-3">
+                <div class="mt-8 grid gap-6 md:grid-cols-3">
                     <RelatedCollectionCard
                         v-for="relatedCollection in relatedCollections"
                         :key="relatedCollection.id"

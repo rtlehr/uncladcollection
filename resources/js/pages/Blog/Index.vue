@@ -8,13 +8,18 @@ export default {
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import {
+    computed,
+    ref,
+} from 'vue';
 
 import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import PublicBlogFilters from '@/components/Blog/PublicBlogFilters.vue';
 import PublicBlogHero from '@/components/Blog/PublicBlogHero.vue';
 import PublicBlogPagination from '@/components/Blog/PublicBlogPagination.vue';
+import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 
 import type {
     BlogFilters,
@@ -23,18 +28,58 @@ import type {
     PaginatedBlogPosts,
     Tag,
 } from '@/types/blog';
+import type {
+    PublicActiveFilter,
+    PublicSearchSuggestion,
+} from '@/types/publicSearch';
 
 const props = defineProps<{
     posts: PaginatedBlogPosts;
     featuredPosts: BlogPost[];
     categories: Category[];
     tags: Tag[];
+    suggestions: PublicSearchSuggestion[];
     filters: BlogFilters;
 }>();
 
 const search = ref(props.filters.search ?? '');
 const categoryId = ref(props.filters.category_id ?? '');
 const tagId = ref(props.filters.tag_id ?? '');
+
+const activeFilters = computed<PublicActiveFilter[]>(() => {
+    const items: PublicActiveFilter[] = [];
+
+    if (search.value) {
+        items.push({
+            key: 'search',
+            label: `Search: ${search.value}`,
+        });
+    }
+
+    const category = props.categories.find(
+        (item) => String(item.id) === categoryId.value,
+    );
+
+    if (category) {
+        items.push({
+            key: 'category_id',
+            label: `Category: ${category.name}`,
+        });
+    }
+
+    const tag = props.tags.find(
+        (item) => String(item.id) === tagId.value,
+    );
+
+    if (tag) {
+        items.push({
+            key: 'tag_id',
+            label: `Tag: ${tag.name}`,
+        });
+    }
+
+    return items;
+});
 
 const heroPost = computed(() =>
     props.featuredPosts[0] ?? props.posts.data[0] ?? null,
@@ -56,19 +101,15 @@ const regularPosts = computed(() =>
 );
 
 function applyFilters(): void {
-    router.get(
-        '/blog',
-        {
-            search: search.value || undefined,
-            category_id: categoryId.value || undefined,
-            tag_id: tagId.value || undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+    router.get('/blog', {
+        search: search.value || undefined,
+        category_id: categoryId.value || undefined,
+        tag_id: tagId.value || undefined,
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
 }
 
 function resetFilters(): void {
@@ -76,15 +117,29 @@ function resetFilters(): void {
     categoryId.value = '';
     tagId.value = '';
 
-    router.get(
-        '/blog',
-        {},
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+    router.get('/blog', {}, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
+}
+
+function removeFilter(key: string): void {
+    if (key === 'search') search.value = '';
+    if (key === 'category_id') categoryId.value = '';
+    if (key === 'tag_id') tagId.value = '';
+
+    applyFilters();
+}
+
+function selectSuggestion(suggestion: PublicSearchSuggestion): void {
+    if (suggestion.href) {
+        router.visit(suggestion.href);
+        return;
+    }
+
+    search.value = suggestion.value;
+    applyFilters();
 }
 </script>
 
@@ -95,7 +150,9 @@ function resetFilters(): void {
         <PublicBlogHero
             v-model="search"
             :total="posts.total"
+            :suggestions="suggestions"
             @search="applyFilters"
+            @suggestion="selectSuggestion"
         />
 
         <PublicBlogFilters
@@ -108,17 +165,23 @@ function resetFilters(): void {
         />
 
         <main class="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
-            <section v-if="heroPost">
-                <div class="mb-7">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                        Featured reading
-                    </p>
+            <div class="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <PublicResultSummary
+                    :from="posts.from"
+                    :to="posts.to"
+                    :total="posts.total"
+                    item-label="articles"
+                    :filtered="activeFilters.length > 0"
+                />
 
-                    <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        Start with something worth reading
-                    </h2>
-                </div>
+                <PublicActiveFilters
+                    :items="activeFilters"
+                    @remove="removeFilter"
+                    @clear="resetFilters"
+                />
+            </div>
 
+            <section v-if="heroPost && activeFilters.length === 0">
                 <PublicArticleCard
                     :post="heroPost"
                     variant="hero"
@@ -126,7 +189,7 @@ function resetFilters(): void {
             </section>
 
             <section
-                v-if="secondaryFeaturedPosts.length"
+                v-if="secondaryFeaturedPosts.length && activeFilters.length === 0"
                 class="mt-8 grid gap-6 lg:grid-cols-2"
             >
                 <PublicArticleCard
@@ -137,24 +200,7 @@ function resetFilters(): void {
                 />
             </section>
 
-            <section class="mt-16">
-                <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-accent)]">
-                            Latest from the community
-                        </p>
-
-                        <h2 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                            Recent Articles
-                        </h2>
-                    </div>
-
-                    <p class="text-sm text-stone-500 dark:text-stone-400">
-                        Showing {{ posts.from ?? 0 }}–{{ posts.to ?? 0 }}
-                        of {{ posts.total.toLocaleString() }}
-                    </p>
-                </div>
-
+            <section :class="activeFilters.length === 0 ? 'mt-16' : ''">
                 <div
                     v-if="regularPosts.length"
                     class="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
@@ -175,7 +221,7 @@ function resetFilters(): void {
                     </h2>
 
                     <p class="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                        Try a broader search or remove one of the filters.
+                        Try a broader phrase, another category, or remove a filter.
                     </p>
 
                     <button

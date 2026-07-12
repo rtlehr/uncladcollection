@@ -20,19 +20,13 @@ class CollectionBrowseController extends Controller
     ): Response {
         abort_unless($collection->is_active, 404);
 
-        $search = trim($request->string('search')->toString());
-        $sort = $request->string('sort', 'curated')->toString();
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+            'sort' => ['nullable', 'in:curated,newest,oldest,most_viewed,most_favorited,most_downloaded'],
+        ]);
 
-        if (! in_array($sort, [
-            'curated',
-            'newest',
-            'oldest',
-            'most_viewed',
-            'most_favorited',
-            'most_downloaded',
-        ], true)) {
-            $sort = 'curated';
-        }
+        $search = trim((string) ($validated['search'] ?? ''));
+        $sort = (string) ($validated['sort'] ?? 'curated');
 
         $collection->loadCount([
             'images as images_count' => fn (Builder $query) => $query
@@ -289,11 +283,78 @@ class CollectionBrowseController extends Controller
             'statistics' => $statistics,
             'relatedCollections' => $relatedCollections,
             'relatedArticles' => $relatedArticles,
+            'suggestions' => $this->collectionSearchSuggestions(
+                $collection,
+                $search,
+            ),
+
             'filters' => [
                 'search' => $search,
                 'sort' => $sort,
             ],
         ]);
+    }
+
+    private function collectionSearchSuggestions(
+        Collection $collection,
+        string $search,
+    ): array {
+        if (mb_strlen($search) < 2) {
+            return [];
+        }
+
+        $like = "%{$search}%";
+
+        return collect()
+            ->concat(
+                Image::query()
+                    ->where('collection_id', $collection->id)
+                    ->where('is_active', true)
+                    ->whereNotNull('photographer')
+                    ->where('photographer', 'like', $like)
+                    ->select('photographer')
+                    ->distinct()
+                    ->limit(4)
+                    ->get()
+                    ->map(fn (Image $item) => [
+                        'type' => 'photographer',
+                        'label' => $item->photographer,
+                        'value' => $item->photographer,
+                        'href' => null,
+                        'meta' => 'Photographer in this collection',
+                    ]),
+            )
+            ->concat(
+                Image::query()
+                    ->where('collection_id', $collection->id)
+                    ->where('is_active', true)
+                    ->whereHas(
+                        'tags',
+                        fn (Builder $query) => $query
+                            ->where('name', 'like', $like),
+                    )
+                    ->with('tags:id,name')
+                    ->limit(8)
+                    ->get(['id'])
+                    ->flatMap(fn (Image $image) => $image->tags)
+                    ->filter(fn ($tag) => str_contains(
+                        mb_strtolower($tag->name),
+                        mb_strtolower($search),
+                    ))
+                    ->unique('id')
+                    ->take(4)
+                    ->map(fn ($tag) => [
+                        'type' => 'tag',
+                        'label' => $tag->name,
+                        'value' => $tag->name,
+                        'href' => null,
+                        'meta' => 'Tag in this collection',
+                    ]),
+            )
+            ->unique(fn (array $item) => $item['type'].'|'.$item['label'])
+            ->take(8)
+            ->values()
+            ->all();
     }
 
     private function imageCardQuery(): Builder

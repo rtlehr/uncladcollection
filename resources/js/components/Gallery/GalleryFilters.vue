@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { SlidersHorizontal, X } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import {
+    computed,
+    ref,
+} from 'vue';
 
 import type { GalleryOption } from '@/types/gallery';
 
@@ -43,10 +46,12 @@ const activeCount = computed(() => [
                     type="button"
                     class="inline-flex h-11 items-center gap-2 rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-stone-700"
                     :aria-expanded="mobileOpen"
+                    aria-controls="gallery-filter-panel"
                     @click="mobileOpen = !mobileOpen"
                 >
                     <SlidersHorizontal class="h-4 w-4" />
                     Filters
+
                     <span
                         v-if="activeCount"
                         class="rounded-full bg-[var(--brand-accent)] px-2 py-0.5 text-xs text-white"
@@ -70,11 +75,12 @@ const activeCount = computed(() => [
             </div>
 
             <div
+                id="gallery-filter-panel"
                 :class="[
                     'gap-3',
                     mobileOpen
                         ? 'mt-4 grid'
-                        : 'hidden lg:grid lg:grid-cols-[repeat(4,minmax(0,1fr))_auto_auto]',
+                        : 'hidden lg:grid lg:grid-cols-[repeat(4,minmax(0,1fr))_220px_auto_auto]',
                 ]"
             >
                 <select

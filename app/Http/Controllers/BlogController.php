@@ -14,9 +14,19 @@ class BlogController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim($request->string('search')->toString());
-        $categoryId = $request->integer('category_id') ?: null;
-        $tagId = $request->integer('tag_id') ?: null;
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:120'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'tag_id' => ['nullable', 'integer', 'exists:tags,id'],
+        ]);
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        $categoryId = isset($validated['category_id'])
+            ? (int) $validated['category_id']
+            : null;
+        $tagId = isset($validated['tag_id'])
+            ? (int) $validated['tag_id']
+            : null;
 
         $featuredPosts = $this->blogCardQuery()
             ->published()
@@ -72,12 +82,80 @@ class BlogController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug']),
 
+            'suggestions' => $this->blogSearchSuggestions($search),
+
             'filters' => [
                 'search' => $search,
                 'category_id' => $categoryId ? (string) $categoryId : '',
                 'tag_id' => $tagId ? (string) $tagId : '',
             ],
         ]);
+    }
+
+    private function blogSearchSuggestions(string $search): array
+    {
+        if (mb_strlen($search) < 2) {
+            return [];
+        }
+
+        $like = "%{$search}%";
+
+        return collect()
+            ->concat(
+                Category::query()
+                    ->where('category_type', 'blog')
+                    ->where('is_active', true)
+                    ->where('name', 'like', $like)
+                    ->limit(3)
+                    ->get(['id', 'name'])
+                    ->map(fn (Category $item) => [
+                        'type' => 'category',
+                        'label' => $item->name,
+                        'value' => $item->name,
+                        'href' => "/blog?category_id={$item->id}",
+                        'meta' => 'Article category',
+                    ]),
+            )
+            ->concat(
+                Tag::query()
+                    ->where('tag_type', 'blog')
+                    ->where('name', 'like', $like)
+                    ->limit(3)
+                    ->get(['id', 'name'])
+                    ->map(fn (Tag $item) => [
+                        'type' => 'tag',
+                        'label' => $item->name,
+                        'value' => $item->name,
+                        'href' => "/blog?tag_id={$item->id}",
+                        'meta' => 'Article tag',
+                    ]),
+            )
+            ->concat(
+                BlogPost::query()
+                    ->published()
+                    ->whereHas(
+                        'author',
+                        fn (Builder $query) => $query
+                            ->where('name', 'like', $like),
+                    )
+                    ->with('author:id,name')
+                    ->limit(3)
+                    ->get(['id', 'user_id'])
+                    ->pluck('author')
+                    ->filter()
+                    ->unique('id')
+                    ->map(fn ($author) => [
+                        'type' => 'author',
+                        'label' => $author->name,
+                        'value' => $author->name,
+                        'href' => null,
+                        'meta' => 'Article author',
+                    ]),
+            )
+            ->unique(fn (array $item) => $item['type'].'|'.$item['label'])
+            ->take(8)
+            ->values()
+            ->all();
     }
 
     public function show(BlogPost $blogPost): Response
