@@ -4,6 +4,7 @@ import { ref } from 'vue';
 
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import { CircleCheck, CircleAlert } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import type { AdminAsset, SelectOption } from '@/types/adminAsset';
 
@@ -120,7 +121,7 @@ function editAsset(assetId: number): void {
                         <th class="p-3">Type</th>
                         <th class="p-3">Status</th>
                         <th class="p-3">Files</th>
-                        <th class="p-3">Collection</th>
+                        <th class="p-3">Collection</th><th class="p-3">Health</th>
                         <th class="p-3 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -157,6 +158,17 @@ function editAsset(assetId: number): void {
                             {{ asset.collection?.name ?? '—' }}
                         </td>
 
+                        <td class="p-3">
+                            <div class="flex items-center gap-2">
+                                <CircleCheck v-if="asset.health.score >= 90" class="h-4 w-4 text-emerald-600" />
+                                <CircleAlert v-else class="h-4 w-4 text-amber-600" />
+                                <span class="font-medium tabular-nums">{{ asset.health.score }}%</span>
+                            </div>
+                            <div class="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                                <div class="h-full rounded-full bg-primary" :style="{ width: `${asset.health.score}%` }" />
+                            </div>
+                        </td>
+
                         <td class="p-3 text-right">
                             <Button
                                 type="button"
@@ -171,7 +183,7 @@ function editAsset(assetId: number): void {
 
                     <tr v-if="!assets.length">
                         <td
-                            colspan="6"
+                            colspan="7"
                             class="p-8 text-center text-muted-foreground"
                         >
                             No assets found.

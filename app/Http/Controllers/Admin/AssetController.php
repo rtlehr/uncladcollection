@@ -10,6 +10,7 @@ use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Models\LicenseType;
 use App\Services\AssetOfferingService;
+use App\Services\AssetHealthService;
 use App\Services\AssetMediaPresentationService;
 use App\Models\Collection;
 use App\Services\AssetService;
@@ -34,7 +35,7 @@ class AssetController extends Controller
 
         $assets = Asset::query()
             ->withCount(['files', 'activeFiles'])
-            ->with(['collection:id,name', 'primaryPreviewFile'])
+            ->with(['collection:id,name', 'primaryPreviewFile', 'activeFiles', 'offerings'])
             ->when($search, fn ($query) => $query->where(fn ($query) => $query
                 ->where('title', 'like', "%{$search}%")
                 ->orWhere('slug', 'like', "%{$search}%")
@@ -345,6 +346,7 @@ class AssetController extends Controller
             'poster_file_id' => $asset->poster_file_id,
             'preview_url' => $asset->primaryPreviewFile?->publicUrl(),
             'legacy_image_id' => $asset->legacy_image_id,
+            'health' => app(AssetHealthService::class)->summarize($asset),
         ];
 
         if ($detailed) {

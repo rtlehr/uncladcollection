@@ -38,6 +38,19 @@ export interface AdminAssetFile {
     preview_note: string | null;
 }
 
+
+export interface AssetHealthCheck {
+    key: string;
+    label: string;
+    complete: boolean;
+}
+
+export interface AssetHealth {
+    score: number;
+    status: 'ready' | 'needs_review' | 'needs_attention';
+    checks: AssetHealthCheck[];
+}
+
 export interface AdminAsset {
     id: number;
     uuid: string;
@@ -59,6 +72,7 @@ export interface AdminAsset {
     poster_file_id: number | null;
     preview_url: string | null;
     legacy_image_id: number | null;
+    health: AssetHealth;
     files?: AdminAssetFile[];
     offerings?: AdminAssetOffering[];
 }

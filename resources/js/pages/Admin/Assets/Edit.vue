@@ -14,6 +14,8 @@ import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
 import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
+import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
+import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const props = defineProps<{
@@ -116,13 +118,12 @@ function saveOfferings(): void {
     offeringForm.put(`/admin/assets/${props.assetRecord.id}/offerings`, { preserveScroll: true });
 }
 
-function moveFile(index: number, offset: number) {
-    const files = [...(props.assetRecord.files ?? [])];
-    const target = index + offset;
-    if (target < 0 || target >= files.length) return;
-    [files[index], files[target]] = [files[target], files[index]];
+function reorderFiles(files: AdminAssetFile[]): void {
     router.put(`/admin/assets/${props.assetRecord.id}/files/order`, {
-        files: files.map((file, position) => ({ id: file.id, sort_order: (position + 1) * 10 })),
+        files: files.map((file, position) => ({
+            id: file.id,
+            sort_order: (position + 1) * 10,
+        })),
     }, { preserveScroll: true });
 }
 </script>
@@ -153,6 +154,8 @@ function moveFile(index: number, offset: number) {
                 </span>
             </div>
         </PageHeader>
+
+        <AssetHealthCard :health="assetRecord.health" />
 
         <form class="space-y-6" @submit.prevent="updateAsset">
             <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
@@ -187,29 +190,17 @@ function moveFile(index: number, offset: number) {
             />
         </FormSection>
 
-        <FormSection title="Current Files" description="Change roles, preview assignments, downloadability, order, or replace a revision.">
-            <div class="space-y-3">
-                <div v-for="(file, index) in assetRecord.files" :key="file.id" class="grid gap-3 rounded-lg border p-4 xl:grid-cols-[40px_minmax(0,1fr)_180px_1fr_auto] xl:items-center">
-                    <div class="flex flex-col text-xs"><button type="button" :disabled="index === 0" @click="moveFile(index, -1)">▲</button><button type="button" :disabled="index === (assetRecord.files?.length ?? 0) - 1" @click="moveFile(index, 1)">▼</button></div>
-                    <div class="min-w-0">
-                        <div class="truncate font-medium">{{ file.original_filename }}</div>
-                        <div class="text-xs text-muted-foreground">{{ file.media_type }} · {{ file.extension.toUpperCase() }} · {{ file.size_bytes ? (file.size_bytes / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown size' }}</div>
-                        <div class="mt-1 flex gap-2"><StatusBadge :status="file.processing_status" /><StatusBadge :status="file.virus_scan_status" /></div>
-                    </div>
-                    <select v-model="file.role" class="h-10 rounded-md border bg-background px-3 text-sm"><option v-for="role in fileRoles" :key="role.value" :value="role.value">{{ role.label }}</option></select>
-                    <div class="flex flex-wrap gap-3 text-sm">
-                        <label class="flex gap-2"><input v-model="file.is_downloadable" type="checkbox" /> Downloadable</label>
-                        <label class="flex gap-2"><input v-model="file.is_primary_preview" type="checkbox" /> Primary preview</label>
-                        <label class="flex gap-2"><input v-model="file.is_poster" type="checkbox" /> Poster</label>
-                    </div>
-                    <div class="flex flex-wrap justify-end gap-2">
-                        <Button type="button" size="sm" variant="outline" @click="saveFile(file)">Save</Button>
-                        <label class="inline-flex h-9 cursor-pointer items-center rounded-md border px-3 text-sm">{{ replacingId === file.id ? 'Replacing…' : 'Replace' }}<input class="hidden" type="file" :accept="acceptedExtensions.map(ext => '.' + ext).join(',')" @change="replaceFile(file, $event)" /></label>
-                        <Button type="button" size="sm" variant="destructive" @click="removeFile(file)">Remove</Button>
-                    </div>
-                </div>
-                <p v-if="!assetRecord.files?.length" class="rounded-lg border border-dashed p-8 text-center text-muted-foreground">No active files.</p>
-            </div>
+        <FormSection title="File Workspace" description="Drag files to reorder them, update presentation settings inline, and manage revisions from one workspace.">
+            <AssetFileWorkspace
+                :files="assetRecord.files ?? []"
+                :roles="fileRoles"
+                :replacing-id="replacingId"
+                :accepted-extensions="acceptedExtensions"
+                @save="saveFile"
+                @replace="replaceFile"
+                @remove="removeFile"
+                @reorder="reorderFiles"
+            />
         </FormSection>
 
 
