@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AssetFileRole;
+use App\Enums\AssetConfigurationDisplayType;
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
 use App\Http\Controllers\Controller;
@@ -10,6 +11,7 @@ use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Models\LicenseType;
 use App\Services\AssetOfferingService;
+use App\Services\AssetConfigurationService;
 use App\Services\AssetHealthService;
 use App\Services\AssetMediaPresentationService;
 use App\Models\Collection;
@@ -60,11 +62,11 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Create', $this->formOptions());
     }
 
-    public function store(Request $request, AssetService $assetService): RedirectResponse
+    public function store(Request $request, AssetService $assetService, AssetConfigurationService $configurationService): RedirectResponse
     {
         $validated = $this->validateAsset($request, requireFiles: true);
 
-        $asset = DB::transaction(function () use ($request, $validated, $assetService): Asset {
+        $asset = DB::transaction(function () use ($request, $validated, $assetService, $configurationService): Asset {
             $asset = $assetService->create([
                 'collection_id' => $validated['collection_id'] ?? null,
                 'title' => $validated['title'],
@@ -95,6 +97,8 @@ class AssetController extends Controller
                 }
             }
 
+            $configurationService->saveMany($asset, $validated['configurations'] ?? []);
+
             return $asset;
         });
 
@@ -104,7 +108,7 @@ class AssetController extends Controller
 
     public function edit(Asset $asset): Response
     {
-        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType']);
+        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType', 'configurationGroups.values.rules']);
 
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
@@ -260,6 +264,14 @@ class AssetController extends Controller
         return back()->with('success', 'Asset license offerings updated successfully.');
     }
 
+    public function updateConfigurations(Request $request, Asset $asset, AssetConfigurationService $service): RedirectResponse
+    {
+        $validated = $this->validateConfigurations($request);
+        $service->saveMany($asset, $validated['configurations'] ?? []);
+
+        return back()->with('success', 'Product configuration updated successfully.');
+    }
+
     public function destroy(Asset $asset): RedirectResponse
     {
         $asset->delete();
@@ -287,6 +299,7 @@ class AssetController extends Controller
             'file_downloadable' => ['nullable', 'array'],
             'primary_preview_index' => ['nullable', 'integer', 'min:0'],
             'poster_index' => ['nullable', 'integer', 'min:0'],
+            ...$this->configurationRules(),
         ]);
     }
 
@@ -299,6 +312,7 @@ class AssetController extends Controller
             'fileRoles' => collect(AssetFileRole::cases())->map(fn ($role) => ['value' => $role->value, 'label' => Str::headline($role->value)])->values(),
             'acceptedExtensions' => collect(config('asset-media.extensions', []))->flatten()->unique()->values(),
             'maxUploadKilobytes' => config('asset-media.max_upload_kilobytes', 512000),
+            'configurationDisplayTypes' => collect(AssetConfigurationDisplayType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label(), 'uses_values' => $type->usesValues()])->values(),
         ];
     }
 
@@ -311,6 +325,39 @@ class AssetController extends Controller
         abort_unless($assetFile->is_active, 404);
 
         return $presentation->response($assetFile);
+    }
+
+    private function validateConfigurations(Request $request): array
+    {
+        return $request->validate($this->configurationRules());
+    }
+
+    private function configurationRules(): array
+    {
+        return [
+            'configurations' => ['nullable', 'array', 'max:30'],
+            'configurations.*.name' => ['required', 'string', 'max:255'],
+            'configurations.*.code' => ['nullable', 'string', 'max:255'],
+            'configurations.*.display_type' => ['required', Rule::enum(AssetConfigurationDisplayType::class)],
+            'configurations.*.is_required' => ['boolean'],
+            'configurations.*.allows_multiple' => ['boolean'],
+            'configurations.*.placeholder' => ['nullable', 'string', 'max:255'],
+            'configurations.*.help_text' => ['nullable', 'string', 'max:2000'],
+            'configurations.*.minimum_value' => ['nullable', 'numeric'],
+            'configurations.*.maximum_value' => ['nullable', 'numeric'],
+            'configurations.*.step_value' => ['nullable', 'numeric', 'gt:0'],
+            'configurations.*.is_active' => ['boolean'],
+            'configurations.*.values' => ['nullable', 'array', 'max:100'],
+            'configurations.*.values.*.label' => ['required_with:configurations.*.values', 'string', 'max:255'],
+            'configurations.*.values.*.value' => ['nullable', 'string', 'max:255'],
+            'configurations.*.values.*.description' => ['nullable', 'string', 'max:2000'],
+            'configurations.*.values.*.swatch_color' => ['nullable', 'string', 'max:32'],
+            'configurations.*.values.*.image_path' => ['nullable', 'string', 'max:1024'],
+            'configurations.*.values.*.is_default' => ['boolean'],
+            'configurations.*.values.*.is_active' => ['boolean'],
+            'configurations.*.values.*.price_adjustment_cents' => ['nullable', 'integer', 'min:-100000000', 'max:100000000'],
+            'configurations.*.values.*.currency' => ['nullable', 'string', 'size:3'],
+        ];
     }
 
     private function assetTypes(): array
@@ -392,6 +439,32 @@ class AssetController extends Controller
                 'include_all_active_files' => $offering->include_all_active_files,
                 'is_active' => $offering->is_active,
                 'file_ids' => $offering->files->pluck('id')->values(),
+            ])->values();
+            $data['configurations'] = $asset->configurationGroups->map(fn ($group) => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'code' => $group->code,
+                'display_type' => $group->display_type->value,
+                'is_required' => $group->is_required,
+                'allows_multiple' => $group->allows_multiple,
+                'placeholder' => $group->placeholder,
+                'help_text' => $group->help_text,
+                'minimum_value' => $group->minimum_value,
+                'maximum_value' => $group->maximum_value,
+                'step_value' => $group->step_value,
+                'is_active' => $group->is_active,
+                'values' => $group->values->map(fn ($value) => [
+                    'id' => $value->id,
+                    'label' => $value->label,
+                    'value' => $value->value,
+                    'description' => $value->description,
+                    'swatch_color' => $value->swatch_color,
+                    'image_path' => $value->image_path,
+                    'is_default' => $value->is_default,
+                    'is_active' => $value->is_active,
+                    'price_adjustment_cents' => (int) ($value->rules->firstWhere('rule_type.value', 'fixed_adjustment')?->amount_cents ?? $value->rules->first()?->amount_cents ?? 0),
+                    'currency' => $value->rules->first()?->currency ?? 'USD',
+                ])->values(),
             ])->values();
         }
 

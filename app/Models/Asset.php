@@ -97,4 +97,14 @@ class Asset extends Model
         return $this->hasMany(AssetOffering::class)->orderBy('sort_order');
     }
 
+    public function configurationGroups(): HasMany
+    {
+        return $this->hasMany(AssetConfigurationGroup::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function activeConfigurationGroups(): HasMany
+    {
+        return $this->configurationGroups()->where('is_active', true);
+    }
+
 }

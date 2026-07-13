@@ -6,7 +6,8 @@ import FormSection from '@/Components/Forms/FormSection.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
-import type { NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
+import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import type { AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
 
 const props = defineProps<{
     collections: NamedOption[];
@@ -15,6 +16,7 @@ const props = defineProps<{
     fileRoles: SelectOption[];
     acceptedExtensions: string[];
     maxUploadKilobytes: number;
+    configurationDisplayTypes: ConfigurationDisplayTypeOption[];
 }>();
 
 const pendingFiles: PendingAssetFile[] = [];
@@ -32,6 +34,7 @@ const form = useForm({
     files: pendingFiles,
     primary_preview_index: null as number | null,
     poster_index: null as number | null,
+    configurations: [] as AdminAssetConfigurationGroup[],
 });
 
 function submit() {
@@ -62,6 +65,9 @@ function submit() {
                     <FormSection title="Asset Files" description="Upload all deliverables belonging to this asset. Roles are suggested automatically and can be changed.">
                         <AssetFileDropzone v-model="form.files" :roles="fileRoles" :accepted-extensions="acceptedExtensions" :max-upload-kilobytes="maxUploadKilobytes" :disabled="form.processing" />
                         <p v-if="form.errors.files" class="mt-2 text-sm text-destructive">{{ form.errors.files }}</p>
+                    </FormSection>
+                    <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
+                        <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" />
                     </FormSection>
                 </div>
                 <div class="space-y-6">

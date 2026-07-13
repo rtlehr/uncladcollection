@@ -13,6 +13,7 @@ import AssetTechnicalSpecs from '@/components/Assets/Public/AssetTechnicalSpecs.
 import AssetIncludedFiles from '@/components/Assets/Public/AssetIncludedFiles.vue';
 import AssetDetailSummary from '@/components/Assets/Public/AssetDetailSummary.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
+import AssetConfigurationSelector from '@/components/Assets/Public/AssetConfigurationSelector.vue';
 import type { PublicAsset, PublicAssetOffering, RelatedPublicAsset } from '@/types/publicAsset';
 
 defineProps<{ asset: PublicAsset; offerings: PublicAssetOffering[]; relatedAssets: RelatedPublicAsset[] }>();
@@ -32,6 +33,7 @@ defineProps<{ asset: PublicAsset; offerings: PublicAssetOffering[]; relatedAsset
                 </aside>
             </div>
 
+            <div v-if="asset.configurations.length" class="mt-10"><AssetConfigurationSelector :groups="asset.configurations" :base-price-cents="offerings.length ? Math.min(...offerings.map(o => o.price_cents)) : 0" /></div>
             <div class="mt-10"><AssetDetailSummary :asset="asset" /></div>
             <div class="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]"><AssetIncludedFiles :files="asset.files" /><AssetTechnicalSpecs :files="asset.files" /></div>
 

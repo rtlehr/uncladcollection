@@ -16,7 +16,8 @@ import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.v
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
 import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
-import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
+import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption, AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption } from '@/types/adminAsset';
 
 const props = defineProps<{
     assetRecord: AdminAsset;
@@ -27,6 +28,7 @@ const props = defineProps<{
     acceptedExtensions: string[];
     maxUploadKilobytes: number;
     licenseTypes: LicenseTypeOption[];
+    configurationDisplayTypes: ConfigurationDisplayTypeOption[];
 }>();
 
 const form = useForm({
@@ -46,6 +48,7 @@ const pendingFiles = ref<PendingAssetFile[]>([]);
 const uploadForm = useForm({ files: [] as File[], file_roles: [] as string[], file_downloadable: [] as number[] });
 const replacingId = ref<number | null>(null);
 const offeringForm = useForm({ offerings: (props.assetRecord.offerings ?? []) as AdminAssetOffering[] });
+const configurationForm = useForm({ configurations: (props.assetRecord.configurations ?? []) as AdminAssetConfigurationGroup[] });
 const deletion = useDeleteConfirmation<AdminAssetFile>();
 
 const canViewPublicPage = computed(
@@ -112,6 +115,10 @@ function confirmRemoveFile(): void {
             onFinish: finish,
         });
     });
+}
+
+function saveConfigurations(): void {
+    configurationForm.put(`/admin/assets/${props.assetRecord.id}/configurations`, { preserveScroll: true });
 }
 
 function saveOfferings(): void {
@@ -219,6 +226,14 @@ function reorderFiles(files: AdminAssetFile[]): void {
             @confirm="confirmRemoveFile"
             @cancel="deletion.cancelDelete"
         />
+
+
+        <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, language, or personalization.">
+            <form class="space-y-6" @submit.prevent="saveConfigurations">
+                <AssetConfigurationBuilder v-model="configurationForm.configurations" :display-types="configurationDisplayTypes" />
+                <div class="flex justify-end border-t pt-4"><Button type="submit" :disabled="configurationForm.processing">{{ configurationForm.processing ? 'Saving…' : 'Save Configuration' }}</Button></div>
+            </form>
+        </FormSection>
 
         <FormSection title="License Offerings" description="Build customer packages, compare coverage, and review exactly what each license delivers.">
             <form class="space-y-6" @submit.prevent="saveOfferings">

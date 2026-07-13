@@ -28,6 +28,7 @@ class AssetBrowseController extends Controller
             'primaryPreviewFile',
             'posterFile',
             'legacyImage:id,slug,title',
+            'configurationGroups' => fn ($query) => $query->where('is_active', true)->with(['values' => fn ($query) => $query->where('is_active', true)->with(['rules' => fn ($query) => $query->where('is_active', true)])]),
             'offerings' => fn ($query) => $query
                 ->where('is_active', true)
                 ->with(['licenseType:id,name,slug,description,usage_terms', 'files'])
@@ -102,6 +103,30 @@ class AssetBrowseController extends Controller
                 'files' => $gallery,
                 'formats' => $files->pluck('extension')->filter()->map(fn (string $extension) => strtoupper($extension))->unique()->values()->all(),
                 'legacy_image_url' => $asset->legacyImage ? route('images.show', $asset->legacyImage->slug) : null,
+                'configurations' => $asset->configurationGroups->map(fn ($group) => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'code' => $group->code,
+                    'display_type' => $group->display_type->value,
+                    'is_required' => $group->is_required,
+                    'allows_multiple' => $group->allows_multiple,
+                    'placeholder' => $group->placeholder,
+                    'help_text' => $group->help_text,
+                    'minimum_value' => $group->minimum_value !== null ? (float) $group->minimum_value : null,
+                    'maximum_value' => $group->maximum_value !== null ? (float) $group->maximum_value : null,
+                    'step_value' => $group->step_value !== null ? (float) $group->step_value : null,
+                    'values' => $group->values->map(fn ($value) => [
+                        'id' => $value->id,
+                        'label' => $value->label,
+                        'value' => $value->value,
+                        'description' => $value->description,
+                        'swatch_color' => $value->swatch_color,
+                        'image_url' => $value->image_path ? asset('storage/'.$value->image_path) : null,
+                        'is_default' => $value->is_default,
+                        'price_adjustment_cents' => (int) ($value->rules->first()?->amount_cents ?? 0),
+                        'currency' => $value->rules->first()?->currency ?? 'USD',
+                    ])->values(),
+                ])->values(),
             ],
             'offerings' => $asset->offerings->map(function ($offering) use ($presentation, $asset) {
                 $included = $offering->includedFiles();

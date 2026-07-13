@@ -36,6 +36,7 @@ export interface PublicAsset {
     files: PublicAssetFile[];
     formats: string[];
     legacy_image_url: string | null;
+    configurations: PublicAssetConfigurationGroup[];
 }
 
 export interface RelatedPublicAsset {
@@ -47,3 +48,7 @@ export interface RelatedPublicAsset {
     preview_url: string | null;
     formats: string[];
 }
+
+
+export interface PublicAssetConfigurationValue { id: number; label: string; value: string; description: string | null; swatch_color: string | null; image_url: string | null; is_default: boolean; price_adjustment_cents: number; currency: string; }
+export interface PublicAssetConfigurationGroup { id: number; name: string; code: string; display_type: string; is_required: boolean; allows_multiple: boolean; placeholder: string | null; help_text: string | null; minimum_value: number | null; maximum_value: number | null; step_value: number | null; values: PublicAssetConfigurationValue[]; }

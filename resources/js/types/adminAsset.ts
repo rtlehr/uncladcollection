@@ -75,6 +75,7 @@ export interface AdminAsset {
     health: AssetHealth;
     files?: AdminAssetFile[];
     offerings?: AdminAssetOffering[];
+    configurations?: AdminAssetConfigurationGroup[];
 }
 
 export interface PendingAssetFile {
@@ -108,3 +109,8 @@ export interface LicenseTypeOption {
     download_limit: number | null;
     expires_after_days: number | null;
 }
+
+
+export interface ConfigurationDisplayTypeOption { value: string; label: string; uses_values: boolean; }
+export interface AdminAssetConfigurationValue { id: number | null; label: string; value: string; description: string | null; swatch_color: string | null; image_path: string | null; is_default: boolean; is_active: boolean; price_adjustment_cents: number; currency: string; }
+export interface AdminAssetConfigurationGroup { id: number | null; name: string; code: string; display_type: string; is_required: boolean; allows_multiple: boolean; placeholder: string | null; help_text: string | null; minimum_value: string | number | null; maximum_value: string | number | null; step_value: string | number | null; is_active: boolean; values: AdminAssetConfigurationValue[]; }
