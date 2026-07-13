@@ -43,8 +43,8 @@ const faqItems = [
 
 const relatedLinks = [
     {
-        title: 'Browse Images',
-        description: 'Explore natural, respectful photography from the image library.',
+        title: 'Browse Marketplace',
+        description: 'Explore natural, respectful photography, video, vectors, and digital resources.',
         href: '/images',
     },
     {
@@ -93,7 +93,7 @@ const relatedLinks = [
                     href="/images"
                     class="inline-flex h-12 items-center rounded-full bg-[var(--brand-primary)] px-6 text-sm font-semibold text-white"
                 >
-                    Browse Images
+                    Browse Marketplace
                 </Link>
 
                 <Link
@@ -216,8 +216,8 @@ const relatedLinks = [
 
         <PublicCTA
             title="Ready to explore the collection?"
-            description="Browse respectful imagery, read new stories, or create an account to save favorites and purchase licensed downloads."
-            primary-label="Browse Images"
+            description="Browse respectful digital assets, read new stories, or create an account to save favorites and build your library."
+            primary-label="Browse Marketplace"
             primary-href="/images"
             secondary-label="Read Stories"
             secondary-href="/blog"

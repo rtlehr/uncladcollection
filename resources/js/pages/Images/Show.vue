@@ -156,7 +156,7 @@ function visitNext(): void {
 
         :breadcrumbs="[
             { name: 'Home', url: '/' },
-            { name: 'Images', url: '/images' },
+            { name: 'Marketplace', url: '/images' },
             { name: imageRecord.title, url: `/images/${imageRecord.slug}` },
         ]"
 
@@ -172,7 +172,7 @@ function visitNext(): void {
                     class="inline-flex items-center gap-2 text-sm font-medium text-stone-500 transition hover:text-[var(--brand-accent)]"
                 >
                     <ArrowLeft class="h-4 w-4" />
-                    Back to image library
+                    Back to marketplace
                 </Link>
 
                 <ImageShareActions :title="imageRecord.title" />
@@ -264,7 +264,7 @@ function visitNext(): void {
                                 ]"
                             />
 
-                            {{ favoriteState ? 'Saved' : 'Save Image' }}
+                            {{ favoriteState ? 'Saved' : 'Save Asset' }}
                         </button>
                     </div>
 
@@ -361,7 +361,7 @@ function visitNext(): void {
                         class="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white transition hover:opacity-90"
                     >
                         <Download class="h-4 w-4" />
-                        Download Image
+                        Download Asset
                     </a>
 
                     <button
@@ -377,7 +377,7 @@ function visitNext(): void {
 
                 <div class="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
                     <h2 class="font-semibold">
-                        Image Details
+                        Asset Details
                     </h2>
 
                     <dl class="mt-4 space-y-3 text-sm">
@@ -447,7 +447,7 @@ function visitNext(): void {
                             </div>
 
                             <div class="text-xs text-stone-500">
-                                Image contributor
+                                Asset creator
                             </div>
                         </div>
                     </div>
@@ -467,7 +467,7 @@ function visitNext(): void {
                         </p>
 
                         <h2 class="mt-3 text-3xl font-semibold tracking-tight">
-                            Related Images
+                            Related Assets
                         </h2>
                     </div>
 

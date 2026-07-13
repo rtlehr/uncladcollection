@@ -123,6 +123,7 @@ class PublicAssetCatalogService
             'starting_price_cents' => $startingPrice !== null ? (int) $startingPrice : null,
             'currency' => $currency,
             'is_ai_generated' => $asset->is_ai_generated,
+            'is_featured' => $asset->is_featured,
             'is_favoritable' => $legacyImage !== null,
             'is_favorited' => (bool) ($legacyImage?->favorites?->isNotEmpty()),
             'favorites_count' => $asset->favorites_count,

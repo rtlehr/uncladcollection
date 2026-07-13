@@ -32,7 +32,7 @@ function scrollToPurchase(): void {
             class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
         >
             <Download class="h-4 w-4" />
-            Download Image
+            Download Asset
         </Link>
 
         <button

@@ -20,7 +20,7 @@ withDefaults(
         eyebrow: null,
         description: null,
         heroImage: null,
-        primaryLabel: 'Browse Images',
+        primaryLabel: 'Browse Marketplace',
         primaryHref: '/images',
         secondaryLabel: 'Read Stories',
         secondaryHref: '/blog',
@@ -62,14 +62,14 @@ withDefaults(
                     <Search class="ml-3 h-5 w-5 shrink-0 text-stone-400" aria-hidden="true" />
 
                     <label for="homepage-search" class="sr-only">
-                        Search images
+                        Search digital assets
                     </label>
 
                     <input
                         id="homepage-search"
                         name="search"
                         type="search"
-                        placeholder="Search the image library..."
+                        placeholder="Search the marketplace..."
                         class="min-w-0 flex-1 border-0 bg-transparent px-2 py-2 text-sm outline-none placeholder:text-stone-400"
                     />
 
@@ -120,7 +120,7 @@ withDefaults(
 
                 <div class="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
                     <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/65">
-                        Featured image
+                        Featured asset
                     </p>
 
                     <h2 class="mt-2 text-2xl font-semibold sm:text-3xl">

@@ -15,11 +15,11 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="My Purchases" />
+    <Head title="My Library" />
 
     <div class="space-y-6 p-6">
         <PageHeader
-            title="My Purchases"
+            title="My Library"
             description="View and download your licensed images."
         />
 
@@ -42,7 +42,7 @@ defineProps<{
             <template #actions>
                 <Button as-child variant="outline">
                     <Link href="/images">
-                        Browse Images
+                        Browse Marketplace
                     </Link>
                 </Button>
             </template>

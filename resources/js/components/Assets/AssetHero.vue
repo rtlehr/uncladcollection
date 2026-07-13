@@ -16,7 +16,7 @@ defineProps<{
                 :href="backHref ?? '/images'"
                 class="text-sm text-muted-foreground transition hover:text-foreground hover:underline"
             >
-                ← {{ backLabel ?? 'Back to Images' }}
+                ← {{ backLabel ?? 'Back to Marketplace' }}
             </Link>
 
             <h1 class="mt-2 break-words text-3xl font-semibold">

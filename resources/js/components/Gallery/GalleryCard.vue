@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, Heart, Images } from '@lucide/vue';
+import { ArrowUpRight, Heart, Images, Play } from '@lucide/vue';
 import { computed, ref } from 'vue';
 
 import AssetFormatBadges from '@/components/Assets/Public/AssetFormatBadges.vue';
+import MarketplaceMediaTypeBadge from '@/components/Marketplace/MarketplaceMediaTypeBadge.vue';
+import MarketplacePrice from '@/components/Marketplace/MarketplacePrice.vue';
 import PerformanceImage from '@/components/Public/PerformanceImage.vue';
 import type { GalleryAsset } from '@/types/gallery';
 
@@ -20,22 +22,16 @@ const favoriteState = ref(props.asset.is_favorited);
 const favoriteCount = ref(props.asset.favorites_count);
 
 const isAuthenticated = computed(() => Boolean((page.props.auth as any)?.user));
-
-const formattedPrice = computed(() => {
-    if (props.asset.starting_price_cents === null) return null;
-
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: props.asset.currency || 'USD',
-    }).format(props.asset.starting_price_cents / 100);
-});
+const hasVideo = computed(() => props.asset.formats.some((format) => ['MP4', 'MOV', 'WEBM', 'OGG'].includes(format.toUpperCase())));
 
 function toggleFavorite(): void {
     if (!props.asset.is_favoritable || !props.asset.favorite_url || !props.asset.unfavorite_url) return;
+
     if (!isAuthenticated.value) {
         router.visit('/login');
         return;
     }
+
     if (favoriteProcessing.value) return;
 
     favoriteProcessing.value = true;
@@ -62,9 +58,9 @@ function toggleFavorite(): void {
 </script>
 
 <template>
-    <article class="public-card group overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+    <article class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-stone-300 hover:shadow-xl focus-within:ring-2 focus-within:ring-[var(--brand-accent)] focus-within:ring-offset-2 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700">
         <div class="relative overflow-hidden bg-stone-200 dark:bg-stone-800">
-            <Link :href="asset.href" class="block" prefetch="hover">
+            <Link :href="asset.href" class="block focus:outline-none" prefetch="hover" :aria-label="`View ${asset.title}`">
                 <PerformanceImage
                     v-if="asset.preview_url"
                     :src="asset.preview_url"
@@ -73,17 +69,25 @@ function toggleFavorite(): void {
                     fetchpriority="low"
                     sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 520px) 50vw, 100vw"
                     wrapper-class="aspect-[4/3]"
-                    image-class="public-image-zoom object-cover"
+                    image-class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
                 />
+
                 <div v-else class="flex aspect-[4/3] items-center justify-center" role="img" :aria-label="`${asset.title}: preview unavailable`">
-                    <Images class="h-9 w-9 text-stone-400" />
+                    <Images class="h-10 w-10 text-stone-400" />
                 </div>
 
-                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-70 transition group-hover:opacity-95" />
-                <div class="absolute inset-x-0 bottom-0 hidden translate-y-2 p-4 text-white opacity-0 transition duration-300 sm:block sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
-                    <span class="inline-flex items-center gap-1 text-xs font-semibold">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-black/15 opacity-75 transition duration-300 group-hover:opacity-95" />
+
+                <div v-if="hasVideo" class="absolute inset-0 flex items-center justify-center">
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-black/40 text-white shadow-xl backdrop-blur transition duration-300 group-hover:scale-110 group-hover:bg-black/60">
+                        <Play class="ml-0.5 h-6 w-6 fill-current" aria-hidden="true" />
+                    </span>
+                </div>
+
+                <div class="absolute inset-x-0 bottom-0 translate-y-2 p-4 text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
                         View asset
-                        <ArrowUpRight class="h-3.5 w-3.5" />
+                        <ArrowUpRight class="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
                 </div>
             </Link>
@@ -91,20 +95,23 @@ function toggleFavorite(): void {
             <button
                 v-if="asset.is_favoritable"
                 type="button"
-                class="public-icon-button absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur transition hover:bg-black/70 disabled:opacity-50"
-                :aria-label="favoriteState ? 'Remove from favorites' : 'Add to favorites'"
+                class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
+                :aria-label="favoriteState ? `Remove ${asset.title} from favorites` : `Add ${asset.title} to favorites`"
                 :aria-pressed="favoriteState"
                 :disabled="favoriteProcessing"
                 @click="toggleFavorite"
             >
-                <Heart :class="['h-5 w-5', favoriteState ? 'fill-current' : '']" />
+                <Heart :class="['h-5 w-5', favoriteState ? 'fill-current' : '']" aria-hidden="true" />
             </button>
 
-            <div class="absolute left-3 top-3 flex flex-col items-start gap-2">
-                <span class="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur">
-                    {{ asset.asset_type_label }}
+            <div class="absolute left-3 top-3 flex flex-wrap items-center gap-2 pr-14">
+                <MarketplaceMediaTypeBadge :type="asset.asset_type" :label="asset.asset_type_label" />
+
+                <span v-if="asset.is_featured" class="rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-stone-950 shadow-sm">
+                    Featured
                 </span>
-                <span v-if="asset.is_ai_generated" class="rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur">
+
+                <span v-if="asset.is_ai_generated" class="rounded-full bg-violet-600/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white shadow-sm backdrop-blur">
                     AI Generated
                 </span>
             </div>
@@ -114,29 +121,29 @@ function toggleFavorite(): void {
             </div>
         </div>
 
-        <div class="p-4 sm:p-5">
-            <div v-if="showCollection && asset.collection" class="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-accent)]">
+        <div class="p-5">
+            <div v-if="showCollection && asset.collection" class="mb-2 truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-accent)]">
                 {{ asset.collection.name }}
             </div>
 
-            <Link :href="asset.href" prefetch="hover" class="block line-clamp-2 text-base font-semibold leading-snug transition hover:text-[var(--brand-accent)] sm:text-lg">
+            <Link :href="asset.href" prefetch="hover" class="block line-clamp-2 text-lg font-semibold leading-snug transition hover:text-[var(--brand-accent)] focus-visible:outline-none focus-visible:underline">
                 {{ asset.title }}
             </Link>
 
-            <div class="mt-2 flex items-center justify-between gap-3">
+            <div class="mt-3 flex items-end justify-between gap-4">
                 <p class="min-w-0 truncate text-sm text-stone-500 dark:text-stone-400">
                     {{ asset.photographer ? `By ${asset.photographer}` : 'Unclad Collection' }}
                 </p>
-                <p v-if="formattedPrice" class="shrink-0 text-sm font-semibold text-stone-800 dark:text-stone-100">
-                    From {{ formattedPrice }}
-                </p>
+
+                <MarketplacePrice :price-cents="asset.starting_price_cents" :currency="asset.currency" compact />
             </div>
 
-            <div class="mt-3 flex items-center justify-between border-t border-stone-100 pt-3 text-[11px] text-stone-500 sm:mt-4 sm:pt-4 sm:text-xs dark:border-stone-800 dark:text-stone-400">
+            <div class="mt-4 flex items-center justify-between border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
                 <span>{{ asset.views_count.toLocaleString() }} views</span>
-                <span class="inline-flex items-center gap-1">
-                    <Heart class="h-3.5 w-3.5" />
+                <span class="inline-flex items-center gap-1.5">
+                    <Heart class="h-3.5 w-3.5" aria-hidden="true" />
                     {{ favoriteCount.toLocaleString() }}
+                    <span class="sr-only">favorites</span>
                 </span>
             </div>
         </div>

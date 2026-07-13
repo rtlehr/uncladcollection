@@ -25,7 +25,7 @@ defineProps<{
             :title="licenseRecord.image.title"
             :collection-name="licenseRecord.image.collection?.name"
             back-href="/purchases"
-            back-label="Back to My Purchases"
+            back-label="Back to My Library"
         >
             <template #actions>
                 <Button
@@ -78,10 +78,10 @@ defineProps<{
             <aside class="space-y-6">
                 <PurchaseSummary :license="licenseRecord" />
 
-                <DetailSection title="Image Details">
+                <DetailSection title="Asset Details">
                     <div class="space-y-4">
                         <DetailRow
-                            label="Photographer"
+                            label="Creator"
                             :value="licenseRecord.image.photographer"
                         />
 

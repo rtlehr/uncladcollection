@@ -40,10 +40,10 @@ const { can } = useAuth();
 
 const mainNavItems: NavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Blog', href: '/blog', icon: Newspaper },
-    { title: 'Images', href: '/images', icon: ImageIcon },
-    { title: 'My Favorites', href: '/favorites', icon: Heart },
-    { title: 'My Purchases', href: '/purchases', icon: BadgeDollarSign },
+    { title: 'Stories', href: '/blog', icon: Newspaper },
+    { title: 'Marketplace', href: '/images', icon: ImageIcon },
+    { title: 'Favorites', href: '/favorites', icon: Heart },
+    { title: 'My Library', href: '/purchases', icon: BadgeDollarSign },
 ];
 
 const adminNavItems: NavItem[] = [];

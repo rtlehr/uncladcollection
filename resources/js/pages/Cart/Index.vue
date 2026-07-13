@@ -130,14 +130,14 @@ function checkout(): void {
                 </h2>
 
                 <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-stone-600 dark:text-stone-400">
-                    Browse the image library and choose a license to begin.
+                    Browse the marketplace and choose a license to begin.
                 </p>
 
                 <Link
                     href="/images"
                     class="mt-6 inline-flex min-h-11 items-center rounded-full bg-[var(--brand-primary)] px-5 text-sm font-semibold text-white"
                 >
-                    Browse Images
+                    Browse Marketplace
                 </Link>
             </div>
 

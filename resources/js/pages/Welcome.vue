@@ -124,11 +124,11 @@ function collectionHref(collection: HomeCollection): string {
 
     <PublicPageLayout>
         <PublicHomeHero
-            :eyebrow="stringSetting(homepage.hero_eyebrow, 'Authentic imagery. Thoughtful stories.')"
+            :eyebrow="stringSetting(homepage.hero_eyebrow, 'Authentic media. Thoughtful stories.')"
             :title="stringSetting(homepage.hero_title, 'A more natural way to represent nudist life.')"
             :description="stringSetting(homepage.hero_description, siteTagline)"
             :hero-image="heroImage"
-            :primary-label="stringSetting(homepage.hero_primary_button_label, 'Browse Images')"
+            :primary-label="stringSetting(homepage.hero_primary_button_label, 'Browse Marketplace')"
             :primary-href="stringSetting(homepage.hero_primary_button_url, '/images')"
             :secondary-label="stringSetting(homepage.hero_secondary_button_label, 'Read Stories')"
             :secondary-href="stringSetting(homepage.hero_secondary_button_url, '/blog')"
@@ -141,7 +141,7 @@ function collectionHref(collection: HomeCollection): string {
             <div class="mx-auto grid max-w-[1440px] divide-y divide-stone-200 px-5 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:px-8 lg:grid-cols-4 lg:px-12 dark:divide-stone-800">
                 <div class="px-4 py-8 sm:px-7">
                     <div class="text-3xl font-semibold tracking-tight">{{ formatNumber(statistics.images) }}+</div>
-                    <div class="mt-1 text-sm text-stone-500 dark:text-stone-400">Licensed images</div>
+                    <div class="mt-1 text-sm text-stone-500 dark:text-stone-400">Licensed assets</div>
                 </div>
                 <div class="px-4 py-8 sm:px-7">
                     <div class="text-3xl font-semibold tracking-tight">{{ formatNumber(statistics.collections) }}</div>
@@ -163,7 +163,7 @@ function collectionHref(collection: HomeCollection): string {
                 <PublicSectionHeading
                     eyebrow="Why Unclad Collection"
                     :title="stringSetting(homepage.why_title, 'Made for a community that deserves better representation')"
-                    :description="stringSetting(homepage.why_description, 'A thoughtful source for natural, respectful imagery and writing.')"
+                    :description="stringSetting(homepage.why_description, 'A thoughtful source for natural, respectful digital media and stories.')"
                 />
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -173,7 +173,7 @@ function collectionHref(collection: HomeCollection): string {
                         </div>
                         <h3 class="mt-5 text-lg font-semibold">Respectful by design</h3>
                         <p class="mt-2 text-sm leading-7 text-stone-600 dark:text-stone-400">
-                            Imagery selected to represent nudism as normal, social, wholesome, and human.
+                            Media selected to represent nudism as normal, social, wholesome, and human.
                         </p>
                     </article>
 
@@ -193,7 +193,7 @@ function collectionHref(collection: HomeCollection): string {
                         </div>
                         <h3 class="mt-5 text-lg font-semibold">Community perspective</h3>
                         <p class="mt-2 text-sm leading-7 text-stone-600 dark:text-stone-400">
-                            Photography and writing shaped around the lived experiences of nudists.
+                            Creative media and stories shaped around the lived experiences of nudists.
                         </p>
                     </article>
 
@@ -201,9 +201,9 @@ function collectionHref(collection: HomeCollection): string {
                         <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--brand-accent)_14%,transparent)] text-[var(--brand-accent)]">
                             <BookOpen class="h-5 w-5" aria-hidden="true" />
                         </div>
-                        <h3 class="mt-5 text-lg font-semibold">More than stock photos</h3>
+                        <h3 class="mt-5 text-lg font-semibold">More than stock media</h3>
                         <p class="mt-2 text-sm leading-7 text-stone-600 dark:text-stone-400">
-                            Stories, guidance, advocacy, ideas, and resources alongside the image library.
+                            Stories, guidance, advocacy, ideas, and resources alongside the marketplace.
                         </p>
                     </article>
                 </div>
@@ -218,12 +218,12 @@ function collectionHref(collection: HomeCollection): string {
                 <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                     <PublicSectionHeading
                         :eyebrow="stringSetting(homepage.collections_eyebrow, 'Curated collections')"
-                        :title="stringSetting(homepage.collections_title, 'Explore imagery with purpose')"
+                        :title="stringSetting(homepage.collections_title, 'Explore media with purpose')"
                         :description="stringSetting(homepage.collections_description, 'Browse carefully organized collections created for editorial, educational, community, and marketing use.')"
                     />
 
                     <Link href="/images" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-accent)]">
-                        Browse all images
+                        Browse the marketplace
                         <ArrowRight class="h-4 w-4" aria-hidden="true" />
                     </Link>
                 </div>
@@ -252,13 +252,13 @@ function collectionHref(collection: HomeCollection): string {
 
                         <div class="p-6">
                             <div class="text-xs font-semibold uppercase tracking-wider text-stone-500">
-                                {{ collection.images_count }} images
+                                {{ collection.images_count }} assets
                             </div>
                             <h3 class="mt-2 text-2xl font-semibold transition group-hover:text-[var(--brand-accent)]">
                                 {{ collection.name }}
                             </h3>
                             <p class="mt-3 line-clamp-3 text-sm leading-7 text-stone-600 dark:text-stone-400">
-                                {{ collection.description || 'Explore this curated image collection.' }}
+                                {{ collection.description || 'Explore this curated collection.' }}
                             </p>
                         </div>
                     </Link>
@@ -272,13 +272,13 @@ function collectionHref(collection: HomeCollection): string {
         >
             <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                 <PublicSectionHeading
-                    :eyebrow="stringSetting(homepage.images_eyebrow, 'Image library')"
-                    :title="stringSetting(homepage.images_title, 'Photography that feels honest')"
-                    :description="stringSetting(homepage.images_description, 'Discover natural, respectful imagery suited for publications, campaigns, resorts, organizations, and personal projects.')"
+                    :eyebrow="stringSetting(homepage.images_eyebrow, 'Marketplace')"
+                    :title="stringSetting(homepage.images_title, 'Digital media that feels honest')"
+                    :description="stringSetting(homepage.images_description, 'Discover natural, respectful photography, video, vectors, and creative resources for publications, campaigns, resorts, organizations, and personal projects.')"
                 />
 
                 <Link href="/images" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-accent)]">
-                    Explore the library
+                    Explore the marketplace
                     <ArrowRight class="h-4 w-4" aria-hidden="true" />
                 </Link>
             </div>
@@ -334,7 +334,7 @@ function collectionHref(collection: HomeCollection): string {
                     />
 
                     <Link href="/blog" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-accent)]">
-                        Read all articles
+                        Read all stories
                         <ArrowRight class="h-4 w-4" aria-hidden="true" />
                     </Link>
                 </div>
@@ -390,11 +390,11 @@ function collectionHref(collection: HomeCollection): string {
         </section>
 
         <PublicCTA
-            :title="stringSetting(homepage.cta_title, 'Find the right image. Tell a better story.')"
-            :description="stringSetting(homepage.cta_description, 'Create an account to save favorites, purchase licensed downloads, and stay connected with new photography and articles.')"
+            :title="stringSetting(homepage.cta_title, 'Find the right asset. Tell a better story.')"
+            :description="stringSetting(homepage.cta_description, 'Create an account to save favorites, build your library, and stay connected with new assets and stories.')"
             :primary-label="stringSetting(homepage.cta_button_label, 'Create an Account')"
             primary-href="/register"
-            secondary-label="Browse Images"
+            secondary-label="Browse Marketplace"
             secondary-href="/images"
         />
     </PublicPageLayout>

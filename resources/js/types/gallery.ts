@@ -24,6 +24,7 @@ export interface GalleryAsset {
     starting_price_cents: number | null;
     currency: string;
     is_ai_generated: boolean;
+    is_featured: boolean;
     is_favoritable: boolean;
     is_favorited: boolean;
     favorites_count: number;

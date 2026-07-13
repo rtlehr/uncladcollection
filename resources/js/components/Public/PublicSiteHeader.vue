@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
                 aria-label="Primary navigation"
             >
                 <Link href="/images" class="transition hover:text-[var(--brand-accent)]">
-                    Images
+                    Marketplace
                 </Link>
 
                 <Link href="/blog" class="transition hover:text-[var(--brand-accent)]">
@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
                     class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
                     @click="closeMenu"
                 >
-                    Images
+                    Marketplace
                 </Link>
 
                 <Link

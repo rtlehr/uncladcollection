@@ -13,7 +13,7 @@ defineProps<{
         <dl class="space-y-4">
             <div>
                 <dt class="text-sm font-medium text-muted-foreground">
-                    Photographer
+                    Creator
                 </dt>
 
                 <dd class="mt-1">

@@ -138,7 +138,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 
         :breadcrumbs="[
             { name: 'Home', url: '/' },
-            { name: 'Images', url: '/images' },
+            { name: 'Marketplace', url: '/images' },
             { name: collection.name, url: `/collections/${collection.slug}` },
         ]"
 
@@ -201,7 +201,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
         >
             <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
                 <h2 class="text-3xl font-semibold tracking-tight">
-                    Related Articles
+                    Related Stories
                 </h2>
 
                 <div class="mt-8 grid gap-6 md:grid-cols-3">

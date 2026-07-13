@@ -45,7 +45,7 @@ function formatNumber(value: number): string {
                     <ChevronRight class="h-4 w-4" />
 
                     <Link href="/images" class="hover:text-white">
-                        Images
+                        Assets
                     </Link>
 
                     <ChevronRight class="h-4 w-4" />
@@ -66,7 +66,7 @@ function formatNumber(value: number): string {
                 <p class="mt-5 max-w-xl text-base leading-8 text-white/75 sm:text-lg">
                     {{
                         collection.description
-                        || 'Explore this carefully curated selection from the Unclad Collection image library.'
+                        || 'Explore this carefully curated selection from the Unclad Collection marketplace.'
                     }}
                 </p>
 
@@ -78,7 +78,7 @@ function formatNumber(value: number): string {
                     <div>
                         <dt class="flex items-center gap-2 text-xs uppercase tracking-wider text-white/55">
                             <Images class="h-4 w-4" />
-                            Images
+                            Assets
                         </dt>
 
                         <dd class="mt-2 text-2xl font-semibold">
@@ -164,7 +164,7 @@ function formatNumber(value: number): string {
             >
                 <div class="text-center text-white/70">
                     <Images class="mx-auto h-10 w-10" />
-                    <p class="mt-3">Images will appear here when added.</p>
+                    <p class="mt-3">Assets will appear here when added.</p>
                 </div>
             </div>
         </div>

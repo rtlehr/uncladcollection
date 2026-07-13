@@ -31,6 +31,7 @@ it('renders the public images route from published assets without duplicating li
         'legacy_image_id' => $image->id,
         'title' => $image->title,
         'slug' => $image->slug,
+        'is_featured' => true,
     ]);
     catalogFile($asset, 'jpg');
 
@@ -41,6 +42,7 @@ it('renders the public images route from published assets without duplicating li
             ->has('assets.data', 1)
             ->where('assets.data.0.id', $asset->id)
             ->where('assets.data.0.legacy_image_id', $image->id)
+            ->where('assets.data.0.is_featured', true)
             ->where('assets.data.0.href', route('images.show', $image)));
 });
 

@@ -30,7 +30,7 @@ const socialLinks = computed(() => [
                 <div v-else class="text-xl font-semibold">{{ siteName }}</div>
 
                 <p class="mt-4 max-w-md text-sm leading-6 text-stone-600 dark:text-stone-400">
-                    {{ site.tagline || 'Licensed imagery and thoughtful stories for the nudist community.' }}
+                    {{ site.tagline || 'Professional digital assets and thoughtful stories for the nudist community.' }}
                 </p>
 
                 <div v-if="socialLinks.length" class="mt-6 flex gap-2">
@@ -51,7 +51,7 @@ const socialLinks = computed(() => [
             <div>
                 <h2 class="text-sm font-semibold">Explore</h2>
                 <nav class="mt-4 grid gap-3 text-sm text-stone-600 dark:text-stone-400">
-                    <Link href="/images" class="hover:text-[var(--brand-accent)]">Image library</Link>
+                    <Link href="/images" class="hover:text-[var(--brand-accent)]">Marketplace</Link>
                     <Link href="/blog" class="hover:text-[var(--brand-accent)]">Stories</Link>
                     <Link href="/public-page" class="hover:text-[var(--brand-accent)]">About</Link>
                     <Link v-if="isAuthenticated" href="/favorites" class="hover:text-[var(--brand-accent)]">Favorites</Link>
@@ -76,7 +76,7 @@ const socialLinks = computed(() => [
         <div class="border-t border-stone-200 dark:border-stone-800">
             <div class="mx-auto flex max-w-[1440px] flex-col gap-2 px-5 py-6 text-xs text-stone-500 sm:px-8 md:flex-row md:justify-between lg:px-12">
                 <span>{{ site.footer_text || `© ${siteName}. All rights reserved.` }}</span>
-                <span>Natural imagery. Thoughtful representation.</span>
+                <span>Authentic media. Thoughtful representation.</span>
             </div>
         </div>
     </footer>
