@@ -13,6 +13,7 @@ import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
 import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
+import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
 import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const props = defineProps<{
@@ -176,6 +177,15 @@ function moveFile(index: number, offset: number) {
             </div>
             <FormActions submit-label="Save Asset" :processing="form.processing" @cancel="router.visit('/admin/assets')" />
         </form>
+
+        <FormSection title="Preview Gallery" description="Review browser-safe asset files using the same presentation framework as the public page.">
+            <AssetFilePreviewGallery
+                :files="assetRecord.files ?? []"
+                :asset-title="assetRecord.title"
+                :initial-file-id="assetRecord.primary_preview_file_id"
+                compact
+            />
+        </FormSection>
 
         <FormSection title="Current Files" description="Change roles, preview assignments, downloadability, order, or replace a revision.">
             <div class="space-y-3">

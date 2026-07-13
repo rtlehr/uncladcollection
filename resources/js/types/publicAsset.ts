@@ -1,19 +1,6 @@
-export interface PublicAssetFile {
-    id: number;
-    role: string;
-    role_label: string;
-    media_type: string;
-    original_filename: string;
-    extension: string;
-    mime_type: string | null;
-    size_bytes: number | null;
-    width: number | null;
-    height: number | null;
-    duration_seconds: number | null;
-    page_count: number | null;
-    is_downloadable: boolean;
-    url?: string;
-}
+import type { MediaPresentationFile } from '@/types/mediaPresentation';
+
+export interface PublicAssetFile extends MediaPresentationFile {}
 
 export interface PublicAssetOffering {
     id: number;

@@ -1,3 +1,5 @@
+import type { MediaPreviewKind } from '@/types/mediaPresentation';
+
 export interface SelectOption {
     value: string;
     label: string;
@@ -29,6 +31,11 @@ export interface AdminAssetFile {
     is_primary_preview: boolean;
     is_poster: boolean;
     public_url: string | null;
+    can_preview: boolean;
+    preview_kind: MediaPreviewKind;
+    preview_url: string | null;
+    poster_url: string | null;
+    preview_note: string | null;
 }
 
 export interface AdminAsset {

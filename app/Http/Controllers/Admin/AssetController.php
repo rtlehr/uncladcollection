@@ -10,15 +10,19 @@ use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Models\LicenseType;
 use App\Services\AssetOfferingService;
+use App\Services\AssetMediaPresentationService;
 use App\Models\Collection;
 use App\Services\AssetService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AssetController extends Controller
 {
@@ -297,6 +301,17 @@ class AssetController extends Controller
         ];
     }
 
+    public function previewFile(
+        Asset $asset,
+        AssetFile $assetFile,
+        AssetMediaPresentationService $presentation,
+    ): BinaryFileResponse|StreamedResponse|HttpResponse {
+        $this->assertFileBelongsToAsset($asset, $assetFile);
+        abort_unless($assetFile->is_active, 404);
+
+        return $presentation->response($assetFile);
+    }
+
     private function assetTypes(): array
     {
         return collect(AssetType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label()])->values()->all();
@@ -333,6 +348,9 @@ class AssetController extends Controller
         ];
 
         if ($detailed) {
+            $presentation = app(AssetMediaPresentationService::class);
+            $posterUrl = $asset->posterFile ? $presentation->url($asset, $asset->posterFile, true) : null;
+
             $data['files'] = $asset->activeFiles->map(fn (AssetFile $file) => [
                 'id' => $file->id,
                 'uuid' => $file->uuid,
@@ -354,6 +372,11 @@ class AssetController extends Controller
                 'is_primary_preview' => $asset->primary_preview_file_id === $file->id,
                 'is_poster' => $asset->poster_file_id === $file->id,
                 'public_url' => $file->publicUrl(),
+                'can_preview' => $presentation->canPreview($file),
+                'preview_kind' => $presentation->previewKind($file),
+                'preview_url' => $presentation->canPreview($file) ? $presentation->url($asset, $file, true) : null,
+                'poster_url' => $presentation->previewKind($file) === 'video' ? $posterUrl : null,
+                'preview_note' => $presentation->format($asset, $file, $posterUrl, true)['preview_note'],
             ])->values();
             $data['offerings'] = $asset->offerings->map(fn ($offering) => [
                 'id' => $offering->id,

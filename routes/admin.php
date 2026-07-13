@@ -70,6 +70,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
 
+        Route::get('/assets/{asset}/files/{assetFile}/preview', [AssetController::class, 'previewFile'])
+            ->middleware('permission:manage_images')
+            ->name('assets.files.preview');
+
         Route::post('/assets/{asset}/files', [AssetController::class, 'addFiles'])
             ->middleware('permission:manage_images')
             ->name('assets.files.store');
