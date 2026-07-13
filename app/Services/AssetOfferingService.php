@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class AssetOfferingService
 {
+    public function __construct(private readonly AssetPricingService $pricingService) {}
     public function saveMany(Asset $asset, array $offerings): void
     {
         DB::transaction(function () use ($asset, $offerings): void {
@@ -36,6 +37,15 @@ class AssetOfferingService
             }
 
             $asset->offerings()->whereNotIn('id', $keep)->delete();
+
+            $pricingTiers = [];
+            foreach ($offerings as $data) {
+                $offering = $asset->offerings()->where('license_type_id', $data['license_type_id'])->first();
+                foreach ($data['pricing_tiers'] ?? [] as $tier) {
+                    $pricingTiers[] = [...$tier, 'asset_offering_id' => $offering?->id];
+                }
+            }
+            $this->pricingService->saveMany($asset, $pricingTiers);
         });
     }
 

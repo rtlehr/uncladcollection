@@ -20,7 +20,7 @@ defineProps<{
     <div class="space-y-6 p-6">
         <PageHeader
             title="My Library"
-            description="View and download your licensed images."
+            description="Review your licensed assets, purchase details, and available downloads."
         />
 
         <div
@@ -36,8 +36,8 @@ defineProps<{
 
         <EmptyState
             v-else
-            title="No purchases yet"
-            description="You have not purchased any images yet."
+            title="Your library is empty"
+            description="Assets you purchase will appear here with their license and download details."
         >
             <template #actions>
                 <Button as-child variant="outline">
@@ -50,7 +50,7 @@ defineProps<{
 
         <Pagination
             :links="licenses.links"
-            item-label="purchases"
+            item-label="licensed assets"
         />
     </div>
 </template>

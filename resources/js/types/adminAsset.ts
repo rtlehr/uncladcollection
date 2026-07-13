@@ -66,6 +66,7 @@ export interface AdminAsset {
     is_active: boolean;
     is_featured: boolean;
     is_ai_generated: boolean;
+    allows_quantity: boolean;
     files_count: number;
     active_files_count: number;
     primary_preview_file_id: number | null;
@@ -86,6 +87,8 @@ export interface PendingAssetFile {
     previewUrl: string | null;
 }
 
+export interface AdminAssetPricingTier { id: number | null; minimum_quantity: number; maximum_quantity: number | null; pricing_type: 'fixed_unit_price' | 'percentage_off'; unit_price_cents: number | null; percentage_off: number | null; currency: string; is_active: boolean; }
+
 export interface AdminAssetOffering {
     id: number | null;
     license_type_id: number;
@@ -98,6 +101,7 @@ export interface AdminAssetOffering {
     include_all_active_files: boolean;
     is_active: boolean;
     file_ids: number[];
+    pricing_tiers: AdminAssetPricingTier[];
 }
 
 export interface LicenseTypeOption {

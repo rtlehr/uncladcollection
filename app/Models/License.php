@@ -14,19 +14,11 @@ class License extends Model
     public const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'user_id',
-        'image_id',
-        'order_id',
-        'order_item_id',
-        'license_type_id',
-        'license_key',
-        'status',
-        'starts_at',
-        'expires_at',
-        'download_limit',
-        'downloads_used',
-        'license_name',
-        'license_terms',
+        'user_id', 'image_id', 'asset_id', 'order_id', 'order_item_id',
+        'license_type_id', 'asset_offering_id', 'license_key', 'status',
+        'fulfillment_type', 'commerce_version', 'starts_at', 'expires_at',
+        'download_limit', 'downloads_used', 'license_name', 'license_terms',
+        'included_asset_files_snapshot', 'configuration_snapshot', 'pricing_snapshot',
         'metadata',
     ];
 
@@ -34,76 +26,40 @@ class License extends Model
         'starts_at' => 'datetime',
         'expires_at' => 'datetime',
         'metadata' => 'array',
+        'included_asset_files_snapshot' => 'array',
+        'configuration_snapshot' => 'array',
+        'pricing_snapshot' => 'array',
         'download_limit' => 'integer',
         'downloads_used' => 'integer',
     ];
 
     protected static function booted(): void
     {
-        static::creating(function (License $license) {
+        static::creating(function (License $license): void {
             if (blank($license->license_key)) {
-                $license->license_key = 'LIC-' . strtoupper(bin2hex(random_bytes(8)));
+                $license->license_key = 'LIC-'.strtoupper(bin2hex(random_bytes(8)));
             }
         });
     }
 
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function image(): BelongsTo
-    {
-        return $this->belongsTo(Image::class);
-    }
-
-    public function order(): BelongsTo
-    {
-        return $this->belongsTo(Order::class);
-    }
-
-    public function orderItem(): BelongsTo
-    {
-        return $this->belongsTo(OrderItem::class);
-    }
-
-    public function licenseType(): BelongsTo
-    {
-        return $this->belongsTo(LicenseType::class);
-    }
+    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function image(): BelongsTo { return $this->belongsTo(Image::class); }
+    public function asset(): BelongsTo { return $this->belongsTo(Asset::class); }
+    public function order(): BelongsTo { return $this->belongsTo(Order::class); }
+    public function orderItem(): BelongsTo { return $this->belongsTo(OrderItem::class); }
+    public function licenseType(): BelongsTo { return $this->belongsTo(LicenseType::class); }
+    public function assetOffering(): BelongsTo { return $this->belongsTo(AssetOffering::class); }
+    public function downloads(): HasMany { return $this->hasMany(Download::class); }
 
     public function isActive(): bool
     {
-        if ($this->status !== self::STATUS_ACTIVE) {
-            return false;
-        }
-
-        if ($this->expires_at && now()->greaterThan($this->expires_at)) {
-            return false;
-        }
-
-        return true;
+        return $this->status === self::STATUS_ACTIVE
+            && (! $this->expires_at || now()->lessThan($this->expires_at));
     }
 
     public function canDownload(): bool
     {
-        if (! $this->isActive()) {
-            return false;
-        }
-
-        if (
-            $this->download_limit !== null &&
-            $this->downloads_used >= $this->download_limit
-        ) {
-            return false;
-        }
-
-        return true;
+        return $this->isActive()
+            && ($this->download_limit === null || $this->downloads_used < $this->download_limit);
     }
-
-    public function downloads(): HasMany
-    {
-        return $this->hasMany(Download::class);
-    }
-
 }

@@ -6,31 +6,47 @@ export interface PurchaseOrderSummary {
     order_number: string | null;
     paid_at: string | null;
     total_formatted: string | null;
+    line_total_formatted: string | null;
 }
 
-export interface PurchasedAssetImage {
+export interface PurchaseConfigurationLabel {
+    group: string;
+    values: string[];
+}
+
+export interface PurchaseConfigurationSnapshot {
+    labels?: PurchaseConfigurationLabel[];
+    selections?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
+export interface PurchasedProduct {
     id: number;
     title: string;
     slug: string;
-    photographer: string | null;
-    thumbnail_url: string | null;
-    icon_url: string | null;
+    creator: string | null;
+    preview_url: string | null;
     is_ai_generated: boolean;
-    favorites_count: number;
-    downloads_count: number;
-    purchases_count: number;
-    views_count: number;
+    asset_type_label: string;
+    public_url: string;
 }
 
 export interface PurchasedAsset {
     id: number;
+    kind: 'asset' | 'legacy_image';
     license_key: string;
     license_name: string;
     downloads_used: number;
     download_limit: number | null;
     starts_at: string | null;
     expires_at: string | null;
-    image: PurchasedAssetImage;
+    can_download: boolean;
+    detail_url: string;
+    download_url: string | null;
+    quantity: number;
+    configuration: PurchaseConfigurationSnapshot | null;
+    included_files_count: number;
+    product: PurchasedProduct;
     order: PurchaseOrderSummary;
 }
 
@@ -40,24 +56,27 @@ export interface PaginatedPurchases {
     meta?: unknown;
 }
 
-export interface PurchaseDetailImage {
-    id: number;
-    title: string;
-    slug: string;
+export interface PurchaseDetailProduct extends PurchasedProduct {
     description: string | null;
-    photographer: string | null;
-    thumbnail_url: string | null;
-    high_res_url: string | null;
-    original_url: string | null;
-    is_ai_generated: boolean;
     created_at: string | null;
     collection: AssetOption | null;
     categories: AssetOption[];
     tags: AssetOption[];
 }
 
+export interface PurchasedIncludedFile {
+    id: number | null;
+    name: string;
+    role: string | null;
+    media_type: string | null;
+    extension: string | null;
+    mime_type: string | null;
+    size_bytes: number | null;
+}
+
 export interface PurchaseDetailRecord {
     id: number;
+    kind: 'asset' | 'legacy_image';
     license_key: string;
     license_name: string;
     license_terms: string | null;
@@ -66,6 +85,11 @@ export interface PurchaseDetailRecord {
     starts_at: string | null;
     expires_at: string | null;
     can_download: boolean;
-    image: PurchaseDetailImage;
+    download_url: string | null;
+    quantity: number;
+    configuration: PurchaseConfigurationSnapshot | null;
+    pricing: Record<string, unknown> | null;
+    included_files: PurchasedIncludedFile[];
+    product: PurchaseDetailProduct;
     order: PurchaseOrderSummary;
 }

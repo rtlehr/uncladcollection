@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetOffering extends Model
 {
@@ -43,6 +44,11 @@ class AssetOffering extends Model
         }
 
         return $this->files()->where('asset_files.is_active', true)->where('asset_files.is_downloadable', true)->get();
+    }
+
+    public function pricingTiers(): HasMany
+    {
+        return $this->hasMany(AssetPricingTier::class)->orderBy('minimum_quantity')->orderBy('sort_order');
     }
 
     public function getPriceFormattedAttribute(): string

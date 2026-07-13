@@ -4,6 +4,7 @@ import {
     BadgeDollarSign,
     BookOpen,
     ClipboardList,
+    LibraryBig,
     Download,
     FolderGit2,
     Heart,
@@ -58,6 +59,7 @@ if (can('manage_tags')) adminNavItems.push({ title: 'Tags', href: '/admin/tags',
 if (can('manage_collections')) adminNavItems.push({ title: 'Collections', href: '/admin/collections', icon: Images });
 if (can('manage_images')) {
     adminNavItems.push({ title: 'Assets', href: '/admin/assets', icon: FolderGit2 });
+    adminNavItems.push({ title: 'Configuration Library', href: '/admin/configuration-templates', icon: LibraryBig });
     adminNavItems.push({ title: 'Legacy Images', href: '/admin/images', icon: ImageIcon });
 }
 if (can('manage_license_types')) adminNavItems.push({ title: 'License Types', href: '/admin/license-types', icon: BadgeDollarSign });

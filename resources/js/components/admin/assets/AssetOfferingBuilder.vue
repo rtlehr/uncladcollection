@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import { Button } from '@/components/ui/button';
+import AssetPricingTierEditor from '@/components/admin/assets/AssetPricingTierEditor.vue';
 import type { AdminAssetFile, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const model = defineModel<AdminAssetOffering[]>({ required: true });
@@ -37,6 +38,7 @@ function addOffering(): void {
         include_all_active_files: false,
         is_active: true,
         file_ids: [],
+        pricing_tiers: [],
     });
 }
 
@@ -213,6 +215,8 @@ function packageStatus(offering: AdminAssetOffering): string {
                             />
                         </label>
                     </div>
+
+                    <AssetPricingTierEditor v-model="offering.pricing_tiers" :currency="offering.currency" />
 
                     <label class="flex items-start gap-3 rounded-lg border p-3 text-sm">
                         <input v-model="offering.is_active" type="checkbox" class="mt-1" />

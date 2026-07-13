@@ -9,9 +9,11 @@ use App\Enums\AssetType;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Models\AssetConfigurationTemplate;
+use App\Services\AssetConfigurationTemplateService;
 use App\Models\LicenseType;
 use App\Services\AssetOfferingService;
-use App\Services\AssetConfigurationService;
+use App\Commerce\Configuration\ConfigurationManager;
 use App\Services\AssetHealthService;
 use App\Services\AssetMediaPresentationService;
 use App\Models\Collection;
@@ -62,7 +64,7 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Create', $this->formOptions());
     }
 
-    public function store(Request $request, AssetService $assetService, AssetConfigurationService $configurationService): RedirectResponse
+    public function store(Request $request, AssetService $assetService, ConfigurationManager $configurationService): RedirectResponse
     {
         $validated = $this->validateAsset($request, requireFiles: true);
 
@@ -79,6 +81,7 @@ class AssetController extends Controller
                 'is_active' => $request->boolean('is_active'),
                 'is_featured' => $request->boolean('is_featured'),
                 'is_ai_generated' => $request->boolean('is_ai_generated'),
+                'allows_quantity' => $request->boolean('allows_quantity'),
             ]);
 
             foreach ($request->file('files', []) as $index => $file) {
@@ -108,7 +111,7 @@ class AssetController extends Controller
 
     public function edit(Asset $asset): Response
     {
-        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType', 'configurationGroups.values.rules']);
+        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType', 'offerings.pricingTiers', 'configurationGroups.values.rules', 'pricingTiers']);
 
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
@@ -133,6 +136,7 @@ class AssetController extends Controller
             'is_active' => $request->boolean('is_active'),
             'is_featured' => $request->boolean('is_featured'),
             'is_ai_generated' => $request->boolean('is_ai_generated'),
+            'allows_quantity' => $request->boolean('allows_quantity'),
         ]);
 
         return back()->with('success', 'Asset details updated successfully.');
@@ -257,6 +261,14 @@ class AssetController extends Controller
             'offerings.*.is_active' => ['boolean'],
             'offerings.*.file_ids' => ['array'],
             'offerings.*.file_ids.*' => ['integer'],
+            'offerings.*.pricing_tiers' => ['nullable', 'array', 'max:50'],
+            'offerings.*.pricing_tiers.*.minimum_quantity' => ['required', 'integer', 'min:1'],
+            'offerings.*.pricing_tiers.*.maximum_quantity' => ['nullable', 'integer', 'gte:offerings.*.pricing_tiers.*.minimum_quantity'],
+            'offerings.*.pricing_tiers.*.pricing_type' => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\AssetPricingTierType::class)],
+            'offerings.*.pricing_tiers.*.unit_price_cents' => ['nullable', 'integer', 'min:0'],
+            'offerings.*.pricing_tiers.*.percentage_off' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'offerings.*.pricing_tiers.*.currency' => ['nullable', 'string', 'size:3'],
+            'offerings.*.pricing_tiers.*.is_active' => ['boolean'],
         ]);
 
         $service->saveMany($asset, $validated['offerings'] ?? []);
@@ -264,7 +276,7 @@ class AssetController extends Controller
         return back()->with('success', 'Asset license offerings updated successfully.');
     }
 
-    public function updateConfigurations(Request $request, Asset $asset, AssetConfigurationService $service): RedirectResponse
+    public function updateConfigurations(Request $request, Asset $asset, ConfigurationManager $service): RedirectResponse
     {
         $validated = $this->validateConfigurations($request);
         $service->saveMany($asset, $validated['configurations'] ?? []);
@@ -292,6 +304,7 @@ class AssetController extends Controller
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
             'is_ai_generated' => ['boolean'],
+            'allows_quantity' => ['boolean'],
             'files' => [$requireFiles ? 'required' : 'nullable', 'array', $requireFiles ? 'min:1' : 'min:0', 'max:25'],
             'files.*' => ['file', 'max:'.config('asset-media.max_upload_kilobytes', 512000)],
             'file_roles' => [$requireFiles ? 'required' : 'nullable', 'array'],
@@ -313,6 +326,24 @@ class AssetController extends Controller
             'acceptedExtensions' => collect(config('asset-media.extensions', []))->flatten()->unique()->values(),
             'maxUploadKilobytes' => config('asset-media.max_upload_kilobytes', 512000),
             'configurationDisplayTypes' => collect(AssetConfigurationDisplayType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label(), 'uses_values' => $type->usesValues()])->values(),
+            'configurationTemplates' => AssetConfigurationTemplate::query()
+                ->with('activeValues')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+                ->map(function (AssetConfigurationTemplate $template): array {
+                    return [
+                        'id' => $template->id,
+                        'name' => $template->name,
+                        'code' => $template->code,
+                        'description' => $template->description,
+                        'display_type' => $template->display_type->value,
+                        'display_type_label' => $template->display_type->label(),
+                        'values_count' => $template->activeValues->count(),
+                        'asset_group' => app(AssetConfigurationTemplateService::class)->toAssetGroup($template),
+                    ];
+                })->values(),
         ];
     }
 
@@ -387,6 +418,7 @@ class AssetController extends Controller
             'is_active' => $asset->is_active,
             'is_featured' => $asset->is_featured,
             'is_ai_generated' => $asset->is_ai_generated,
+            'allows_quantity' => $asset->allows_quantity,
             'files_count' => $asset->files_count ?? $asset->files()->count(),
             'active_files_count' => $asset->active_files_count ?? $asset->activeFiles()->count(),
             'primary_preview_file_id' => $asset->primary_preview_file_id,
@@ -439,6 +471,16 @@ class AssetController extends Controller
                 'include_all_active_files' => $offering->include_all_active_files,
                 'is_active' => $offering->is_active,
                 'file_ids' => $offering->files->pluck('id')->values(),
+                'pricing_tiers' => $offering->pricingTiers->map(fn ($tier) => [
+                    'id' => $tier->id,
+                    'minimum_quantity' => $tier->minimum_quantity,
+                    'maximum_quantity' => $tier->maximum_quantity,
+                    'pricing_type' => $tier->pricing_type->value,
+                    'unit_price_cents' => $tier->unit_price_cents,
+                    'percentage_off' => $tier->percentage_off !== null ? (float) $tier->percentage_off : null,
+                    'currency' => $tier->currency,
+                    'is_active' => $tier->is_active,
+                ])->values(),
             ])->values();
             $data['configurations'] = $asset->configurationGroups->map(fn ($group) => [
                 'id' => $group->id,

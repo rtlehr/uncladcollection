@@ -31,7 +31,7 @@ class AssetBrowseController extends Controller
             'configurationGroups' => fn ($query) => $query->where('is_active', true)->with(['values' => fn ($query) => $query->where('is_active', true)->with(['rules' => fn ($query) => $query->where('is_active', true)])]),
             'offerings' => fn ($query) => $query
                 ->where('is_active', true)
-                ->with(['licenseType:id,name,slug,description,usage_terms', 'files'])
+                ->with(['licenseType:id,name,slug,description,usage_terms', 'files', 'pricingTiers' => fn ($query) => $query->where('is_active', true)->orderBy('minimum_quantity')])
                 ->orderBy('sort_order')
                 ->orderBy('id'),
         ]);
@@ -89,6 +89,7 @@ class AssetBrowseController extends Controller
                 'asset_type_label' => $asset->asset_type->label(),
                 'photographer' => $asset->photographer,
                 'is_ai_generated' => $asset->is_ai_generated,
+                'allows_quantity' => $asset->allows_quantity,
                 'views_count' => $asset->views_count,
                 'downloads_count' => $asset->downloads_count,
                 'favorites_count' => $asset->favorites_count,
@@ -148,6 +149,15 @@ class AssetBrowseController extends Controller
                     ],
                     'files' => $included->map(fn (AssetFile $file) => $presentation->format($asset, $file))->values()->all(),
                     'total_size_bytes' => $included->sum('size_bytes'),
+                    'pricing_tiers' => $offering->pricingTiers->map(fn ($tier) => [
+                        'id' => $tier->id,
+                        'minimum_quantity' => $tier->minimum_quantity,
+                        'maximum_quantity' => $tier->maximum_quantity,
+                        'pricing_type' => $tier->pricing_type->value,
+                        'unit_price_cents' => $tier->unit_price_cents,
+                        'percentage_off' => $tier->percentage_off !== null ? (float) $tier->percentage_off : null,
+                        'currency' => $tier->currency,
+                    ])->values(),
                 ];
             })->values(),
             'relatedAssets' => $relatedAssets,

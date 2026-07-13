@@ -23,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('images.download');
 
     Route::get('/purchases', [PurchaseBrowseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/licenses/{license}', [PurchaseBrowseController::class, 'showLicense'])
+        ->name('purchases.licenses.show');
     Route::get('/purchases/{image:slug}', [PurchaseBrowseController::class, 'show'])->name('purchases.show');
     Route::get('/favorites', [ImageBrowseController::class, 'favorites'])->name('images.favorites');
     Route::post('/images/{image}/favorite', [ImageFavoriteController::class, 'store'])

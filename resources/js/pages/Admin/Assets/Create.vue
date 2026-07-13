@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import type { AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
+import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
 const props = defineProps<{
     collections: NamedOption[];
@@ -17,6 +18,7 @@ const props = defineProps<{
     acceptedExtensions: string[];
     maxUploadKilobytes: number;
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
+    configurationTemplates: ConfigurationTemplateSummary[];
 }>();
 
 const pendingFiles: PendingAssetFile[] = [];
@@ -31,6 +33,7 @@ const form = useForm({
     is_active: true,
     is_featured: false,
     is_ai_generated: false,
+    allows_quantity: false,
     files: pendingFiles,
     primary_preview_index: null as number | null,
     poster_index: null as number | null,
@@ -67,7 +70,7 @@ function submit() {
                         <p v-if="form.errors.files" class="mt-2 text-sm text-destructive">{{ form.errors.files }}</p>
                     </FormSection>
                     <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
-                        <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" />
+                        <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
                     </FormSection>
                 </div>
                 <div class="space-y-6">
@@ -80,6 +83,7 @@ function submit() {
                             <label class="flex gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Active</label>
                             <label class="flex gap-2 text-sm"><input v-model="form.is_featured" type="checkbox" /> Featured</label>
                             <label class="flex gap-2 text-sm"><input v-model="form.is_ai_generated" type="checkbox" /> AI Generated</label>
+                            <label class="flex items-start gap-2 text-sm"><input v-model="form.allows_quantity" type="checkbox" class="mt-0.5" /><span><span class="font-medium">Allow quantity selection</span><span class="mt-0.5 block text-xs text-muted-foreground">Enable this only when customers may order more than one unit.</span></span></label>
                         </div>
                     </FormSection>
                 </div>

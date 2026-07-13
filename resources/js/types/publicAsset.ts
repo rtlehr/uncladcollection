@@ -2,6 +2,8 @@ import type { MediaPresentationFile } from '@/types/mediaPresentation';
 
 export interface PublicAssetFile extends MediaPresentationFile {}
 
+export interface PublicAssetPricingTier { id: number; minimum_quantity: number; maximum_quantity: number | null; pricing_type: 'fixed_unit_price' | 'percentage_off'; unit_price_cents: number | null; percentage_off: number | null; currency: string; }
+
 export interface PublicAssetOffering {
     id: number;
     name: string;
@@ -14,6 +16,7 @@ export interface PublicAssetOffering {
     license_type: { id: number; name: string; slug: string; description: string | null };
     files: PublicAssetFile[];
     total_size_bytes: number;
+    pricing_tiers: PublicAssetPricingTier[];
 }
 
 export interface PublicAsset {
@@ -26,6 +29,7 @@ export interface PublicAsset {
     asset_type_label: string;
     photographer: string | null;
     is_ai_generated: boolean;
+    allows_quantity: boolean;
     views_count: number;
     downloads_count: number;
     favorites_count: number;

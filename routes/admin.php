@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\CommentModerationController;
@@ -103,6 +104,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->name('assets.offerings.update');
 
         Route::resource('assets', AssetController::class)
+            ->except(['show'])
+            ->middleware('permission:manage_images');
+
+        Route::resource('configuration-templates', AssetConfigurationTemplateController::class)
             ->except(['show'])
             ->middleware('permission:manage_images');
 

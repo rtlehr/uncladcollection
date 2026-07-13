@@ -18,6 +18,7 @@ import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption, AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption } from '@/types/adminAsset';
+import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
 const props = defineProps<{
     assetRecord: AdminAsset;
@@ -29,6 +30,7 @@ const props = defineProps<{
     maxUploadKilobytes: number;
     licenseTypes: LicenseTypeOption[];
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
+    configurationTemplates: ConfigurationTemplateSummary[];
 }>();
 
 const form = useForm({
@@ -42,6 +44,7 @@ const form = useForm({
     is_active: props.assetRecord.is_active,
     is_featured: props.assetRecord.is_featured,
     is_ai_generated: props.assetRecord.is_ai_generated,
+    allows_quantity: props.assetRecord.allows_quantity,
 });
 
 const pendingFiles = ref<PendingAssetFile[]>([]);
@@ -182,6 +185,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
                         <label class="flex gap-2 text-sm"><input v-model="form.is_active" type="checkbox" /> Active</label>
                         <label class="flex gap-2 text-sm"><input v-model="form.is_featured" type="checkbox" /> Featured</label>
                         <label class="flex gap-2 text-sm"><input v-model="form.is_ai_generated" type="checkbox" /> AI Generated</label>
+                        <label class="flex items-start gap-2 text-sm"><input v-model="form.allows_quantity" type="checkbox" class="mt-0.5" /><span><span class="font-medium">Allow quantity selection</span><span class="mt-0.5 block text-xs text-muted-foreground">Enable this only when customers may order more than one unit.</span></span></label>
                     </div>
                 </FormSection>
             </div>
@@ -230,7 +234,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
 
         <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, language, or personalization.">
             <form class="space-y-6" @submit.prevent="saveConfigurations">
-                <AssetConfigurationBuilder v-model="configurationForm.configurations" :display-types="configurationDisplayTypes" />
+                <AssetConfigurationBuilder v-model="configurationForm.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
                 <div class="flex justify-end border-t pt-4"><Button type="submit" :disabled="configurationForm.processing">{{ configurationForm.processing ? 'Saving…' : 'Save Configuration' }}</Button></div>
             </form>
         </FormSection>

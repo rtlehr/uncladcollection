@@ -23,7 +23,7 @@ class Asset extends Model
     protected $fillable = [
         'uuid', 'legacy_image_id', 'collection_id', 'title', 'slug', 'description',
         'asset_type', 'status', 'photographer', 'sort_order', 'is_active',
-        'is_featured', 'is_ai_generated', 'downloads_count', 'favorites_count',
+        'is_featured', 'is_ai_generated', 'allows_quantity', 'downloads_count', 'favorites_count',
         'purchases_count', 'views_count', 'published_at', 'metadata',
         'primary_preview_file_id', 'poster_file_id',
     ];
@@ -37,6 +37,7 @@ class Asset extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_ai_generated' => 'boolean',
+            'allows_quantity' => 'boolean',
             'downloads_count' => 'integer',
             'favorites_count' => 'integer',
             'purchases_count' => 'integer',
@@ -105,6 +106,11 @@ class Asset extends Model
     public function activeConfigurationGroups(): HasMany
     {
         return $this->configurationGroups()->where('is_active', true);
+    }
+
+    public function pricingTiers(): HasMany
+    {
+        return $this->hasMany(AssetPricingTier::class)->orderBy('minimum_quantity')->orderBy('sort_order');
     }
 
 }

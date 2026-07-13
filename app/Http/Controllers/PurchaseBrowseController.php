@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Image;
 use App\Models\License;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,24 +20,36 @@ class PurchaseBrowseController extends Controller
         $sort = $request->string('sort', 'newest')->toString();
 
         $licenses = License::query()
-            ->with(['image.collection', 'image.categories', 'image.tags', 'licenseType', 'order'])
+            ->with($this->relations())
             ->where('user_id', Auth::id())
             ->where('status', License::STATUS_ACTIVE)
-            ->whereHas('image', function ($query) use ($search) {
-                $query->where('is_active', true)
-                    ->when($search, function ($query) use ($search) {
-                        $query->where(function ($query) use ($search) {
-                            $query->where('title', 'like', "%{$search}%")
-                                ->orWhere('description', 'like', "%{$search}%")
-                                ->orWhere('photographer', 'like', "%{$search}%");
-                        });
-                    });
+            ->where(function (Builder $query): void {
+                $query->whereHas('image')->orWhereHas('asset');
             })
-            ->when($sort === 'oldest', fn ($query) => $query->oldest())
-            ->when($sort === 'newest', fn ($query) => $query->latest())
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query
+                        ->whereHas('image', function (Builder $query) use ($search): void {
+                            $query->where(function (Builder $query) use ($search): void {
+                                $query->where('title', 'like', "%{$search}%")
+                                    ->orWhere('description', 'like', "%{$search}%")
+                                    ->orWhere('photographer', 'like', "%{$search}%");
+                            });
+                        })
+                        ->orWhereHas('asset', function (Builder $query) use ($search): void {
+                            $query->where(function (Builder $query) use ($search): void {
+                                $query->where('title', 'like', "%{$search}%")
+                                    ->orWhere('description', 'like', "%{$search}%")
+                                    ->orWhere('photographer', 'like', "%{$search}%");
+                            });
+                        });
+                });
+            })
+            ->when($sort === 'oldest', fn (Builder $query) => $query->oldest())
+            ->when($sort !== 'oldest', fn (Builder $query) => $query->latest())
             ->paginate(24)
             ->withQueryString()
-            ->through(fn (License $license) => $this->formatPurchasedImageCard($license));
+            ->through(fn (License $license): array => $this->formatCard($license));
 
         return Inertia::render('Purchases/Index', [
             'licenses' => $licenses,
@@ -46,12 +60,13 @@ class PurchaseBrowseController extends Controller
         ]);
     }
 
-    public function show(Image $image): Response
+    /**
+     * Preserve the existing legacy image purchase URL while directing the
+     * customer to the license-based detail route used by both purchase types.
+     */
+    public function show(Image $image): RedirectResponse
     {
-        abort_unless($image->is_active, 404);
-
         $license = License::query()
-            ->with(['image.collection', 'image.categories', 'image.tags', 'licenseType', 'order'])
             ->where('user_id', Auth::id())
             ->where('image_id', $image->id)
             ->where('status', License::STATUS_ACTIVE)
@@ -60,55 +75,77 @@ class PurchaseBrowseController extends Controller
 
         abort_unless($license, 403);
 
-        $image->load(['collection', 'categories', 'tags']);
+        return redirect()->route('purchases.licenses.show', $license);
+    }
+
+    public function showLicense(Request $request, License $license): Response
+    {
+        abort_unless((int) $license->user_id === (int) $request->user()->id, 403);
+        abort_unless($license->status === License::STATUS_ACTIVE, 404);
+
+        $license->load($this->relations());
+        abort_unless($license->image || $license->asset, 404);
 
         return Inertia::render('Purchases/Show', [
-            'licenseRecord' => $this->formatLicenseDetail($license),
+            'licenseRecord' => $this->formatDetail($license),
         ]);
     }
 
-    private function formatPurchasedImageCard(License $license): array
+    /** @return array<int, string> */
+    private function relations(): array
     {
-        $image = $license->image;
+        return [
+            'image.collection',
+            'image.categories',
+            'image.tags',
+            'asset.collection',
+            'asset.primaryPreviewFile',
+            'licenseType',
+            'assetOffering.licenseType',
+            'order',
+            'orderItem',
+        ];
+    }
+
+    private function formatCard(License $license): array
+    {
+        $isAsset = $license->asset !== null;
+        $product = $isAsset
+            ? $this->formatNativeProduct($license)
+            : $this->formatLegacyProduct($license);
 
         return [
             'id' => $license->id,
+            'kind' => $isAsset ? 'asset' : 'legacy_image',
             'license_key' => $license->license_key,
             'license_name' => $license->license_name,
             'downloads_used' => $license->downloads_used,
             'download_limit' => $license->download_limit,
             'starts_at' => $license->starts_at?->format('Y-m-d'),
             'expires_at' => $license->expires_at?->format('Y-m-d'),
-
-            'image' => [
-                'id' => $image->id,
-                'title' => $image->title,
-                'slug' => $image->slug,
-                'photographer' => $image->photographer,
-                'thumbnail_url' => $image->thumbnail_path ? Storage::url($image->thumbnail_path) : null,
-                'icon_url' => $image->icon_path ? Storage::url($image->icon_path) : null,
-                'is_ai_generated' => $image->is_ai_generated,
-                'favorites_count' => $image->favorites_count,
-                'downloads_count' => $image->downloads_count,
-                'purchases_count' => $image->purchases_count,
-                'views_count' => $image->views_count,
-            ],
-
-            'order' => [
-                'id' => $license->order?->id,
-                'order_number' => $license->order?->order_number,
-                'paid_at' => $license->order?->paid_at?->format('Y-m-d'),
-                'total_formatted' => $license->order?->total_formatted,
-            ],
+            'can_download' => ! $isAsset && $license->canDownload(),
+            'detail_url' => route('purchases.licenses.show', $license),
+            'download_url' => ! $isAsset && $license->image
+                ? route('images.download', $license->image)
+                : null,
+            'quantity' => max(1, (int) ($license->orderItem?->quantity ?? 1)),
+            'configuration' => $license->configuration_snapshot,
+            'included_files_count' => count($license->included_asset_files_snapshot ?? []),
+            'product' => $product,
+            'order' => $this->formatOrder($license),
         ];
     }
 
-    private function formatLicenseDetail(License $license): array
+    private function formatDetail(License $license): array
     {
-        $image = $license->image;
+        $isAsset = $license->asset !== null;
+        $product = $isAsset
+            ? $this->formatNativeProduct($license, true)
+            : $this->formatLegacyProduct($license, true);
 
         return [
             'id' => $license->id,
+            'kind' => $isAsset ? 'asset' : 'legacy_image',
             'license_key' => $license->license_key,
             'license_name' => $license->license_name,
             'license_terms' => $license->license_terms,
@@ -116,48 +153,109 @@ class PurchaseBrowseController extends Controller
             'download_limit' => $license->download_limit,
             'starts_at' => $license->starts_at?->format('Y-m-d'),
             'expires_at' => $license->expires_at?->format('Y-m-d'),
-            'can_download' => $license->canDownload(),
+            'can_download' => ! $isAsset && $license->canDownload(),
+            'download_url' => ! $isAsset && $license->image
+                ? route('images.download', $license->image)
+                : null,
+            'quantity' => max(1, (int) ($license->orderItem?->quantity ?? 1)),
+            'configuration' => $license->configuration_snapshot,
+            'pricing' => $license->pricing_snapshot,
+            'included_files' => collect($license->included_asset_files_snapshot ?? [])
+                ->map(fn (array $file): array => [
+                    'id' => $file['asset_file_id'] ?? null,
+                    'name' => $file['original_filename'] ?? 'Included file',
+                    'role' => $file['role'] ?? null,
+                    'media_type' => $file['media_type'] ?? null,
+                    'extension' => isset($file['extension']) ? strtoupper((string) $file['extension']) : null,
+                    'mime_type' => $file['mime_type'] ?? null,
+                    'size_bytes' => isset($file['size_bytes']) ? (int) $file['size_bytes'] : null,
+                ])
+                ->values()
+                ->all(),
+            'product' => $product,
+            'order' => $this->formatOrder($license),
+        ];
+    }
 
-            'image' => [
-                'id' => $image->id,
-                'title' => $image->title,
-                'slug' => $image->slug,
-                'description' => $image->description,
-                'photographer' => $image->photographer,
-                'thumbnail_url' => $image->thumbnail_path ? Storage::url($image->thumbnail_path) : null,
-                'high_res_url' => $image->high_res_path ? Storage::url($image->high_res_path) : null,
-                'original_url' => $image->original_path ? Storage::url($image->original_path) : null,
-                'is_ai_generated' => $image->is_ai_generated,
-                'created_at' => $image->created_at?->format('Y-m-d'),
+    private function formatNativeProduct(License $license, bool $detailed = false): array
+    {
+        $asset = $license->asset;
+        $preview = $asset?->primaryPreviewFile;
 
-                'collection' => $image->collection
-                    ? [
-                        'id' => $image->collection->id,
-                        'name' => $image->collection->name,
-                    ]
-                    : null,
+        $product = [
+            'id' => $asset->id,
+            'title' => $asset->title,
+            'slug' => $asset->slug,
+            'creator' => $asset->photographer,
+            'preview_url' => $preview
+                ? route('assets.preview', [$asset, $preview])
+                : null,
+            'is_ai_generated' => (bool) $asset->is_ai_generated,
+            'asset_type_label' => $asset->asset_type->label(),
+            'public_url' => route('assets.show', $asset->slug),
+        ];
 
-                'categories' => $image->categories
-                    ->map(fn ($category) => [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                    ])
-                    ->values(),
+        if (! $detailed) {
+            return $product;
+        }
 
-                'tags' => $image->tags
-                    ->map(fn ($tag) => [
-                        'id' => $tag->id,
-                        'name' => $tag->name,
-                    ])
-                    ->values(),
-            ],
+        return array_merge($product, [
+            'description' => $asset->description,
+            'created_at' => $asset->created_at?->format('Y-m-d'),
+            'collection' => $asset->collection
+                ? ['id' => $asset->collection->id, 'name' => $asset->collection->name]
+                : null,
+            'categories' => [],
+            'tags' => [],
+        ]);
+    }
 
-            'order' => [
-                'id' => $license->order?->id,
-                'order_number' => $license->order?->order_number,
-                'paid_at' => $license->order?->paid_at?->format('Y-m-d'),
-                'total_formatted' => $license->order?->total_formatted,
-            ],
+    private function formatLegacyProduct(License $license, bool $detailed = false): array
+    {
+        $image = $license->image;
+
+        $product = [
+            'id' => $image->id,
+            'title' => $image->title,
+            'slug' => $image->slug,
+            'creator' => $image->photographer,
+            'preview_url' => $image->thumbnail_path
+                ? Storage::url($image->thumbnail_path)
+                : ($image->icon_path ? Storage::url($image->icon_path) : null),
+            'is_ai_generated' => (bool) $image->is_ai_generated,
+            'asset_type_label' => 'Image',
+            'public_url' => route('images.show', $image->slug),
+        ];
+
+        if (! $detailed) {
+            return $product;
+        }
+
+        return array_merge($product, [
+            'description' => $image->description,
+            'created_at' => $image->created_at?->format('Y-m-d'),
+            'collection' => $image->collection
+                ? ['id' => $image->collection->id, 'name' => $image->collection->name]
+                : null,
+            'categories' => $image->categories
+                ->map(fn ($category): array => ['id' => $category->id, 'name' => $category->name])
+                ->values()
+                ->all(),
+            'tags' => $image->tags
+                ->map(fn ($tag): array => ['id' => $tag->id, 'name' => $tag->name])
+                ->values()
+                ->all(),
+        ]);
+    }
+
+    private function formatOrder(License $license): array
+    {
+        return [
+            'id' => $license->order?->id,
+            'order_number' => $license->order?->order_number,
+            'paid_at' => $license->order?->paid_at?->format('Y-m-d'),
+            'total_formatted' => $license->order?->total_formatted,
+            'line_total_formatted' => $license->orderItem?->total_price_formatted,
         ];
     }
 }

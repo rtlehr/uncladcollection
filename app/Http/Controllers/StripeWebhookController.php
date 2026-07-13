@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Commerce\Checkout\CheckoutEngine;
 use App\Models\Order;
-use App\Services\PurchaseService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Stripe\Exception\SignatureVerificationException;
@@ -12,10 +12,7 @@ use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
 {
-    public function __construct(
-        protected PurchaseService $purchaseService,
-    ) {
-    }
+    public function __construct(private readonly CheckoutEngine $checkoutEngine) {}
 
     public function __invoke(Request $request): Response
     {
@@ -27,81 +24,54 @@ class StripeWebhookController extends Controller
         }
 
         try {
-            $event = Webhook::constructEvent(
-                $payload,
-                $signature,
-                config('stripe.webhook_secret'),
-            );
+            $event = Webhook::constructEvent($payload, $signature, config('stripe.webhook_secret'));
         } catch (UnexpectedValueException) {
             return response('Invalid payload.', 400);
         } catch (SignatureVerificationException) {
             return response('Invalid signature.', 400);
         }
 
-        switch ($event->type) {
-            case 'checkout.session.completed':
-            case 'checkout.session.async_payment_succeeded':
-                $session = $event->data->object;
+        $session = $event->data->object ?? null;
 
-                if (($session->payment_status ?? null) !== 'paid') {
-                    break;
-                }
+        if (in_array($event->type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
+            if (($session->payment_status ?? null) !== 'paid') {
+                return response('Webhook handled.', 200);
+            }
 
-                $order = Order::query()
-                    ->where(
-                        'stripe_checkout_session_id',
-                        $session->id,
-                    )
-                    ->first();
+            $order = Order::query()->where('stripe_checkout_session_id', $session->id)->first();
+            if (! $order) {
+                return response('Webhook handled.', 200);
+            }
 
-                if (! $order) {
-                    break;
-                }
+            $metadataOrderId = (int) ($session->metadata->order_id ?? 0);
+            if ($metadataOrderId > 0 && $metadataOrderId !== $order->id) {
+                return response('Order metadata mismatch.', 400);
+            }
 
-                $metadataOrderId = (int) ($session->metadata->order_id ?? 0);
+            $amountTotal = isset($session->amount_total) ? (int) $session->amount_total : null;
+            if ($amountTotal !== null && $amountTotal !== (int) $order->total_cents) {
+                return response('Order amount mismatch.', 400);
+            }
 
-                if (
-                    $metadataOrderId > 0
-                    && $metadataOrderId !== $order->id
-                ) {
-                    return response('Order metadata mismatch.', 400);
-                }
+            $order->update([
+                'payment_reference' => $session->payment_intent ?? null,
+                'stripe_payment_intent_id' => $session->payment_intent ?? null,
+            ]);
 
+            $this->checkoutEngine->markPaid($order);
+        }
+
+        if (in_array($event->type, ['checkout.session.expired', 'checkout.session.async_payment_failed'], true)) {
+            $order = Order::query()->where('stripe_checkout_session_id', $session->id)->first();
+
+            if ($order && $order->status === Order::STATUS_PENDING) {
                 $order->update([
-                    'payment_reference' => $session->payment_intent ?? null,
-                    'stripe_payment_intent_id' => $session->payment_intent ?? null,
+                    'status' => $event->type === 'checkout.session.expired'
+                        ? Order::STATUS_CANCELED
+                        : Order::STATUS_FAILED,
+                    'canceled_at' => $event->type === 'checkout.session.expired' ? now() : null,
                 ]);
-
-                $this->purchaseService->markOrderPaid($order);
-
-                break;
-
-            case 'checkout.session.expired':
-            case 'checkout.session.async_payment_failed':
-                $session = $event->data->object;
-
-                $order = Order::query()
-                    ->where(
-                        'stripe_checkout_session_id',
-                        $session->id,
-                    )
-                    ->first();
-
-                if (
-                    $order
-                    && $order->status === Order::STATUS_PENDING
-                ) {
-                    $order->update([
-                        'status' => $event->type === 'checkout.session.expired'
-                            ? Order::STATUS_CANCELED
-                            : Order::STATUS_FAILED,
-                        'canceled_at' => $event->type === 'checkout.session.expired'
-                            ? now()
-                            : null,
-                    ]);
-                }
-
-                break;
+            }
         }
 
         return response('Webhook handled.', 200);
