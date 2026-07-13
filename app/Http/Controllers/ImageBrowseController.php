@@ -7,6 +7,7 @@ use App\Models\Collection;
 use App\Models\Image;
 use App\Models\LicenseType;
 use App\Models\Tag;
+use App\Services\PublicAssetCatalogService;
 use App\Services\PurchaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use Inertia\Response;
 
 class ImageBrowseController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, PublicAssetCatalogService $catalog): Response
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],
@@ -25,117 +26,46 @@ class ImageBrowseController extends Controller
             'tag_id' => ['nullable', 'integer', 'exists:tags,id'],
             'collection_id' => ['nullable', 'integer', 'exists:collections,id'],
             'ai_generated' => ['nullable', 'in:0,1'],
+            'asset_type' => ['nullable', 'string', 'max:40'],
+            'format' => ['nullable', 'string', 'max:20'],
             'sort' => ['nullable', 'in:newest,oldest,most_viewed,most_favorited,most_downloaded'],
         ]);
 
-        $search = trim((string) ($validated['search'] ?? ''));
-        $categoryId = isset($validated['category_id'])
-            ? (int) $validated['category_id']
-            : null;
-        $tagId = isset($validated['tag_id'])
-            ? (int) $validated['tag_id']
-            : null;
-        $collectionId = isset($validated['collection_id'])
-            ? (int) $validated['collection_id']
-            : null;
-        $aiGenerated = (string) ($validated['ai_generated'] ?? '');
-        $sort = (string) ($validated['sort'] ?? 'newest');
-
-        if (! in_array($sort, [
-            'newest',
-            'oldest',
-            'most_viewed',
-            'most_favorited',
-            'most_downloaded',
-        ], true)) {
-            $sort = 'newest';
-        }
-
-        $images = $this->imageCardQuery()
-            ->where('is_active', true)
-            ->when($search !== '', function (Builder $query) use ($search) {
-                $query->where(function (Builder $query) use ($search) {
-                    $query
-                        ->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('photographer', 'like', "%{$search}%")
-                        ->orWhereHas(
-                            'categories',
-                            fn (Builder $query) => $query->where('name', 'like', "%{$search}%"),
-                        )
-                        ->orWhereHas(
-                            'tags',
-                            fn (Builder $query) => $query->where('name', 'like', "%{$search}%"),
-                        )
-                        ->orWhereHas(
-                            'collection',
-                            fn (Builder $query) => $query->where('name', 'like', "%{$search}%"),
-                        );
-                });
-            })
-            ->when(
-                $categoryId,
-                fn (Builder $query) => $query->whereHas(
-                    'categories',
-                    fn (Builder $query) => $query->whereKey($categoryId),
-                ),
-            )
-            ->when(
-                $tagId,
-                fn (Builder $query) => $query->whereHas(
-                    'tags',
-                    fn (Builder $query) => $query->whereKey($tagId),
-                ),
-            )
-            ->when(
-                $collectionId,
-                fn (Builder $query) => $query->where('collection_id', $collectionId),
-            )
-            ->when(
-                in_array($aiGenerated, ['0', '1'], true),
-                fn (Builder $query) => $query->where(
-                    'is_ai_generated',
-                    $aiGenerated === '1',
-                ),
-            )
-            ->when($sort === 'oldest', fn (Builder $query) => $query->oldest())
-            ->when($sort === 'most_viewed', fn (Builder $query) => $query->orderByDesc('views_count'))
-            ->when($sort === 'most_favorited', fn (Builder $query) => $query->orderByDesc('favorites_count'))
-            ->when($sort === 'most_downloaded', fn (Builder $query) => $query->orderByDesc('downloads_count'))
-            ->when($sort === 'newest', fn (Builder $query) => $query->latest())
-            ->paginate(24)
-            ->withQueryString()
-            ->through(fn (Image $image) => $this->formatImageCard($image));
+        $filters = [
+            'search' => trim((string) ($validated['search'] ?? '')),
+            'category_id' => isset($validated['category_id']) ? (int) $validated['category_id'] : null,
+            'tag_id' => isset($validated['tag_id']) ? (int) $validated['tag_id'] : null,
+            'collection_id' => isset($validated['collection_id']) ? (int) $validated['collection_id'] : null,
+            'ai_generated' => (string) ($validated['ai_generated'] ?? ''),
+            'asset_type' => (string) ($validated['asset_type'] ?? ''),
+            'format' => strtolower((string) ($validated['format'] ?? '')),
+            'sort' => (string) ($validated['sort'] ?? 'newest'),
+        ];
 
         return Inertia::render('Images/Index', [
-            'images' => $images,
-
+            'assets' => $catalog->paginate($filters, Auth::id()),
             'collections' => Collection::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(['id', 'name']),
-
             'categories' => Category::query()
                 ->where('category_type', 'image')
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
-
             'tags' => Tag::query()
                 ->where('tag_type', 'image')
                 ->orderBy('name')
                 ->get(['id', 'name']),
-
-            'suggestions' => $this->imageSearchSuggestions($search),
-
+            'assetTypes' => $catalog->assetTypeOptions(),
+            'formats' => $catalog->formatOptions(),
+            'suggestions' => $catalog->suggestions($filters['search']),
             'filters' => [
-                'search' => $search,
-                'category_id' => $categoryId ? (string) $categoryId : '',
-                'tag_id' => $tagId ? (string) $tagId : '',
-                'collection_id' => $collectionId ? (string) $collectionId : '',
-                'ai_generated' => $aiGenerated,
-                'sort' => $sort,
+                ...$filters,
+                'category_id' => $filters['category_id'] ? (string) $filters['category_id'] : '',
+                'tag_id' => $filters['tag_id'] ? (string) $filters['tag_id'] : '',
+                'collection_id' => $filters['collection_id'] ? (string) $filters['collection_id'] : '',
             ],
         ]);
     }

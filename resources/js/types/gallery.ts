@@ -3,14 +3,28 @@ export interface GalleryOption {
     name: string;
 }
 
-export interface GalleryImage {
+export interface GallerySelectOption {
+    value: string;
+    label: string;
+}
+
+export interface GalleryAsset {
     id: number;
+    legacy_image_id: number | null;
     title: string;
     slug: string;
+    href: string;
+    favorite_url: string | null;
+    unfavorite_url: string | null;
     photographer: string | null;
-    thumbnail_url: string | null;
-    icon_url: string | null;
+    preview_url: string | null;
+    asset_type: string;
+    asset_type_label: string;
+    formats: string[];
+    starting_price_cents: number | null;
+    currency: string;
     is_ai_generated: boolean;
+    is_favoritable: boolean;
     is_favorited: boolean;
     favorites_count: number;
     downloads_count: number;
@@ -31,8 +45,8 @@ export interface GalleryPaginationLink {
     active: boolean;
 }
 
-export interface PaginatedGalleryImages {
-    data: GalleryImage[];
+export interface PaginatedGalleryAssets {
+    data: GalleryAsset[];
     links: GalleryPaginationLink[];
     current_page: number;
     last_page: number;
@@ -50,7 +64,15 @@ export interface GalleryFilters {
     tag_id: string;
     collection_id: string;
     ai_generated: string;
+    asset_type: string;
+    format: string;
     sort: string;
+}
+
+// Legacy image-detail contracts remain in use until the purchase/download migration.
+export interface GalleryImage extends GalleryAsset {
+    thumbnail_url?: string | null;
+    icon_url?: string | null;
 }
 
 export interface GalleryActiveLicense {
