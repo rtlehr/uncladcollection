@@ -90,10 +90,16 @@ function cancel() {
                 </div>
 
                 <div class="mt-6 rounded-lg border bg-muted/20 p-4">
-                    <label class="flex items-start gap-3">
+                    <label
+                        for="is_active"
+                        class="flex cursor-pointer items-start gap-3"
+                    >
                         <Checkbox
-                            :checked="form.is_active"
-                            @update:checked="form.is_active = Boolean($event)"
+                            id="is_active"
+                            :model-value="form.is_active"
+                            @update:model-value="
+                                form.is_active = $event === true
+                            "
                         />
 
                         <div>
