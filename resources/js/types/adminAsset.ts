@@ -67,6 +67,9 @@ export interface AdminAsset {
     is_featured: boolean;
     is_ai_generated: boolean;
     allows_quantity: boolean;
+    fulfillment_type: 'digital' | 'physical' | 'hybrid';
+    collects_shipping_address: boolean;
+    shipping_address_required: boolean;
     files_count: number;
     active_files_count: number;
     primary_preview_file_id: number | null;

@@ -17,6 +17,7 @@ const props = defineProps<{
     fileRoles: SelectOption[];
     acceptedExtensions: string[];
     maxUploadKilobytes: number;
+    fulfillmentTypes: SelectOption[];
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
     configurationTemplates: ConfigurationTemplateSummary[];
 }>();
@@ -34,6 +35,9 @@ const form = useForm({
     is_featured: false,
     is_ai_generated: false,
     allows_quantity: false,
+    fulfillment_type: 'digital',
+    collects_shipping_address: false,
+    shipping_address_required: false,
     files: pendingFiles,
     primary_preview_index: null as number | null,
     poster_index: null as number | null,
@@ -84,6 +88,9 @@ function submit() {
                             <label class="flex gap-2 text-sm"><input v-model="form.is_featured" type="checkbox" /> Featured</label>
                             <label class="flex gap-2 text-sm"><input v-model="form.is_ai_generated" type="checkbox" /> AI Generated</label>
                             <label class="flex items-start gap-2 text-sm"><input v-model="form.allows_quantity" type="checkbox" class="mt-0.5" /><span><span class="font-medium">Allow quantity selection</span><span class="mt-0.5 block text-xs text-muted-foreground">Enable this only when customers may order more than one unit.</span></span></label>
+                        <FormField label="Fulfillment" for-id="fulfillment_type"><select id="fulfillment_type" v-model="form.fulfillment_type" class="h-10 w-full rounded-md border bg-background px-3 text-sm"><option v-for="option in fulfillmentTypes" :key="option.value" :value="option.value">{{ option.label }}</option></select></FormField>
+                        <label class="flex items-start gap-2 text-sm"><input v-model="form.collects_shipping_address" type="checkbox" class="mt-0.5" /><span><span class="font-medium">Collect shipping address</span><span class="mt-0.5 block text-xs text-muted-foreground">Show delivery-address fields on the public asset page and preserve the address with the cart and order.</span></span></label>
+                        <label v-if="form.collects_shipping_address" class="ml-6 flex items-start gap-2 text-sm"><input v-model="form.shipping_address_required" type="checkbox" class="mt-0.5" /><span><span class="font-medium">Shipping address is mandatory</span><span class="mt-0.5 block text-xs text-muted-foreground">Keep Add to Cart disabled until the customer completes the required address fields.</span></span></label>
                         </div>
                     </FormSection>
                 </div>

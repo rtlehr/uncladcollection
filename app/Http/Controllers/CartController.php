@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Commerce\Cart\CartEngine;
+use App\Commerce\Fulfillment\ShippingAddress;
 use App\Models\AssetOffering;
 use App\Models\CartItem;
 use App\Models\Image;
@@ -40,6 +41,7 @@ class CartController extends Controller
                         'currency' => $cartItem->currency,
                         'configuration' => $cartItem->configuration_snapshot,
                         'pricing' => $cartItem->pricing_snapshot,
+                        'shipping_address' => $cartItem->shipping_address_snapshot,
                         'asset' => [
                             'id' => $cartItem->asset->id,
                             'title' => $cartItem->asset->title,
@@ -96,6 +98,17 @@ class CartController extends Controller
                 'lines' => ['required', 'array', 'min:1', 'max:50'],
                 'lines.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
                 'lines.*.selections' => ['nullable', 'array'],
+                'shipping_address' => ['nullable', 'array'],
+                'shipping_address.full_name' => ['nullable', 'string', 'max:255'],
+                'shipping_address.company' => ['nullable', 'string', 'max:255'],
+                'shipping_address.address_line_1' => ['nullable', 'string', 'max:255'],
+                'shipping_address.address_line_2' => ['nullable', 'string', 'max:255'],
+                'shipping_address.city' => ['nullable', 'string', 'max:120'],
+                'shipping_address.region' => ['nullable', 'string', 'max:120'],
+                'shipping_address.postal_code' => ['nullable', 'string', 'max:32'],
+                'shipping_address.country_code' => ['nullable', 'string', 'size:2'],
+                'shipping_address.phone' => ['nullable', 'string', 'max:40'],
+                'shipping_address.delivery_instructions' => ['nullable', 'string', 'max:1000'],
             ]);
 
             $offering = AssetOffering::query()
@@ -103,7 +116,15 @@ class CartController extends Controller
                 ->with('asset')
                 ->findOrFail($validated['asset_offering_id']);
 
-            $cartEngine->addAssetLines($request->user(), $offering, $validated['lines']);
+            $address = isset($validated['shipping_address'])
+                ? ShippingAddress::fromInput($validated['shipping_address'])
+                : null;
+
+            if ($offering->asset->collects_shipping_address && $offering->asset->shipping_address_required && ! $address?->isComplete()) {
+                return back()->withErrors(['shipping_address' => 'Complete the mandatory shipping address before adding this product to your cart.']);
+            }
+
+            $cartEngine->addAssetLines($request->user(), $offering, $validated['lines'], $address);
 
             return back()->with('success', 'Configured items added to your cart.');
         }

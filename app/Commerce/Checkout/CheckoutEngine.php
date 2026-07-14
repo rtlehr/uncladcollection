@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Enums\OrderFulfillmentStatus;
 
 final class CheckoutEngine
 {
@@ -129,7 +130,7 @@ final class CheckoutEngine
             $locked->loadMissing(['items.licenseType', 'items.image', 'items.asset', 'items.assetOffering.licenseType']);
             $locked->update([
                 'status' => Order::STATUS_PAID,
-                'fulfillment_status' => 'ready',
+                'fulfillment_status' => OrderFulfillmentStatus::ReadyToPackage->value,
                 'paid_at' => $locked->paid_at ?? now(),
             ]);
 
@@ -164,6 +165,10 @@ final class CheckoutEngine
 
                 if ((int) $item->assetOffering->asset_id !== (int) $item->asset_id) {
                     throw ValidationException::withMessages(['cart' => 'A cart offering no longer belongs to its asset.']);
+                }
+
+                if ($item->asset->collects_shipping_address && $item->asset->shipping_address_required && empty($item->shipping_address_snapshot)) {
+                    throw ValidationException::withMessages(['cart' => 'A mandatory shipping address is missing from one or more products.']);
                 }
             } else {
                 if (! $item->image?->is_active || ! $item->licenseType?->is_active) {
@@ -206,7 +211,7 @@ final class CheckoutEngine
             'license_type_id' => $cartItem->license_type_id,
             'asset_offering_id' => $cartItem->asset_offering_id,
             'status' => OrderItem::STATUS_PENDING,
-            'fulfillment_type' => 'digital',
+            'fulfillment_type' => $cartItem->asset?->fulfillment_type?->value ?? 'digital',
             'commerce_version' => self::COMMERCE_VERSION,
             'quantity' => $quantity,
             'unit_price_cents' => $unit,
@@ -218,6 +223,7 @@ final class CheckoutEngine
             'license_terms' => $licenseType?->usage_terms,
             'configuration_hash' => $cartItem->configuration_hash,
             'configuration_snapshot' => $cartItem->configuration_snapshot,
+            'shipping_address_snapshot' => $cartItem->shipping_address_snapshot,
             'pricing_snapshot' => $cartItem->pricing_snapshot,
             'included_asset_files_snapshot' => $this->snapshots->includedFiles($cartItem),
             'metadata' => [

@@ -12,7 +12,9 @@ import { computed, reactive, ref, watch } from 'vue';
 
 import AssetConfigurationSelector from './AssetConfigurationSelector.vue';
 import AssetFormatBadge from './AssetFormatBadge.vue';
+import AssetFulfillmentBadge from './AssetFulfillmentBadge.vue';
 import AssetOfferingCard from './AssetOfferingCard.vue';
+import AssetShippingAddress, { type ShippingAddressPayload } from './AssetShippingAddress.vue';
 
 import type {
     PublicAssetConfigurationGroup,
@@ -42,12 +44,17 @@ const props = defineProps<{
     offerings: PublicAssetOffering[];
     assetTitle: string;
     allowQuantity: boolean;
+    collectShippingAddress: boolean;
+    shippingAddressRequired: boolean;
+    fulfillmentType: 'digital' | 'physical' | 'hybrid';
 }>();
 
 const offeringId = ref<number | null>(props.offerings[0]?.id ?? null);
 const quantity = ref(1);
 const lines = ref<DraftLine[]>([]);
 const processing = ref(false);
+const shippingAddress = ref<ShippingAddressPayload | null>(null);
+const shippingAddressValid = ref(!props.shippingAddressRequired);
 
 const current = reactive({
     selections: {} as Record<string, unknown>,
@@ -106,7 +113,7 @@ const canAddConfiguration = computed(() => {
 });
 
 const canSubmit = computed(() => {
-    if (!offering.value || processing.value) {
+    if (!offering.value || processing.value || !shippingAddressValid.value) {
         return false;
     }
 
@@ -339,6 +346,11 @@ function removeLine(id: number): void {
     lines.value = lines.value.filter((line) => line.id !== id);
 }
 
+function receiveShippingAddress(payload: { address: ShippingAddressPayload; valid: boolean }): void {
+    shippingAddress.value = payload.address;
+    shippingAddressValid.value = payload.valid;
+}
+
 function submit(): void {
     if (!canSubmit.value || !offering.value) {
         return;
@@ -378,6 +390,7 @@ function submit(): void {
         {
             asset_offering_id: offering.value.id,
             lines: submittedLines,
+            shipping_address: props.collectShippingAddress ? shippingAddress.value : null,
         } as any,
         {
             preserveScroll: true,
@@ -404,18 +417,20 @@ watch(offering, (selected) => {
         id="purchase"
         class="scroll-mt-24 space-y-8"
     >
-        <div class="max-w-3xl">
+        <div class="rounded-3xl border border-stone-200 bg-stone-50 p-6 dark:border-stone-800 dark:bg-stone-900/50">
             <p
                 class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-accent)]"
             >
-                Purchase {{ assetTitle }}
+                Complete your purchase
             </p>
 
             <h2 class="mt-2 text-3xl font-semibold sm:text-4xl">
-                Choose, configure, and review
+                Build your order for {{ assetTitle }}
             </h2>
 
-            <p class="mt-3 text-stone-600 dark:text-stone-300">
+            <div class="mt-3"><AssetFulfillmentBadge :type="fulfillmentType" size="md" /></div>
+
+            <p class="mt-4 text-stone-600 dark:text-stone-300">
                 Select the license package that matches your project. Add one or
                 more configurations, see quantity savings immediately, and
                 review the exact total before adding it to your cart.
@@ -426,7 +441,7 @@ watch(offering, (selected) => {
             <div class="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <p class="text-sm font-semibold">
-                        1. Choose your license
+                        <span class="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs text-white">1</span>Choose your license
                     </p>
 
                     <p class="mt-1 text-sm text-stone-500">
@@ -460,7 +475,7 @@ watch(offering, (selected) => {
             <div class="space-y-6">
                 <div v-if="needsConfigurationBuilder">
                     <p class="text-sm font-semibold">
-                        2. Configure your purchase
+                        <span class="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs text-white">2</span>Configure your purchase
                     </p>
 
                     <p class="mt-1 text-sm text-stone-500">
@@ -476,6 +491,16 @@ watch(offering, (selected) => {
                     :base-price-cents="offering.price_cents"
                     :currency="offering.currency"
                     @configuration-change="receiveConfiguration"
+                />
+
+                <div v-if="collectShippingAddress">
+                    <p class="mb-3 text-sm font-semibold"><span class="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-primary)] text-xs text-white">3</span>Shipping information</p>
+                </div>
+
+                <AssetShippingAddress
+                    v-if="collectShippingAddress"
+                    :required="shippingAddressRequired"
+                    @change="receiveShippingAddress"
                 />
 
                 <section
@@ -632,10 +657,11 @@ watch(offering, (selected) => {
                     <p
                         class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-accent)]"
                     >
-                        Your order
+                        Review your order
                     </p>
 
                     <div class="mt-2 flex items-start justify-between gap-4">
+                        <span class="sr-only">Step 4</span>
                         <div>
                             <h3 class="text-xl font-semibold">
                                 {{ offering.name }}
@@ -860,6 +886,10 @@ watch(offering, (selected) => {
                         <span class="text-3xl font-bold">
                             {{ formatPrice(offering.price_cents) }}
                         </span>
+                    </div>
+
+                    <div v-if="!canSubmit" class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+                        Complete all mandatory product options{{ shippingAddressRequired ? ' and shipping fields' : '' }} to enable Add to Cart.
                     </div>
 
                     <button

@@ -101,6 +101,7 @@ defineProps<{
             <AssetPurchaseSummaryCard
               :offerings="offerings"
               :formats="asset.formats"
+              :fulfillment-type="asset.fulfillment_type"
             />
           </div>
         </aside>
@@ -116,6 +117,9 @@ defineProps<{
           :offerings="offerings"
           :asset-title="asset.title"
           :allow-quantity="asset.allows_quantity"
+          :collect-shipping-address="asset.collects_shipping_address"
+          :shipping-address-required="asset.shipping_address_required"
+          :fulfillment-type="asset.fulfillment_type"
         />
       </section>
 
@@ -127,7 +131,7 @@ defineProps<{
       </div>
 
       <div class="mt-10">
-        <AssetPurchaseConfidence />
+        <AssetPurchaseConfidence :fulfillment-type="asset.fulfillment_type" />
       </div>
 
       <section v-if="relatedAssets.length" class="mt-16">

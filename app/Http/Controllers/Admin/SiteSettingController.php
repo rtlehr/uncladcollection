@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Asset;
 use App\Models\SiteSetting;
 use App\Services\SiteSettingService;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class SiteSettingController extends Controller
 
         return Inertia::render('Admin/SiteSettings/Index', [
             'settings' => $settings,
+            'heroAssetOptions' => Asset::query()->published()->orderBy('title')->get(['id','title','asset_type'])->map(fn (Asset $asset) => ['value' => (string) $asset->id, 'label' => $asset->title.' · '.$asset->asset_type->value])->values(),
         ]);
     }
 

@@ -31,4 +31,16 @@ class CartSnapshotFactory
             'currency' => strtoupper($offering->currency),
         ];
     }
+
+    public function shippingAddress(?array $address): ?array
+    {
+        if (! $address) {
+            return null;
+        }
+
+        return [
+            ...$address,
+            'snapshot_version' => 1,
+        ];
+    }
 }

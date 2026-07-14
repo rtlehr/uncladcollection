@@ -3,13 +3,47 @@ import FormField from '@/Components/Forms/FormField.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 
+import { computed } from 'vue';
+
 import type { SiteSetting } from '@/types/siteSetting';
 
 const props = defineProps<{
     setting: SiteSetting;
     modelValue: string;
     error?: string;
+    options?: Array<{ value: string; label: string }>;
 }>();
+
+
+const builtInOptions: Record<string, Array<{ value: string; label: string }>> = {
+    hero_media_mode: [
+        { value: 'automatic', label: 'Automatic — prefer video, then image' },
+        { value: 'image', label: 'Image only' },
+        { value: 'video', label: 'Video only' },
+    ],
+    hero_media_position: [
+        { value: 'center', label: 'Center' },
+        { value: 'top', label: 'Top' },
+        { value: 'bottom', label: 'Bottom' },
+        { value: 'left', label: 'Left' },
+        { value: 'right', label: 'Right' },
+    ],
+    hero_height: [
+        { value: 'compact', label: 'Compact' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'large', label: 'Large' },
+        { value: 'fullscreen', label: 'Fullscreen' },
+    ],
+    hero_text_alignment: [
+        { value: 'left', label: 'Left' },
+        { value: 'center', label: 'Center' },
+        { value: 'right', label: 'Right' },
+    ],
+};
+
+const effectiveOptions = computed(() =>
+    props.options ?? builtInOptions[props.setting.setting_key] ?? [],
+);
 
 const emit = defineEmits<{
     'update:modelValue': [value: string];
@@ -37,8 +71,20 @@ function updateValue(value: string | number) {
         :description="setting.description ?? undefined"
         :error="error"
     >
+
+        <select
+            v-if="effectiveOptions.length"
+            :id="`setting-${setting.id}`"
+            :value="modelValue"
+            class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            @change="updateValue(($event.target as HTMLSelectElement).value)"
+        >
+            <option value="">Automatic fallback</option>
+            <option v-for="option in effectiveOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+        </select>
+
         <div
-            v-if="setting.setting_type === 'boolean'"
+            v-else-if="setting.setting_type === 'boolean'"
             class="flex items-start justify-between gap-4 rounded-md border p-4"
         >
             <div>

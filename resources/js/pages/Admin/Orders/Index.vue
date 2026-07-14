@@ -21,10 +21,12 @@ const props = defineProps<{
     orders: PaginatedAdminOrders;
     filters: AdminOrderFilters;
     statuses: string[];
+    fulfillmentStatuses: { value: string; label: string }[];
 }>();
 
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
+const fulfillmentStatus = ref((props.filters as any).fulfillment_status ?? '');
 
 function reload() {
     router.get(
@@ -32,6 +34,7 @@ function reload() {
         {
             search: search.value || undefined,
             status: status.value || undefined,
+            fulfillment_status: fulfillmentStatus.value || undefined,
             sort: props.filters.sort,
             direction: props.filters.direction,
         },
@@ -46,6 +49,7 @@ function reload() {
 function resetFilters() {
     search.value = '';
     status.value = '';
+    fulfillmentStatus.value = '';
 
     router.get(
         '/admin/orders',
@@ -70,6 +74,7 @@ function sortBy(column: string) {
         {
             search: search.value || undefined,
             status: status.value || undefined,
+            fulfillment_status: fulfillmentStatus.value || undefined,
             sort: column,
             direction,
         },
@@ -91,7 +96,7 @@ function sortBy(column: string) {
             description="View customer image license purchases."
         />
 
-        <FilterToolbar :columns="2" compact>
+        <FilterToolbar :columns="3" compact>
             <SearchToolbar
                 v-model="search"
                 placeholder="Search orders, users, or images..."
@@ -117,6 +122,8 @@ function sortBy(column: string) {
                 </option>
             </select>
 
+
+            <select v-model="fulfillmentStatus" class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" @change="reload"><option value="">All Fulfillment</option><option v-for="item in fulfillmentStatuses" :key="item.value" :value="item.value">{{ item.label }}</option></select>
             <template #actions>
                 <Button
                     type="button"
@@ -167,6 +174,7 @@ function sortBy(column: string) {
                         @sort="sortBy"
                     />
 
+                    <DataTableHeaderCell label="Fulfillment" />
                     <DataTableHeaderCell label="Items" />
                     <DataTableHeaderCell label="Licenses" />
 
@@ -231,6 +239,8 @@ function sortBy(column: string) {
                     <td class="p-4 font-medium">
                         {{ order.total_formatted }}
                     </td>
+
+                    <td class="p-4"><StatusBadge :status="order.fulfillment_status" /></td>
 
                     <td class="p-4">
                         {{ order.items_count }}

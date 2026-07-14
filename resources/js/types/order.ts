@@ -1,65 +1,8 @@
-export interface AdminOrderLinkedImage {
-    id: number;
-    title: string;
-    slug: string;
-}
-
-export interface AdminOrderItem {
-    id: number;
-    status: string;
-    quantity: number;
-    unit_price_formatted: string;
-    total_price_formatted: string;
-    image_title: string;
-    license_name: string;
-    image: AdminOrderLinkedImage | null;
-}
-
-export interface AdminOrderLicense {
-    id: number;
-    license_key: string;
-    status: string;
-    license_name: string;
-    downloads_used: number;
-    download_limit: number | null;
-    starts_at: string | null;
-    expires_at: string | null;
-    downloads_count: number;
-    image: AdminOrderLinkedImage | null;
-}
-
-export interface AdminOrderUser {
-    id: number;
-    name: string;
-    email: string;
-}
-
-export interface AdminOrderDetail {
-    id: number;
-    order_number: string;
-    status: string;
-
-    subtotal_formatted: string;
-    total_formatted: string;
-
-    subtotal_cents: number;
-    discount_cents: number;
-    tax_cents: number;
-    total_cents: number;
-
-    currency: string;
-
-    payment_provider: string | null;
-    payment_reference: string | null;
-    stripe_checkout_session_id: string | null;
-    stripe_payment_intent_id: string | null;
-
-    paid_at: string | null;
-    refunded_at: string | null;
-    canceled_at: string | null;
-    created_at: string | null;
-
-    user: AdminOrderUser | null;
-    items: AdminOrderItem[];
-    licenses: AdminOrderLicense[];
-}
+export interface SelectOption { value: string; label: string; }
+export interface AdminOrderLinkedItem { id:number; title:string; slug:string; }
+export interface ConfigurationLabel { group:string; values:string[]; }
+export interface AdminOrderItem { id:number; status:string; fulfillment_type:string; quantity:number; unit_price_formatted:string; total_price_formatted:string; title:string; license_name:string; configuration:{labels?:ConfigurationLabel[]}|null; shipping_address:Record<string,string|null>|null; pricing:Record<string,unknown>|null; included_files:Array<Record<string,unknown>>|null; asset:AdminOrderLinkedItem|null; image:AdminOrderLinkedItem|null; }
+export interface AdminOrderLicense { id:number; license_key:string; status:string; license_name:string; downloads_used:number; download_limit:number|null; starts_at:string|null; expires_at:string|null; downloads_count:number; title:string|null; }
+export interface AdminOrderUser { id:number; name:string; email:string; }
+export interface FulfillmentEvent { id:number; status:string; note:string|null; created_at:string|null; user:string|null; }
+export interface AdminOrderDetail { id:number; order_number:string; status:string; fulfillment_status:string; subtotal_formatted:string; total_formatted:string; subtotal_cents:number; discount_cents:number; tax_cents:number; total_cents:number; currency:string; payment_provider:string|null; payment_reference:string|null; stripe_checkout_session_id:string|null; stripe_payment_intent_id:string|null; shipping_carrier:string|null; tracking_number:string|null; fulfillment_notes:string|null; paid_at:string|null; refunded_at:string|null; canceled_at:string|null; shipped_at:string|null; delivered_at:string|null; fulfilled_at:string|null; created_at:string|null; user:AdminOrderUser|null; items:AdminOrderItem[]; licenses:AdminOrderLicense[]; fulfillment_events:FulfillmentEvent[]; }

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
+use App\Http\Controllers\Admin\MarketingCampaignController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteSettingController;
@@ -34,6 +35,11 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::put('/site-settings', [SiteSettingController::class, 'update'])
             ->middleware('permission:manage_site_settings')
             ->name('site-settings.update');
+
+
+        Route::resource('marketing-campaigns', MarketingCampaignController::class)
+            ->except(['show'])
+            ->middleware('permission:manage_site_settings');
 
         Route::resource('permissions', PermissionController::class)
             ->except(['show'])
@@ -122,6 +128,15 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/orders/{order}', [AdminOrderController::class, 'show'])
             ->middleware('permission:manage_orders')
             ->name('orders.show');
+
+
+        Route::patch('/orders/{order}/fulfillment', [AdminOrderController::class, 'updateFulfillment'])
+            ->middleware('permission:manage_orders')
+            ->name('orders.fulfillment.update');
+
+        Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'invoice'])
+            ->middleware('permission:manage_orders')
+            ->name('orders.invoice');
 
         Route::get('/licenses', [AdminLicenseController::class, 'index'])
             ->middleware('permission:manage_licenses')

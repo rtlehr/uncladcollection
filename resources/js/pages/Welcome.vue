@@ -29,6 +29,7 @@ import PublicSectionHeading from '@/components/Public/PublicSectionHeading.vue';
 import type {
     HomeArticle,
     HomeCollection,
+    HomeHeroCampaign,
     HomeHeroImage,
     HomeImage,
     HomeStatistics,
@@ -38,6 +39,7 @@ import type {
 const props = defineProps<{
     siteSettings: PublicSiteSettings;
     heroImage: HomeHeroImage | null;
+    heroCampaign: HomeHeroCampaign | null;
     featuredCollections: HomeCollection[];
     featuredImages: HomeImage[];
     latestArticles: HomeArticle[];
@@ -128,6 +130,7 @@ function collectionHref(collection: HomeCollection): string {
             :title="stringSetting(homepage.hero_title, 'A more natural way to represent nudist life.')"
             :description="stringSetting(homepage.hero_description, siteTagline)"
             :hero-image="heroImage"
+            :campaign="heroCampaign"
             :primary-label="stringSetting(homepage.hero_primary_button_label, 'Browse Marketplace')"
             :primary-href="stringSetting(homepage.hero_primary_button_url, '/images')"
             :secondary-label="stringSetting(homepage.hero_secondary_button_label, 'Read Stories')"

@@ -12,6 +12,7 @@ import {
     Images,
     KeyRound,
     LayoutGrid,
+    Megaphone,
     MessageCircle,
     Newspaper,
     Settings,
@@ -50,7 +51,10 @@ const mainNavItems: NavItem[] = [
 const adminNavItems: NavItem[] = [];
 
 if (can('view_admin')) adminNavItems.push({ title: 'Admin Dashboard', href: '/admin', icon: LayoutGrid });
-if (can('manage_site_settings')) adminNavItems.push({ title: 'Site Settings', href: '/admin/site-settings', icon: Settings });
+if (can('manage_site_settings')) {
+    adminNavItems.push({ title: 'Site Settings', href: '/admin/site-settings', icon: Settings });
+    adminNavItems.push({ title: 'Marketing Campaigns', href: '/admin/marketing-campaigns', icon: Megaphone });
+}
 if (can('manage_permissions')) adminNavItems.push({ title: 'Permissions', href: '/admin/permissions', icon: KeyRound });
 if (can('manage_roles')) adminNavItems.push({ title: 'Roles', href: '/admin/roles', icon: ShieldCheck });
 if (can('manage_users')) adminNavItems.push({ title: 'Users', href: '/admin/users', icon: UsersRound });

@@ -69,3 +69,27 @@ export interface HomeStatistics {
     articles: number;
     downloads: number;
 }
+
+
+export interface HomeHeroCampaign {
+    id: number;
+    name: string;
+    media_type: 'image' | 'video';
+    media_url: string;
+    poster_url: string | null;
+    eyebrow: string | null;
+    headline: string | null;
+    subheadline: string | null;
+    primary_button_label: string | null;
+    primary_button_url: string | null;
+    secondary_button_label: string | null;
+    secondary_button_url: string | null;
+    overlay_opacity: number;
+    media_position: 'center' | 'top' | 'bottom' | 'left' | 'right';
+    hero_height: 'compact' | 'medium' | 'large' | 'fullscreen';
+    text_alignment: 'left' | 'center' | 'right';
+    autoplay_first_visit: boolean;
+    autoplay_mobile: boolean;
+    loop_video: boolean;
+    show_search: boolean;
+}

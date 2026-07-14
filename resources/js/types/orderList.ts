@@ -10,6 +10,7 @@ export interface AdminOrderListItem {
     id: number;
     order_number: string;
     status: string;
+    fulfillment_status: string;
     total_formatted: string;
     currency: string;
     payment_provider: string | null;
@@ -23,6 +24,7 @@ export interface AdminOrderListItem {
 export interface AdminOrderFilters {
     search: string;
     status: string;
+    fulfillment_status: string;
     sort: string;
     direction: 'asc' | 'desc';
 }

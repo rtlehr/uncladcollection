@@ -30,6 +30,9 @@ export interface PublicAsset {
     photographer: string | null;
     is_ai_generated: boolean;
     allows_quantity: boolean;
+    fulfillment_type: 'digital' | 'physical' | 'hybrid';
+    collects_shipping_address: boolean;
+    shipping_address_required: boolean;
     views_count: number;
     downloads_count: number;
     favorites_count: number;

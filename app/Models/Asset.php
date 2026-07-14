@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AssetFulfillmentType;
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
 use App\Observers\AssetObserver;
@@ -23,7 +24,8 @@ class Asset extends Model
     protected $fillable = [
         'uuid', 'legacy_image_id', 'collection_id', 'title', 'slug', 'description',
         'asset_type', 'status', 'photographer', 'sort_order', 'is_active',
-        'is_featured', 'is_ai_generated', 'allows_quantity', 'downloads_count', 'favorites_count',
+        'is_featured', 'is_ai_generated', 'allows_quantity', 'fulfillment_type',
+        'collects_shipping_address', 'shipping_address_required', 'downloads_count', 'favorites_count',
         'purchases_count', 'views_count', 'published_at', 'metadata',
         'primary_preview_file_id', 'poster_file_id',
     ];
@@ -38,6 +40,9 @@ class Asset extends Model
             'is_featured' => 'boolean',
             'is_ai_generated' => 'boolean',
             'allows_quantity' => 'boolean',
+            'fulfillment_type' => AssetFulfillmentType::class,
+            'collects_shipping_address' => 'boolean',
+            'shipping_address_required' => 'boolean',
             'downloads_count' => 'integer',
             'favorites_count' => 'integer',
             'purchases_count' => 'integer',

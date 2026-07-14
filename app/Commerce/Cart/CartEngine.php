@@ -3,6 +3,7 @@
 namespace App\Commerce\Cart;
 
 use App\Commerce\Configuration\ConfigurationSelection;
+use App\Commerce\Fulfillment\ShippingAddress;
 use App\Commerce\Pricing\PricingEngine;
 use App\Models\AssetOffering;
 use App\Models\CartItem;
@@ -20,7 +21,7 @@ class CartEngine
     /**
      * @param array<int, array{quantity:int,selections?:array<string,mixed>}> $lines
      */
-    public function addAssetLines(User $user, AssetOffering $offering, array $lines): void
+    public function addAssetLines(User $user, AssetOffering $offering, array $lines, ?ShippingAddress $shippingAddress = null): void
     {
         $offering->loadMissing([
             'asset.configurationGroups.values.rules',
@@ -36,7 +37,7 @@ class CartEngine
             ]);
         }
 
-        DB::transaction(function () use ($user, $offering, $lines): void {
+        DB::transaction(function () use ($user, $offering, $lines, $shippingAddress): void {
             foreach ($lines as $index => $line) {
                 $quantity = max(1, min(999, (int) ($line['quantity'] ?? 1)));
                 $selection = ConfigurationSelection::fromInput(
@@ -50,6 +51,7 @@ class CartEngine
                     'asset_id' => $offering->asset_id,
                     'asset_offering_id' => $offering->id,
                     'configuration_hash' => $selection->hash(),
+                    'shipping_address_hash' => $shippingAddress?->hash(),
                 ]);
 
                 $newQuantity = ($item->exists ? (int) $item->quantity : 0) + $quantity;
@@ -60,6 +62,7 @@ class CartEngine
                     'license_type_id' => $offering->license_type_id,
                     'quantity' => $newQuantity,
                     'configuration_snapshot' => $this->snapshots->configuration($selection),
+                    'shipping_address_snapshot' => $this->snapshots->shippingAddress($shippingAddress?->toArray()),
                     'price_cents' => $provisionalLineTotal,
                     'base_unit_price_cents' => (int) $offering->price_cents,
                     'configuration_adjustment_cents' => 0,

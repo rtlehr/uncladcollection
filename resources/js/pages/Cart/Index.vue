@@ -42,6 +42,7 @@ type CartItem = {
         labels?: ConfigurationLabel[];
     } | null;
 
+    shipping_address?: { full_name?: string; address_line_1?: string; address_line_2?: string | null; city?: string; region?: string; postal_code?: string; country_code?: string } | null;
     pricing: {
         pricing_tier_label?: string | null;
     } | null;
@@ -299,6 +300,12 @@ function clearCart(): void {
                                         {{ label.group }}:
                                         {{ label.values.join(', ') }}
                                     </span>
+                                </div>
+
+                                <div v-if="item.shipping_address" class="mt-3 rounded-xl border border-stone-200 p-3 text-xs leading-5 text-stone-600 dark:border-stone-700 dark:text-stone-300">
+                                    <p class="font-semibold text-stone-900 dark:text-white">Ships to {{ item.shipping_address.full_name }}</p>
+                                    <p>{{ item.shipping_address.address_line_1 }}<template v-if="item.shipping_address.address_line_2">, {{ item.shipping_address.address_line_2 }}</template></p>
+                                    <p>{{ item.shipping_address.city }}, {{ item.shipping_address.region }} {{ item.shipping_address.postal_code }} · {{ item.shipping_address.country_code }}</p>
                                 </div>
 
                                 <p

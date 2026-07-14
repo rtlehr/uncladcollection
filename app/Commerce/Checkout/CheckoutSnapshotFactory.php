@@ -27,6 +27,7 @@ final class CheckoutSnapshotFactory
                 'quantity' => (int) $cartItem->quantity,
                 'configuration_hash' => $cartItem->configuration_hash,
                 'configuration' => $cartItem->configuration_snapshot,
+                'shipping_address' => $cartItem->shipping_address_snapshot,
                 'pricing' => $cartItem->pricing_snapshot,
                 'line_total_cents' => (int) ($cartItem->line_total_cents ?? $cartItem->price_cents),
                 'currency' => strtoupper($cartItem->currency),
@@ -75,6 +76,7 @@ final class CheckoutSnapshotFactory
             'quantity' => $item->quantity,
             'configuration_hash' => $item->configuration_hash,
             'configuration' => $item->configuration_snapshot,
+            'shipping_address' => $item->shipping_address_snapshot,
             'pricing' => $item->pricing_snapshot,
             'included_files' => $item->included_asset_files_snapshot,
         ];

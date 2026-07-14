@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AssetFileRole;
+use App\Enums\AssetFulfillmentType;
 use App\Enums\AssetConfigurationDisplayType;
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
@@ -82,6 +83,10 @@ class AssetController extends Controller
                 'is_featured' => $request->boolean('is_featured'),
                 'is_ai_generated' => $request->boolean('is_ai_generated'),
                 'allows_quantity' => $request->boolean('allows_quantity'),
+                'fulfillment_type' => $validated['fulfillment_type'],
+                'collects_shipping_address' => $request->boolean('collects_shipping_address'),
+                'shipping_address_required' => $request->boolean('collects_shipping_address')
+                    && $request->boolean('shipping_address_required'),
             ]);
 
             foreach ($request->file('files', []) as $index => $file) {
@@ -137,6 +142,10 @@ class AssetController extends Controller
             'is_featured' => $request->boolean('is_featured'),
             'is_ai_generated' => $request->boolean('is_ai_generated'),
             'allows_quantity' => $request->boolean('allows_quantity'),
+            'fulfillment_type' => $validated['fulfillment_type'],
+            'collects_shipping_address' => $request->boolean('collects_shipping_address'),
+            'shipping_address_required' => $request->boolean('collects_shipping_address')
+                && $request->boolean('shipping_address_required'),
         ]);
 
         return back()->with('success', 'Asset details updated successfully.');
@@ -305,6 +314,9 @@ class AssetController extends Controller
             'is_featured' => ['boolean'],
             'is_ai_generated' => ['boolean'],
             'allows_quantity' => ['boolean'],
+            'fulfillment_type' => ['required', Rule::enum(AssetFulfillmentType::class)],
+            'collects_shipping_address' => ['boolean'],
+            'shipping_address_required' => ['boolean'],
             'files' => [$requireFiles ? 'required' : 'nullable', 'array', $requireFiles ? 'min:1' : 'min:0', 'max:25'],
             'files.*' => ['file', 'max:'.config('asset-media.max_upload_kilobytes', 512000)],
             'file_roles' => [$requireFiles ? 'required' : 'nullable', 'array'],
@@ -325,6 +337,7 @@ class AssetController extends Controller
             'fileRoles' => collect(AssetFileRole::cases())->map(fn ($role) => ['value' => $role->value, 'label' => Str::headline($role->value)])->values(),
             'acceptedExtensions' => collect(config('asset-media.extensions', []))->flatten()->unique()->values(),
             'maxUploadKilobytes' => config('asset-media.max_upload_kilobytes', 512000),
+            'fulfillmentTypes' => collect(AssetFulfillmentType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label()])->values(),
             'configurationDisplayTypes' => collect(AssetConfigurationDisplayType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label(), 'uses_values' => $type->usesValues()])->values(),
             'configurationTemplates' => AssetConfigurationTemplate::query()
                 ->with('activeValues')
@@ -419,6 +432,9 @@ class AssetController extends Controller
             'is_featured' => $asset->is_featured,
             'is_ai_generated' => $asset->is_ai_generated,
             'allows_quantity' => $asset->allows_quantity,
+            'fulfillment_type' => $asset->fulfillment_type->value,
+            'collects_shipping_address' => $asset->collects_shipping_address,
+            'shipping_address_required' => $asset->shipping_address_required,
             'files_count' => $asset->files_count ?? $asset->files()->count(),
             'active_files_count' => $asset->active_files_count ?? $asset->activeFiles()->count(),
             'primary_preview_file_id' => $asset->primary_preview_file_id,

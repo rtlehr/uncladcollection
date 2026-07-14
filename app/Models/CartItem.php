@@ -15,7 +15,9 @@ class CartItem extends Model
         'asset_offering_id',
         'quantity',
         'configuration_hash',
+        'shipping_address_hash',
         'configuration_snapshot',
+        'shipping_address_snapshot',
         'price_cents',
         'base_unit_price_cents',
         'configuration_adjustment_cents',
@@ -30,6 +32,7 @@ class CartItem extends Model
         return [
             'quantity' => 'integer',
             'configuration_snapshot' => 'array',
+            'shipping_address_snapshot' => 'array',
             'price_cents' => 'integer',
             'base_unit_price_cents' => 'integer',
             'configuration_adjustment_cents' => 'integer',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Collection;
 use App\Models\Image;
+use App\Models\MarketingCampaign;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -40,6 +41,12 @@ class HomeController extends Controller
 
         $heroImage = $this->getHeroImage($heroImageId);
 
+        $heroCampaign = MarketingCampaign::query()
+            ->current()
+            ->orderBy('sort_order')
+            ->latest()
+            ->first();
+
         $featuredCollections = $this->getFeaturedCollections(
             $featuredCollectionIds,
         );
@@ -56,6 +63,29 @@ class HomeController extends Controller
             'heroImage' => $heroImage
                 ? $this->formatHeroImage($heroImage)
                 : null,
+
+            'heroCampaign' => $heroCampaign ? [
+                'id' => $heroCampaign->id,
+                'name' => $heroCampaign->name,
+                'media_type' => $heroCampaign->media_type,
+                'media_url' => $heroCampaign->media_url,
+                'poster_url' => $heroCampaign->poster_url,
+                'eyebrow' => $heroCampaign->eyebrow,
+                'headline' => $heroCampaign->headline,
+                'subheadline' => $heroCampaign->subheadline,
+                'primary_button_label' => $heroCampaign->primary_button_label,
+                'primary_button_url' => $heroCampaign->primary_button_url,
+                'secondary_button_label' => $heroCampaign->secondary_button_label,
+                'secondary_button_url' => $heroCampaign->secondary_button_url,
+                'overlay_opacity' => $heroCampaign->overlay_opacity,
+                'media_position' => $heroCampaign->media_position,
+                'hero_height' => $heroCampaign->hero_height,
+                'text_alignment' => $heroCampaign->text_alignment,
+                'autoplay_first_visit' => $heroCampaign->autoplay_first_visit,
+                'autoplay_mobile' => $heroCampaign->autoplay_mobile,
+                'loop_video' => $heroCampaign->loop_video,
+                'show_search' => $heroCampaign->show_search,
+            ] : null,
 
             'featuredCollections' => $featuredCollections,
 

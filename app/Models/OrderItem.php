@@ -19,7 +19,7 @@ class OrderItem extends Model
         'status', 'fulfillment_type', 'commerce_version', 'quantity',
         'unit_price_cents', 'total_price_cents', 'image_title', 'asset_title',
         'license_name', 'offering_name', 'license_terms', 'configuration_hash',
-        'configuration_snapshot', 'pricing_snapshot', 'included_asset_files_snapshot',
+        'configuration_snapshot', 'shipping_address_snapshot', 'pricing_snapshot', 'included_asset_files_snapshot',
         'metadata',
     ];
 
@@ -28,6 +28,7 @@ class OrderItem extends Model
         'unit_price_cents' => 'integer',
         'total_price_cents' => 'integer',
         'configuration_snapshot' => 'array',
+        'shipping_address_snapshot' => 'array',
         'pricing_snapshot' => 'array',
         'included_asset_files_snapshot' => 'array',
         'metadata' => 'array',
