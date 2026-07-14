@@ -22,8 +22,8 @@ const socialLinks = computed(() => [
         <div class="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 lg:grid-cols-4 lg:px-12">
             <div class="lg:col-span-2">
                 <img
-                    v-if="site.logo_url"
-                    :src="site.logo_url"
+                    v-if="site.logo_horizontal_url || site.logo_url"
+                    :src="site.logo_horizontal_url || site.logo_url"
                     :alt="`${siteName} logo`"
                     class="h-10 max-w-52 object-contain"
                 />

@@ -33,9 +33,9 @@
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="{{ site_setting('branding.app_icon') ?: '/favicon.ico' }}" sizes="any">
+        <link rel="icon" type="image/png" sizes="32x32" href="/storage/site/branding/icons/favicon-32x32.png">
+        <link rel="apple-touch-icon" href="/storage/site/branding/icons/apple-touch-icon.png">
 
         @fonts
 

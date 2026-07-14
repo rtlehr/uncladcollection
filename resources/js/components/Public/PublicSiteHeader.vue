@@ -58,8 +58,8 @@ onBeforeUnmount(() => {
                 @click="closeMenu"
             >
                 <img
-                    v-if="site.logo_url"
-                    :src="site.logo_url"
+                    v-if="site.logo_horizontal_url || site.logo_url"
+                    :src="site.logo_horizontal_url || site.logo_url"
                     :alt="`${siteName} logo`"
                     class="h-8 max-w-[150px] object-contain sm:h-10 sm:max-w-52"
                 />

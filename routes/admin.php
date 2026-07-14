@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_site_settings')
             ->name('site-settings.index');
 
-        Route::put('/site-settings', [SiteSettingController::class, 'update'])
+        Route::match(['post', 'put'], '/site-settings', [SiteSettingController::class, 'update'])
             ->middleware('permission:manage_site_settings')
             ->name('site-settings.update');
 

@@ -83,10 +83,14 @@ class HandleInertiaRequests extends Middleware
                 'branding.active_theme',
                 'professional',
             ),
-            'logo_url' => data_get(
-                $settings,
-                'branding.site_logo',
-            ),
+            'logo_url' => data_get($settings, 'branding.logo_horizontal', data_get($settings, 'branding.logo_full', data_get($settings, 'branding.site_logo'))),
+            'logo_full_url' => data_get($settings, 'branding.logo_full', data_get($settings, 'branding.site_logo')),
+            'logo_horizontal_url' => data_get($settings, 'branding.logo_horizontal', data_get($settings, 'branding.logo_full', data_get($settings, 'branding.site_logo'))),
+            'logo_icon_url' => data_get($settings, 'branding.logo_icon', data_get($settings, 'branding.logo_full', data_get($settings, 'branding.site_logo'))),
+            'logo_light_url' => data_get($settings, 'branding.logo_light'),
+            'logo_dark_url' => data_get($settings, 'branding.logo_dark'),
+            'email_logo_url' => data_get($settings, 'branding.email_logo', data_get($settings, 'branding.logo_horizontal')),
+            'app_icon_url' => data_get($settings, 'branding.app_icon'),
             'primary_color' => data_get(
                 $settings,
                 'branding.primary_color',
@@ -176,7 +180,7 @@ class HandleInertiaRequests extends Middleware
             'default_image_url' => data_get(
                 $settings,
                 'seo.default_social_image',
-                data_get($settings, 'branding.site_logo'),
+                data_get($settings, 'branding.social_image', data_get($settings, 'branding.logo_full', data_get($settings, 'branding.site_logo'))),
             ),
             'x_username' => $xUsername,
             'locale' => str_replace('-', '_', app()->getLocale()),

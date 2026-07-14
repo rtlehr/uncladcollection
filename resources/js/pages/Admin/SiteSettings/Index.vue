@@ -8,6 +8,7 @@ import {
 import { computed, ref } from 'vue';
 
 import SiteSettingField from '@/Components/Admin/SiteSettingField.vue';
+import BrandingSettingsPanel from '@/components/admin/BrandingSettingsPanel.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 
@@ -163,6 +164,8 @@ const activeGroup = ref<GroupName>(
 
 const form = useForm<{
     settings: SiteSettingFormValue[];
+    branding_uploads: Record<string, File | null>;
+    branding_remove: Record<string, boolean>;
 }>({
     settings: Object.values(props.settings)
         .flat()
@@ -170,6 +173,8 @@ const form = useForm<{
             id: setting.id,
             setting_value: setting.setting_value ?? '',
         })),
+    branding_uploads: {},
+    branding_remove: {},
 });
 
 const formValuesById = computed(() => {
@@ -272,8 +277,25 @@ function selectGroup(groupName: string): void {
     activeGroup.value = groupName as GroupName;
 }
 
+const brandingValues = computed<Record<number, string>>(() => Object.fromEntries(form.settings.map(item => [item.id, item.setting_value])));
+const brandingErrors = computed<Record<string, string | undefined>>(() => Object.fromEntries(Object.keys(form.branding_uploads).map(key => [key, form.errors[`branding_uploads.${key}`]])));
+function updateBrandingUpload(key: string, file: File | null): void {
+    form.branding_uploads = {
+        ...form.branding_uploads,
+        [key]: file,
+    };
+}
+
+function updateBrandingRemoval(key: string, value: boolean): void {
+    form.branding_remove = {
+        ...form.branding_remove,
+        [key]: value,
+    };
+}
+
 function submit(): void {
-    form.put('/admin/site-settings', {
+    form.post('/admin/site-settings', {
+        forceFormData: true,
         preserveScroll: true,
 
         onError: () => {
@@ -479,8 +501,20 @@ function submit(): void {
                         </header>
 
                         <div class="p-5 sm:p-7">
+                            <BrandingSettingsPanel
+                                v-if="activeGroup === 'branding'"
+                                :settings="activeGroupSettings"
+                                :values="brandingValues"
+                                :uploads="form.branding_uploads"
+                                :removals="form.branding_remove"
+                                :errors="brandingErrors"
+                                @update:value="updateSettingValue"
+                                @update:upload="updateBrandingUpload"
+                                @update:remove="updateBrandingRemoval"
+                            />
+
                             <div
-                                v-if="activeGroupSettings.length"
+                                v-else-if="activeGroupSettings.length"
                                 class="grid gap-x-8 gap-y-7 xl:grid-cols-2"
                             >
                                 <SiteSettingField
