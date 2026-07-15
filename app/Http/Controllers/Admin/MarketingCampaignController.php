@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarketingCampaign;
+use App\Services\MarketingCampaignMediaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,7 @@ use Inertia\Response;
 
 class MarketingCampaignController extends Controller
 {
+    public function __construct(private readonly MarketingCampaignMediaService $mediaService) {}
     public function index(): Response
     {
         return Inertia::render('Admin/MarketingCampaigns/Index', [
@@ -34,7 +36,14 @@ class MarketingCampaignController extends Controller
         $validated = $this->validateCampaign($request, true);
         $uuid = (string) Str::uuid();
         $validated['uuid'] = $uuid;
-        $validated['media_path'] = $request->file('media')->store("marketing/campaigns/{$uuid}", 'public');
+        $directory = "marketing/campaigns/{$uuid}";
+        if ($validated['media_type'] === 'image') {
+            $validated['media_original_path'] = $this->mediaService->storeOriginal($request->file('media_original'), $directory);
+            $validated['media_path'] = $this->mediaService->storeEdited($request->file('media'), $directory);
+            $validated['media_edit_data'] = $this->decodeEditData($request->input('media_edit_data'));
+        } else {
+            $validated['media_path'] = $this->mediaService->storeVideo($request->file('media'), $directory);
+        }
         $validated['poster_path'] = $request->file('poster')?->store("marketing/campaigns/{$uuid}", 'public');
         $validated = $this->normalizeBooleans($request, $validated);
         MarketingCampaign::create($validated);
@@ -55,9 +64,19 @@ class MarketingCampaignController extends Controller
         $validated = $this->validateCampaign($request, false);
         $directory = "marketing/campaigns/{$marketingCampaign->uuid}";
 
+        if ($request->hasFile('media_original')) {
+            $this->mediaService->delete($marketingCampaign->media_original_path);
+            $validated['media_original_path'] = $this->mediaService->storeOriginal($request->file('media_original'), $directory);
+        }
+
         if ($request->hasFile('media')) {
-            Storage::disk('public')->delete($marketingCampaign->media_path);
-            $validated['media_path'] = $request->file('media')->store($directory, 'public');
+            $this->mediaService->delete($marketingCampaign->media_path);
+            if ($validated['media_type'] === 'image') {
+                $validated['media_path'] = $this->mediaService->storeEdited($request->file('media'), $directory);
+                $validated['media_edit_data'] = $this->decodeEditData($request->input('media_edit_data'));
+            } else {
+                $validated['media_path'] = $this->mediaService->storeVideo($request->file('media'), $directory);
+            }
         }
 
         if ($request->boolean('remove_poster')) {
@@ -89,6 +108,8 @@ class MarketingCampaignController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'media_type' => ['required', Rule::in(['image', 'video'])],
             'media' => [$mediaRequired ? 'required' : 'nullable', 'file', 'max:102400', 'mimetypes:image/jpeg,image/png,image/webp,video/mp4,video/webm'],
+            'media_original' => [$mediaRequired ? 'required_if:media_type,image' : 'nullable', 'image', 'max:102400'],
+            'media_edit_data' => ['nullable', 'json'],
             'poster' => ['nullable', 'image', 'max:20480'],
             'remove_poster' => ['nullable', 'boolean'],
             'eyebrow' => ['nullable', 'string', 'max:255'],
@@ -113,12 +134,19 @@ class MarketingCampaignController extends Controller
         ]);
     }
 
+    private function decodeEditData(?string $value): ?array
+    {
+        if (! $value) return null;
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : null;
+    }
+
     private function normalizeBooleans(Request $request, array $validated): array
     {
         foreach (['autoplay_first_visit', 'autoplay_mobile', 'loop_video', 'show_search', 'is_active'] as $field) {
             $validated[$field] = $request->boolean($field);
         }
-        unset($validated['media'], $validated['poster'], $validated['remove_poster']);
+        unset($validated['media'], $validated['media_original'], $validated['poster'], $validated['remove_poster']);
         return $validated;
     }
 }

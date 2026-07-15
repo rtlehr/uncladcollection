@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class MarketingCampaign extends Model
 {
     protected $fillable = [
-        'uuid', 'name', 'media_type', 'media_path', 'poster_path', 'headline',
+        'uuid', 'name', 'media_type', 'media_path', 'media_original_path', 'media_edit_data', 'poster_path', 'headline',
         'subheadline', 'eyebrow', 'primary_button_label', 'primary_button_url',
         'secondary_button_label', 'secondary_button_url', 'overlay_opacity',
         'media_position', 'hero_height', 'text_alignment', 'autoplay_first_visit',
@@ -27,9 +27,10 @@ class MarketingCampaign extends Model
         'sort_order' => 'integer',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'media_edit_data' => 'array',
     ];
 
-    protected $appends = ['media_url', 'poster_url', 'is_current'];
+    protected $appends = ['media_url', 'media_original_url', 'poster_url', 'is_current'];
 
     public function scopeCurrent(Builder $query): Builder
     {
@@ -46,6 +47,11 @@ class MarketingCampaign extends Model
     public function getMediaUrlAttribute(): ?string
     {
         return $this->media_path ? Storage::disk('public')->url($this->media_path) : null;
+    }
+
+    public function getMediaOriginalUrlAttribute(): ?string
+    {
+        return $this->media_original_path ? Storage::disk('public')->url($this->media_original_path) : null;
     }
 
     public function getPosterUrlAttribute(): ?string
