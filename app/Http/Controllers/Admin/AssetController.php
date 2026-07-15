@@ -156,9 +156,10 @@ class AssetController extends Controller
         $validated = $request->validate([
             'files' => ['required', 'array', 'min:1', 'max:25'],
             'files.*' => ['required', 'file', 'max:'.config('asset-media.max_upload_kilobytes', 512000)],
-            'file_roles' => ['required', 'array'],
+            'file_roles' => ['required', 'array', 'size:'.count($request->file('files', []))],
             'file_roles.*' => ['required', Rule::enum(AssetFileRole::class)],
-            'file_downloadable' => ['nullable', 'array'],
+            'file_downloadable' => ['nullable', 'array', 'size:'.count($request->file('files', []))],
+            'file_downloadable.*' => ['nullable', 'boolean'],
         ]);
 
         foreach ($request->file('files', []) as $index => $file) {

@@ -79,7 +79,22 @@ function updateAsset() {
         .put(`/admin/assets/${props.assetRecord.id}`, { preserveScroll: true });
 }
 
+const pendingFilesAreValid = computed(
+    () =>
+        pendingFiles.value.length > 0 &&
+        pendingFiles.value.every(
+            (item) => item.validationErrors.length === 0,
+        ),
+);
+
+const uploadPercentage = computed(
+    () => uploadForm.progress?.percentage ?? null,
+);
+
 function uploadFiles() {
+    if (!pendingFilesAreValid.value) {
+        return;
+    }
     uploadForm.files = pendingFiles.value.map((item) => item.file);
     uploadForm.file_roles = pendingFiles.value.map((item) => item.role);
     uploadForm.file_downloadable = pendingFiles.value.map((item) => item.downloadable ? 1 : 0);
@@ -268,8 +283,48 @@ function reorderFiles(files: AdminAssetFile[]): void {
         </FormSection>
 
         <FormSection title="Add Files" description="Upload additional associated files to this existing asset.">
-            <AssetFileDropzone v-model="pendingFiles" :roles="fileRoles" :accepted-extensions="acceptedExtensions" :max-upload-kilobytes="maxUploadKilobytes" :disabled="uploadForm.processing" />
-            <div class="mt-4 flex justify-end"><Button type="button" :disabled="!pendingFiles.length || uploadForm.processing" @click="uploadFiles">Upload {{ pendingFiles.length || '' }} File{{ pendingFiles.length === 1 ? '' : 's' }}</Button></div>
+            <AssetFileDropzone
+                v-model="pendingFiles"
+                :roles="fileRoles"
+                :accepted-extensions="acceptedExtensions"
+                :max-upload-kilobytes="maxUploadKilobytes"
+                :disabled="uploadForm.processing"
+            />
+
+            <div
+                v-if="uploadForm.processing && uploadPercentage !== null"
+                class="rounded-xl border bg-muted/20 p-4"
+            >
+                <div class="flex items-center justify-between text-sm">
+                    <span class="font-medium">Uploading files</span>
+                    <span class="text-muted-foreground">
+                        {{ uploadPercentage }}%
+                    </span>
+                </div>
+
+                <div class="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                        class="h-full rounded-full bg-primary transition-all"
+                        :style="{ width: `${uploadPercentage}%` }"
+                    />
+                </div>
+            </div>
+
+            <div
+                v-if="Object.keys(uploadForm.errors).length"
+                class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+            >
+                <p class="font-medium">Some files could not be uploaded.</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5">
+                    <li
+                        v-for="(message, key) in uploadForm.errors"
+                        :key="key"
+                    >
+                        {{ message }}
+                    </li>
+                </ul>
+            </div>
+            <div class="mt-4 flex justify-end"><Button type="button" :disabled="!pendingFilesAreValid || uploadForm.processing" @click="uploadFiles">Upload {{ pendingFiles.length || '' }} File{{ pendingFiles.length === 1 ? '' : 's' }}</Button></div>
         </FormSection>
     </div>
 </template>

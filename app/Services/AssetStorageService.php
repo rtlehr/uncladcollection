@@ -5,14 +5,22 @@ namespace App\Services;
 use App\Enums\AssetFileRole;
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Support\Uploads\UploadStreamResolver;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 class AssetStorageService
 {
+    public function __construct(
+        private readonly UploadStreamResolver $streams,
+    ) {
+    }
+
     public function disk(): string
     {
         return (string) config('asset-media.private_disk', 'asset-files');
@@ -31,30 +39,62 @@ class AssetStorageService
         );
     }
 
-    public function store(Asset $asset, UploadedFile $file, AssetFileRole $role): array
-    {
+    public function store(
+        Asset $asset,
+        UploadedFile $file,
+        AssetFileRole $role,
+    ): array {
         $disk = $this->disk();
         $directory = $this->directory($asset, $role);
         $storedFilename = $this->randomFilename($file);
         $path = trim($directory.'/'.$storedFilename, '/');
-        $checksum = $this->checksum($file);
-
-        $stream = fopen($file->getRealPath(), 'rb');
-
-        if (! is_resource($stream)) {
-            throw new RuntimeException('The uploaded file could not be opened for storage.');
-        }
 
         try {
-            $stored = Storage::disk($disk)->put($path, $stream, [
-                'visibility' => 'private',
-            ]);
-        } finally {
-            fclose($stream);
+            $checksum = $this->checksum($file);
+            $stored = $this->withReadableStream(
+                $file,
+                fn ($stream): bool => Storage::disk($disk)->put(
+                    $path,
+                    $stream,
+                    ['visibility' => 'private'],
+                ),
+            );
+        } catch (Throwable $exception) {
+            $this->logFailure(
+                operation: 'store',
+                file: $file,
+                exception: $exception,
+                context: [
+                    'asset_id' => $asset->id,
+                    'asset_uuid' => $asset->uuid,
+                    'role' => $role->value,
+                    'disk' => $disk,
+                    'path' => $path,
+                ],
+            );
+
+            throw $exception;
         }
 
         if (! $stored) {
-            throw new RuntimeException('The uploaded file could not be stored.');
+            $exception = new RuntimeException(
+                'The uploaded file could not be stored.',
+            );
+
+            $this->logFailure(
+                operation: 'store',
+                file: $file,
+                exception: $exception,
+                context: [
+                    'asset_id' => $asset->id,
+                    'asset_uuid' => $asset->uuid,
+                    'role' => $role->value,
+                    'disk' => $disk,
+                    'path' => $path,
+                ],
+            );
+
+            throw $exception;
         }
 
         return [
@@ -68,7 +108,10 @@ class AssetStorageService
 
     public function delete(AssetFile $assetFile): bool
     {
-        return $this->deleteStoredPath($assetFile->disk, $assetFile->path);
+        return $this->deleteStoredPath(
+            $assetFile->disk,
+            $assetFile->path,
+        );
     }
 
     public function deleteStoredPath(string $disk, string $path): bool
@@ -82,10 +125,16 @@ class AssetStorageService
 
     public function randomFilename(UploadedFile $file): string
     {
-        $extension = strtolower($file->getClientOriginalExtension());
+        $extension = strtolower(
+            $file->getClientOriginalExtension()
+            ?: $file->guessExtension()
+            ?: '',
+        );
 
         if ($extension === '') {
-            throw new InvalidArgumentException('The uploaded file must have an approved extension.');
+            throw new InvalidArgumentException(
+                'The uploaded file must have an approved extension.',
+            );
         }
 
         return Str::ulid()->toBase32().'.'.$extension;
@@ -93,19 +142,71 @@ class AssetStorageService
 
     public function checksum(UploadedFile $file): string
     {
-        $path = $file->getRealPath();
+        try {
+            return $this->withReadableStream(
+                $file,
+                function ($stream): string {
+                    $context = hash_init('sha256');
+                    $result = hash_update_stream($context, $stream);
 
-        if ($path === false) {
-            throw new InvalidArgumentException('The uploaded file could not be read.');
+                    if ($result === false) {
+                        throw new RuntimeException(
+                            'The uploaded file checksum could not be calculated.',
+                        );
+                    }
+
+                    return hash_final($context);
+                },
+            );
+        } catch (Throwable $exception) {
+            $this->logFailure(
+                operation: 'checksum',
+                file: $file,
+                exception: $exception,
+            );
+
+            throw $exception;
         }
+    }
 
-        $checksum = hash_file('sha256', $path);
+    /**
+     * @template T
+     *
+     * @param callable(resource): T $callback
+     * @return T
+     */
+    private function withReadableStream(
+        UploadedFile $file,
+        callable $callback,
+    ): mixed {
+        $stream = $this->streams->open($file);
 
-        if ($checksum === false) {
-            throw new RuntimeException('The uploaded file checksum could not be calculated.');
+        try {
+            return $callback($stream);
+        } finally {
+            fclose($stream);
         }
+    }
 
-        return $checksum;
+    private function logFailure(
+        string $operation,
+        UploadedFile $file,
+        Throwable $exception,
+        array $context = [],
+    ): void {
+        Log::error('Asset upload processing failed.', [
+            ...$context,
+            'operation' => $operation,
+            'filename' => $file->getClientOriginalName(),
+            'client_extension' => $file->getClientOriginalExtension(),
+            'client_mime_type' => $file->getClientMimeType(),
+            'reported_size_bytes' => $file->getSize() ?: null,
+            'real_path_available' => $file->getRealPath() !== false,
+            'pathname' => $file->getPathname(),
+            'uploaded_file_class' => $file::class,
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+        ]);
     }
 
     private function roleDirectory(AssetFileRole $role): string

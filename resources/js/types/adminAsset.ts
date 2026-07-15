@@ -82,12 +82,24 @@ export interface AdminAsset {
     configurations?: AdminAssetConfigurationGroup[];
 }
 
+export interface PendingAssetFileMetadata {
+    extension: string;
+    mimeType: string;
+    sizeBytes: number;
+    width: number | null;
+    height: number | null;
+    durationSeconds: number | null;
+    kind: 'image' | 'video' | 'archive' | 'document' | 'vector' | 'other';
+}
+
 export interface PendingAssetFile {
     id: string;
     file: File;
     role: string;
     downloadable: boolean;
     previewUrl: string | null;
+    metadata: PendingAssetFileMetadata;
+    validationErrors: string[];
 }
 
 export interface AdminAssetPricingTier { id: number | null; minimum_quantity: number; maximum_quantity: number | null; pricing_type: 'fixed_unit_price' | 'percentage_off'; unit_price_cents: number | null; percentage_off: number | null; currency: string; is_active: boolean; }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -44,14 +45,28 @@ const form = useForm({
     configurations: [] as AdminAssetConfigurationGroup[],
 });
 
+const hasInvalidFiles = computed(() =>
+    form.files.some((item) => item.validationErrors.length > 0),
+);
+
+const uploadPercentage = computed(
+    () => form.progress?.percentage ?? null,
+);
+
 function submit() {
+    if (hasInvalidFiles.value) {
+        return;
+    }
     form.transform((data) => ({
         ...data,
         collection_id: data.collection_id === '' ? null : data.collection_id,
         files: data.files.map((item) => item.file),
         file_roles: data.files.map((item) => item.role),
         file_downloadable: data.files.map((item) => item.downloadable ? 1 : 0),
-    })).post('/admin/assets', { forceFormData: true });
+    })).post('/admin/assets', {
+        forceFormData: true,
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -70,8 +85,46 @@ function submit() {
                         </div>
                     </FormSection>
                     <FormSection title="Asset Files" description="Upload all deliverables belonging to this asset. Roles are suggested automatically and can be changed.">
-                        <AssetFileDropzone v-model="form.files" :roles="fileRoles" :accepted-extensions="acceptedExtensions" :max-upload-kilobytes="maxUploadKilobytes" :disabled="form.processing" />
-                        <p v-if="form.errors.files" class="mt-2 text-sm text-destructive">{{ form.errors.files }}</p>
+                        <AssetFileDropzone
+                            v-model="form.files"
+                            v-model:primary-preview-index="form.primary_preview_index"
+                            v-model:poster-index="form.poster_index"
+                            :roles="fileRoles"
+                            :accepted-extensions="acceptedExtensions"
+                            :max-upload-kilobytes="maxUploadKilobytes"
+                            :disabled="form.processing"
+                            allow-primary-selection
+                            allow-poster-selection
+                        />
+                        <p
+                            v-if="form.errors.files"
+                            class="mt-2 text-sm text-destructive"
+                        >
+                            {{ form.errors.files }}
+                        </p>
+
+                        <div
+                            v-if="form.processing && uploadPercentage !== null"
+                            class="mt-4 rounded-xl border bg-muted/20 p-4"
+                        >
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="font-medium">Uploading asset files</span>
+                                <span class="text-muted-foreground">
+                                    {{ uploadPercentage }}%
+                                </span>
+                            </div>
+
+                            <div class="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+                                <div
+                                    class="h-full rounded-full bg-primary transition-all"
+                                    :style="{ width: `${uploadPercentage}%` }"
+                                />
+                            </div>
+
+                            <p class="mt-2 text-xs text-muted-foreground">
+                                Keep this page open until the upload completes.
+                            </p>
+                        </div>
                     </FormSection>
                     <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
                         <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
@@ -95,7 +148,7 @@ function submit() {
                     </FormSection>
                 </div>
             </div>
-            <FormActions submit-label="Create Asset" :processing="form.processing" @cancel="router.visit('/admin/assets')" />
+            <FormActions submit-label="Create Asset" :processing="form.processing" :disabled="hasInvalidFiles" @cancel="router.visit('/admin/assets')" />
         </form>
     </div>
 </template>
