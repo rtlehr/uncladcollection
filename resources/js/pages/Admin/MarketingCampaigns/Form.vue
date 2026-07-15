@@ -2,13 +2,14 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { ImageIcon, Pencil } from '@lucide/vue';
-import ImageEditorDialog, { type ImageEditData, type ImageEditorPreset } from '@/components/media/ImageEditorDialog.vue';
+import ImageEditorDialog, { type ImageEditData } from '@/components/media/ImageEditorDialog.vue';
+import { MARKETING_HERO_PRESET } from '@/config/imageEditorPresets';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { MarketingCampaign } from '@/types/marketingCampaign';
 
 const props = defineProps<{ campaign?: MarketingCampaign | null }>();
-const marketingPreset: ImageEditorPreset = { key: 'marketing-hero', label: 'Marketing hero', width: 1920, height: 800, outputType: 'image/jpeg', quality: 0.9 };
+const marketingPreset = MARKETING_HERO_PRESET;
 const editorOpen = ref(false);
 const selectedOriginal = ref<File | null>(null);
 const originalSource = ref<File | string | null>(props.campaign?.media_original_url ?? props.campaign?.media_url ?? null);
