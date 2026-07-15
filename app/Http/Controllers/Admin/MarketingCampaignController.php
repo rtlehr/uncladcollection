@@ -65,18 +65,35 @@ class MarketingCampaignController extends Controller
         $directory = "marketing/campaigns/{$marketingCampaign->uuid}";
 
         if ($request->hasFile('media_original')) {
-            $this->mediaService->delete($marketingCampaign->media_original_path);
-            $validated['media_original_path'] = $this->mediaService->storeOriginal($request->file('media_original'), $directory);
+            $previousOriginalPath = $marketingCampaign->media_original_path;
+
+            $validated['media_original_path'] = $this->mediaService->storeOriginal(
+                $request->file('media_original'),
+                $directory,
+            );
+
+            $this->mediaService->delete($previousOriginalPath);
         }
 
         if ($request->hasFile('media')) {
-            $this->mediaService->delete($marketingCampaign->media_path);
+            $previousMediaPath = $marketingCampaign->media_path;
+
             if ($validated['media_type'] === 'image') {
-                $validated['media_path'] = $this->mediaService->storeEdited($request->file('media'), $directory);
-                $validated['media_edit_data'] = $this->decodeEditData($request->input('media_edit_data'));
+                $validated['media_path'] = $this->mediaService->storeEdited(
+                    $request->file('media'),
+                    $directory,
+                );
+                $validated['media_edit_data'] = $this->decodeEditData(
+                    $request->input('media_edit_data'),
+                );
             } else {
-                $validated['media_path'] = $this->mediaService->storeVideo($request->file('media'), $directory);
+                $validated['media_path'] = $this->mediaService->storeVideo(
+                    $request->file('media'),
+                    $directory,
+                );
             }
+
+            $this->mediaService->delete($previousMediaPath);
         }
 
         if ($request->boolean('remove_poster')) {
