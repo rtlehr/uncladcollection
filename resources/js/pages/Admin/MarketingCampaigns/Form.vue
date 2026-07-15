@@ -43,13 +43,47 @@ function chooseMedia(e: Event): void {
 }
 function choosePoster(e: Event): void { form.poster = (e.target as HTMLInputElement).files?.[0] ?? null; }
 function applyEdited(payload: { file: File; edit: ImageEditData; previewUrl: string }): void {
-    if (editedPreview.value?.startsWith('blob:')) URL.revokeObjectURL(editedPreview.value);
+    if (editedPreview.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(editedPreview.value);
+    }
+
     editedPreview.value = payload.previewUrl;
     editData.value = payload.edit;
-    form.media = payload.file;
+
+    // Assign a fresh File instance to the Inertia form so it is always detected
+    // as multipart upload data in both development and managed hosting.
+    form.media = new File(
+        [payload.file],
+        payload.file.name || 'marketing-hero.jpg',
+        {
+            type: payload.file.type || marketingPreset.outputType,
+            lastModified: Date.now(),
+        },
+    );
+
+    form.media_type = 'image';
     form.media_edit_data = JSON.stringify(payload.edit);
 }
-function submit(): void { const opts={forceFormData:true}; props.campaign ? form.post(`/admin/marketing-campaigns/${props.campaign.id}?_method=PUT`,opts) : form.post('/admin/marketing-campaigns',opts); }
+
+function submit(): void {
+    const url = props.campaign
+        ? `/admin/marketing-campaigns/${props.campaign.id}`
+        : '/admin/marketing-campaigns';
+
+    form
+        .transform((data) => (
+            props.campaign
+                ? {
+                    ...data,
+                    _method: 'put',
+                }
+                : data
+        ))
+        .post(url, {
+            forceFormData: true,
+            preserveScroll: true,
+        });
+}
 onBeforeUnmount(() => { if (editedPreview.value?.startsWith('blob:')) URL.revokeObjectURL(editedPreview.value); });
 </script>
 
