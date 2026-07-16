@@ -17,6 +17,8 @@ import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreview
 import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption, AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption } from '@/types/adminAsset';
 import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
@@ -57,6 +59,99 @@ const replacingId = ref<number | null>(null);
 const offeringForm = useForm({ offerings: (props.assetRecord.offerings ?? []) as AdminAssetOffering[] });
 const configurationForm = useForm({ configurations: (props.assetRecord.configurations ?? []) as AdminAssetConfigurationGroup[] });
 const deletion = useDeleteConfirmation<AdminAssetFile>();
+
+const marketplacePreviewUrl = ref<string | null>(
+    props.assetRecord.marketplace_image_url,
+);
+const marketplaceEditData = ref<Partial<ImageEditData> | null>(
+    props.assetRecord.marketplace_image_edit_data as Partial<ImageEditData> | null,
+);
+const marketplaceSourceKey = ref<string | null>(
+    props.assetRecord.marketplace_source_asset_file_id
+        ? String(props.assetRecord.marketplace_source_asset_file_id)
+        : null,
+);
+const presentationForm = useForm({
+    marketplace_image: null as File | null,
+    marketplace_edit_data: null as string | null,
+    marketplace_source_asset_file_id:
+        props.assetRecord.marketplace_source_asset_file_id as number | null,
+    remove_marketplace_image: false,
+});
+
+const marketplaceSources = computed(() =>
+    (props.assetRecord.files ?? [])
+        .filter(
+            (file) =>
+                file.can_preview &&
+                ['image', 'vector'].includes(file.preview_kind) &&
+                Boolean(file.preview_url),
+        )
+        .map((file) => ({
+            key: String(file.id),
+            label: `${file.original_filename} (${file.extension.toUpperCase()})`,
+            source: file.preview_url as string,
+            sourceAssetFileId: file.id,
+        })),
+);
+
+const marketplaceFormats = computed(() =>
+    (props.assetRecord.files ?? [])
+        .map((file) => file.extension.toUpperCase())
+        .filter((value, index, values) => values.indexOf(value) === index),
+);
+
+function applyMarketplaceImage(payload: {
+    file: File;
+    edit: ImageEditData;
+    previewUrl: string;
+    sourceAssetFileId: number | null;
+}): void {
+    if (marketplacePreviewUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(marketplacePreviewUrl.value);
+    }
+
+    marketplacePreviewUrl.value = payload.previewUrl;
+    marketplaceEditData.value = payload.edit;
+    presentationForm.marketplace_image = payload.file;
+    presentationForm.marketplace_edit_data = JSON.stringify(payload.edit);
+    presentationForm.marketplace_source_asset_file_id =
+        payload.sourceAssetFileId;
+    presentationForm.remove_marketplace_image = false;
+}
+
+function saveMarketplaceImage(): void {
+    presentationForm.post(
+        `/admin/assets/${props.assetRecord.id}/presentation`,
+        {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                presentationForm.marketplace_image = null;
+                presentationForm.remove_marketplace_image = false;
+            },
+        },
+    );
+}
+
+function clearMarketplaceImage(): void {
+    presentationForm.marketplace_image = null;
+    presentationForm.marketplace_edit_data = null;
+    presentationForm.remove_marketplace_image = true;
+
+    presentationForm.post(
+        `/admin/assets/${props.assetRecord.id}/presentation`,
+        {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                marketplacePreviewUrl.value = null;
+                marketplaceEditData.value = null;
+                presentationForm.remove_marketplace_image = false;
+            },
+        },
+    );
+}
 
 const canViewPublicPage = computed(
     () => props.assetRecord.status === 'published' && props.assetRecord.is_active,
@@ -213,6 +308,51 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </div>
             <FormActions submit-label="Save Asset" :processing="form.processing" @cancel="router.visit('/admin/assets')" />
         </form>
+
+        <FormSection
+            title="Asset Presentation"
+            description="Control the dedicated marketplace-card image independently from the full asset preview."
+        >
+            <form class="space-y-5" @submit.prevent="saveMarketplaceImage">
+                <AssetMarketplaceImageEditor
+                    v-model:source-key="marketplaceSourceKey"
+                    :sources="marketplaceSources"
+                    :preview-url="marketplacePreviewUrl"
+                    :edit-data="marketplaceEditData"
+                    :title="assetRecord.title"
+                    :creator="assetRecord.photographer"
+                    :asset-type-label="assetTypes.find((item) => item.value === assetRecord.asset_type)?.label ?? 'Asset'"
+                    :formats="marketplaceFormats"
+                    :disabled="presentationForm.processing"
+                    allow-clear
+                    @apply="applyMarketplaceImage"
+                    @clear="clearMarketplaceImage"
+                />
+
+                <div class="flex justify-end border-t pt-4">
+                    <Button
+                        type="submit"
+                        :disabled="
+                            presentationForm.processing ||
+                            !presentationForm.marketplace_image
+                        "
+                    >
+                        {{
+                            presentationForm.processing
+                                ? 'Saving…'
+                                : 'Save Marketplace Image'
+                        }}
+                    </Button>
+                </div>
+
+                <p
+                    v-if="presentationForm.errors.marketplace_image"
+                    class="text-sm text-destructive"
+                >
+                    {{ presentationForm.errors.marketplace_image }}
+                </p>
+            </form>
+        </FormSection>
 
         <FormSection title="Preview Gallery" description="Review browser-safe asset files using the same presentation framework as the public page.">
             <AssetFilePreviewGallery

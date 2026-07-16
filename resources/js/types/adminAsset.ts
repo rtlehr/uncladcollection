@@ -75,6 +75,9 @@ export interface AdminAsset {
     primary_preview_file_id: number | null;
     poster_file_id: number | null;
     preview_url: string | null;
+    marketplace_image_url: string | null;
+    marketplace_image_edit_data: Record<string, unknown> | null;
+    marketplace_source_asset_file_id: number | null;
     legacy_image_id: number | null;
     health: AssetHealth;
     files?: AdminAssetFile[];

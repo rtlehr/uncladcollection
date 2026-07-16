@@ -1,6 +1,14 @@
 import type { ImageEditorPreset } from '@/components/media/ImageEditorDialog.vue';
 
 export const IMAGE_EDITOR_PRESETS: Record<string, ImageEditorPreset> = {
+    marketplaceCard: {
+        key: 'marketplace-card',
+        label: 'Marketplace card',
+        width: 1200,
+        height: 675,
+        outputType: 'image/jpeg',
+        quality: 0.9,
+    },
     marketingHero: {
         key: 'marketing-hero',
         label: 'Marketing hero',
@@ -61,3 +69,6 @@ export const IMAGE_EDITOR_PRESETS: Record<string, ImageEditorPreset> = {
 
 export const MARKETING_HERO_PRESET =
     IMAGE_EDITOR_PRESETS.marketingHero;
+
+export const MARKETPLACE_CARD_PRESET =
+    IMAGE_EDITOR_PRESETS.marketplaceCard;

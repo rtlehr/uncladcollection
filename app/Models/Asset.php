@@ -27,7 +27,7 @@ class Asset extends Model
         'is_featured', 'is_ai_generated', 'allows_quantity', 'fulfillment_type',
         'collects_shipping_address', 'shipping_address_required', 'downloads_count', 'favorites_count',
         'purchases_count', 'views_count', 'published_at', 'metadata',
-        'primary_preview_file_id', 'poster_file_id',
+        'presentation_images', 'primary_preview_file_id', 'poster_file_id',
     ];
 
     protected function casts(): array
@@ -49,6 +49,7 @@ class Asset extends Model
             'views_count' => 'integer',
             'published_at' => 'datetime',
             'metadata' => 'array',
+            'presentation_images' => 'array',
             'primary_preview_file_id' => 'integer',
             'poster_file_id' => 'integer',
         ];

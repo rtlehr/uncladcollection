@@ -17,6 +17,7 @@ use App\Services\AssetOfferingService;
 use App\Commerce\Configuration\ConfigurationManager;
 use App\Services\AssetHealthService;
 use App\Services\AssetMediaPresentationService;
+use App\Services\AssetPresentationService;
 use App\Models\Collection;
 use App\Services\AssetService;
 use Illuminate\Http\RedirectResponse;
@@ -65,11 +66,11 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Create', $this->formOptions());
     }
 
-    public function store(Request $request, AssetService $assetService, ConfigurationManager $configurationService): RedirectResponse
+    public function store(Request $request, AssetService $assetService, ConfigurationManager $configurationService, AssetPresentationService $presentationService): RedirectResponse
     {
         $validated = $this->validateAsset($request, requireFiles: true);
 
-        $asset = DB::transaction(function () use ($request, $validated, $assetService, $configurationService): Asset {
+        $asset = DB::transaction(function () use ($request, $validated, $assetService, $configurationService, $presentationService): Asset {
             $asset = $assetService->create([
                 'collection_id' => $validated['collection_id'] ?? null,
                 'title' => $validated['title'],
@@ -89,12 +90,16 @@ class AssetController extends Controller
                     && $request->boolean('shipping_address_required'),
             ]);
 
+            $uploadedAssetFiles = [];
+
             foreach ($request->file('files', []) as $index => $file) {
                 $role = AssetFileRole::from($validated['file_roles'][$index] ?? AssetFileRole::Supplemental->value);
                 $assetFile = $assetService->addFile($asset, $file, $role, attributes: [
                     'sort_order' => ($index + 1) * 10,
                     'is_downloadable' => (bool) ($validated['file_downloadable'][$index] ?? true),
                 ]);
+
+                $uploadedAssetFiles[$index] = $assetFile;
 
                 if (($validated['primary_preview_index'] ?? null) !== null && (int) $validated['primary_preview_index'] === $index) {
                     $assetService->setPrimaryPreview($asset, $assetFile);
@@ -103,6 +108,22 @@ class AssetController extends Controller
                 if (($validated['poster_index'] ?? null) !== null && (int) $validated['poster_index'] === $index) {
                     $assetService->setPoster($asset, $assetFile);
                 }
+            }
+
+            if ($request->hasFile('marketplace_image')) {
+                $sourceIndex = $validated['marketplace_source_index'] ?? null;
+                $sourceAssetFileId = $sourceIndex !== null
+                    ? ($uploadedAssetFiles[(int) $sourceIndex]->id ?? null)
+                    : null;
+
+                $presentationService->saveMarketplace(
+                    $asset,
+                    $request->file('marketplace_image'),
+                    $this->decodePresentationData(
+                        $validated['marketplace_edit_data'] ?? null,
+                    ),
+                    $sourceAssetFileId,
+                );
             }
 
             $configurationService->saveMany($asset, $validated['configurations'] ?? []);
@@ -256,6 +277,59 @@ class AssetController extends Controller
     }
 
 
+
+    public function updatePresentation(
+        Request $request,
+        Asset $asset,
+        AssetPresentationService $service,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'marketplace_image' => [
+                'nullable',
+                'file',
+                'image',
+                'max:'.config('asset-media.max_upload_kilobytes', 512000),
+            ],
+            'marketplace_edit_data' => ['nullable', 'string', 'max:20000'],
+            'marketplace_source_asset_file_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('asset_files', 'id')->where(
+                    fn ($query) => $query->where('asset_id', $asset->id),
+                ),
+            ],
+            'remove_marketplace_image' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->boolean('remove_marketplace_image')) {
+            $service->clearMarketplace($asset);
+
+            return back()->with(
+                'success',
+                'The marketplace image was removed. The automatic asset preview will be used.',
+            );
+        }
+
+        if (! $request->hasFile('marketplace_image')) {
+            return back()->withErrors([
+                'marketplace_image' => 'Create or edit the marketplace crop before saving.',
+            ]);
+        }
+
+        $service->saveMarketplace(
+            $asset,
+            $request->file('marketplace_image'),
+            $this->decodePresentationData(
+                $validated['marketplace_edit_data'] ?? null,
+            ),
+            isset($validated['marketplace_source_asset_file_id'])
+                ? (int) $validated['marketplace_source_asset_file_id']
+                : null,
+        );
+
+        return back()->with('success', 'Marketplace image updated successfully.');
+    }
+
     public function updateOfferings(Request $request, Asset $asset, AssetOfferingService $service): RedirectResponse
     {
         $validated = $request->validate([
@@ -325,6 +399,14 @@ class AssetController extends Controller
             'file_downloadable' => ['nullable', 'array'],
             'primary_preview_index' => ['nullable', 'integer', 'min:0'],
             'poster_index' => ['nullable', 'integer', 'min:0'],
+            'marketplace_image' => [
+                'nullable',
+                'file',
+                'image',
+                'max:'.config('asset-media.max_upload_kilobytes', 512000),
+            ],
+            'marketplace_edit_data' => ['nullable', 'string', 'max:20000'],
+            'marketplace_source_index' => ['nullable', 'integer', 'min:0'],
             ...$this->configurationRules(),
         ]);
     }
@@ -405,6 +487,18 @@ class AssetController extends Controller
         ];
     }
 
+
+    private function decodePresentationData(?string $value): array
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
     private function assetTypes(): array
     {
         return collect(AssetType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label()])->values()->all();
@@ -441,6 +535,16 @@ class AssetController extends Controller
             'primary_preview_file_id' => $asset->primary_preview_file_id,
             'poster_file_id' => $asset->poster_file_id,
             'preview_url' => $asset->primaryPreviewFile?->publicUrl(),
+            'marketplace_image_url' => app(AssetPresentationService::class)
+                ->marketplaceUrl($asset),
+            'marketplace_image_edit_data' => data_get(
+                $asset->presentation_images,
+                'marketplace.edit_data',
+            ),
+            'marketplace_source_asset_file_id' => data_get(
+                $asset->presentation_images,
+                'marketplace.source_asset_file_id',
+            ),
             'legacy_image_id' => $asset->legacy_image_id,
             'health' => app(AssetHealthService::class)->summarize($asset),
         ];

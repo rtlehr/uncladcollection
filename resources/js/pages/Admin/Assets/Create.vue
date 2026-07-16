@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -8,6 +8,8 @@ import FormActions from '@/Components/Forms/FormActions.vue';
 import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import type { AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
 import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
@@ -43,6 +45,9 @@ const form = useForm({
     primary_preview_index: null as number | null,
     poster_index: null as number | null,
     configurations: [] as AdminAssetConfigurationGroup[],
+    marketplace_image: null as File | null,
+    marketplace_edit_data: null as string | null,
+    marketplace_source_index: null as number | null,
 });
 
 const hasInvalidFiles = computed(() =>
@@ -52,6 +57,46 @@ const hasInvalidFiles = computed(() =>
 const uploadPercentage = computed(
     () => form.progress?.percentage ?? null,
 );
+
+const marketplacePreviewUrl = ref<string | null>(null);
+const marketplaceEditData = ref<Partial<ImageEditData> | null>(null);
+const marketplaceSourceKey = ref<string | null>(null);
+
+const marketplaceSources = computed(() =>
+    form.files
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => item.metadata.kind === 'image' && item.previewUrl)
+        .map(({ item, index }) => ({
+            key: String(index),
+            label: item.file.name,
+            source: item.file,
+            sourceAssetFileId: null,
+        })),
+);
+
+const marketplaceFormats = computed(() =>
+    form.files
+        .map((item) => item.metadata.extension.toUpperCase())
+        .filter((value, index, values) => values.indexOf(value) === index),
+);
+
+function applyMarketplaceImage(payload: {
+    file: File;
+    edit: ImageEditData;
+    previewUrl: string;
+    sourceKey: string;
+}): void {
+    if (marketplacePreviewUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(marketplacePreviewUrl.value);
+    }
+
+    marketplacePreviewUrl.value = payload.previewUrl;
+    marketplaceEditData.value = payload.edit;
+    marketplaceSourceKey.value = payload.sourceKey;
+    form.marketplace_image = payload.file;
+    form.marketplace_edit_data = JSON.stringify(payload.edit);
+    form.marketplace_source_index = Number(payload.sourceKey);
+}
 
 function submit() {
     if (hasInvalidFiles.value) {
@@ -126,6 +171,31 @@ function submit() {
                             </p>
                         </div>
                     </FormSection>
+                    <FormSection
+                        title="Asset Presentation"
+                        description="Create the dedicated 16:9 crop used on marketplace cards."
+                    >
+                        <AssetMarketplaceImageEditor
+                            v-model:source-key="marketplaceSourceKey"
+                            :sources="marketplaceSources"
+                            :preview-url="marketplacePreviewUrl"
+                            :edit-data="marketplaceEditData"
+                            :title="form.title"
+                            :creator="form.photographer"
+                            :asset-type-label="assetTypes.find((item) => item.value === form.asset_type)?.label ?? 'Asset'"
+                            :formats="marketplaceFormats"
+                            :disabled="form.processing"
+                            @apply="applyMarketplaceImage"
+                        />
+
+                        <p
+                            v-if="form.errors.marketplace_image"
+                            class="mt-2 text-sm text-destructive"
+                        >
+                            {{ form.errors.marketplace_image }}
+                        </p>
+                    </FormSection>
+
                     <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
                         <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
                     </FormSection>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Services\AssetMediaPresentationService;
+use App\Services\AssetPresentationService;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -73,7 +74,9 @@ class AssetBrowseController extends Controller
                     'slug' => $related->slug,
                     'asset_type' => $related->asset_type->value,
                     'asset_type_label' => $related->asset_type->label(),
-                    'preview_url' => $preview['preview_url'] ?? null,
+                    'preview_url' => app(AssetPresentationService::class)
+                        ->marketplaceUrl($related)
+                        ?? ($preview['preview_url'] ?? null),
                     'formats' => $related->activeFiles->pluck('extension')->filter()->map(fn ($ext) => strtoupper($ext))->unique()->values()->all(),
                 ];
             });

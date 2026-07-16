@@ -10,6 +10,7 @@ use App\Models\AssetFile;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Tag;
+use App\Services\AssetPresentationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
@@ -109,7 +110,11 @@ class PublicAssetCatalogService
             'favorite_url' => $legacyImage ? route('images.favorite', $legacyImage) : null,
             'unfavorite_url' => $legacyImage ? route('images.unfavorite', $legacyImage) : null,
             'photographer' => $asset->photographer,
-            'preview_url' => $preview ? ($preview->publicUrl() ?? route('assets.preview', [$asset, $preview])) : null,
+            'preview_url' => app(AssetPresentationService::class)
+                ->marketplaceUrl($asset)
+                ?? ($preview
+                    ? ($preview->publicUrl() ?? route('assets.preview', [$asset, $preview]))
+                    : null),
             'asset_type' => $asset->asset_type->value,
             'asset_type_label' => $asset->asset_type->label(),
             'formats' => $files

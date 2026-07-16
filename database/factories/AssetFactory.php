@@ -44,6 +44,7 @@ class AssetFactory extends Factory
             'views_count' => 0,
             'published_at' => null,
             'metadata' => [],
+            'presentation_images' => null,
             'primary_preview_file_id' => null,
             'poster_file_id' => null,
         ];
