@@ -18,8 +18,21 @@ import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import AssetFileRelationshipManager from '@/components/admin/assets/AssetFileRelationshipManager.vue';
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
-import type { AdminAsset, AdminAssetFile, NamedOption, PendingAssetFile, SelectOption, AdminAssetOffering, LicenseTypeOption, AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption } from '@/types/adminAsset';
+import type {
+    AdminAsset,
+    AdminAssetFile,
+    AdminAssetFileRelationship,
+    AssetFileRelationshipTypeOption,
+    NamedOption,
+    PendingAssetFile,
+    SelectOption,
+    AdminAssetOffering,
+    LicenseTypeOption,
+    AdminAssetConfigurationGroup,
+    ConfigurationDisplayTypeOption,
+} from '@/types/adminAsset';
 import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
 const props = defineProps<{
@@ -34,6 +47,7 @@ const props = defineProps<{
     fulfillmentTypes: SelectOption[];
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
     configurationTemplates: ConfigurationTemplateSummary[];
+    relationshipTypes: AssetFileRelationshipTypeOption[];
 }>();
 
 const form = useForm({
@@ -58,6 +72,11 @@ const uploadForm = useForm({ files: [] as File[], file_roles: [] as string[], fi
 const replacingId = ref<number | null>(null);
 const offeringForm = useForm({ offerings: (props.assetRecord.offerings ?? []) as AdminAssetOffering[] });
 const configurationForm = useForm({ configurations: (props.assetRecord.configurations ?? []) as AdminAssetConfigurationGroup[] });
+const relationshipForm = useForm({
+    relationships: (
+        props.assetRecord.file_relationships ?? []
+    ) as AdminAssetFileRelationship[],
+});
 const deletion = useDeleteConfirmation<AdminAssetFile>();
 
 const marketplacePreviewUrl = ref<string | null>(
@@ -238,6 +257,15 @@ function saveConfigurations(): void {
     configurationForm.put(`/admin/assets/${props.assetRecord.id}/configurations`, { preserveScroll: true });
 }
 
+function saveRelationships(): void {
+    relationshipForm.put(
+        `/admin/assets/${props.assetRecord.id}/relationships`,
+        {
+            preserveScroll: true,
+        },
+    );
+}
+
 function saveOfferings(): void {
     offeringForm.put(`/admin/assets/${props.assetRecord.id}/offerings`, { preserveScroll: true });
 }
@@ -393,6 +421,51 @@ function reorderFiles(files: AdminAssetFile[]): void {
             @cancel="deletion.cancelDelete"
         />
 
+
+
+        <FormSection
+            title="File Relationships"
+            description="Connect previews, source files, videos, archives, and related deliverables."
+        >
+            <form class="space-y-5" @submit.prevent="saveRelationships">
+                <AssetFileRelationshipManager
+                    v-model="relationshipForm.relationships"
+                    :files="assetRecord.files ?? []"
+                    :relationship-types="relationshipTypes"
+                    :processing="relationshipForm.processing"
+                />
+
+                <div
+                    v-if="Object.keys(relationshipForm.errors).length"
+                    class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+                >
+                    <p class="font-medium">
+                        Some relationships need attention.
+                    </p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5">
+                        <li
+                            v-for="(message, key) in relationshipForm.errors"
+                            :key="key"
+                        >
+                            {{ message }}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-end border-t pt-4">
+                    <Button
+                        type="submit"
+                        :disabled="relationshipForm.processing"
+                    >
+                        {{
+                            relationshipForm.processing
+                                ? 'Saving…'
+                                : 'Save Relationships'
+                        }}
+                    </Button>
+                </div>
+            </form>
+        </FormSection>
 
         <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, language, or personalization.">
             <form class="space-y-6" @submit.prevent="saveConfigurations">

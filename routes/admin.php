@@ -109,6 +109,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware(['permission:manage_images'])
             ->name('assets.presentation.update');
 
+        Route::put('/assets/{asset}/relationships', [AssetController::class, 'updateRelationships'])
+            ->middleware('permission:manage_images')
+            ->name('assets.relationships.update');
+
         Route::put('/assets/{asset}/offerings', [AssetController::class, 'updateOfferings'])
             ->middleware('permission:manage_images')
             ->name('assets.offerings.update');

@@ -70,6 +70,13 @@ class Asset extends Model
         return $this->hasMany(AssetFile::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function fileRelationships(): HasMany
+    {
+        return $this->hasMany(AssetFileRelationship::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
     public function activeFiles(): HasMany
     {
         return $this->files()->where('is_active', true);

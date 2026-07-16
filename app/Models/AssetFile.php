@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
@@ -85,4 +86,20 @@ class AssetFile extends Model
         return $this->belongsToMany(AssetOffering::class, 'asset_offering_files')->withTimestamps();
     }
 
+    public function outgoingRelationships(): HasMany
+    {
+        return $this->hasMany(
+            AssetFileRelationship::class,
+            'source_asset_file_id',
+        )->orderBy('sort_order');
+    }
+
+    public function incomingRelationships(): HasMany
+    {
+        return $this->hasMany(
+            AssetFileRelationship::class,
+            'target_asset_file_id',
+        )->orderBy('sort_order');
+    }
 }
+

@@ -51,6 +51,22 @@ export interface AssetHealth {
     checks: AssetHealthCheck[];
 }
 
+export interface AssetFileRelationshipTypeOption {
+    value: string;
+    label: string;
+    description: string;
+}
+
+export interface AdminAssetFileRelationship {
+    id: number | null;
+    source_asset_file_id: number;
+    target_asset_file_id: number;
+    relationship_type: string;
+    label: string | null;
+    sort_order: number;
+    metadata: Record<string, unknown> | null;
+}
+
 export interface AdminAsset {
     id: number;
     uuid: string;
@@ -81,6 +97,7 @@ export interface AdminAsset {
     legacy_image_id: number | null;
     health: AssetHealth;
     files?: AdminAssetFile[];
+    file_relationships?: AdminAssetFileRelationship[];
     offerings?: AdminAssetOffering[];
     configurations?: AdminAssetConfigurationGroup[];
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\AssetFileRole;
+use App\Enums\AssetFileRelationshipType;
 use App\Enums\AssetFulfillmentType;
 use App\Enums\AssetConfigurationDisplayType;
 use App\Enums\AssetStatus;
@@ -18,6 +19,7 @@ use App\Commerce\Configuration\ConfigurationManager;
 use App\Services\AssetHealthService;
 use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
+use App\Services\AssetFileRelationshipService;
 use App\Models\Collection;
 use App\Services\AssetService;
 use Illuminate\Http\RedirectResponse;
@@ -137,7 +139,17 @@ class AssetController extends Controller
 
     public function edit(Asset $asset): Response
     {
-        $asset->load(['activeFiles', 'collection', 'offerings.files', 'offerings.licenseType', 'offerings.pricingTiers', 'configurationGroups.values.rules', 'pricingTiers']);
+        $asset->load([
+            'activeFiles',
+            'collection',
+            'fileRelationships.sourceFile',
+            'fileRelationships.targetFile',
+            'offerings.files',
+            'offerings.licenseType',
+            'offerings.pricingTiers',
+            'configurationGroups.values.rules',
+            'pricingTiers',
+        ]);
 
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
@@ -330,6 +342,60 @@ class AssetController extends Controller
         return back()->with('success', 'Marketplace image updated successfully.');
     }
 
+
+    public function updateRelationships(
+        Request $request,
+        Asset $asset,
+        AssetFileRelationshipService $service,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'relationships' => ['array', 'max:250'],
+            'relationships.*.source_asset_file_id' => [
+                'required',
+                'integer',
+                Rule::exists('asset_files', 'id')->where(
+                    fn ($query) => $query->where('asset_id', $asset->id),
+                ),
+            ],
+            'relationships.*.target_asset_file_id' => [
+                'required',
+                'integer',
+                Rule::exists('asset_files', 'id')->where(
+                    fn ($query) => $query->where('asset_id', $asset->id),
+                ),
+                'different:relationships.*.source_asset_file_id',
+            ],
+            'relationships.*.relationship_type' => [
+                'required',
+                Rule::enum(AssetFileRelationshipType::class),
+            ],
+            'relationships.*.label' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'relationships.*.sort_order' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+            'relationships.*.metadata' => [
+                'nullable',
+                'array',
+            ],
+        ]);
+
+        $service->saveMany(
+            $asset,
+            $validated['relationships'] ?? [],
+        );
+
+        return back()->with(
+            'success',
+            'File relationships updated successfully.',
+        );
+    }
+
     public function updateOfferings(Request $request, Asset $asset, AssetOfferingService $service): RedirectResponse
     {
         $validated = $request->validate([
@@ -420,6 +486,13 @@ class AssetController extends Controller
             'fileRoles' => collect(AssetFileRole::cases())->map(fn ($role) => ['value' => $role->value, 'label' => Str::headline($role->value)])->values(),
             'acceptedExtensions' => collect(config('asset-media.extensions', []))->flatten()->unique()->values(),
             'maxUploadKilobytes' => config('asset-media.max_upload_kilobytes', 512000),
+            'relationshipTypes' => collect(
+                AssetFileRelationshipType::cases(),
+            )->map(fn (AssetFileRelationshipType $type) => [
+                'value' => $type->value,
+                'label' => $type->label(),
+                'description' => $type->description(),
+            ])->values(),
             'fulfillmentTypes' => collect(AssetFulfillmentType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label()])->values(),
             'configurationDisplayTypes' => collect(AssetConfigurationDisplayType::cases())->map(fn ($type) => ['value' => $type->value, 'label' => $type->label(), 'uses_values' => $type->usesValues()])->values(),
             'configurationTemplates' => AssetConfigurationTemplate::query()
@@ -580,6 +653,20 @@ class AssetController extends Controller
                 'poster_url' => $presentation->previewKind($file) === 'video' ? $posterUrl : null,
                 'preview_note' => $presentation->format($asset, $file, $posterUrl, true)['preview_note'],
             ])->values();
+            $data['file_relationships'] = $asset->fileRelationships
+                ->map(fn ($relationship) => [
+                    'id' => $relationship->id,
+                    'source_asset_file_id' =>
+                        $relationship->source_asset_file_id,
+                    'target_asset_file_id' =>
+                        $relationship->target_asset_file_id,
+                    'relationship_type' =>
+                        $relationship->relationship_type->value,
+                    'label' => $relationship->label,
+                    'sort_order' => $relationship->sort_order,
+                    'metadata' => $relationship->metadata,
+                ])->values();
+
             $data['offerings'] = $asset->offerings->map(fn ($offering) => [
                 'id' => $offering->id,
                 'license_type_id' => $offering->license_type_id,
