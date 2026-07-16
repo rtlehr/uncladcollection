@@ -28,6 +28,7 @@ const emit = defineEmits<{
 const search = ref('');
 const images = ref<LibraryImage[]>([]);
 const loading = ref(false);
+const error = ref<string | null>(null);
 
 watch(
     () => props.open,
@@ -40,6 +41,7 @@ watch(
 
 async function searchImages() {
     loading.value = true;
+    error.value = null;
 
     try {
         const params = new URLSearchParams();
@@ -55,15 +57,21 @@ async function searchImages() {
         });
 
         if (!response.ok) {
-            alert('Unable to load image library.');
+            const data = await response.json().catch(() => null);
+            error.value =
+                data?.message
+                ?? `Unable to load image library (${response.status}).`;
             return;
         }
 
         const data = await response.json();
 
         images.value = data.images ?? [];
-    } catch {
-        alert('Unable to load image library.');
+    } catch (exception) {
+        error.value =
+            exception instanceof Error
+                ? exception.message
+                : 'Unable to load image library.';
     } finally {
         loading.value = false;
     }
@@ -88,11 +96,11 @@ function selectImage(image: LibraryImage) {
                 <div>
                     <h3 class="flex items-center gap-2 text-lg font-semibold">
                         <Images class="h-5 w-5" />
-                        Insert From Image Library
+                        Choose From Asset Library
                     </h3>
 
                     <p class="text-sm text-muted-foreground">
-                        Search and insert an existing Unclad Collection image.
+                        Choose an Asset image, then crop it before inserting it into the article.
                     </p>
                 </div>
 
@@ -121,12 +129,19 @@ function selectImage(image: LibraryImage) {
             </div>
 
             <div class="max-h-[58vh] overflow-y-auto p-4">
-                <div v-if="loading" class="py-12 text-center text-sm text-muted-foreground">
-                    Loading images...
+                <div
+                    v-if="error"
+                    class="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+                >
+                    {{ error }}
+                </div>
+
+                <div v-else-if="loading" class="py-12 text-center text-sm text-muted-foreground">
+                    Loading assets...
                 </div>
 
                 <div v-else-if="images.length === 0" class="py-12 text-center text-sm text-muted-foreground">
-                    No images found.
+                    No previewable Asset images found.
                 </div>
 
                 <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -134,7 +149,8 @@ function selectImage(image: LibraryImage) {
                         v-for="image in images"
                         :key="image.id"
                         type="button"
-                        class="overflow-hidden rounded-md border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md"
+                        class="overflow-hidden rounded-md border bg-card text-left shadow-sm transition hover:border-primary hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        title="Select and edit this Asset image"
                         @click="selectImage(image)"
                     >
                         <div class="aspect-[4/3] bg-muted">

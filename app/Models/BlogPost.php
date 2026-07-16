@@ -26,7 +26,10 @@ class BlogPost extends Model
         'content',
         'featured_image_path',
         'header_image_path',
+        'header_image_original_path',
         'icon_image_path',
+        'icon_image_original_path',
+        'image_edit_data',
         'status',
         'published_at',
         'seo_title',
@@ -49,12 +52,15 @@ class BlogPost extends Model
         'comments_enabled' => 'boolean',
         'comments_visible' => 'boolean',
         'comments_require_approval' => 'boolean',
+        'image_edit_data' => 'array',
     ];
 
     protected $appends = [
         'featured_image_url',
         'header_image_url',
+        'header_image_original_url',
         'icon_image_url',
+        'icon_image_original_url',
     ];
 
     public function getRouteKeyName(): string
@@ -94,6 +100,20 @@ class BlogPost extends Model
         return $this->header_image_path
             ? Storage::url($this->header_image_path)
             : null;
+    }
+
+    public function getHeaderImageOriginalUrlAttribute(): ?string
+    {
+        return $this->header_image_original_path
+            ? Storage::url($this->header_image_original_path)
+            : $this->header_image_url;
+    }
+
+    public function getIconImageOriginalUrlAttribute(): ?string
+    {
+        return $this->icon_image_original_path
+            ? Storage::url($this->icon_image_original_path)
+            : $this->icon_image_url;
     }
 
     public function getIconImageUrlAttribute(): ?string

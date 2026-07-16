@@ -19,6 +19,7 @@ import {
     Heading3,
     Highlighter,
     ImageIcon,
+    Settings2,
     Images,
     Italic,
     LinkIcon,
@@ -36,9 +37,15 @@ import {
 } from '@lucide/vue';
 
 import { Button } from '@/components/ui/button';
+import BlogArticleImageDialog from '@/components/admin/BlogArticleImageDialog.vue';
 import ImagePickerDialog, {
     type LibraryImage,
 } from '@/components/admin/ImagePickerDialog.vue';
+import BlogLibraryImageEditorDialog from '@/components/admin/BlogLibraryImageEditorDialog.vue';
+import type { UploadedBlogArticleImage } from '@/lib/blogArticleImageUpload';
+import BlogMediaPropertiesDialog, {
+    type BlogMediaProperties,
+} from '@/components/admin/BlogMediaPropertiesDialog.vue';
 
 const props = defineProps<{ modelValue: string }>();
 
@@ -48,10 +55,26 @@ const emit = defineEmits<{
 
 const codeView = ref(false);
 const htmlCode = ref(props.modelValue ?? '');
-const uploadingImage = ref(false);
 const selectedImage = ref(false);
 const selectedImageSrc = ref<string | null>(null);
 const libraryOpen = ref(false);
+const libraryEditorOpen = ref(false);
+const selectedLibraryImage = ref<LibraryImage | null>(null);
+const mediaPropertiesOpen = ref(false);
+const mediaPropertiesInitial = ref<BlogMediaProperties>({
+    alt: '',
+    caption: '',
+    credit: '',
+    photographer: '',
+    assetTitle: '',
+    publicUrl: '',
+    showLicenseLink: false,
+    clickToEnlarge: false,
+    borderStyle: 'none',
+    shadowStyle: 'none',
+    roundedStyle: 'small',
+    spacingStyle: 'normal',
+});
 
 const BlogImage = Image.extend({
     addAttributes() {
@@ -108,6 +131,89 @@ const BlogImage = Image.extend({
                     attributes.publicUrl
                         ? { 'data-public-url': attributes.publicUrl }
                         : {},
+            },
+
+            caption: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-caption'),
+                renderHTML: (attributes) =>
+                    attributes.caption
+                        ? { 'data-caption': attributes.caption }
+                        : {},
+            },
+
+            credit: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-credit'),
+                renderHTML: (attributes) =>
+                    attributes.credit
+                        ? { 'data-credit': attributes.credit }
+                        : {},
+            },
+
+            assetTitle: {
+                default: null,
+                parseHTML: (element) => element.getAttribute('data-asset-title'),
+                renderHTML: (attributes) =>
+                    attributes.assetTitle
+                        ? { 'data-asset-title': attributes.assetTitle }
+                        : {},
+            },
+
+            showLicenseLink: {
+                default: false,
+                parseHTML: (element) =>
+                    element.getAttribute('data-show-license-link') === 'true',
+                renderHTML: (attributes) =>
+                    attributes.showLicenseLink
+                        ? { 'data-show-license-link': 'true' }
+                        : {},
+            },
+
+            clickToEnlarge: {
+                default: false,
+                parseHTML: (element) =>
+                    element.getAttribute('data-click-to-enlarge') === 'true',
+                renderHTML: (attributes) =>
+                    attributes.clickToEnlarge
+                        ? { 'data-click-to-enlarge': 'true' }
+                        : {},
+            },
+
+            borderStyle: {
+                default: 'none',
+                parseHTML: (element) =>
+                    element.getAttribute('data-border-style') ?? 'none',
+                renderHTML: (attributes) => ({
+                    'data-border-style': attributes.borderStyle,
+                }),
+            },
+
+            shadowStyle: {
+                default: 'none',
+                parseHTML: (element) =>
+                    element.getAttribute('data-shadow-style') ?? 'none',
+                renderHTML: (attributes) => ({
+                    'data-shadow-style': attributes.shadowStyle,
+                }),
+            },
+
+            roundedStyle: {
+                default: 'small',
+                parseHTML: (element) =>
+                    element.getAttribute('data-rounded-style') ?? 'small',
+                renderHTML: (attributes) => ({
+                    'data-rounded-style': attributes.roundedStyle,
+                }),
+            },
+
+            spacingStyle: {
+                default: 'normal',
+                parseHTML: (element) =>
+                    element.getAttribute('data-spacing-style') ?? 'normal',
+                renderHTML: (attributes) => ({
+                    'data-spacing-style': attributes.spacingStyle,
+                }),
             },
         };
     },
@@ -253,7 +359,6 @@ function imageClass(alignment: string, size: string): string {
 
 function findSelectedImage() {
     if (!editor.value || !selectedImageSrc.value) {
-        alert('Click the image first, then choose an image option.');
         return null;
     }
 
@@ -269,7 +374,6 @@ function findSelectedImage() {
     });
 
     if (!found) {
-        alert('Click the image first, then choose an image option.');
         selectedImage.value = false;
         selectedImageSrc.value = null;
     }
@@ -294,6 +398,21 @@ function currentAlignment(): string {
 
 function currentSize(): string {
     const current = currentImageClass();
+
+    // Preserve the fixed inline dimensions assigned by Add Edited Image when
+    // changing only the alignment. Without these checks, Left Wrap / Right
+    // Wrap replaced the preset with blog-image-large.
+    if (current.includes('blog-image-landscape-inline')) {
+        return 'blog-image-landscape-inline';
+    }
+
+    if (current.includes('blog-image-portrait-inline')) {
+        return 'blog-image-portrait-inline';
+    }
+
+    if (current.includes('blog-image-square-inline')) {
+        return 'blog-image-square-inline';
+    }
 
     if (current.includes('blog-image-small')) return 'blog-image-small';
     if (current.includes('blog-image-medium')) return 'blog-image-medium';
@@ -329,6 +448,67 @@ function updateImage(alignment?: string, size?: string) {
     emitEditorHtml();
 }
 
+function openMediaProperties(): void {
+    const found = findSelectedImage();
+
+    if (!found) return;
+
+    const attrs = found.node.attrs;
+
+    mediaPropertiesInitial.value = {
+        alt: attrs.alt ?? '',
+        caption: attrs.caption ?? '',
+        credit: attrs.credit ?? '',
+        photographer: attrs.photographer ?? '',
+        assetTitle: attrs.assetTitle ?? attrs.alt ?? '',
+        publicUrl: attrs.publicUrl ?? '',
+        showLicenseLink: Boolean(attrs.showLicenseLink),
+        clickToEnlarge: Boolean(attrs.clickToEnlarge),
+        borderStyle: attrs.borderStyle ?? 'none',
+        shadowStyle: attrs.shadowStyle ?? 'none',
+        roundedStyle: attrs.roundedStyle ?? 'small',
+        spacingStyle: attrs.spacingStyle ?? 'normal',
+    };
+
+    mediaPropertiesOpen.value = true;
+}
+
+function applyMediaProperties(
+    properties: BlogMediaProperties,
+): void {
+    if (!editor.value) return;
+
+    const found = findSelectedImage();
+
+    if (!found) return;
+
+    const { state, view } = editor.value;
+
+    view.dispatch(
+        state.tr.setNodeMarkup(found.pos, undefined, {
+            ...found.node.attrs,
+            alt: properties.alt,
+            caption: properties.caption || null,
+            credit: properties.credit || null,
+            photographer: properties.photographer || null,
+            assetTitle: properties.assetTitle || null,
+            publicUrl: properties.publicUrl || null,
+            showLicenseLink:
+                properties.showLicenseLink
+                && properties.publicUrl.trim() !== '',
+            clickToEnlarge: properties.clickToEnlarge,
+            borderStyle: properties.borderStyle,
+            shadowStyle: properties.shadowStyle,
+            roundedStyle: properties.roundedStyle,
+            spacingStyle: properties.spacingStyle,
+        }),
+    );
+
+    selectedImage.value = true;
+    selectedImageSrc.value = found.node.attrs.src;
+    emitEditorHtml();
+}
+
 function removeImage() {
     if (!editor.value) return;
 
@@ -351,7 +531,11 @@ function removeImage() {
     emitEditorHtml();
 }
 
-function insertImage(src: string, alt: string | null = null) {
+function insertImage(
+    src: string,
+    alt: string | null = null,
+    sizeClass = 'blog-image-medium',
+) {
     if (!editor.value) return;
 
     editor.value
@@ -360,7 +544,7 @@ function insertImage(src: string, alt: string | null = null) {
         .setImage({
             src,
             alt: alt ?? '',
-            class: 'blog-image-center blog-image-large',
+            class: `blog-image-center ${sizeClass}`,
         })
         .run();
 
@@ -370,83 +554,55 @@ function insertImage(src: string, alt: string | null = null) {
     emitEditorHtml();
 }
 
-function insertLibraryManagedImage(image: LibraryImage) {
+
+function sizeClassForPreset(preset: string): string {
+    if (preset === 'blog-content-portrait') {
+        return 'blog-image-portrait-inline';
+    }
+
+    if (preset === 'blog-content-square') {
+        return 'blog-image-square-inline';
+    }
+
+    return 'blog-image-landscape-inline';
+}
+
+function insertEditedArticleImage(
+    payload: UploadedBlogArticleImage,
+): void {
     if (!editor.value) return;
 
-    const src = image.high_res_url ?? image.thumbnail_url ?? image.icon_url;
-
-    if (!src) {
-        alert('This image does not have an available URL.');
-        return;
-    }
+    const sizeClass = sizeClassForPreset(payload.preset);
 
     editor.value
         .chain()
         .focus()
         .setImage({
-            src,
-            alt: image.title,
-            class: 'blog-image-center blog-image-large',
-            imageId: String(image.id),
-            imageSlug: image.slug,
-            photographer: image.photographer ?? '',
-            publicUrl: image.public_url ?? '',
+            src: payload.url,
+            alt: payload.alt,
+            class: `blog-image-center ${sizeClass}`,
+            imageId: payload.assetId
+                ? String(payload.assetId)
+                : null,
+            imageSlug: payload.assetSlug,
+            photographer: payload.photographer ?? '',
+            publicUrl: payload.publicUrl ?? '',
+            assetTitle: payload.title ?? payload.alt,
+            caption: '',
+            credit: '',
+            showLicenseLink: Boolean(payload.publicUrl),
+            clickToEnlarge: false,
+            borderStyle: 'none',
+            shadowStyle: 'none',
+            roundedStyle: 'small',
+            spacingStyle: 'normal',
         })
         .run();
 
     selectedImage.value = true;
-    selectedImageSrc.value = src;
+    selectedImageSrc.value = payload.url;
 
     emitEditorHtml();
-}
-
-async function uploadImage() {
-    if (!editor.value || uploadingImage.value) return;
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-
-    input.onchange = async () => {
-        const file = input.files?.[0];
-
-        if (!file) return;
-
-        uploadingImage.value = true;
-
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-
-            const csrfToken = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute('content') ?? '';
-
-            const response = await fetch('/admin/blog-posts/upload-content-image', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    Accept: 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                alert('Image upload failed.');
-                return;
-            }
-
-            const data = await response.json();
-
-            insertImage(data.url, file.name);
-        } catch {
-            alert('Image upload failed.');
-        } finally {
-            uploadingImage.value = false;
-        }
-    };
-
-    input.click();
 }
 
 function openImageLibrary() {
@@ -457,9 +613,18 @@ function closeImageLibrary() {
     libraryOpen.value = false;
 }
 
-function insertLibraryImage(image: LibraryImage) {
-    insertLibraryManagedImage(image);
+function selectLibraryImage(image: LibraryImage): void {
+    selectedLibraryImage.value = image;
     closeImageLibrary();
+    libraryEditorOpen.value = true;
+}
+
+function insertEditedLibraryImage(
+    payload: UploadedBlogArticleImage,
+): void {
+    insertEditedArticleImage(payload);
+    selectedLibraryImage.value = null;
+    libraryEditorOpen.value = false;
 }
 </script>
 
@@ -529,16 +694,9 @@ function insertLibraryImage(image: LibraryImage) {
                         <Highlighter class="h-4 w-4" />
                     </Button>
 
-                    <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        title="Upload Image"
-                        :disabled="uploadingImage"
-                        @click="uploadImage"
-                     aria-label="Upload Image">
-                        <ImageIcon class="h-4 w-4" />
-                    </Button>
+                    <BlogArticleImageDialog
+                        @uploaded="insertEditedArticleImage"
+                    />
 
                     <Button
                         type="button"
@@ -589,13 +747,6 @@ function insertLibraryImage(image: LibraryImage) {
             </div>
 
             <div
-                v-if="uploadingImage"
-                class="rounded-md border border-dashed bg-background px-3 py-2 text-xs text-muted-foreground" role="status" aria-live="polite"
-            >
-                Uploading image...
-            </div>
-
-            <div
                 v-if="selectedImage && !codeView"
                 class="rounded-md border bg-background p-3 shadow-sm"
             >
@@ -605,17 +756,32 @@ function insertLibraryImage(image: LibraryImage) {
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-left')">
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        :disabled="!selectedImage"
+                        @mousedown.prevent
+                        @click="openMediaProperties"
+                    >
+                        <Settings2 class="mr-2 h-4 w-4" />
+                        Image Details
+                    </Button>
+
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent :disabled="!selectedImage"
+                        @click="updateImage('blog-image-left')">
                         <WrapText class="mr-2 h-4 w-4" />
                         Left Wrap
                     </Button>
 
-                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-center')">
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent :disabled="!selectedImage"
+                        @click="updateImage('blog-image-center')">
                         <AlignCenter class="mr-2 h-4 w-4" />
                         Center
                     </Button>
 
-                    <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="updateImage('blog-image-right')">
+                    <Button type="button" size="sm" variant="outline" @mousedown.prevent :disabled="!selectedImage"
+                        @click="updateImage('blog-image-right')">
                         <WrapText class="mr-2 h-4 w-4 rotate-180" />
                         Right Wrap
                     </Button>
@@ -636,7 +802,8 @@ function insertLibraryImage(image: LibraryImage) {
                         Full Width
                     </Button>
 
-                    <Button type="button" size="sm" variant="destructive" @mousedown.prevent @click="removeImage">
+                    <Button type="button" size="sm" variant="destructive" @mousedown.prevent :disabled="!selectedImage"
+                        @click="removeImage">
                         <Trash2 class="mr-2 h-4 w-4" />
                         Remove
                     </Button>
@@ -666,7 +833,21 @@ function insertLibraryImage(image: LibraryImage) {
         <ImagePickerDialog
             :open="libraryOpen"
             @close="closeImageLibrary"
-            @select="insertLibraryImage"
+            @select="selectLibraryImage"
+        />
+
+        <BlogLibraryImageEditorDialog
+            v-model:open="libraryEditorOpen"
+            :image="selectedLibraryImage"
+            @uploaded="insertEditedLibraryImage"
+        />
+
+        <BlogMediaPropertiesDialog
+            v-model:open="mediaPropertiesOpen"
+            :image-src="selectedImageSrc"
+            :initial="mediaPropertiesInitial"
+            :has-asset="Boolean(findSelectedImage()?.node?.attrs?.imageId)"
+            @apply="applyMediaProperties"
         />
     </div>
 </template>

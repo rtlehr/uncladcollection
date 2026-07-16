@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/vue3';
 import type { BlogPost } from '@/types/blog';
 
 import { formatDate } from '@/lib/formatDate';
-import { contentImage } from '@/lib/contentImages';
+import { blogCardImage } from '@/lib/contentImages';
 
 const props = withDefaults(
     defineProps<{
@@ -42,8 +42,8 @@ const props = withDefaults(
             <img
                         loading="lazy"
                         decoding="async"
-                v-if="contentImage(post)"
-                :src="contentImage(post)!"
+                v-if="blogCardImage(post)"
+                :src="blogCardImage(post)!"
                 :alt="post.title"
                 :class="[
                     'w-full object-cover transition duration-300 group-hover:scale-105',

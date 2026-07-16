@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Category;
-use App\Models\Image;
+use App\Models\Asset;
 use App\Models\Tag;
 use App\Services\AdminActivityService;
+use App\Services\BlogImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,8 @@ use Inertia\Response;
 class AdminBlogPostController extends Controller
 {
     public function __construct(
-        protected AdminActivityService $adminActivityService
+        protected AdminActivityService $adminActivityService,
+        protected BlogImageService $blogImageService
     ) {
     }
 
@@ -84,9 +86,12 @@ class AdminBlogPostController extends Controller
             'excerpt' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
 
-            'featured_image' => ['nullable', 'image', 'max:5120'],
-            'header_image' => ['nullable', 'image', 'max:5120'],
-            'icon_image' => ['nullable', 'image', 'max:2048'],
+            'header_image' => ['nullable', 'image', 'max:8192'],
+            'header_image_original' => ['nullable', 'image', 'max:12288'],
+            'header_image_edit_data' => ['nullable', 'string', 'max:20000'],
+            'icon_image' => ['nullable', 'image', 'max:4096'],
+            'icon_image_original' => ['nullable', 'image', 'max:8192'],
+            'icon_image_edit_data' => ['nullable', 'string', 'max:20000'],
 
             'status' => ['required', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
@@ -109,17 +114,39 @@ class AdminBlogPostController extends Controller
             'tag_ids.*' => ['integer', 'exists:tags,id'],
         ]);
 
-        $featuredImagePath = $request->hasFile('featured_image')
-            ? $request->file('featured_image')->store('blog/featured-images', 'public')
-            : null;
-
         $headerImagePath = $request->hasFile('header_image')
-            ? $request->file('header_image')->store('blog/header-images', 'public')
+            ? $this->blogImageService->storeRendered(
+                $request->file('header_image'),
+                'header-images',
+            )
+            : null;
+        $headerOriginalPath = $request->hasFile('header_image_original')
+            ? $this->blogImageService->storeOriginal(
+                $request->file('header_image_original'),
+                'header-images',
+            )
+            : null;
+        $iconImagePath = $request->hasFile('icon_image')
+            ? $this->blogImageService->storeRendered(
+                $request->file('icon_image'),
+                'icon-images',
+            )
+            : null;
+        $iconOriginalPath = $request->hasFile('icon_image_original')
+            ? $this->blogImageService->storeOriginal(
+                $request->file('icon_image_original'),
+                'icon-images',
+            )
             : null;
 
-        $iconImagePath = $request->hasFile('icon_image')
-            ? $request->file('icon_image')->store('blog/icon-images', 'public')
-            : null;
+        $imageEditData = [
+            'header' => $this->decodeImageEditData(
+                $validated['header_image_edit_data'] ?? null,
+            ),
+            'icon' => $this->decodeImageEditData(
+                $validated['icon_image_edit_data'] ?? null,
+            ),
+        ];
 
         $blogPost = BlogPost::create([
             'user_id' => Auth::id(),
@@ -128,9 +155,11 @@ class AdminBlogPostController extends Controller
             'excerpt' => $validated['excerpt'] ?? null,
             'content' => $validated['content'] ?? null,
 
-            'featured_image_path' => $featuredImagePath,
             'header_image_path' => $headerImagePath,
+            'header_image_original_path' => $headerOriginalPath,
             'icon_image_path' => $iconImagePath,
+            'icon_image_original_path' => $iconOriginalPath,
+            'image_edit_data' => $imageEditData,
 
             'status' => $validated['status'],
             'published_at' => $validated['status'] === BlogPost::STATUS_PUBLISHED
@@ -218,9 +247,12 @@ class AdminBlogPostController extends Controller
             'excerpt' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
 
-            'featured_image' => ['nullable', 'image', 'max:5120'],
-            'header_image' => ['nullable', 'image', 'max:5120'],
-            'icon_image' => ['nullable', 'image', 'max:2048'],
+            'header_image' => ['nullable', 'image', 'max:8192'],
+            'header_image_original' => ['nullable', 'image', 'max:12288'],
+            'header_image_edit_data' => ['nullable', 'string', 'max:20000'],
+            'icon_image' => ['nullable', 'image', 'max:4096'],
+            'icon_image_original' => ['nullable', 'image', 'max:8192'],
+            'icon_image_edit_data' => ['nullable', 'string', 'max:20000'],
 
             'status' => ['required', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
@@ -247,36 +279,55 @@ class AdminBlogPostController extends Controller
         $oldCategoryIds = $blogPost->categories()->pluck('categories.id')->values()->all();
         $oldTagIds = $blogPost->tags()->pluck('tags.id')->values()->all();
 
-        $featuredImagePath = $blogPost->featured_image_path;
         $headerImagePath = $blogPost->header_image_path;
+        $headerOriginalPath = $blogPost->header_image_original_path;
         $iconImagePath = $blogPost->icon_image_path;
+        $iconOriginalPath = $blogPost->icon_image_original_path;
+        $imageEditData = $blogPost->image_edit_data ?? [];
 
-        if ($request->hasFile('featured_image')) {
-            if ($featuredImagePath) {
-                Storage::disk('public')->delete($featuredImagePath);
-            }
-
-            $featuredImagePath = $request->file('featured_image')
-                ->store('blog/featured-images', 'public');
-        }
 
         if ($request->hasFile('header_image')) {
-            if ($headerImagePath) {
-                Storage::disk('public')->delete($headerImagePath);
-            }
+            $newPath = $this->blogImageService->storeRendered(
+                $request->file('header_image'),
+                'header-images',
+            );
+            $this->blogImageService->delete($headerImagePath);
+            $headerImagePath = $newPath;
+            $imageEditData['header'] = $this->decodeImageEditData(
+                $validated['header_image_edit_data'] ?? null,
+            );
+        }
 
-            $headerImagePath = $request->file('header_image')
-                ->store('blog/header-images', 'public');
+        if ($request->hasFile('header_image_original')) {
+            $newPath = $this->blogImageService->storeOriginal(
+                $request->file('header_image_original'),
+                'header-images',
+            );
+            $this->blogImageService->delete($headerOriginalPath);
+            $headerOriginalPath = $newPath;
         }
 
         if ($request->hasFile('icon_image')) {
-            if ($iconImagePath) {
-                Storage::disk('public')->delete($iconImagePath);
-            }
-
-            $iconImagePath = $request->file('icon_image')
-                ->store('blog/icon-images', 'public');
+            $newPath = $this->blogImageService->storeRendered(
+                $request->file('icon_image'),
+                'icon-images',
+            );
+            $this->blogImageService->delete($iconImagePath);
+            $iconImagePath = $newPath;
+            $imageEditData['icon'] = $this->decodeImageEditData(
+                $validated['icon_image_edit_data'] ?? null,
+            );
         }
+
+        if ($request->hasFile('icon_image_original')) {
+            $newPath = $this->blogImageService->storeOriginal(
+                $request->file('icon_image_original'),
+                'icon-images',
+            );
+            $this->blogImageService->delete($iconOriginalPath);
+            $iconOriginalPath = $newPath;
+        }
+
 
         $blogPost->update([
             'title' => $validated['title'],
@@ -284,9 +335,11 @@ class AdminBlogPostController extends Controller
             'excerpt' => $validated['excerpt'] ?? null,
             'content' => $validated['content'] ?? null,
 
-            'featured_image_path' => $featuredImagePath,
             'header_image_path' => $headerImagePath,
+            'header_image_original_path' => $headerOriginalPath,
             'icon_image_path' => $iconImagePath,
+            'icon_image_original_path' => $iconOriginalPath,
+            'image_edit_data' => $imageEditData,
 
             'status' => $validated['status'],
             'published_at' => $validated['status'] === BlogPost::STATUS_PUBLISHED
@@ -361,15 +414,44 @@ class AdminBlogPostController extends Controller
 
     public function uploadContentImage(Request $request)
     {
-        $request->validate([
-            'image' => ['required', 'image', 'max:5120'],
+        $validated = $request->validate([
+            'image' => ['required', 'image', 'max:8192'],
+            'preset' => [
+                'required',
+                'in:blog-content-landscape,blog-content-portrait,blog-content-square',
+            ],
+            'edit_data' => ['nullable', 'string', 'max:20000'],
+            'alt' => ['nullable', 'string', 'max:500'],
+            'asset_id' => [
+                'nullable',
+                'integer',
+                'exists:assets,id',
+            ],
         ]);
 
-        $path = $request->file('image')
-            ->store('blog/content-images', 'public');
+        $path = $this->blogImageService->storeContentImage(
+            $request->file('image'),
+            $validated['preset'],
+        );
+
+        $asset = isset($validated['asset_id'])
+            ? Asset::query()->find($validated['asset_id'])
+            : null;
 
         return response()->json([
-            'url' => Storage::url($path),
+            'url' => Storage::disk('public')->url($path),
+            'path' => $path,
+            'preset' => $validated['preset'],
+            'alt' => $validated['alt'] ?? $asset?->title,
+            'asset' => $asset
+                ? [
+                    'id' => $asset->id,
+                    'title' => $asset->title,
+                    'slug' => $asset->slug,
+                    'photographer' => $asset->photographer,
+                    'public_url' => route('assets.show', $asset),
+                ]
+                : null,
         ]);
     }
 
@@ -377,7 +459,11 @@ class AdminBlogPostController extends Controller
     {
         $search = $request->string('search')->toString();
 
-        $images = Image::query()
+        $assets = Asset::query()
+            ->with([
+                'primaryPreviewFile',
+                'activeFiles',
+            ])
             ->where('is_active', true)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
@@ -388,31 +474,55 @@ class AdminBlogPostController extends Controller
                 });
             })
             ->latest()
-            ->limit(24)
-            ->get([
-                'id',
-                'title',
-                'slug',
-                'photographer',
-                'thumbnail_path',
-                'icon_path',
-                'high_res_path',
-            ])
-            ->map(function (Image $image) {
+            ->limit(48)
+            ->get()
+            ->map(function (Asset $asset): ?array {
+                $preview = $asset->primaryPreviewFile
+                    ?? $asset->activeFiles->first(
+                        fn ($file) => in_array(
+                            $file->media_type->value,
+                            ['image', 'vector'],
+                            true,
+                        ),
+                    );
+
+                if (! $preview) {
+                    return null;
+                }
+
+                $previewUrl = route(
+                    'admin.assets.files.preview',
+                    [$asset, $preview],
+                );
+
                 return [
-                    'id' => $image->id,
-                    'title' => $image->title,
-                    'slug' => $image->slug,
-                    'photographer' => $image->photographer,
-                    'thumbnail_url' => $image->thumbnail_url,
-                    'icon_url' => $image->icon_url,
-                    'high_res_url' => $image->high_res_url,
-                    'public_url' => url('/images/' . $image->slug),
+                    'id' => $asset->id,
+                    'title' => $asset->title,
+                    'slug' => $asset->slug,
+                    'photographer' => $asset->photographer,
+                    'thumbnail_url' => $previewUrl,
+                    'icon_url' => $previewUrl,
+                    'high_res_url' => $previewUrl,
+                    'public_url' => route('assets.show', $asset),
                 ];
-            });
+            })
+            ->filter()
+            ->values();
 
         return response()->json([
-            'images' => $images,
+            'images' => $assets,
         ]);
     }
+
+    private function decodeImageEditData(?string $value): array
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
 }

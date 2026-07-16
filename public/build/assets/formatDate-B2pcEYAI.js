@@ -1,1 +1,0 @@
-function e(e){return e.header_image_url??e.featured_image_url??e.icon_image_url??null}function t(e){return e?new Date(e).toLocaleDateString(void 0,{year:`numeric`,month:`long`,day:`numeric`}):``}export{e as n,t};

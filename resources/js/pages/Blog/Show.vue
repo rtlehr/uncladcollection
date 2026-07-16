@@ -35,7 +35,7 @@ import type {
     BlogPost,
 } from '@/types/blog';
 
-import { contentImage } from '@/lib/contentImages';
+import { articleHeaderImage } from '@/lib/contentImages';
 import { formatDate } from '@/lib/formatDate';
 import { readingTime as calculateReadingTime } from '@/lib/readingTime';
 
@@ -60,7 +60,7 @@ const tableOfContents = ref<Array<{
 }>>([]);
 
 const articleImage = computed(() =>
-    contentImage(props.blogPost),
+    articleHeaderImage(props.blogPost),
 );
 
 const readingTime = computed(() =>
@@ -137,12 +137,46 @@ function buildEnhancedContent(): void {
         });
     });
 
-    doc.querySelectorAll('img[data-image-id]').forEach((img) => {
+    doc.querySelectorAll('img').forEach((img) => {
         const imageId = img.getAttribute('data-image-id');
         const slug = img.getAttribute('data-image-slug');
         const photographer = img.getAttribute('data-photographer');
         const publicUrl = img.getAttribute('data-public-url');
-        const title = img.getAttribute('alt') || 'View image';
+        const assetTitle =
+            img.getAttribute('data-asset-title')
+            || img.getAttribute('alt')
+            || 'Article image';
+        const captionText = img.getAttribute('data-caption');
+        const credit = img.getAttribute('data-credit');
+        const showLicenseLink =
+            img.getAttribute('data-show-license-link') === 'true';
+        const clickToEnlarge =
+            img.getAttribute('data-click-to-enlarge') === 'true';
+        const borderStyle =
+            img.getAttribute('data-border-style') || 'none';
+        const shadowStyle =
+            img.getAttribute('data-shadow-style') || 'none';
+        const roundedStyle =
+            img.getAttribute('data-rounded-style') || 'small';
+        const spacingStyle =
+            img.getAttribute('data-spacing-style') || 'normal';
+
+        const shouldEnhance = Boolean(
+            imageId
+            || captionText
+            || credit
+            || photographer
+            || publicUrl
+            || clickToEnlarge
+            || borderStyle !== 'none'
+            || shadowStyle !== 'none'
+            || roundedStyle !== 'small'
+            || spacingStyle !== 'normal',
+        );
+
+        if (!shouldEnhance) {
+            return;
+        }
 
         const originalClass = img
             .getAttribute('class')
@@ -150,54 +184,82 @@ function buildEnhancedContent(): void {
             .trim() ?? '';
 
         const figure = doc.createElement('figure');
-        figure.className = `uc-media-card ${originalClass}`.trim();
+        figure.className = [
+            'uc-article-media',
+            originalClass,
+            `uc-media-border-${borderStyle}`,
+            `uc-media-shadow-${shadowStyle}`,
+            `uc-media-rounded-${roundedStyle}`,
+            `uc-media-spacing-${spacingStyle}`,
+        ].filter(Boolean).join(' ');
 
         if (imageId) figure.setAttribute('data-image-id', imageId);
         if (slug) figure.setAttribute('data-image-slug', slug);
-        if (publicUrl) figure.setAttribute('data-public-url', publicUrl);
 
         const clonedImg = img.cloneNode(true) as HTMLImageElement;
-        clonedImg.className = 'uc-media-card-image';
+        clonedImg.className = 'uc-article-media-image';
         clonedImg.removeAttribute('contenteditable');
         clonedImg.removeAttribute('draggable');
 
-        const caption = doc.createElement('figcaption');
-        caption.className = 'uc-media-card-caption';
-
-        caption.innerHTML = `
-            <div class="uc-media-card-title">${title}</div>
-            ${
-                photographer
-                    ? `
-                        <div class="uc-media-card-credit-label">Photography by</div>
-                        <div class="uc-media-card-credit-name">${photographer}</div>
-                    `
-                    : ''
-            }
-        `;
-
         const imageContainer = doc.createElement('div');
-        imageContainer.className = 'uc-media-card-image-container';
-        imageContainer.appendChild(clonedImg);
+        imageContainer.className = 'uc-article-media-image-container';
 
-        const icon = doc.createElement('div');
-        icon.className = 'uc-media-card-icon';
-        icon.innerHTML = arrowIconSvg;
-        imageContainer.appendChild(icon);
+        if (clickToEnlarge) {
+            const enlargeLink = doc.createElement('a');
+            enlargeLink.href = clonedImg.src;
+            enlargeLink.target = '_blank';
+            enlargeLink.rel = 'noopener';
+            enlargeLink.className = 'uc-article-media-enlarge';
+            enlargeLink.setAttribute(
+                'aria-label',
+                `Open larger image: ${assetTitle}`,
+            );
+            enlargeLink.appendChild(clonedImg);
+            imageContainer.appendChild(enlargeLink);
+        } else {
+            imageContainer.appendChild(clonedImg);
+        }
 
         figure.appendChild(imageContainer);
-        figure.appendChild(caption);
 
-        if (publicUrl) {
-            const wrapper = doc.createElement('a');
-            wrapper.href = publicUrl;
-            wrapper.className = `uc-media-card-wrapper ${originalClass}`.trim();
-            wrapper.setAttribute('aria-label', `View ${title}`);
-            wrapper.appendChild(figure);
-            img.replaceWith(wrapper);
-        } else {
-            img.replaceWith(figure);
+        if (
+            captionText
+            || credit
+            || photographer
+            || (showLicenseLink && publicUrl)
+        ) {
+            const figcaption = doc.createElement('figcaption');
+            figcaption.className = 'uc-article-media-caption';
+
+            if (captionText) {
+                const caption = doc.createElement('div');
+                caption.className = 'uc-article-media-caption-text';
+                caption.textContent = captionText;
+                figcaption.appendChild(caption);
+            }
+
+            const attribution = credit || photographer;
+
+            if (attribution) {
+                const creditLine = doc.createElement('div');
+                creditLine.className = 'uc-article-media-credit';
+                creditLine.textContent = credit
+                    || `Photography by ${photographer}`;
+                figcaption.appendChild(creditLine);
+            }
+
+            if (showLicenseLink && publicUrl) {
+                const licenseLink = doc.createElement('a');
+                licenseLink.href = publicUrl;
+                licenseLink.className = 'uc-article-media-license';
+                licenseLink.textContent = 'License This Image';
+                figcaption.appendChild(licenseLink);
+            }
+
+            figure.appendChild(figcaption);
         }
+
+        img.replaceWith(figure);
     });
 
     tableOfContents.value = headings;

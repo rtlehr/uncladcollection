@@ -80,9 +80,9 @@ function booleanSetting(value: unknown, fallback = true): boolean {
 }
 
 function articleImage(article: HomeArticle): string | null {
-    return article.featured_image_url
+    return article.icon_image_url
         ?? article.header_image_url
-        ?? article.icon_image_url;
+        ?? article.featured_image_url;
 }
 
 function formatDate(date: string | null): string {

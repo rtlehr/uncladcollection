@@ -63,7 +63,13 @@ export interface AdminBlogPostDetail {
 
     featured_image_url: string | null;
     header_image_url: string | null;
+    header_image_original_url: string | null;
     icon_image_url: string | null;
+    icon_image_original_url: string | null;
+    image_edit_data: {
+        header?: Record<string, unknown>;
+        icon?: Record<string, unknown>;
+    } | null;
 
     status: string;
     published_at: string | null;

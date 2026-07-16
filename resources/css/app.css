@@ -211,6 +211,39 @@
     width: 100% !important;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Blog Inline Article Image Presets
+|--------------------------------------------------------------------------
+|
+| These classes are assigned automatically by Add Edited Image.
+| They apply in both the admin editor and the public article renderer.
+|
+*/
+
+.blog-content img.blog-image-landscape-inline {
+    width: auto !important;
+    max-width: min(300px, 100%) !important;
+    height: auto !important;
+}
+
+.blog-content img.blog-image-portrait-inline {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 300px !important;
+}
+
+
+.blog-content img.blog-image-square-inline {
+    width: 300px !important;
+    max-width: 100% !important;
+    height: 300px !important;
+    max-height: 300px !important;
+    object-fit: cover !important;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Blog Managed Media Cards
@@ -262,6 +295,41 @@
 .blog-content .uc-media-card-wrapper.blog-image-full {
     max-width: 100% !important;
     width: 100% !important;
+}
+
+
+.blog-content .uc-media-card-wrapper.blog-image-landscape-inline {
+    width: auto !important;
+    max-width: min(300px, 100%) !important;
+}
+
+.blog-content .uc-media-card-wrapper.blog-image-portrait-inline {
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 300px !important;
+}
+
+.blog-content .uc-media-card-wrapper.blog-image-portrait-inline img {
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 300px !important;
+}
+
+
+.blog-content .uc-media-card-wrapper.blog-image-square-inline {
+    width: 300px !important;
+    max-width: 100% !important;
+    height: 300px !important;
+    max-height: 300px !important;
+}
+
+.blog-content .uc-media-card-wrapper.blog-image-square-inline img {
+    width: 300px !important;
+    max-width: 100% !important;
+    height: 300px !important;
+    max-height: 300px !important;
+    object-fit: cover !important;
 }
 
 .blog-content figure.uc-media-card {
@@ -1075,5 +1143,165 @@
     .public-card:hover,
     .public-button-primary:hover {
         transform: none;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| UC-B103B — Advanced Article Media
+|--------------------------------------------------------------------------
+*/
+
+.blog-content figure.uc-article-media {
+    display: block;
+    overflow: hidden;
+    max-width: 100%;
+    background: transparent;
+}
+
+.blog-content figure.uc-article-media.blog-image-left {
+    float: left;
+    margin-right: 1.5rem;
+}
+
+.blog-content figure.uc-article-media.blog-image-right {
+    float: right;
+    margin-left: 1.5rem;
+}
+
+.blog-content figure.uc-article-media.blog-image-center {
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.blog-content figure.uc-article-media.blog-image-landscape-inline {
+    width: min(300px, 100%);
+}
+
+.blog-content figure.uc-article-media.blog-image-portrait-inline {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.blog-content figure.uc-article-media.blog-image-square-inline {
+    width: min(300px, 100%);
+}
+
+.blog-content .uc-article-media-image-container,
+.blog-content .uc-article-media-enlarge {
+    display: block;
+    overflow: hidden;
+}
+
+.blog-content img.uc-article-media-image {
+    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+}
+
+.blog-content figure.uc-article-media.blog-image-portrait-inline
+    img.uc-article-media-image {
+    width: auto !important;
+    max-height: 300px !important;
+}
+
+.blog-content figure.uc-article-media.blog-image-square-inline
+    img.uc-article-media-image {
+    width: 300px !important;
+    height: 300px !important;
+    object-fit: cover;
+}
+
+.blog-content .uc-media-border-thin {
+    border: 1px solid hsl(var(--border));
+}
+
+.blog-content .uc-media-border-card {
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+}
+
+.blog-content .uc-media-shadow-soft {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.10);
+}
+
+.blog-content .uc-media-shadow-strong {
+    box-shadow: 0 16px 42px rgb(0 0 0 / 0.18);
+}
+
+.blog-content .uc-media-rounded-none {
+    border-radius: 0;
+}
+
+.blog-content .uc-media-rounded-small {
+    border-radius: 0.5rem;
+}
+
+.blog-content .uc-media-rounded-large {
+    border-radius: 1rem;
+}
+
+.blog-content .uc-media-spacing-tight {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.blog-content .uc-media-spacing-normal {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.blog-content .uc-media-spacing-large {
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.blog-content .uc-article-media-caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 1rem;
+    border-top: 1px solid hsl(var(--border));
+    padding: 0.75rem 0.9rem;
+    background: hsl(var(--muted) / 0.25);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.blog-content .uc-article-media-caption-text {
+    flex: 1 1 100%;
+    color: hsl(var(--foreground));
+}
+
+.blog-content .uc-article-media-credit {
+    color: hsl(var(--muted-foreground));
+}
+
+.blog-content .uc-article-media-license {
+    margin-left: auto;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    text-decoration: none;
+}
+
+.blog-content .uc-article-media-license:hover {
+    text-decoration: underline;
+}
+
+.blog-content .uc-article-media-enlarge {
+    cursor: zoom-in;
+}
+
+@media (max-width: 768px) {
+    .blog-content figure.uc-article-media.blog-image-left,
+    .blog-content figure.uc-article-media.blog-image-right {
+        float: none;
+        width: min(300px, 100%);
+        margin-left: auto;
+        margin-right: auto;
     }
 }

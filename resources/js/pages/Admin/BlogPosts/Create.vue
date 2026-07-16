@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
-import BlogImageUploadField from '@/Components/Admin/BlogImageUploadField.vue';
+import BlogEditedImageField from '@/components/admin/BlogEditedImageField.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
+import {
+    BLOG_HEADER_PRESET,
+    BLOG_ICON_PRESET,
+} from '@/config/imageEditorPresets';
 import OptionChecklist from '@/Components/Admin/OptionChecklist.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import FormField from '@/Components/Forms/FormField.vue';
@@ -30,9 +35,12 @@ const form = useForm({
     slug: '',
     excerpt: '',
     content: '',
-    featured_image: null as File | null,
     header_image: null as File | null,
+    header_image_original: null as File | null,
+    header_image_edit_data: null as string | null,
     icon_image: null as File | null,
+    icon_image_original: null as File | null,
+    icon_image_edit_data: null as string | null,
     status: 'draft',
     published_at: '',
     expires_at: '',
@@ -61,8 +69,24 @@ function toggleSelection(field: 'category_ids' | 'tag_ids', id: number, checked:
         : form[field].filter((selectedId) => selectedId !== id);
 }
 
-function setFile(event: Event, field: 'featured_image' | 'header_image' | 'icon_image') {
-    form[field] = (event.target as HTMLInputElement).files?.[0] ?? null;
+function applyHeaderImage(payload: {
+    file: File;
+    original: File | null;
+    edit: ImageEditData;
+}): void {
+    form.header_image = payload.file;
+    form.header_image_original = payload.original;
+    form.header_image_edit_data = JSON.stringify(payload.edit);
+}
+
+function applyIconImage(payload: {
+    file: File;
+    original: File | null;
+    edit: ImageEditData;
+}): void {
+    form.icon_image = payload.file;
+    form.icon_image_original = payload.original;
+    form.icon_image_edit_data = JSON.stringify(payload.edit);
 }
 
 function submit() {
@@ -124,35 +148,32 @@ function cancel() {
 
                 <FormSection
                     title="Images"
-                    description="Upload the featured, header, and compact icon images."
+                    description="Create the article header and compact icon crops. Article images are inserted from the editor toolbar."
                 >
-                    <div class="grid gap-6 md:grid-cols-3">
-                        <BlogImageUploadField
-                            id="featured_image"
-                            label="Featured Image"
-                            description="Used on blog cards and related posts."
-                            :current-url="null"
-                            :error="form.errors.featured_image"
-                            @change="setFile($event, 'featured_image')"
-                        />
-
-                        <BlogImageUploadField
+                    <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+                        <BlogEditedImageField
                             id="header_image"
                             label="Header Image"
-                            description="Large image shown at the top of the article."
+                            description="Wide image shown at the top of the article."
+                            :preset="BLOG_HEADER_PRESET"
                             :current-url="null"
+                            :current-original-url="null"
+                            :initial-edit="null"
                             :error="form.errors.header_image"
-                            @change="setFile($event, 'header_image')"
+                            @apply="applyHeaderImage"
                         />
 
-                        <BlogImageUploadField
+                        <BlogEditedImageField
                             id="icon_image"
                             label="Icon Image"
-                            description="Small icon used for compact displays."
+                            description="Square image used for compact blog displays."
+                            :preset="BLOG_ICON_PRESET"
                             :current-url="null"
-                            preview-class="h-24 w-24"
+                            :current-original-url="null"
+                            :initial-edit="null"
+                            preview-class="aspect-square w-full"
                             :error="form.errors.icon_image"
-                            @change="setFile($event, 'icon_image')"
+                            @apply="applyIconImage"
                         />
                     </div>
                 </FormSection>

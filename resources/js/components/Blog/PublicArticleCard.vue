@@ -9,7 +9,7 @@ import {
 import PerformanceImage from '@/components/Public/PerformanceImage.vue';
 
 import type { BlogPost } from '@/types/blog';
-import { contentImage } from '@/lib/contentImages';
+import { blogCardImage } from '@/lib/contentImages';
 import { formatDate } from '@/lib/formatDate';
 import { readingTime } from '@/lib/readingTime';
 
@@ -40,8 +40,8 @@ withDefaults(
     >
         <div class="overflow-hidden bg-stone-200 dark:bg-stone-800">
             <PerformanceImage
-                v-if="contentImage(post)"
-                :src="contentImage(post)!"
+                v-if="blogCardImage(post)"
+                :src="blogCardImage(post)!"
                 :alt="post.title"
                 :loading="variant === 'hero' ? 'eager' : 'lazy'"
                 :fetchpriority="variant === 'hero' ? 'high' : 'low'"
