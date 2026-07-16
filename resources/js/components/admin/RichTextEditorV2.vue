@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { Node, mergeAttributes } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -13,6 +14,7 @@ import {
     AlignLeft,
     AlignRight,
     Bold,
+    Boxes,
     Code,
     Heading1,
     Heading2,
@@ -43,6 +45,9 @@ import ImagePickerDialog, {
 } from '@/components/admin/ImagePickerDialog.vue';
 import BlogLibraryImageEditorDialog from '@/components/admin/BlogLibraryImageEditorDialog.vue';
 import type { UploadedBlogArticleImage } from '@/lib/blogArticleImageUpload';
+import SmartAssetCardDialog, {
+    type SmartAssetCardInsert,
+} from '@/components/admin/SmartAssetCardDialog.vue';
 import BlogMediaPropertiesDialog, {
     type BlogMediaProperties,
 } from '@/components/admin/BlogMediaPropertiesDialog.vue';
@@ -61,6 +66,7 @@ const libraryOpen = ref(false);
 const libraryEditorOpen = ref(false);
 const selectedLibraryImage = ref<LibraryImage | null>(null);
 const mediaPropertiesOpen = ref(false);
+const assetCardDialogOpen = ref(false);
 const mediaPropertiesInitial = ref<BlogMediaProperties>({
     alt: '',
     caption: '',
@@ -74,6 +80,57 @@ const mediaPropertiesInitial = ref<BlogMediaProperties>({
     shadowStyle: 'none',
     roundedStyle: 'small',
     spacingStyle: 'normal',
+});
+
+
+const SmartAssetCard = Node.create({
+    name: 'smartAssetCard',
+    group: 'block',
+    atom: true,
+    selectable: true,
+    draggable: true,
+
+    addAttributes() {
+        return {
+            assetId: { default: null },
+            assetSlug: { default: null },
+            layout: { default: 'standard' },
+            heading: { default: '' },
+            description: { default: '' },
+        };
+    },
+
+    parseHTML() {
+        return [{ tag: 'div[data-smart-asset-card]' }];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+        const layout = HTMLAttributes.layout ?? 'standard';
+        const heading = HTMLAttributes.heading ?? 'Smart Asset Card';
+        const description = HTMLAttributes.description ?? '';
+
+        return [
+            'div',
+            mergeAttributes(
+                {
+                    'data-smart-asset-card': 'true',
+                    'data-asset-id': HTMLAttributes.assetId,
+                    'data-asset-slug': HTMLAttributes.assetSlug,
+                    'data-layout': layout,
+                    'data-heading': heading,
+                    'data-description': description,
+                    class: `uc-smart-asset-card-placeholder uc-smart-asset-card-${layout}`,
+                },
+            ),
+            [
+                'div',
+                { class: 'uc-smart-asset-card-placeholder-label' },
+                'Smart Asset Card',
+            ],
+            ['strong', {}, heading],
+            description ? ['p', {}, description] : ['span', {}, ''],
+        ];
+    },
 });
 
 const BlogImage = Image.extend({
@@ -232,6 +289,7 @@ const editor = useEditor({
             inline: false,
             allowBase64: false,
         }),
+        SmartAssetCard,
         Link.configure({
             openOnClick: false,
         }),
@@ -605,6 +663,34 @@ function insertEditedArticleImage(
     emitEditorHtml();
 }
 
+function insertSmartAssetCard(
+    payload: SmartAssetCardInsert,
+): void {
+    if (!editor.value) return;
+
+    editor.value
+        .chain()
+        .focus()
+        .insertContent([
+            {
+                type: 'smartAssetCard',
+                attrs: {
+                    assetId: payload.assetId,
+                    assetSlug: payload.assetSlug,
+                    layout: payload.layout,
+                    heading: payload.heading,
+                    description: payload.description,
+                },
+            },
+            {
+                type: 'paragraph',
+            },
+        ])
+        .run();
+
+    emitEditorHtml();
+}
+
 function openImageLibrary() {
     libraryOpen.value = true;
 }
@@ -706,6 +792,18 @@ function insertEditedLibraryImage(
                         @click="openImageLibrary"
                      aria-label="Insert From Library">
                         <Images class="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        title="Insert Smart Asset Card"
+                        aria-label="Insert Smart Asset Card"
+                        @click="assetCardDialogOpen = true"
+                    >
+                        <Boxes class="mr-2 h-4 w-4" />
+                        Asset Card
                     </Button>
 
                     <Button type="button" size="icon" variant="ghost" title="Add Link" @click="setLink" aria-label="Add Link">
@@ -840,6 +938,11 @@ function insertEditedLibraryImage(
             v-model:open="libraryEditorOpen"
             :image="selectedLibraryImage"
             @uploaded="insertEditedLibraryImage"
+        />
+
+        <SmartAssetCardDialog
+            v-model:open="assetCardDialogOpen"
+            @insert="insertSmartAssetCard"
         />
 
         <BlogMediaPropertiesDialog

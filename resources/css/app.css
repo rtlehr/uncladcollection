@@ -1305,3 +1305,123 @@
         margin-right: auto;
     }
 }
+
+
+/* UC-B105A — Smart Asset Cards */
+.blog-content .uc-smart-asset-card-placeholder {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    border: 2px dashed hsl(var(--border));
+    border-radius: 0.75rem;
+    background: hsl(var(--muted) / 0.25);
+}
+
+.blog-content .uc-smart-asset-card-placeholder-label {
+    margin-bottom: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: hsl(var(--primary));
+}
+
+.blog-content .uc-smart-asset-card {
+    display: grid;
+    overflow: hidden;
+    margin: 2rem 0;
+    border: 1px solid hsl(var(--border));
+    border-radius: 1rem;
+    background: hsl(var(--card));
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.08);
+}
+
+.blog-content .uc-smart-asset-card-standard {
+    grid-template-columns: minmax(220px, 42%) 1fr;
+}
+
+.blog-content .uc-smart-asset-card-compact {
+    grid-template-columns: 150px 1fr;
+}
+
+.blog-content .uc-smart-asset-card-featured {
+    grid-template-columns: 1fr;
+}
+
+.blog-content .uc-smart-asset-image {
+    display: block;
+    min-height: 160px;
+    background: hsl(var(--muted));
+}
+
+.blog-content .uc-smart-asset-image img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 160px;
+    margin: 0 !important;
+    object-fit: cover;
+}
+
+.blog-content .uc-smart-asset-card-featured .uc-smart-asset-image {
+    aspect-ratio: 16 / 7;
+}
+
+.blog-content .uc-smart-asset-body {
+    padding: 1.25rem;
+}
+
+.blog-content .uc-smart-asset-body h3 {
+    margin: 0.35rem 0 0.5rem;
+    font-size: 1.25rem;
+}
+
+.blog-content .uc-smart-asset-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: hsl(var(--primary));
+}
+
+.blog-content .uc-smart-asset-meta {
+    margin-top: 0.7rem;
+    font-size: 0.82rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.blog-content .uc-smart-asset-formats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.85rem;
+}
+
+.blog-content .uc-smart-asset-format {
+    border-radius: 999px;
+    background: hsl(var(--muted));
+    padding: 0.2rem 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.blog-content .uc-smart-asset-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.blog-content .uc-smart-asset-actions a {
+    border-radius: 0.5rem;
+    background: hsl(var(--primary));
+    padding: 0.55rem 0.85rem;
+    color: hsl(var(--primary-foreground));
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .blog-content .uc-smart-asset-card-standard,
+    .blog-content .uc-smart-asset-card-compact {
+        grid-template-columns: 1fr;
+    }
+}

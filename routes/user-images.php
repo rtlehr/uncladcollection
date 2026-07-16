@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssetBrowseController;
+use App\Http\Controllers\AssetCardController;
 use App\Http\Controllers\CollectionBrowseController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\ImageBrowseController;
@@ -32,3 +33,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/images/{image}/favorite', [ImageFavoriteController::class, 'destroy'])
         ->middleware('throttle:60,1')->name('images.unfavorite');
 });
+
+Route::get('/assets/{asset:slug}/card-data', [AssetCardController::class, 'show'])
+    ->name('assets.card-data');

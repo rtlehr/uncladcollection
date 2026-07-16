@@ -100,7 +100,7 @@ function slugifyHeading(value: string): string {
         .replace(/^-+|-+$/g, '');
 }
 
-function buildEnhancedContent(): void {
+async function buildEnhancedContent(): Promise<void> {
     const html = props.blogPost.content ?? '';
 
     if (!html) {
@@ -261,6 +261,89 @@ function buildEnhancedContent(): void {
 
         img.replaceWith(figure);
     });
+
+
+    const cardNodes = Array.from(
+        doc.querySelectorAll<HTMLElement>(
+            '[data-smart-asset-card="true"]',
+        ),
+    );
+
+    await Promise.all(
+        cardNodes.map(async (node) => {
+            const slug = node.dataset.assetSlug;
+            const layout = node.dataset.layout ?? 'standard';
+            const heading = node.dataset.heading ?? '';
+            const description = node.dataset.description ?? '';
+
+            if (!slug) return;
+
+            try {
+                const response = await fetch(
+                    `/assets/${encodeURIComponent(slug)}/card-data`,
+                    { headers: { Accept: 'application/json' } },
+                );
+
+                if (!response.ok) {
+                    throw new Error('Asset unavailable');
+                }
+
+                const data = await response.json();
+                const asset = data.asset;
+
+                const card = doc.createElement('article');
+                card.className =
+                    `uc-smart-asset-card uc-smart-asset-card-${layout}`;
+
+                const image = asset.preview_url
+                    ? `<img src="${asset.preview_url}" alt="${asset.title}" />`
+                    : '';
+
+                const formats = (asset.formats ?? [])
+                    .slice(0, 6)
+                    .map(
+                        (format: string) =>
+                            `<span class="uc-smart-asset-format">${format}</span>`,
+                    )
+                    .join('');
+
+                const price =
+                    asset.starting_price_cents !== null
+                        ? new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: asset.currency ?? 'USD',
+                        }).format(asset.starting_price_cents / 100)
+                        : 'View pricing';
+
+                card.innerHTML = `
+                    <a class="uc-smart-asset-image" href="${asset.href}">
+                        ${image}
+                    </a>
+                    <div class="uc-smart-asset-body">
+                        <div class="uc-smart-asset-eyebrow">
+                            ${asset.asset_type_label}
+                        </div>
+                        <h3>${heading || asset.title}</h3>
+                        ${description ? `<p>${description}</p>` : ''}
+                        <div class="uc-smart-asset-meta">
+                            By ${asset.photographer || 'Unclad Collection'}
+                        </div>
+                        <div class="uc-smart-asset-formats">${formats}</div>
+                        <div class="uc-smart-asset-actions">
+                            <strong>From ${price}</strong>
+                            <a href="${asset.href}">View Asset</a>
+                        </div>
+                    </div>
+                `;
+
+                node.replaceWith(card);
+            } catch {
+                node.innerHTML =
+                    '<p>This Asset is currently unavailable.</p>';
+                node.className = 'uc-smart-asset-card-unavailable';
+            }
+        }),
+    );
 
     tableOfContents.value = headings;
     enhancedContent.value = doc.body.innerHTML;

@@ -504,6 +504,15 @@ class AdminBlogPostController extends Controller
                     'icon_url' => $previewUrl,
                     'high_res_url' => $previewUrl,
                     'public_url' => route('assets.show', $asset),
+                    'asset_type_label' => $asset->asset_type->label(),
+                    'formats' => $asset->activeFiles
+                        ->pluck('extension')
+                        ->filter()
+                        ->map(fn (string $extension) => strtoupper($extension))
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->all(),
                 ];
             })
             ->filter()
