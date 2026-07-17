@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -98,6 +99,14 @@ function applyMarketplaceImage(payload: {
     form.marketplace_source_index = Number(payload.sourceKey);
 }
 
+const adminSections = [
+    { id: 'asset-details', title: 'Asset Details', description: 'Title, creator, and description.', errorKeys: ['title', 'photographer', 'description'] },
+    { id: 'asset-files', title: 'Asset Files', description: 'Upload and classify deliverables.', errorKeys: ['files', 'file_roles', 'file_downloadable'] },
+    { id: 'asset-presentation', title: 'Presentation', description: 'Marketplace card image.', errorKeys: ['marketplace_image'] },
+    { id: 'asset-configuration', title: 'Configuration', description: 'Customer-selectable options.', errorKeys: ['configurations'] },
+    { id: 'asset-classification', title: 'Publishing', description: 'Type, status, collection, and fulfillment.', errorKeys: ['asset_type', 'status', 'collection_id', 'fulfillment_type'] },
+];
+
 function submit() {
     if (hasInvalidFiles.value) {
         return;
@@ -119,17 +128,20 @@ function submit() {
     <Head title="Create Asset" />
     <div class="space-y-8 p-6">
         <PageHeader title="Create Asset" description="Create one marketplace asset with multiple associated files." />
-        <form class="space-y-6" @submit.prevent="submit">
-            <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <AdminSectionNavigator :sections="adminSections" :errors="form.errors" label="Asset sections" storage-key="admin.assets.create.workspace" v-slot="{ activeSection }">
+            <form class="space-y-6" @submit.prevent="submit">
+            <div class="grid gap-6">
                 <div class="space-y-6">
-                    <FormSection title="Asset Details" description="Customer-facing information for the asset listing.">
+                    <FormSection v-show="activeSection === 'asset-details'"
+                        id="asset-details" class="scroll-mt-24" title="Asset Details" description="Customer-facing information for the asset listing.">
                         <div class="grid gap-4 md:grid-cols-2">
                             <FormField label="Title" for-id="title" required :error="form.errors.title"><Input id="title" v-model="form.title" /></FormField>
                             <FormField label="Photographer / Creator" for-id="photographer" :error="form.errors.photographer"><Input id="photographer" v-model="form.photographer" /></FormField>
                             <FormField class="md:col-span-2" label="Description" for-id="description" :error="form.errors.description"><textarea id="description" v-model="form.description" rows="5" class="w-full rounded-md border bg-background px-3 py-2 text-sm" /></FormField>
                         </div>
                     </FormSection>
-                    <FormSection title="Asset Files" description="Upload all deliverables belonging to this asset. Roles are suggested automatically and can be changed.">
+                    <FormSection v-show="activeSection === 'asset-files'"
+                        id="asset-files" class="scroll-mt-24" title="Asset Files" description="Upload all deliverables belonging to this asset. Roles are suggested automatically and can be changed.">
                         <AssetFileDropzone
                             v-model="form.files"
                             v-model:primary-preview-index="form.primary_preview_index"
@@ -172,6 +184,9 @@ function submit() {
                         </div>
                     </FormSection>
                     <FormSection
+                        v-show="activeSection === 'asset-presentation'"
+                        id="asset-presentation"
+                        class="scroll-mt-24"
                         title="Asset Presentation"
                         description="Create the dedicated 16:9 crop used on marketplace cards."
                     >
@@ -196,12 +211,14 @@ function submit() {
                         </p>
                     </FormSection>
 
-                    <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
+                    <FormSection v-show="activeSection === 'asset-configuration'"
+                        id="asset-configuration" class="scroll-mt-24" title="Product Configuration" description="Optional customer choices such as size, color, resolution, or personalization.">
                         <AssetConfigurationBuilder v-model="form.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
                     </FormSection>
                 </div>
                 <div class="space-y-6">
-                    <FormSection title="Classification" description="Control the asset type and workflow status.">
+                    <FormSection v-show="activeSection === 'asset-classification'"
+                        id="asset-classification" class="scroll-mt-24" title="Classification" description="Control the asset type and workflow status.">
                         <div class="space-y-4">
                             <FormField label="Asset Type" for-id="asset_type"><select id="asset_type" v-model="form.asset_type" class="h-10 w-full rounded-md border bg-background px-3 text-sm"><option v-for="option in assetTypes" :key="option.value" :value="option.value">{{ option.label }}</option></select></FormField>
                             <FormField label="Status" for-id="status"><select id="status" v-model="form.status" class="h-10 w-full rounded-md border bg-background px-3 text-sm"><option v-for="option in statuses" :key="option.value" :value="option.value">{{ option.label }}</option></select></FormField>
@@ -219,6 +236,7 @@ function submit() {
                 </div>
             </div>
             <FormActions submit-label="Create Asset" :processing="form.processing" :disabled="hasInvalidFiles" @cancel="router.visit('/admin/assets')" />
-        </form>
+            </form>
+        </AdminSectionNavigator>
     </div>
 </template>

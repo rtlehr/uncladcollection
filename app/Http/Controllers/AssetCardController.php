@@ -22,6 +22,10 @@ class AssetCardController extends Controller
             'activeFiles',
             'offerings' => fn ($query) => $query
                 ->where('is_active', true)
+                ->with([
+                    'licenseType:id,name,slug,description',
+                    'files:id,asset_id,extension,is_active,is_downloadable,sort_order',
+                ])
                 ->orderBy('sort_order'),
             'legacyImage.categories:id,name',
             'legacyImage.tags:id,name',

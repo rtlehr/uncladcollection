@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 
 import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 import BlogEditedImageField from '@/components/admin/BlogEditedImageField.vue';
@@ -90,6 +91,14 @@ function applyIconImage(payload: {
     form.icon_image_edit_data = JSON.stringify(payload.edit);
 }
 
+const adminSections = [
+    { id: 'blog-content', title: 'Content', description: 'Title, excerpt, and article body.', errorKeys: ['title', 'slug', 'excerpt', 'content'] },
+    { id: 'blog-images', title: 'Images', description: 'Header and icon presentation.', errorKeys: ['header_image', 'icon_image'] },
+    { id: 'blog-publishing', title: 'Publishing', description: 'Schedule, visibility, and comments.', errorKeys: ['status', 'published_at', 'expires_at', 'is_active'] },
+    { id: 'blog-taxonomy', title: 'Categories & Tags', description: 'Organize and connect the article.', errorKeys: ['category_ids', 'tag_ids'] },
+    { id: 'blog-seo', title: 'SEO', description: 'Search title and description.', errorKeys: ['seo_title', 'seo_description'] },
+];
+
 function submit() {
     form.transform((data) => ({ ...data, _method: 'put' }))
         .post(`/admin/blog-posts/${props.blogPost.slug}`, {
@@ -110,8 +119,12 @@ function cancel() {
         <div class="space-y-8 p-6">
             <PageHeader title="Edit Blog Post" description="Update this blog article." />
 
-            <form class="space-y-8" @submit.prevent="submit">
+            <AdminSectionNavigator :sections="adminSections" :errors="form.errors" label="Blog sections" storage-key="admin.blog-posts.edit.workspace" v-slot="{ activeSection }">
+                <form class="space-y-8" @submit.prevent="submit">
                 <FormSection
+                    v-show="activeSection === 'blog-content'"
+                    id="blog-content"
+                    class="scroll-mt-24"
                     title="Post Content"
                     description="Write the article title, summary, and full content."
                 >
@@ -149,6 +162,9 @@ function cancel() {
                 </FormSection>
 
                 <FormSection
+                    v-show="activeSection === 'blog-images'"
+                    id="blog-images"
+                    class="scroll-mt-24"
                     title="Images"
                     description="Create the article header and compact icon crops. Article images are inserted from the editor toolbar."
                 >
@@ -181,6 +197,9 @@ function cancel() {
                 </FormSection>
 
                 <FormSection
+                    v-show="activeSection === 'blog-publishing'"
+                    id="blog-publishing"
+                    class="scroll-mt-24"
                     title="Publishing Schedule"
                     description="Control status, visibility, scheduling, and comment behavior."
                 >
@@ -278,7 +297,7 @@ function cancel() {
                     </div>
                 </FormSection>
 
-                <div class="grid gap-6 lg:grid-cols-2">
+                <div v-show="activeSection === 'blog-taxonomy'" id="blog-taxonomy" class="scroll-mt-24 grid gap-6 lg:grid-cols-2">
                     <FormSection
                         title="Categories"
                         description="Select blog categories."
@@ -307,6 +326,9 @@ function cancel() {
                 </div>
 
                 <FormSection
+                    v-show="activeSection === 'blog-seo'"
+                    id="blog-seo"
+                    class="scroll-mt-24"
                     title="SEO"
                     description="Optional search-engine title and description."
                 >
@@ -337,7 +359,8 @@ function cancel() {
                     @submit="submit"
                     @cancel="cancel"
                 />
-            </form>
+                </form>
+            </AdminSectionNavigator>
         </div>
     </AppLayout>
 </template>

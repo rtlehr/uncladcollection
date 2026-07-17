@@ -99,7 +99,62 @@ class PublicAssetCatalogService
         $legacyImage = $asset->legacyImage;
         $offerings = $asset->offerings;
         $startingPrice = $offerings->min('price_cents');
+        $highestPrice = $offerings->max('price_cents');
         $currency = $offerings->firstWhere('price_cents', $startingPrice)?->currency ?? 'USD';
+
+        $formatNames = $files
+            ->pluck('extension')
+            ->filter()
+            ->map(fn (string $extension) => strtoupper($extension))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $commerceOfferings = $offerings
+            ->map(function ($offering) use ($files): array {
+                $includedFiles = $offering->include_all_active_files
+                    ? $files->where('is_downloadable', true)
+                    : ($offering->relationLoaded('files')
+                        ? $offering->files
+                            ->where('is_active', true)
+                            ->where('is_downloadable', true)
+                        : collect());
+
+                return [
+                    'id' => $offering->id,
+                    'name' => $offering->name,
+                    'description' => $offering->description
+                        ?: $offering->licenseType?->description,
+                    'license_type' => $offering->licenseType ? [
+                        'id' => $offering->licenseType->id,
+                        'name' => $offering->licenseType->name,
+                        'slug' => $offering->licenseType->slug,
+                    ] : null,
+                    'price_cents' => (int) $offering->price_cents,
+                    'currency' => $offering->currency ?: 'USD',
+                    'formats' => $includedFiles
+                        ->pluck('extension')
+                        ->filter()
+                        ->map(fn (string $extension) => strtoupper($extension))
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->all(),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $badges = collect()
+            ->when($asset->is_featured, fn ($items) => $items->push('Featured'))
+            ->when($asset->created_at?->gte(now()->subDays(30)), fn ($items) => $items->push('New'))
+            ->when($asset->asset_type === AssetType::Vector, fn ($items) => $items->push('Vector'))
+            ->when($asset->asset_type === AssetType::Video, fn ($items) => $items->push('Video'))
+            ->when($asset->asset_type === AssetType::Bundle, fn ($items) => $items->push('Bundle'))
+            ->when($asset->is_ai_generated, fn ($items) => $items->push('AI Generated'))
+            ->when((bool) data_get($asset->metadata, 'editors_choice'), fn ($items) => $items->push("Editor's Choice"))
+            ->values()
+            ->all();
 
         return [
             'id' => $asset->id,
@@ -117,16 +172,14 @@ class PublicAssetCatalogService
                     : null),
             'asset_type' => $asset->asset_type->value,
             'asset_type_label' => $asset->asset_type->label(),
-            'formats' => $files
-                ->pluck('extension')
-                ->filter()
-                ->map(fn (string $extension) => strtoupper($extension))
-                ->unique()
-                ->sort()
-                ->values()
-                ->all(),
+            'formats' => $formatNames->all(),
             'starting_price_cents' => $startingPrice !== null ? (int) $startingPrice : null,
+            'highest_price_cents' => $highestPrice !== null ? (int) $highestPrice : null,
             'currency' => $currency,
+            'offerings_count' => count($commerceOfferings),
+            'offerings' => $commerceOfferings,
+            'badges' => $badges,
+            'license_href' => ($legacyImage ? route('images.show', $legacyImage) : route('assets.show', $asset)).'#purchase',
             'is_ai_generated' => $asset->is_ai_generated,
             'is_featured' => $asset->is_featured,
             'is_favoritable' => $legacyImage !== null,

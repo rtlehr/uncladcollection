@@ -106,8 +106,9 @@ const SmartAssetCard = Node.create({
 
     renderHTML({ HTMLAttributes }) {
         const layout = HTMLAttributes.layout ?? 'standard';
-        const heading = HTMLAttributes.heading ?? 'Smart Asset Card';
-        const description = HTMLAttributes.description ?? '';
+        const heading = HTMLAttributes.heading ?? 'Marketplace Asset';
+        const description = HTMLAttributes.description
+            ?? 'Live pricing, formats, and licensing details appear when published.';
 
         return [
             'div',
@@ -124,11 +125,48 @@ const SmartAssetCard = Node.create({
             ),
             [
                 'div',
-                { class: 'uc-smart-asset-card-placeholder-label' },
-                'Smart Asset Card',
+                { class: 'uc-smart-asset-card-placeholder-toolbar' },
+                [
+                    'span',
+                    { class: 'uc-smart-asset-card-placeholder-label' },
+                    'Smart Asset Card',
+                ],
+                [
+                    'span',
+                    { class: 'uc-smart-asset-card-placeholder-layout' },
+                    layout,
+                ],
             ],
-            ['strong', {}, heading],
-            description ? ['p', {}, description] : ['span', {}, ''],
+            [
+                'div',
+                { class: 'uc-smart-asset-card-placeholder-content' },
+                [
+                    'div',
+                    { class: 'uc-smart-asset-card-placeholder-media' },
+                    ['span', { class: 'uc-smart-asset-card-placeholder-media-badge' }, 'Live asset'],
+                    ['span', { class: 'uc-smart-asset-card-placeholder-media-icon' }, 'UC'],
+                ],
+                [
+                    'div',
+                    { class: 'uc-smart-asset-card-placeholder-copy' },
+                    ['span', { class: 'uc-smart-asset-card-placeholder-eyebrow' }, 'Marketplace preview'],
+                    ['strong', {}, heading],
+                    ['p', {}, description],
+                    [
+                        'div',
+                        { class: 'uc-smart-asset-card-placeholder-chips' },
+                        ['span', {}, 'Formats'],
+                        ['span', {}, 'Licenses'],
+                        ['span', {}, 'Live price'],
+                    ],
+                    [
+                        'div',
+                        { class: 'uc-smart-asset-card-placeholder-footer' },
+                        ['span', {}, `Asset: ${HTMLAttributes.assetSlug ?? 'selected asset'}`],
+                        ['b', {}, 'View Asset →'],
+                    ],
+                ],
+            ],
         ];
     },
 });

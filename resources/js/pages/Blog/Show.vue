@@ -100,6 +100,25 @@ function slugifyHeading(value: string): string {
         .replace(/^-+|-+$/g, '');
 }
 
+
+function escapeHtml(value: unknown): string {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function formatMoney(cents: number | null, currency = 'USD'): string {
+    if (cents === null) return 'View pricing';
+
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+    }).format(cents / 100);
+}
+
 async function buildEnhancedContent(): Promise<void> {
     const html = props.blogPost.content ?? '';
 
@@ -295,43 +314,101 @@ async function buildEnhancedContent(): Promise<void> {
                 card.className =
                     `uc-smart-asset-card uc-smart-asset-card-${layout}`;
 
+                const safeHref = escapeHtml(asset.href);
+                const safeLicenseHref = escapeHtml(
+                    asset.license_href || `${asset.href}#purchase`,
+                );
+                const safeTitle = escapeHtml(heading || asset.title);
+                const safeAssetTitle = escapeHtml(asset.title);
+                const safeDescription = escapeHtml(description);
+                const safePhotographer = escapeHtml(
+                    asset.photographer || 'Unclad Collection',
+                );
+                const safeType = escapeHtml(asset.asset_type_label);
+
                 const image = asset.preview_url
-                    ? `<img src="${asset.preview_url}" alt="${asset.title}" />`
-                    : '';
+                    ? `<img src="${escapeHtml(asset.preview_url)}" alt="${safeAssetTitle}" loading="lazy" />`
+                    : `<div class="uc-smart-asset-image-fallback">${safeType}</div>`;
 
                 const formats = (asset.formats ?? [])
-                    .slice(0, 6)
+                    .slice(0, 8)
                     .map(
                         (format: string) =>
-                            `<span class="uc-smart-asset-format">${format}</span>`,
+                            `<span class="uc-smart-asset-format">${escapeHtml(format)}</span>`,
                     )
                     .join('');
 
-                const price =
-                    asset.starting_price_cents !== null
-                        ? new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: asset.currency ?? 'USD',
-                        }).format(asset.starting_price_cents / 100)
-                        : 'View pricing';
+                const badges = (asset.badges ?? [])
+                    .slice(0, 5)
+                    .map(
+                        (badge: string) =>
+                            `<span class="uc-smart-asset-badge">${escapeHtml(badge)}</span>`,
+                    )
+                    .join('');
+
+                const offerings = (asset.offerings ?? [])
+                    .slice(0, layout === 'compact' ? 2 : 3)
+                    .map((offering: any) => {
+                        const licenseName = escapeHtml(
+                            offering.license_type?.name || offering.name,
+                        );
+                        const offeringPrice = formatMoney(
+                            offering.price_cents,
+                            offering.currency || asset.currency || 'USD',
+                        );
+                        const offeringFormats = (offering.formats ?? [])
+                            .slice(0, 4)
+                            .map((format: string) => escapeHtml(format))
+                            .join(' · ');
+
+                        return `
+                            <li>
+                                <span>
+                                    <strong>${licenseName}</strong>
+                                    ${offeringFormats ? `<small>${offeringFormats}</small>` : ''}
+                                </span>
+                                <b>${escapeHtml(offeringPrice)}</b>
+                            </li>
+                        `;
+                    })
+                    .join('');
+
+                const startingPrice = formatMoney(
+                    asset.starting_price_cents,
+                    asset.currency ?? 'USD',
+                );
+                const priceRange =
+                    asset.highest_price_cents !== null
+                    && asset.highest_price_cents !== asset.starting_price_cents
+                        ? `${startingPrice}–${formatMoney(asset.highest_price_cents, asset.currency ?? 'USD')}`
+                        : startingPrice;
 
                 card.innerHTML = `
-                    <a class="uc-smart-asset-image" href="${asset.href}">
+                    <a class="uc-smart-asset-image" href="${safeHref}" aria-label="View ${safeAssetTitle} in the marketplace">
                         ${image}
+                        ${badges ? `<span class="uc-smart-asset-badges">${badges}</span>` : ''}
                     </a>
                     <div class="uc-smart-asset-body">
-                        <div class="uc-smart-asset-eyebrow">
-                            ${asset.asset_type_label}
-                        </div>
-                        <h3>${heading || asset.title}</h3>
-                        ${description ? `<p>${description}</p>` : ''}
-                        <div class="uc-smart-asset-meta">
-                            By ${asset.photographer || 'Unclad Collection'}
-                        </div>
-                        <div class="uc-smart-asset-formats">${formats}</div>
-                        <div class="uc-smart-asset-actions">
-                            <strong>From ${price}</strong>
-                            <a href="${asset.href}">View Asset</a>
+                        <div class="uc-smart-asset-eyebrow"><span>${safeType}</span><span class="uc-smart-asset-live-label">Live marketplace listing</span></div>
+                        <h3><a href="${safeHref}">${safeTitle}</a></h3>
+                        ${safeDescription ? `<p class="uc-smart-asset-description">${safeDescription}</p>` : ''}
+                        <div class="uc-smart-asset-meta">By ${safePhotographer}</div>
+                        ${formats ? `<div class="uc-smart-asset-formats">${formats}</div>` : ''}
+                        ${offerings ? `
+                            <div class="uc-smart-asset-license-summary">
+                                <span>Available licenses</span>
+                                <ul>${offerings}</ul>
+                            </div>
+                        ` : ''}
+                        <div class="uc-smart-asset-footer">
+                            <div class="uc-smart-asset-price">
+                                <span>${asset.offerings_count > 1 ? 'Starting at' : 'Price'}</span>
+                                <strong>${escapeHtml(priceRange)}</strong>
+                            </div>
+                            <div class="uc-smart-asset-actions">
+                                <a class="uc-smart-asset-action-secondary" href="${safeHref}" aria-label="View details for ${safeAssetTitle}">View details</a>
+                                <a class="uc-smart-asset-action-primary" href="${safeLicenseHref}" aria-label="License ${safeAssetTitle}">License asset <span aria-hidden="true">→</span></a>
+                            </div>
                         </div>
                     </div>
                 `;

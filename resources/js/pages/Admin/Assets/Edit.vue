@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -188,6 +189,15 @@ function viewPublicPage(): void {
     );
 }
 
+const adminSections = [
+    { id: 'asset-overview', title: 'Overview', description: 'Asset health and core details.', errorKeys: ['title', 'photographer', 'description', 'asset_type', 'status'] },
+    { id: 'asset-presentation', title: 'Presentation', description: 'Marketplace image and public preview.', errorKeys: ['marketplace_image'] },
+    { id: 'asset-files', title: 'Files', description: 'Preview, reorder, replace, and upload files.', errorKeys: ['files'] },
+    { id: 'asset-relationships', title: 'Relationships', description: 'Connect source and derived files.', errorKeys: ['relationships'] },
+    { id: 'asset-configuration', title: 'Configuration', description: 'Customer-selectable options.', errorKeys: ['configurations'] },
+    { id: 'asset-offerings', title: 'License Offerings', description: 'Pricing, licenses, and included files.', errorKeys: ['offerings'] },
+];
+
 function updateAsset() {
     form.transform((data) => ({ ...data, collection_id: data.collection_id === '' ? null : data.collection_id }))
         .put(`/admin/assets/${props.assetRecord.id}`, { preserveScroll: true });
@@ -307,10 +317,12 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </div>
         </PageHeader>
 
-        <AssetHealthCard :health="assetRecord.health" />
+        <AdminSectionNavigator :sections="adminSections" :errors="{ ...form.errors, ...presentationForm.errors, ...relationshipForm.errors, ...configurationForm.errors, ...offeringForm.errors, ...uploadForm.errors }" label="Asset sections" storage-key="admin.assets.edit.workspace" v-slot="{ activeSection }">
+        <div v-show="activeSection === 'asset-overview'" id="asset-overview" class="space-y-6">
+            <AssetHealthCard :health="assetRecord.health" />
 
         <form class="space-y-6" @submit.prevent="updateAsset">
-            <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+            <div class="grid gap-6 xl:grid-cols-2">
                 <FormSection title="Asset Details" description="Customer-facing information and classification.">
                     <div class="grid gap-4 md:grid-cols-2">
                         <FormField label="Title" for-id="title" :error="form.errors.title"><Input id="title" v-model="form.title" /></FormField>
@@ -336,8 +348,12 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </div>
             <FormActions submit-label="Save Asset" :processing="form.processing" @cancel="router.visit('/admin/assets')" />
         </form>
+        </div>
 
         <FormSection
+            v-show="activeSection === 'asset-presentation'"
+            id="asset-presentation"
+            class="scroll-mt-24"
             title="Asset Presentation"
             description="Control the dedicated marketplace-card image independently from the full asset preview."
         >
@@ -382,6 +398,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </form>
         </FormSection>
 
+        <div v-show="activeSection === 'asset-files'" id="asset-files" class="space-y-6">
         <FormSection title="Preview Gallery" description="Review browser-safe asset files using the same presentation framework as the public page.">
             <AssetFilePreviewGallery
                 :files="assetRecord.files ?? []"
@@ -405,6 +422,8 @@ function reorderFiles(files: AdminAssetFile[]): void {
         </FormSection>
 
 
+        </div>
+
         <ConfirmActionDialog
             v-model:open="deletion.open.value"
             title="Remove asset file?"
@@ -424,6 +443,9 @@ function reorderFiles(files: AdminAssetFile[]): void {
 
 
         <FormSection
+            v-show="activeSection === 'asset-relationships'"
+            id="asset-relationships"
+            class="scroll-mt-24"
             title="File Relationships"
             description="Connect previews, source files, videos, archives, and related deliverables."
         >
@@ -467,14 +489,14 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </form>
         </FormSection>
 
-        <FormSection title="Product Configuration" description="Optional customer choices such as size, color, resolution, language, or personalization.">
+        <FormSection v-show="activeSection === 'asset-configuration'" id="asset-configuration" class="scroll-mt-24" title="Product Configuration" description="Optional customer choices such as size, color, resolution, language, or personalization.">
             <form class="space-y-6" @submit.prevent="saveConfigurations">
                 <AssetConfigurationBuilder v-model="configurationForm.configurations" :display-types="configurationDisplayTypes" :templates="configurationTemplates" />
                 <div class="flex justify-end border-t pt-4"><Button type="submit" :disabled="configurationForm.processing">{{ configurationForm.processing ? 'Saving…' : 'Save Configuration' }}</Button></div>
             </form>
         </FormSection>
 
-        <FormSection title="License Offerings" description="Build customer packages, compare coverage, and review exactly what each license delivers.">
+        <FormSection v-show="activeSection === 'asset-offerings'" id="asset-offerings" class="scroll-mt-24" title="License Offerings" description="Build customer packages, compare coverage, and review exactly what each license delivers.">
             <form class="space-y-6" @submit.prevent="saveOfferings">
                 <AssetOfferingMatrix
                     :files="assetRecord.files ?? []"
@@ -495,7 +517,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </form>
         </FormSection>
 
-        <FormSection title="Add Files" description="Upload additional associated files to this existing asset.">
+        <FormSection v-show="activeSection === 'asset-files'" id="asset-add-files" class="scroll-mt-24" title="Add Files" description="Upload additional associated files to this existing asset.">
             <AssetFileDropzone
                 v-model="pendingFiles"
                 :roles="fileRoles"
@@ -539,5 +561,6 @@ function reorderFiles(files: AdminAssetFile[]): void {
             </div>
             <div class="mt-4 flex justify-end"><Button type="button" :disabled="!pendingFilesAreValid || uploadForm.processing" @click="uploadFiles">Upload {{ pendingFiles.length || '' }} File{{ pendingFiles.length === 1 ? '' : 's' }}</Button></div>
         </FormSection>
+        </AdminSectionNavigator>
     </div>
 </template>
