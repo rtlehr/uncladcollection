@@ -17,6 +17,9 @@ Route::get('/assets/{asset:slug}', [AssetBrowseController::class, 'show'])->name
 Route::get('/assets/{asset}/preview/{assetFile}', [AssetBrowseController::class, 'preview'])
     ->middleware('throttle:120,1')
     ->name('assets.preview');
+Route::get('/assets/{asset}/marketplace-preview', [AssetBrowseController::class, 'marketplacePreview'])
+    ->middleware('throttle:120,1')
+    ->name('assets.marketplace-preview');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/images/{image}/download', [DownloadController::class, 'download'])

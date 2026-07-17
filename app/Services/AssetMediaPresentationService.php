@@ -12,6 +12,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AssetMediaPresentationService
 {
+    public function __construct(
+        private readonly AssetWatermarkPreviewService $watermarks,
+    ) {}
+
     /** @var array<string, string> */
     private const PREVIEW_KINDS = [
         'jpg' => 'image',
@@ -84,13 +88,26 @@ class AssetMediaPresentationService
 
     public function url(Asset $asset, AssetFile $file, bool $admin = false): string
     {
-        if ($file->publicUrl()) {
+        if ($admin && $file->publicUrl()) {
             return $file->publicUrl();
         }
 
         return $admin
             ? route('admin.assets.files.preview', [$asset, $file])
-            : route('assets.preview', [$asset, $file]);
+            : route('assets.preview', [
+                'asset' => $asset,
+                'assetFile' => $file,
+                'v' => $this->watermarks->version(),
+            ]);
+    }
+
+    public function publicResponse(Asset $asset, AssetFile $file): BinaryFileResponse|StreamedResponse|HttpResponse
+    {
+        if ($this->watermarks->supports($file)) {
+            return $this->watermarks->assetFileResponse($asset, $file);
+        }
+
+        return $this->response($file);
     }
 
     public function response(AssetFile $file): BinaryFileResponse|StreamedResponse|HttpResponse

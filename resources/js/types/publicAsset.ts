@@ -38,6 +38,7 @@ export interface PublicAsset {
     favorites_count: number;
     published_at: string | null;
     collection: { id: number; name: string; slug: string } | null;
+    presentation_url: string | null;
     preview: PublicAssetFile | null;
     poster: PublicAssetFile | null;
     files: PublicAssetFile[];

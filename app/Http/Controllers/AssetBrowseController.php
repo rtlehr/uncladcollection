@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
+use App\Services\AssetWatermarkPreviewService;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -105,6 +106,7 @@ class AssetBrowseController extends Controller
                     'name' => $asset->collection->name,
                     'slug' => $asset->collection->slug,
                 ] : null,
+                'presentation_url' => app(AssetPresentationService::class)->marketplaceUrl($asset),
                 'preview' => $preview,
                 'poster' => collect($gallery)->firstWhere('id', $asset->poster_file_id),
                 'files' => $gallery,
@@ -175,6 +177,16 @@ class AssetBrowseController extends Controller
         abort_unless($assetFile->asset_id === $asset->id && $assetFile->is_active, 404);
         abort_unless($asset->is_active && $asset->status->value === 'published', 404);
 
-        return $presentation->response($assetFile);
+        return $presentation->publicResponse($asset, $assetFile);
+    }
+
+    public function marketplacePreview(
+        Asset $asset,
+        AssetWatermarkPreviewService $watermarks,
+    ): BinaryFileResponse {
+        abort_unless($asset->is_active && $asset->status->value === 'published', 404);
+
+        return $watermarks->marketplaceResponse($asset);
     }
 }
+

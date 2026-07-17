@@ -10,6 +10,10 @@ use InvalidArgumentException;
 
 class AssetPresentationService
 {
+    public function __construct(
+        private readonly AssetWatermarkPreviewService $watermarks,
+    ) {}
+
     public function saveMarketplace(
         Asset $asset,
         UploadedFile $image,
@@ -84,7 +88,7 @@ class AssetPresentationService
         }
     }
 
-    public function marketplaceUrl(Asset $asset): ?string
+    public function marketplaceUrl(Asset $asset, bool $watermarked = false): ?string
     {
         $path = data_get($asset->presentation_images, 'marketplace.path');
         $disk = data_get($asset->presentation_images, 'marketplace.disk', 'public');
@@ -93,6 +97,8 @@ class AssetPresentationService
             return null;
         }
 
-        return Storage::disk($disk)->url($path);
+        return $watermarked
+            ? $this->watermarks->marketplaceRoute($asset)
+            : Storage::disk($disk)->url($path);
     }
 }

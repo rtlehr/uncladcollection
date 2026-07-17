@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowUpRight, Heart, Images, Play } from '@lucide/vue';
+import { ArrowUpRight, Heart, Play } from '@lucide/vue';
 import { computed, ref } from 'vue';
 
 import AssetFormatBadges from '@/components/Assets/Public/AssetFormatBadges.vue';
 import MarketplaceMediaTypeBadge from '@/components/Marketplace/MarketplaceMediaTypeBadge.vue';
 import MarketplacePrice from '@/components/Marketplace/MarketplacePrice.vue';
-import PerformanceImage from '@/components/Public/PerformanceImage.vue';
+import PresentationMedia from '@/components/Marketplace/PresentationMedia.vue';
 import type { GalleryAsset } from '@/types/gallery';
 
 const props = withDefaults(defineProps<{
@@ -58,34 +58,29 @@ function toggleFavorite(): void {
 </script>
 
 <template>
-    <article class="group overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-stone-300 hover:shadow-xl focus-within:ring-2 focus-within:ring-[var(--brand-accent)] focus-within:ring-offset-2 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700">
+    <article class="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-stone-200/90 bg-white shadow-[0_10px_30px_-24px_rgba(28,25,23,0.45)] transition duration-300 hover:-translate-y-1.5 hover:border-stone-300 hover:shadow-[0_24px_55px_-30px_rgba(28,25,23,0.55)] focus-within:ring-2 focus-within:ring-[var(--brand-accent)] focus-within:ring-offset-2 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700">
         <div class="relative overflow-hidden bg-stone-200 dark:bg-stone-800">
             <Link :href="asset.href" class="block focus:outline-none" prefetch="hover" :aria-label="`View ${asset.title}`">
-                <PerformanceImage
-                    v-if="asset.preview_url"
+                <PresentationMedia
                     :src="asset.preview_url"
                     :alt="asset.title"
                     loading="lazy"
                     fetchpriority="low"
                     sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 520px) 50vw, 100vw"
-                    wrapper-class="aspect-[4/3]"
-                    image-class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+                    aspect-class="aspect-[4/3]"
+                    image-class="transition duration-500 ease-out group-hover:scale-[1.045]"
                 />
 
-                <div v-else class="flex aspect-[4/3] items-center justify-center" role="img" :aria-label="`${asset.title}: preview unavailable`">
-                    <Images class="h-10 w-10 text-stone-400" />
-                </div>
-
-                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-black/15 opacity-75 transition duration-300 group-hover:opacity-95" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-black/20 opacity-70 transition duration-300 group-hover:opacity-90" />
 
                 <div v-if="hasVideo" class="absolute inset-0 flex items-center justify-center">
-                    <span class="flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-black/40 text-white shadow-xl backdrop-blur transition duration-300 group-hover:scale-110 group-hover:bg-black/60">
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-black/35 text-white shadow-xl backdrop-blur transition duration-300 group-hover:scale-110 group-hover:bg-black/60">
                         <Play class="ml-0.5 h-6 w-6 fill-current" aria-hidden="true" />
                     </span>
                 </div>
 
-                <div class="absolute inset-x-0 bottom-0 translate-y-2 p-4 text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold">
+                <div class="absolute inset-x-0 bottom-0 flex translate-y-2 items-end justify-between gap-3 p-4 text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em]">
                         View asset
                         <ArrowUpRight class="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
@@ -95,7 +90,7 @@ function toggleFavorite(): void {
             <button
                 v-if="asset.is_favoritable"
                 type="button"
-                class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
+                class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
                 :aria-label="favoriteState ? `Remove ${asset.title} from favorites` : `Add ${asset.title} to favorites`"
                 :aria-pressed="favoriteState"
                 :disabled="favoriteProcessing"
@@ -121,30 +116,35 @@ function toggleFavorite(): void {
             </div>
         </div>
 
-        <div class="p-5">
-            <div v-if="showCollection && asset.collection" class="mb-2 truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-accent)]">
+        <div class="flex flex-1 flex-col p-5 sm:p-5">
+            <div v-if="showCollection && asset.collection" class="mb-2 truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)]">
                 {{ asset.collection.name }}
             </div>
 
-            <Link :href="asset.href" prefetch="hover" class="block line-clamp-2 text-lg font-semibold leading-snug transition hover:text-[var(--brand-accent)] focus-visible:outline-none focus-visible:underline">
+            <Link :href="asset.href" prefetch="hover" class="block line-clamp-2 text-lg font-semibold leading-snug tracking-[-0.015em] text-stone-950 transition hover:text-[var(--brand-accent)] focus-visible:outline-none focus-visible:underline dark:text-white">
                 {{ asset.title }}
             </Link>
 
-            <div class="mt-3 flex items-end justify-between gap-4">
-                <p class="min-w-0 truncate text-sm text-stone-500 dark:text-stone-400">
-                    {{ asset.photographer ? `By ${asset.photographer}` : 'Unclad Collection' }}
-                </p>
+            <p class="mt-2 min-w-0 truncate text-sm text-stone-500 dark:text-stone-400">
+                {{ asset.photographer ? `By ${asset.photographer}` : 'Unclad Collection' }}
+            </p>
 
-                <MarketplacePrice :price-cents="asset.starting_price_cents" :currency="asset.currency" compact />
-            </div>
+            <div class="mt-auto pt-5">
+                <div class="flex items-end justify-between gap-4 border-t border-stone-100 pt-4 dark:border-stone-800">
+                    <div class="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400">
+                        <span>{{ asset.views_count.toLocaleString() }} views</span>
+                        <span class="inline-flex items-center gap-1.5">
+                            <Heart class="h-3.5 w-3.5" aria-hidden="true" />
+                            {{ favoriteCount.toLocaleString() }}
+                            <span class="sr-only">favorites</span>
+                        </span>
+                    </div>
 
-            <div class="mt-4 flex items-center justify-between border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
-                <span>{{ asset.views_count.toLocaleString() }} views</span>
-                <span class="inline-flex items-center gap-1.5">
-                    <Heart class="h-3.5 w-3.5" aria-hidden="true" />
-                    {{ favoriteCount.toLocaleString() }}
-                    <span class="sr-only">favorites</span>
-                </span>
+                    <div class="text-right">
+                        <span class="block text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">From</span>
+                        <MarketplacePrice :price-cents="asset.starting_price_cents" :currency="asset.currency" compact />
+                    </div>
+                </div>
             </div>
         </div>
     </article>

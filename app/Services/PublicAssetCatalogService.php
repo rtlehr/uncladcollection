@@ -168,7 +168,7 @@ class PublicAssetCatalogService
             'preview_url' => app(AssetPresentationService::class)
                 ->marketplaceUrl($asset)
                 ?? ($preview
-                    ? ($preview->publicUrl() ?? route('assets.preview', [$asset, $preview]))
+                    ? app(AssetMediaPresentationService::class)->url($asset, $preview)
                     : null),
             'asset_type' => $asset->asset_type->value,
             'asset_type_label' => $asset->asset_type->label(),

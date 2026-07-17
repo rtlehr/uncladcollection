@@ -2,15 +2,14 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
-import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
+import AdminAssetWorkspaceHeader from '@/components/admin/assets/AdminAssetWorkspaceHeader.vue';
 import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
 import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
@@ -189,14 +188,54 @@ function viewPublicPage(): void {
     );
 }
 
-const adminSections = [
-    { id: 'asset-overview', title: 'Overview', description: 'Asset health and core details.', errorKeys: ['title', 'photographer', 'description', 'asset_type', 'status'] },
-    { id: 'asset-presentation', title: 'Presentation', description: 'Marketplace image and public preview.', errorKeys: ['marketplace_image'] },
-    { id: 'asset-files', title: 'Files', description: 'Preview, reorder, replace, and upload files.', errorKeys: ['files'] },
-    { id: 'asset-relationships', title: 'Relationships', description: 'Connect source and derived files.', errorKeys: ['relationships'] },
-    { id: 'asset-configuration', title: 'Configuration', description: 'Customer-selectable options.', errorKeys: ['configurations'] },
-    { id: 'asset-offerings', title: 'License Offerings', description: 'Pricing, licenses, and included files.', errorKeys: ['offerings'] },
-];
+const adminSections = computed(() => [
+    {
+        id: 'asset-overview',
+        title: 'Overview',
+        description: 'Asset health and core details.',
+        errorKeys: ['title', 'photographer', 'description', 'asset_type', 'status'],
+        dirty: form.isDirty,
+    },
+    {
+        id: 'asset-presentation',
+        title: 'Presentation',
+        description: 'Marketplace image and public preview.',
+        errorKeys: ['marketplace_image'],
+        dirty: presentationForm.isDirty || Boolean(presentationForm.marketplace_image),
+    },
+    {
+        id: 'asset-files',
+        title: 'Files',
+        description: 'Preview, reorder, replace, and upload files.',
+        errorKeys: ['files'],
+        badge: props.assetRecord.active_files_count,
+        dirty: uploadForm.isDirty || pendingFiles.value.length > 0,
+    },
+    {
+        id: 'asset-relationships',
+        title: 'Relationships',
+        description: 'Connect source and derived files.',
+        errorKeys: ['relationships'],
+        badge: relationshipForm.relationships.length,
+        dirty: relationshipForm.isDirty,
+    },
+    {
+        id: 'asset-configuration',
+        title: 'Configuration',
+        description: 'Customer-selectable options.',
+        errorKeys: ['configurations'],
+        badge: configurationForm.configurations.length,
+        dirty: configurationForm.isDirty,
+    },
+    {
+        id: 'asset-offerings',
+        title: 'License Offerings',
+        description: 'Pricing, licenses, and included files.',
+        errorKeys: ['offerings'],
+        badge: offeringForm.offerings.length,
+        dirty: offeringForm.isDirty,
+    },
+]);
 
 function updateAsset() {
     form.transform((data) => ({ ...data, collection_id: data.collection_id === '' ? null : data.collection_id }))
@@ -293,29 +332,11 @@ function reorderFiles(files: AdminAssetFile[]): void {
 <template>
     <Head :title="`Edit ${assetRecord.title}`" />
     <div class="space-y-8 p-6">
-        <PageHeader
-            :title="`Edit ${assetRecord.title}`"
-            description="Manage asset details, associated files, previews, and revisions."
-        >
-            <div class="flex flex-wrap items-center gap-3">
-                <Button
-                    type="button"
-                    variant="outline"
-                    :disabled="!canViewPublicPage"
-                    :title="canViewPublicPage ? 'Open the public asset page in a new tab' : 'Publish and activate this asset before viewing its public page'"
-                    @click="viewPublicPage"
-                >
-                    View Public Page
-                </Button>
-
-                <span
-                    v-if="!canViewPublicPage"
-                    class="text-sm text-muted-foreground"
-                >
-                    Publish and activate this asset to enable the public page.
-                </span>
-            </div>
-        </PageHeader>
+        <AdminAssetWorkspaceHeader
+            :asset="assetRecord"
+            :can-view-public-page="canViewPublicPage"
+            @view-public-page="viewPublicPage"
+        />
 
         <AdminSectionNavigator :sections="adminSections" :errors="{ ...form.errors, ...presentationForm.errors, ...relationshipForm.errors, ...configurationForm.errors, ...offeringForm.errors, ...uploadForm.errors }" label="Asset sections" storage-key="admin.assets.edit.workspace" v-slot="{ activeSection }">
         <div v-show="activeSection === 'asset-overview'" id="asset-overview" class="space-y-6">

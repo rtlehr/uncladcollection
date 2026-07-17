@@ -8,6 +8,7 @@ export type AdminSectionDefinition = {
     description?: string;
     errorKeys?: string[];
     badge?: string | number | null;
+    dirty?: boolean;
 };
 
 const props = withDefaults(
@@ -109,7 +110,7 @@ watch(
                     @change="onMobileChange"
                 >
                     <option v-for="section in sectionStates" :key="section.id" :value="section.id">
-                        {{ section.title }}{{ section.badge !== null && section.badge !== undefined ? ` (${section.badge})` : '' }}{{ section.hasError ? ' — needs attention' : '' }}
+                        {{ section.title }}{{ section.badge !== null && section.badge !== undefined ? ` (${section.badge})` : '' }}{{ section.dirty ? ' — unsaved' : '' }}{{ section.hasError ? ' — needs attention' : '' }}
                     </option>
                 </select>
 
@@ -139,7 +140,7 @@ watch(
 
                         <span class="min-w-0 flex-1">
                             <span class="flex items-center justify-between gap-2 text-sm font-medium">
-                                <span>{{ section.title }}</span>
+                                <span class="flex items-center gap-2"><span>{{ section.title }}</span><span v-if="section.dirty" class="h-2 w-2 rounded-full bg-current" title="Unsaved changes" /></span>
                                 <span
                                     v-if="section.badge !== null && section.badge !== undefined"
                                     :class="[
