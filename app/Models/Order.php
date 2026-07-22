@@ -67,6 +67,7 @@ class Order extends Model
     public function items(): HasMany { return $this->hasMany(OrderItem::class); }
     public function licenses(): HasMany { return $this->hasMany(License::class); }
     public function fulfillmentEvents(): HasMany { return $this->hasMany(OrderFulfillmentEvent::class)->orderBy('created_at'); }
+    public function financialTransactions(): HasMany { return $this->hasMany(FinancialTransaction::class)->orderBy('occurred_at'); }
     public function getSubtotalFormattedAttribute(): string { return '$'.number_format($this->subtotal_cents / 100, 2); }
     public function getTotalFormattedAttribute(): string { return '$'.number_format($this->total_cents / 100, 2); }
     public function isPaid(): bool { return $this->status === self::STATUS_PAID; }

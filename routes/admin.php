@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AnalyticsDashboardController;
+use App\Http\Controllers\Admin\FinancialReportController;
 use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -32,6 +33,14 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/analytics', AnalyticsDashboardController::class)
             ->middleware('permission:view_reports')
             ->name('analytics.index');
+
+        Route::get('/analytics/financial', [FinancialReportController::class, 'index'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.financial');
+
+        Route::get('/analytics/financial/export', [FinancialReportController::class, 'export'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.financial.export');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')

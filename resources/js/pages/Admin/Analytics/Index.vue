@@ -38,7 +38,9 @@ const applyFilters = () => router.get('/admin/analytics', filters, { preserveSta
 <template>
     <Head title="Marketplace Intelligence" />
     <div class="space-y-8 p-6">
-        <PageHeader title="Marketplace Intelligence" description="A clear executive view of revenue, customer movement, marketplace health, and content performance." />
+        <PageHeader title="Marketplace Intelligence" description="A clear executive view of revenue, customer movement, marketplace health, and content performance.">
+            <template #actions><Button variant="outline" as-child><Link href="/admin/analytics/financial">Financial reporting</Link></Button></template>
+        </PageHeader>
 
         <form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit.prevent="applyFilters">
             <div class="grid gap-2">
