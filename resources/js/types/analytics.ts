@@ -62,3 +62,16 @@ export type ExecutiveDashboard = {
     marketplace_health: MarketplaceHealth;
     recent_activity: RecentMarketplaceActivity[];
 };
+
+export type CustomerConversionSummary = {
+    buyers: number;
+    new_customers: number;
+    repeat_customers: number;
+    repeat_customer_percent: number;
+    paid_orders: number;
+    revenue_cents: number;
+    average_customer_value_cents: number;
+    orders_per_customer: number;
+    abandoned_cart_lines: number;
+    abandoned_cart_value_cents: number;
+};

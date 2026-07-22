@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
+use App\Http\Controllers\Admin\CustomerConversionReportController;
 use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
@@ -54,6 +55,19 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/analytics/assets/{asset}', [AssetPerformanceReportController::class, 'show'])
             ->middleware('permission:view_reports')
             ->name('analytics.assets.show');
+
+
+        Route::get('/analytics/customers', [CustomerConversionReportController::class, 'index'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.customers.index');
+
+        Route::get('/analytics/customers/export', [CustomerConversionReportController::class, 'export'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.customers.export');
+
+        Route::get('/analytics/customers/{user}', [CustomerConversionReportController::class, 'show'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.customers.show');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')
