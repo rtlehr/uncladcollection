@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AnalyticsDashboardController;
 use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -27,6 +28,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->group(function () {
         Route::get('/', AdminDashboardController::class)
             ->name('dashboard');
+
+        Route::get('/analytics', AnalyticsDashboardController::class)
+            ->middleware('permission:view_reports')
+            ->name('analytics.index');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')

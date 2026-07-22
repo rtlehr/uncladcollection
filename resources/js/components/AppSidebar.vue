@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import {
+    BarChart3,
     BadgeDollarSign,
     BookOpen,
     ClipboardList,
@@ -81,6 +82,14 @@ if (can('view_admin')) {
         title: 'Admin Dashboard',
         href: '/admin',
         icon: LayoutGrid,
+    });
+}
+
+if (can('view_reports')) {
+    adminOverviewItems.push({
+        title: 'Marketplace Intelligence',
+        href: '/admin/analytics',
+        icon: BarChart3,
     });
 }
 
