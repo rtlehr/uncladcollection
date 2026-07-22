@@ -21,6 +21,9 @@ use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
 use App\Http\Controllers\Admin\MarketingCampaignController;
 use App\Http\Controllers\Admin\MarketingCampaignPerformanceReportController;
+use App\Http\Controllers\Admin\AdvertiserController;
+use App\Http\Controllers\Admin\AdPlacementController;
+use App\Http\Controllers\Admin\AdvertisingCampaignController;
 use App\Http\Controllers\Admin\MarketplaceOperationsReportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -123,6 +126,12 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_site_settings')
             ->name('site-settings.update');
 
+
+        Route::resource('advertisers', AdvertiserController::class)->except(['show'])->middleware('permission:manage_advertisers');
+        Route::resource('ad-placements', AdPlacementController::class)->except(['show'])->middleware('permission:manage_ad_placements');
+        Route::resource('ad-campaigns', AdvertisingCampaignController::class)->middleware('permission:manage_ad_campaigns');
+        Route::post('/ad-campaigns/{adCampaign}/submit', [AdvertisingCampaignController::class, 'submit'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.submit');
+        Route::post('/ad-campaigns/{adCampaign}/decision', [AdvertisingCampaignController::class, 'approve'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.decision');
 
         Route::resource('marketing-campaigns', MarketingCampaignController::class)
             ->except(['show'])

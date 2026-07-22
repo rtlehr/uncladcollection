@@ -116,6 +116,14 @@ class PermissionSeeder extends Seeder
                 'description' => 'Manage customer orders.',
             ],
 
+            // Sponsorship & Advertising
+            ['group_name'=>'Advertising','name'=>'view_advertising','label'=>'View Advertising','description'=>'View sponsorship and advertising administration.'],
+            ['group_name'=>'Advertising','name'=>'manage_advertisers','label'=>'Manage Advertisers','description'=>'Manage advertiser organizations and contacts.'],
+            ['group_name'=>'Advertising','name'=>'manage_ad_campaigns','label'=>'Manage Ad Campaigns','description'=>'Create and manage paid advertising campaigns.'],
+            ['group_name'=>'Advertising','name'=>'approve_ad_campaigns','label'=>'Approve Ad Campaigns','description'=>'Approve or reject advertising campaigns and creatives.'],
+            ['group_name'=>'Advertising','name'=>'manage_ad_placements','label'=>'Manage Ad Placements','description'=>'Manage advertising inventory and placement rules.'],
+            ['group_name'=>'Advertising','name'=>'view_advertising_reports','label'=>'View Advertising Reports','description'=>'View sponsorship and advertising performance reports.'],
+
             // Reports
             [
                 'group_name' => 'Reports',

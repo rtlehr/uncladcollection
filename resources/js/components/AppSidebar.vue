@@ -4,6 +4,8 @@ import {
     BarChart3,
     BadgeDollarSign,
     BookOpen,
+    BriefcaseBusiness,
+    RectangleHorizontal,
     ClipboardList,
     Download,
     FolderGit2,
@@ -199,6 +201,30 @@ if (can('manage_license_types')) {
  * Marketing and site presentation
  */
 const adminMarketingItems: NavItem[] = [];
+
+if (can('manage_advertisers')) {
+    adminMarketingItems.push({
+        title: 'Advertisers',
+        href: '/admin/advertisers',
+        icon: BriefcaseBusiness,
+    });
+}
+
+if (can('manage_ad_campaigns')) {
+    adminMarketingItems.push({
+        title: 'Ad Campaigns',
+        href: '/admin/ad-campaigns',
+        icon: Megaphone,
+    });
+}
+
+if (can('manage_ad_placements')) {
+    adminMarketingItems.push({
+        title: 'Ad Placements',
+        href: '/admin/ad-placements',
+        icon: RectangleHorizontal,
+    });
+}
 
 if (can('manage_site_settings')) {
     adminMarketingItems.push({

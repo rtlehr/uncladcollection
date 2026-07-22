@@ -1,0 +1,4 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Factories\HasFactory; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+class AdPlacement extends Model { use HasFactory; protected $fillable=['uuid','name','code','location','format','width','height','max_active_campaigns','base_price_cents','pricing_model','eligibility_rules','is_active','description']; protected $casts=['eligibility_rules'=>'array','is_active'=>'boolean','base_price_cents'=>'integer']; public function campaigns(): BelongsToMany{return $this->belongsToMany(AdvertisingCampaign::class,'advertising_campaign_placement')->withPivot(['priority','allocated_budget_cents'])->withTimestamps();} }
