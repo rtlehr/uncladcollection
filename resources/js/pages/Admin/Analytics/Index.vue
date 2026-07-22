@@ -39,7 +39,7 @@ const applyFilters = () => router.get('/admin/analytics', filters, { preserveSta
     <Head title="Marketplace Intelligence" />
     <div class="space-y-8 p-6">
         <PageHeader title="Marketplace Intelligence" description="A clear executive view of revenue, customer movement, marketplace health, and content performance.">
-            <template #actions><div class="flex flex-wrap gap-2"><Button variant="outline" as-child><Link href="/admin/analytics/assets">Asset performance</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/customers">Customer analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/financial">Financial reporting</Link></Button></div></template>
+            <template #actions><div class="flex flex-wrap gap-2"><Button variant="outline" as-child><Link href="/admin/analytics/assets">Asset performance</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/customers">Customer analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/blog">Content analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/financial">Financial reporting</Link></Button></div></template>
         </PageHeader>
 
         <form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit.prevent="applyFilters">

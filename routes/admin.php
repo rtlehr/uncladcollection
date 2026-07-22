@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AnalyticsDashboardController;
 use App\Http\Controllers\Admin\AssetPerformanceReportController;
+use App\Http\Controllers\Admin\BlogContentPerformanceReportController;
 use App\Http\Controllers\Admin\FinancialReportController;
 use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
@@ -68,6 +69,19 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/analytics/customers/{user}', [CustomerConversionReportController::class, 'show'])
             ->middleware('permission:view_reports')
             ->name('analytics.customers.show');
+
+
+        Route::get('/analytics/blog', [BlogContentPerformanceReportController::class, 'index'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.blog.index');
+
+        Route::get('/analytics/blog/export', [BlogContentPerformanceReportController::class, 'export'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.blog.export');
+
+        Route::get('/analytics/blog/{blogPost}', [BlogContentPerformanceReportController::class, 'show'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.blog.show');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')
