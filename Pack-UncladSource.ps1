@@ -56,7 +56,7 @@ $ExcludedFileNames = @(
     'npm-debug.log',
     'yarn-error.log',
     'Thumbs.db',
-    '.DS_Store'.
+    '.DS_Store',
     'phpinfo.php'
 )
 
@@ -101,6 +101,10 @@ function Test-IsExcluded {
     }
 
     if ($ExcludedFileNames -contains $File.Name) {
+        return $true
+    }
+
+    if ($RelativePath.Equals('public/phpinfo.php', [System.StringComparison]::OrdinalIgnoreCase)) {
         return $true
     }
 

@@ -2,11 +2,15 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarketingCampaignTrackingController;
+use App\Http\Controllers\PublicAdController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/marketing-campaigns/{marketingCampaign}/impression', [MarketingCampaignTrackingController::class, 'impression'])->name('marketing-campaigns.impression');
 Route::post('/marketing-campaigns/{marketingCampaign}/click', [MarketingCampaignTrackingController::class, 'click'])->name('marketing-campaigns.click');
+Route::get('/ads/placements/{placement}', [PublicAdController::class, 'show'])->name('ads.placements.show');
+Route::post('/ads/creatives/{creative}/impression', [PublicAdController::class, 'impression'])->name('ads.creatives.impression');
+Route::post('/ads/creatives/{creative}/click', [PublicAdController::class, 'click'])->name('ads.creatives.click');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')
@@ -22,3 +26,5 @@ require __DIR__.'/user-blog.php';
 require __DIR__.'/showcase.php';
 require __DIR__.'/public-demo.php';
 require __DIR__.'/seo.php';
+
+require __DIR__.'/advertiser.php';

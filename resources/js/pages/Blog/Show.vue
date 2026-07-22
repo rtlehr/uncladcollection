@@ -26,6 +26,7 @@ import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import PublicAuthorCard from '@/components/Blog/PublicAuthorCard.vue';
 import ReadingProgress from '@/components/Blog/ReadingProgress.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
@@ -545,6 +546,8 @@ watch(
                             class="blog-content prose prose-lg prose-stone max-w-none prose-headings:scroll-mt-24 prose-headings:tracking-tight prose-h2:mt-14 prose-h2:text-3xl prose-h3:mt-10 prose-h3:text-2xl prose-p:leading-8 prose-a:text-[var(--brand-accent)] prose-blockquote:border-[var(--brand-accent)] dark:prose-invert"
                             v-html="enhancedContent"
                         />
+
+                        <PublicAdPlacement placement="blog-article-after-content" class="mt-12" />
 
                         <div class="mt-12 border-t border-stone-200 pt-8 dark:border-stone-800">
                             <ArticleShareActions :title="blogPost.title" />

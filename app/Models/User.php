@@ -70,6 +70,18 @@ class User extends Authenticatable implements PasskeyUser
     /**
      * Permissions assigned directly to this user.
      */
+    public function advertiserMemberships(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AdvertiserMembership::class);
+    }
+
+    public function advertisers(): BelongsToMany
+    {
+        return $this->belongsToMany(Advertiser::class, 'advertiser_memberships')
+            ->withPivot(['role', 'is_primary', 'is_active', 'invited_at', 'accepted_at'])
+            ->withTimestamps();
+    }
+
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);

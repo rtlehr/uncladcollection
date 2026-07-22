@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import {
     BarChart3,
     BadgeDollarSign,
     BookOpen,
     BriefcaseBusiness,
+    Building2,
     RectangleHorizontal,
     ClipboardList,
     Download,
@@ -73,6 +74,16 @@ const mainNavItems: NavItem[] = [
         icon: BadgeDollarSign,
     },
 ];
+
+const authUser = (usePage().props as any).auth?.user;
+
+if (authUser?.has_advertiser_portal) {
+    mainNavItems.push({
+        title: 'Advertiser Portal',
+        href: '/advertiser',
+        icon: Building2,
+    });
+}
 
 /**
  * Administration overview
@@ -223,6 +234,28 @@ if (can('manage_ad_placements')) {
         title: 'Ad Placements',
         href: '/admin/ad-placements',
         icon: RectangleHorizontal,
+    });
+}
+
+
+if (can('view_sponsorship_sales')) {
+    adminCommerceItems.push({ title: 'Sponsorship Pipeline', href: '/admin/sponsorship-leads', icon: BriefcaseBusiness });
+}
+if (can('manage_sponsorship_packages')) {
+    adminCommerceItems.push({ title: 'Sponsorship Packages', href: '/admin/sponsorship-packages', icon: ClipboardList });
+}
+if (can('manage_sponsorship_proposals')) {
+    adminCommerceItems.push({ title: 'Sponsorship Proposals', href: '/admin/sponsorship-proposals', icon: Newspaper });
+}
+if (can('manage_ad_inventory')) {
+    adminCommerceItems.push({ title: 'Ad Inventory', href: '/admin/ad-inventory', icon: RectangleHorizontal });
+}
+
+if (can('view_advertising_billing')) {
+    adminMarketingItems.push({
+        title: 'Ad Billing',
+        href: '/admin/advertising-invoices',
+        icon: BadgeDollarSign,
     });
 }
 

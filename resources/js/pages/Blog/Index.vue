@@ -18,6 +18,7 @@ import PublicBlogFilters from '@/components/Blog/PublicBlogFilters.vue';
 import PublicBlogHero from '@/components/Blog/PublicBlogHero.vue';
 import PublicBlogPagination from '@/components/Blog/PublicBlogPagination.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
@@ -201,6 +202,8 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
                     @clear="resetFilters"
                 />
             </div>
+
+            <PublicAdPlacement placement="blog-index-inline" class="mb-10" />
 
             <section v-if="heroPost && activeFilters.length === 0">
                 <PublicArticleCard

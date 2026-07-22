@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'enabled' => \App\Http\Middleware\EnsureUserIsEnabled::class,
+            'advertiser.portal' => \App\Http\Middleware\EnsureAdvertiserPortalAccess::class,
         ]);
 
         $middleware->appendToGroup('web', [

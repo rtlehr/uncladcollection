@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                         'role_names' => $user->roleNames(),
                         'permissions' => $user->allPermissionNames(),
                         'avatar_url' => $user->avatar_url,
+                        'has_advertiser_portal' => $user->advertiserMemberships()->where('is_active', true)->exists(),
                     ]
                     : null,
             ],

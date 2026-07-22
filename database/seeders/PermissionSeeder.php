@@ -123,6 +123,18 @@ class PermissionSeeder extends Seeder
             ['group_name'=>'Advertising','name'=>'approve_ad_campaigns','label'=>'Approve Ad Campaigns','description'=>'Approve or reject advertising campaigns and creatives.'],
             ['group_name'=>'Advertising','name'=>'manage_ad_placements','label'=>'Manage Ad Placements','description'=>'Manage advertising inventory and placement rules.'],
             ['group_name'=>'Advertising','name'=>'view_advertising_reports','label'=>'View Advertising Reports','description'=>'View sponsorship and advertising performance reports.'],
+            ['group_name'=>'Advertising','name'=>'view_advertising_billing','label'=>'View Advertising Billing','description'=>'View advertiser invoices and payment history.'],
+            ['group_name'=>'Advertising','name'=>'manage_advertising_invoices','label'=>'Manage Advertising Invoices','description'=>'Create, issue, edit, and void advertising invoices.'],
+            ['group_name'=>'Advertising','name'=>'record_advertising_payments','label'=>'Record Advertising Payments','description'=>'Record manual and Stripe advertising payments.'],
+            ['group_name'=>'Advertising','name'=>'refund_advertising_payments','label'=>'Refund Advertising Payments','description'=>'Record and reconcile advertising refunds.'],
+
+
+            ['group_name'=>'Sponsorship Sales','name'=>'view_sponsorship_sales','label'=>'View Sponsorship Sales','description'=>'View sponsorship packages, pipeline, proposals, and inventory.'],
+            ['group_name'=>'Sponsorship Sales','name'=>'manage_sponsorship_packages','label'=>'Manage Sponsorship Packages','description'=>'Create and maintain reusable sponsorship offerings.'],
+            ['group_name'=>'Sponsorship Sales','name'=>'manage_sponsorship_leads','label'=>'Manage Sponsorship Leads','description'=>'Manage sponsorship leads and sales activities.'],
+            ['group_name'=>'Sponsorship Sales','name'=>'manage_sponsorship_proposals','label'=>'Manage Sponsorship Proposals','description'=>'Create and manage sponsorship proposals.'],
+            ['group_name'=>'Sponsorship Sales','name'=>'manage_ad_inventory','label'=>'Manage Ad Inventory','description'=>'Review and manage placement availability and reservations.'],
+            ['group_name'=>'Sponsorship Sales','name'=>'convert_sponsorship_proposals','label'=>'Convert Sponsorship Proposals','description'=>'Convert accepted proposals into campaigns and invoices.'],
 
             // Reports
             [

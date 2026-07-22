@@ -11,6 +11,7 @@ import GalleryFilters from '@/components/Gallery/GalleryFilters.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import GalleryHero from '@/components/Gallery/GalleryHero.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
@@ -130,6 +131,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
                 <PublicResultSummary :from="assets.from" :to="assets.to" :total="assets.total" item-label="assets" :filtered="activeFilters.length > 0" />
                 <PublicActiveFilters :items="activeFilters" @remove="removeFilter" @clear="resetFilters" />
             </div>
+            <PublicAdPlacement placement="asset-gallery-inline" class="mb-8" />
             <GalleryGrid v-if="assets.data.length" :assets="assets.data" />
             <GalleryEmpty v-else @reset="resetFilters" />
             <PublicPagination class="mt-10" :pagination="assets" />

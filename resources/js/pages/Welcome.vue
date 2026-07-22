@@ -19,6 +19,7 @@ import {
 } from '@lucide/vue';
 import { computed } from 'vue';
 
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicCTA from '@/components/Public/PublicCTA.vue';
 import PublicHomeHero from '@/components/Public/PublicHomeHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
@@ -136,6 +137,8 @@ function collectionHref(collection: HomeCollection): string {
             :secondary-label="stringSetting(homepage.hero_secondary_button_label, 'Read Stories')"
             :secondary-href="stringSetting(homepage.hero_secondary_button_url, '/blog')"
         />
+
+        <PublicAdPlacement placement="homepage-below-hero" class="mx-auto max-w-[1200px] px-5 py-6 sm:px-8 lg:px-12" />
 
         <section
             v-if="booleanSetting(homepage.show_statistics)"
