@@ -50,7 +50,7 @@ $ExcludedRelativeDirectories = @(
 
 $ExcludedFileNames = @(
     '.env',
-    '.env.testing',
+    '.env-testing',
     '.phpunit.result.cache',
     'auth.json',
     'npm-debug.log',
