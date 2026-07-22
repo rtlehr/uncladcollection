@@ -13,4 +13,7 @@ enum AnalyticsEventName: string
     case BlogPostViewed = 'blog_post_viewed';
     case CampaignViewed = 'campaign_viewed';
     case CampaignClicked = 'campaign_clicked';
+    case SearchPerformed = 'search_performed';
+    case SearchFiltersApplied = 'search_filters_applied';
+    case SearchSuggestionSelected = 'search_suggestion_selected';
 }

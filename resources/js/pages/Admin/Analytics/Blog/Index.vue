@@ -4,7 +4,8 @@ import { BookOpen, Download, Eye, MessageCircle, ShoppingBag, Users } from '@luc
 import { reactive } from 'vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,18 +20,18 @@ const exportHref = () => `/admin/analytics/blog/export?${new URLSearchParams(Obj
 
 <template>
 <Head title="Blog and Content Performance" />
-<div class="space-y-8 p-6">
-<PageHeader title="Blog and Content Performance" description="Measure readership, engagement, and the marketplace activity associated with published content.">
+<div class="analytics-report-page space-y-8 p-6">
+<AnalyticsHeader title="Blog and Content Performance" description="Measure readership, engagement, and the marketplace activity associated with published content.">
 <template #actions><Button variant="outline" as-child><a :href="exportHref()"><Download class="mr-2 h-4 w-4"/>Export CSV</a></Button></template>
-</PageHeader>
-<form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-6 lg:items-end" @submit.prevent="apply">
+</AnalyticsHeader>
+<AnalyticsFilterPanel content-class="grid gap-4 lg:grid-cols-6 lg:items-end" @submit="apply">
 <div class="grid gap-2"><Label>Period</Label><select v-model="filters.period" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="7_days">Last 7 days</option><option value="30_days">Last 30 days</option><option value="90_days">Last 90 days</option><option value="year_to_date">Year to date</option><option value="custom">Custom</option></select></div>
 <div class="grid gap-2"><Label>Search</Label><Input v-model="filters.search" placeholder="Post title or excerpt"/></div>
 <div class="grid gap-2"><Label>Author</Label><select v-model="filters.author_id" class="h-10 rounded-md border bg-background px-3 text-sm"><option :value="null">All authors</option><option v-for="a in authors" :key="a.id" :value="a.id">{{ a.name }}</option></select></div>
 <div class="grid gap-2"><Label>Category</Label><select v-model="filters.category_id" class="h-10 rounded-md border bg-background px-3 text-sm"><option :value="null">All categories</option><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
 <div class="grid gap-2"><Label>Start date</Label><Input v-model="filters.start_date" type="date" :disabled="filters.period !== 'custom'"/></div>
 <div class="grid gap-2"><Label>End date</Label><Input v-model="filters.end_date" type="date" :disabled="filters.period !== 'custom'"/></div><Button type="submit">Apply</Button>
-</form>
+</AnalyticsFilterPanel>
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 <MetricCard label="Published posts" :value="report.summary.published_posts.toLocaleString()"><template #icon><BookOpen class="h-5 w-5"/></template></MetricCard>
 <MetricCard label="Post views" :value="report.summary.views.toLocaleString()"><template #icon><Eye class="h-5 w-5"/></template></MetricCard>

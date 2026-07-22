@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\MarketingCampaignController;
 use App\Http\Controllers\Admin\MarketingCampaignPerformanceReportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SearchDiscoveryReportController;
+use App\Http\Controllers\Admin\DownloadLicenseUtilizationReportController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\UserController;
@@ -90,6 +92,20 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:view_reports')->name('analytics.campaigns.export');
         Route::get('/analytics/campaigns/{marketingCampaign}', [MarketingCampaignPerformanceReportController::class, 'show'])
             ->middleware('permission:view_reports')->name('analytics.campaigns.show');
+
+        Route::get('/analytics/search', [SearchDiscoveryReportController::class, 'index'])
+            ->middleware('permission:view_reports')->name('analytics.search.index');
+        Route::get('/analytics/search/export', [SearchDiscoveryReportController::class, 'export'])
+            ->middleware('permission:view_reports')->name('analytics.search.export');
+        Route::get('/analytics/search/{term}', [SearchDiscoveryReportController::class, 'show'])
+            ->middleware('permission:view_reports')->where('term', '.*')->name('analytics.search.show');
+
+        Route::get('/analytics/downloads', [DownloadLicenseUtilizationReportController::class, 'index'])
+            ->middleware('permission:view_reports')->name('analytics.downloads.index');
+        Route::get('/analytics/downloads/export', [DownloadLicenseUtilizationReportController::class, 'export'])
+            ->middleware('permission:view_reports')->name('analytics.downloads.export');
+        Route::get('/analytics/downloads/{license}', [DownloadLicenseUtilizationReportController::class, 'show'])
+            ->middleware('permission:view_reports')->name('analytics.downloads.show');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')

@@ -5,7 +5,8 @@ import { computed, reactive } from 'vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import TrendChart from '@/components/Analytics/TrendChart.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,12 +38,12 @@ const applyFilters = () => router.get('/admin/analytics', filters, { preserveSta
 
 <template>
     <Head title="Marketplace Intelligence" />
-    <div class="space-y-8 p-6">
-        <PageHeader title="Marketplace Intelligence" description="A clear executive view of revenue, customer movement, marketplace health, and content performance.">
-            <template #actions><div class="flex flex-wrap gap-2"><Button variant="outline" as-child><Link href="/admin/analytics/assets">Asset performance</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/customers">Customer analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/blog">Content analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/campaigns">Campaign analytics</Link></Button><Button variant="outline" as-child><Link href="/admin/analytics/financial">Financial reporting</Link></Button></div></template>
-        </PageHeader>
+    <div class="analytics-report-page space-y-8 p-6">
+        <AnalyticsHeader title="Marketplace Intelligence" description="A clear executive view of revenue, customer movement, marketplace health, and content performance.">
+            
+        </AnalyticsHeader>
 
-        <form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit.prevent="applyFilters">
+        <AnalyticsFilterPanel content-class="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit="applyFilters">
             <div class="grid gap-2">
                 <Label for="period">Reporting period</Label>
                 <select id="period" v-model="filters.period" class="h-10 rounded-md border bg-background px-3 text-sm">
@@ -52,7 +53,7 @@ const applyFilters = () => router.get('/admin/analytics', filters, { preserveSta
             <div class="grid gap-2"><Label for="start_date">Start date</Label><Input id="start_date" v-model="filters.start_date" type="date" :disabled="filters.period !== 'custom'" /></div>
             <div class="grid gap-2"><Label for="end_date">End date</Label><Input id="end_date" v-model="filters.end_date" type="date" :disabled="filters.period !== 'custom'" /></div>
             <Button type="submit">Apply period</Button>
-        </form>
+        </AnalyticsFilterPanel>
 
         <section class="grid gap-4 xl:grid-cols-4">
             <MetricCard label="Revenue" :value="money(metrics.revenue_cents.value)" :trend="trendText('revenue_cents')" :trend-tone="trendTone('revenue_cents')" emphasized size="lg" class="xl:col-span-2"><template #icon><BadgeDollarSign class="h-6 w-6" /></template></MetricCard>

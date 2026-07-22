@@ -4,7 +4,8 @@ import { Download, Eye, Images, MousePointerClick, ShoppingCart, TrendingUp } fr
 import { computed, reactive } from 'vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,17 +21,17 @@ const exportHref=computed(()=>`/admin/analytics/assets/export?${new URLSearchPar
 </script>
 <template>
 <Head title="Asset Performance Analytics" />
-<div class="space-y-8 p-6">
-<PageHeader title="Asset Performance Analytics" description="See which assets attract attention, convert customers, generate revenue, and drive downloads.">
-<template #actions><Button variant="outline" as-child><Link href="/admin/analytics">Executive dashboard</Link></Button><Button as-child><a :href="exportHref"><Download class="mr-2 h-4 w-4"/>Export CSV</a></Button></template>
-</PageHeader>
-<form class="grid gap-4 rounded-xl border bg-background p-4 xl:grid-cols-[1.2fr_.8fr_.8fr_.8fr_.8fr_auto] xl:items-end" @submit.prevent="applyFilters">
+<div class="analytics-report-page space-y-8 p-6">
+<AnalyticsHeader title="Asset Performance Analytics" description="See which assets attract attention, convert customers, generate revenue, and drive downloads.">
+<template #actions><Button as-child><a :href="exportHref"><Download class="mr-2 h-4 w-4"/>Export CSV</a></Button></template>
+</AnalyticsHeader>
+<AnalyticsFilterPanel content-class="grid gap-4 xl:grid-cols-[1.2fr_.8fr_.8fr_.8fr_.8fr_auto] xl:items-end" @submit="applyFilters">
 <div class="grid gap-2"><Label>Search</Label><Input v-model="filters.search" placeholder="Asset title or slug" /></div>
 <div class="grid gap-2"><Label>Media type</Label><select v-model="filters.asset_type" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="all">All types</option><option value="image">Image</option><option value="video">Video</option><option value="vector">Vector</option><option value="document">Document</option><option value="archive">Archive</option><option value="other">Other</option></select></div>
 <div class="grid gap-2"><Label>Collection</Label><select v-model="filters.collection_id" class="h-10 rounded-md border bg-background px-3 text-sm"><option :value="null">All collections</option><option v-for="collection in collections" :key="collection.id" :value="collection.id">{{ collection.name }}</option></select></div>
 <div class="grid gap-2"><Label>Period</Label><select v-model="filters.period" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="7_days">Last 7 days</option><option value="30_days">Last 30 days</option><option value="90_days">Last 90 days</option><option value="year_to_date">Year to date</option><option value="custom">Custom</option></select></div>
 <div class="grid gap-2"><Label>Start</Label><Input v-model="filters.start_date" type="date" :disabled="filters.period !== 'custom'" /></div><div class="grid gap-2"><Label>End</Label><Input v-model="filters.end_date" type="date" :disabled="filters.period !== 'custom'" /></div><Button type="submit">Apply</Button>
-</form>
+</AnalyticsFilterPanel>
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Asset views" :value="report.summary.views.toLocaleString()"><template #icon><Eye class="h-5 w-5"/></template></MetricCard><MetricCard label="Units sold" :value="report.summary.units_sold.toLocaleString()"><template #icon><ShoppingCart class="h-5 w-5"/></template></MetricCard><MetricCard label="Asset revenue" :value="money(report.summary.revenue_cents)" emphasized><template #icon><TrendingUp class="h-5 w-5"/></template></MetricCard><MetricCard label="Downloads" :value="report.summary.downloads.toLocaleString()"><template #icon><Download class="h-5 w-5"/></template></MetricCard></section>
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Assets measured" :value="report.summary.assets_measured.toLocaleString()"><template #icon><Images class="h-5 w-5"/></template></MetricCard><MetricCard label="Cart additions" :value="report.summary.cart_additions.toLocaleString()"><template #icon><MousePointerClick class="h-5 w-5"/></template></MetricCard><MetricCard label="View to cart" :value="`${report.summary.view_to_cart_percent}%`"/><MetricCard label="View to purchase" :value="`${report.summary.view_to_purchase_percent}%`"/></section>
 <div class="grid gap-6 xl:grid-cols-2"><ShowSection title="Performance by media type"><DistributionBars :items="report.media_types" /></ShowSection><ShowSection title="Performance by collection"><DistributionBars :items="report.collections" /></ShowSection></div>

@@ -42,7 +42,7 @@ class MarketingCampaignPerformanceReportController extends Controller
             fputcsv($out, ['Campaign ID', 'Campaign', 'Media type', 'Status', 'Impressions', 'Unique viewers', 'Clicks', 'Primary clicks', 'Secondary clicks', 'CTR percent', 'Influenced buyers', 'Influenced orders', 'Influenced revenue cents', 'Revenue per viewer cents']);
             foreach ($rows as $row) fputcsv($out, $row);
             fclose($out);
-        }, 'marketing-campaign-performance.csv', ['Content-Type' => 'text/csv']);
+        }, 'marketing-campaign-performance-'.$period->start->toDateString().'-'.$period->end->toDateString().'.csv', ['Content-Type' => 'text/csv']);
     }
 
     private function validated(Request $request): array

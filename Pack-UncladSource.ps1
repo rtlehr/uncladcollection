@@ -44,7 +44,8 @@ $ExcludedRelativeDirectories = @(
     'storage/framework/sessions',
     'storage/framework/testing',
     'storage/framework/views',
-    'storage/logs'
+    'storage/logs',
+    'docs'
 )
 
 $ExcludedFileNames = @(
@@ -55,7 +56,8 @@ $ExcludedFileNames = @(
     'npm-debug.log',
     'yarn-error.log',
     'Thumbs.db',
-    '.DS_Store'
+    '.DS_Store'.
+    'phpinfo.php'
 )
 
 $ExcludedExtensions = @(

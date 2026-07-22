@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Image;
@@ -18,7 +20,7 @@ use Inertia\Response;
 
 class ImageBrowseController extends Controller
 {
-    public function index(Request $request, PublicAssetCatalogService $catalog): Response
+    public function index(Request $request, PublicAssetCatalogService $catalog, AnalyticsTracker $tracker): Response
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],
@@ -29,6 +31,7 @@ class ImageBrowseController extends Controller
             'asset_type' => ['nullable', 'string', 'max:40'],
             'format' => ['nullable', 'string', 'max:20'],
             'sort' => ['nullable', 'in:newest,oldest,most_viewed,most_favorited,most_downloaded'],
+            'suggestion_type' => ['nullable', 'string', 'max:40'],
         ]);
 
         $filters = [
@@ -42,8 +45,50 @@ class ImageBrowseController extends Controller
             'sort' => (string) ($validated['sort'] ?? 'newest'),
         ];
 
+        $assets = $catalog->paginate($filters, Auth::id());
+
+        $activeFilterCount = collect($filters)
+            ->except(['search', 'sort'])
+            ->filter(fn ($value) => $value !== null && $value !== '')
+            ->count();
+
+        if ($filters['search'] !== '') {
+            $event = $tracker->record(
+                AnalyticsEventName::SearchPerformed,
+                user: $request->user(),
+                dimensions: [
+                    'term' => mb_strtolower($filters['search']),
+                    'result_count' => $assets->total(),
+                    'filters' => array_filter($filters, fn ($value) => $value !== null && $value !== ''),
+                ],
+                source: 'asset_gallery',
+                channel: 'onsite',
+            );
+            $event->update(['session_id' => $request->session()->getId()]);
+
+            if ($request->filled('suggestion_type')) {
+                $tracker->record(
+                    AnalyticsEventName::SearchSuggestionSelected,
+                    user: $request->user(),
+                    dimensions: ['term' => mb_strtolower($filters['search']), 'suggestion_type' => $request->string('suggestion_type')->toString(), 'result_count' => $assets->total()],
+                    source: 'asset_gallery',
+                    channel: 'onsite',
+                )->update(['session_id' => $request->session()->getId()]);
+            }
+        }
+
+        if ($activeFilterCount > 0 || $filters['sort'] !== 'newest') {
+            $tracker->record(
+                AnalyticsEventName::SearchFiltersApplied,
+                user: $request->user(),
+                dimensions: ['filters' => array_filter($filters, fn ($value) => $value !== null && $value !== ''), 'result_count' => $assets->total()],
+                source: 'asset_gallery',
+                channel: 'onsite',
+            )->update(['session_id' => $request->session()->getId()]);
+        }
+
         return Inertia::render('Images/Index', [
-            'assets' => $catalog->paginate($filters, Auth::id()),
+            'assets' => $assets,
             'collections' => Collection::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')

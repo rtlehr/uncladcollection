@@ -4,7 +4,8 @@ import { BadgeDollarSign, Download, ReceiptText, RotateCcw, ShieldCheck, Shoppin
 import { computed, reactive } from 'vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,20 +31,20 @@ const exportHref = computed(() => `/admin/analytics/financial/export?${new URLSe
 
 <template>
     <Head title="Revenue & Financial Reporting" />
-    <div class="space-y-8 p-6">
-        <PageHeader title="Revenue & Financial Reporting" description="Detailed sales, refund, tax, discount, and reconciliation reporting.">
+    <div class="analytics-report-page space-y-8 p-6">
+        <AnalyticsHeader title="Revenue & Financial Reporting" description="Detailed sales, refund, tax, discount, and reconciliation reporting.">
             <template #actions>
-                <Button variant="outline" as-child><Link href="/admin/analytics">Executive dashboard</Link></Button>
+                
                 <Button as-child><a :href="exportHref"><Download class="mr-2 h-4 w-4" />Export CSV</a></Button>
             </template>
-        </PageHeader>
+        </AnalyticsHeader>
 
-        <form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit.prevent="applyFilters">
+        <AnalyticsFilterPanel content-class="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end" @submit="applyFilters">
             <div class="grid gap-2"><Label for="period">Reporting period</Label><select id="period" v-model="filters.period" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="7_days">Last 7 days</option><option value="30_days">Last 30 days</option><option value="90_days">Last 90 days</option><option value="year_to_date">Year to date</option><option value="custom">Custom</option></select></div>
             <div class="grid gap-2"><Label for="start_date">Start date</Label><Input id="start_date" v-model="filters.start_date" type="date" :disabled="filters.period !== 'custom'" /></div>
             <div class="grid gap-2"><Label for="end_date">End date</Label><Input id="end_date" v-model="filters.end_date" type="date" :disabled="filters.period !== 'custom'" /></div>
             <Button type="submit">Apply period</Button>
-        </form>
+        </AnalyticsFilterPanel>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard label="Collected revenue" :value="money(report.summary.collected_revenue_cents)" emphasized><template #icon><BadgeDollarSign class="h-5 w-5" /></template></MetricCard>

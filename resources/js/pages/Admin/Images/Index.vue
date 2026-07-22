@@ -1,322 +1,138 @@
+<script lang="ts">
+import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
+export default { layout: PublicBlankLayout };
+</script>
+
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
-
-import ActionToolbar from '@/Components/Admin/ActionToolbar.vue';
-import AdminRowActions from '@/Components/Admin/AdminRowActions.vue';
-import FilterToolbar from '@/Components/Admin/FilterToolbar.vue';
-import SearchToolbar from '@/Components/Admin/SearchToolbar.vue';
-import AssetThumbnail from '@/Components/Shared/AssetThumbnail.vue';
-import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
-import StatusBadge from '@/Components/Shared/StatusBadge.vue';
-import DataTable from '@/Components/Tables/DataTable.vue';
-import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
-import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
-import { Button } from '@/components/ui/button';
-import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
-
-import type {
-    AdminImageCollection,
-    AdminImageListFilters,
-    AdminImageListItem,
-} from '@/types/adminImageList';
+import { router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import GalleryEmpty from '@/components/Gallery/GalleryEmpty.vue';
+import GalleryFilters from '@/components/Gallery/GalleryFilters.vue';
+import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
+import GalleryHero from '@/components/Gallery/GalleryHero.vue';
+import PublicPagination from '@/components/Gallery/PublicPagination.vue';
+import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
+import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
+import type { GalleryFilters as GalleryFilterState, GalleryOption, GallerySelectOption, PaginatedGalleryAssets } from '@/types/gallery';
+import type { PublicActiveFilter, PublicSearchSuggestion } from '@/types/publicSearch';
 
 const props = defineProps<{
-    images: AdminImageListItem[];
-    collections: AdminImageCollection[];
-    filters: AdminImageListFilters;
+    assets: PaginatedGalleryAssets;
+    collections: GalleryOption[];
+    categories: GalleryOption[];
+    tags: GalleryOption[];
+    assetTypes: GallerySelectOption[];
+    formats: GallerySelectOption[];
+    suggestions: PublicSearchSuggestion[];
+    filters: GalleryFilterState;
 }>();
 
 const search = ref(props.filters.search ?? '');
-const status = ref(props.filters.status ?? '');
+const categoryId = ref(props.filters.category_id ?? '');
+const tagId = ref(props.filters.tag_id ?? '');
 const collectionId = ref(props.filters.collection_id ?? '');
+const aiGenerated = ref(props.filters.ai_generated ?? '');
+const assetType = ref(props.filters.asset_type ?? '');
+const format = ref(props.filters.format ?? '');
+const sort = ref(props.filters.sort ?? 'newest');
 
-const deletion = useDeleteConfirmation<AdminImageListItem>();
+const activeFilters = computed<PublicActiveFilter[]>(() => {
+    const items: PublicActiveFilter[] = [];
+    if (search.value) items.push({ key: 'search', label: `Search: ${search.value}` });
+    const category = props.categories.find((item) => String(item.id) === categoryId.value);
+    if (category) items.push({ key: 'category_id', label: `Category: ${category.name}` });
+    const collection = props.collections.find((item) => String(item.id) === collectionId.value);
+    if (collection) items.push({ key: 'collection_id', label: `Collection: ${collection.name}` });
+    const tag = props.tags.find((item) => String(item.id) === tagId.value);
+    if (tag) items.push({ key: 'tag_id', label: `Tag: ${tag.name}` });
+    const type = props.assetTypes.find((item) => item.value === assetType.value);
+    if (type) items.push({ key: 'asset_type', label: `Type: ${type.label}` });
+    const selectedFormat = props.formats.find((item) => item.value === format.value);
+    if (selectedFormat) items.push({ key: 'format', label: `Format: ${selectedFormat.label}` });
+    if (aiGenerated.value === '1') items.push({ key: 'ai_generated', label: 'AI Generated' });
+    if (aiGenerated.value === '0') items.push({ key: 'ai_generated', label: 'Photography Only' });
+    return items;
+});
 
-function reload() {
-    router.get(
-        '/admin/images',
-        {
-            search: search.value || undefined,
-            status: status.value || undefined,
-            collection_id: collectionId.value || undefined,
-            sort: props.filters.sort,
-            direction: props.filters.direction,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+function queryPayload() {
+    return {
+        search: search.value || undefined,
+        category_id: categoryId.value || undefined,
+        tag_id: tagId.value || undefined,
+        collection_id: collectionId.value || undefined,
+        ai_generated: aiGenerated.value || undefined,
+        asset_type: assetType.value || undefined,
+        format: format.value || undefined,
+        sort: sort.value || undefined,
+    };
 }
 
-function resetFilters() {
-    search.value = '';
-    status.value = '';
-    collectionId.value = '';
-
-    router.get(
-        '/admin/images',
-        {},
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+function reload(): void {
+    router.get('/images', queryPayload(), { preserveState: true, preserveScroll: true, replace: true });
 }
 
-function sortBy(column: string) {
-    const direction =
-        props.filters.sort === column
-        && props.filters.direction === 'asc'
-            ? 'desc'
-            : 'asc';
-
-    router.get(
-        '/admin/images',
-        {
-            search: search.value || undefined,
-            status: status.value || undefined,
-            collection_id: collectionId.value || undefined,
-            sort: column,
-            direction,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+function resetFilters(): void {
+    search.value = ''; categoryId.value = ''; tagId.value = ''; collectionId.value = ''; aiGenerated.value = ''; assetType.value = ''; format.value = ''; sort.value = 'newest';
+    router.get('/images', {}, { preserveState: true, preserveScroll: true, replace: true });
 }
 
-function confirmDelete() {
-    deletion.runDelete((image, finish) => {
-        router.delete(`/admin/images/${image.id}`, {
-            preserveScroll: true,
-            onFinish: finish,
-        });
-    });
+function removeFilter(key: string): void {
+    if (key === 'search') search.value = '';
+    if (key === 'category_id') categoryId.value = '';
+    if (key === 'tag_id') tagId.value = '';
+    if (key === 'collection_id') collectionId.value = '';
+    if (key === 'ai_generated') aiGenerated.value = '';
+    if (key === 'asset_type') assetType.value = '';
+    if (key === 'format') format.value = '';
+    reload();
+}
+
+function selectSuggestion(suggestion: PublicSearchSuggestion): void {
+    if (suggestion.href) { router.visit(suggestion.href); return; }
+    search.value = suggestion.value;
+    router.get('/images', { ...queryPayload(), suggestion_type: suggestion.type }, { preserveState: true, preserveScroll: true, replace: true });
 }
 </script>
 
 <template>
-    <Head title="Images" />
+    <PublicSeoHead
+        title="Digital Asset Library"
+        description="Browse authentic, respectful, licensed naturist and nudist lifestyle images, vectors, video, and downloadable media."
+        canonical-path="/images"
+        :robots="activeFilters.length > 0 || assets.current_page > 1 ? 'noindex, follow, max-image-preview:large' : 'index, follow, max-image-preview:large'"
+    />
+    <StructuredData :breadcrumbs="[{ name: 'Home', url: '/' }, { name: 'Assets', url: '/images' }]" />
 
-    <div class="space-y-6 p-6">
-        <PageHeader
-            title="Images"
-            description="Manage image uploads and collections."
+    <PublicPageLayout>
+        <GalleryHero v-model:search="search" :total="assets.total" :suggestions="suggestions" @search="reload" @suggestion="selectSuggestion" />
+        <GalleryFilters
+            v-model:category-id="categoryId"
+            v-model:tag-id="tagId"
+            v-model:collection-id="collectionId"
+            v-model:ai-generated="aiGenerated"
+            v-model:asset-type="assetType"
+            v-model:format="format"
+            v-model:sort="sort"
+            :collections="collections"
+            :categories="categories"
+            :tags="tags"
+            :asset-types="assetTypes"
+            :formats="formats"
+            @apply="reload"
+            @reset="resetFilters"
         />
 
-        <ActionToolbar align="end">
-            <template #secondary>
-                <Button as-child>
-                    <Link href="/admin/images/create">
-                        Add Image
-                    </Link>
-                </Button>
-            </template>
-        </ActionToolbar>
-
-        <FilterToolbar :columns="3" compact>
-            <SearchToolbar
-                v-model="search"
-                input-label="Search images"
-                placeholder="Search title, slug, photographer..."
-                :show-reset="false"
-                @search="reload"
-            />
-
-            <label class="grid gap-1.5 text-sm font-medium">
-                <span class="sr-only">Collection</span>
-
-                <select
-                    v-model="collectionId"
-                    class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    aria-label="Filter by collection"
-                    @change="reload"
-                >
-                    <option value="">
-                        All Collections
-                    </option>
-
-                    <option
-                        v-for="collection in collections"
-                        :key="collection.id"
-                        :value="collection.id"
-                    >
-                        {{ collection.name }}
-                    </option>
-                </select>
-            </label>
-
-            <label class="grid gap-1.5 text-sm font-medium">
-                <span class="sr-only">Status</span>
-
-                <select
-                    v-model="status"
-                    class="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    aria-label="Filter by status"
-                    @change="reload"
-                >
-                    <option value="">
-                        All Statuses
-                    </option>
-
-                    <option value="1">
-                        Active
-                    </option>
-
-                    <option value="0">
-                        Inactive
-                    </option>
-                </select>
-            </label>
-
-            <template #actions>
-                <Button type="button" @click="reload">
-                    Apply Filters
-                </Button>
-
-                <Button
-                    type="button"
-                    variant="outline"
-                    @click="resetFilters"
-                >
-                    Reset
-                </Button>
-            </template>
-        </FilterToolbar>
-
-        <DataTable
-            min-width="1050px"
-            caption="Administrative image list"
-        >
-            <thead>
-                <tr class="border-b bg-muted/30">
-                    <DataTableHeaderCell label="Preview" />
-
-                    <DataTableHeaderCell
-                        label="Title"
-                        column="title"
-                        sortable
-                        :current-sort="filters.sort"
-                        :current-direction="filters.direction"
-                        @sort="sortBy"
-                    />
-
-                    <DataTableHeaderCell label="Collection" />
-
-                    <DataTableHeaderCell
-                        label="Photographer"
-                        column="photographer"
-                        sortable
-                        :current-sort="filters.sort"
-                        :current-direction="filters.direction"
-                        @sort="sortBy"
-                    />
-
-                    <DataTableHeaderCell
-                        label="Sort"
-                        column="sort_order"
-                        sortable
-                        :current-sort="filters.sort"
-                        :current-direction="filters.direction"
-                        @sort="sortBy"
-                    />
-
-                    <DataTableHeaderCell
-                        label="Status"
-                        column="is_active"
-                        sortable
-                        :current-sort="filters.sort"
-                        :current-direction="filters.direction"
-                        @sort="sortBy"
-                    />
-
-                    <DataTableHeaderCell
-                        label="Actions"
-                        align="right"
-                    />
-                </tr>
-            </thead>
-
-            <tbody>
-                <tr
-                    v-for="image in images"
-                    :key="image.id"
-                    class="border-b last:border-0 hover:bg-muted/20"
-                >
-                    <td class="p-4">
-                        <AssetThumbnail
-                            :src="image.thumbnail_url"
-                            :alt="image.title"
-                            fallback="No image"
-                        />
-                    </td>
-
-                    <td class="p-4">
-                        <div class="font-medium">
-                            {{ image.title }}
-                        </div>
-
-                        <div class="font-mono text-xs text-muted-foreground">
-                            {{ image.slug }}
-                        </div>
-                    </td>
-
-                    <td class="p-4">
-                        {{ image.collection?.name ?? '—' }}
-                    </td>
-
-                    <td class="p-4">
-                        {{ image.photographer ?? '—' }}
-                    </td>
-
-                    <td class="p-4">
-                        {{ image.sort_order }}
-                    </td>
-
-                    <td class="p-4">
-                        <StatusBadge
-                            :status="image.is_active ? 'active' : 'inactive'"
-                        />
-                    </td>
-
-                    <td class="p-4">
-                        <AdminRowActions
-                            compact
-                            :view-href="`/admin/images/${image.id}`"
-                            :edit-href="`/admin/images/${image.id}/edit`"
-                            @delete="deletion.requestDelete(image)"
-                        />
-                    </td>
-                </tr>
-
-                <DataTableEmpty
-                    v-if="images.length === 0"
-                    :colspan="7"
-                    message="No images found."
-                />
-            </tbody>
-        </DataTable>
-
-        <ConfirmActionDialog
-            v-model:open="deletion.open.value"
-            title="Delete image?"
-            :description="
-                deletion.selected.value
-                    ? `Delete the image '${deletion.selected.value.title}'? This action cannot be undone.`
-                    : 'This action cannot be undone.'
-            "
-            confirm-label="Delete Image"
-            destructive
-            :loading="deletion.processing.value"
-            @confirm="confirmDelete"
-            @cancel="deletion.cancelDelete"
-        />
-    </div>
+        <section class="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14">
+            <div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <PublicResultSummary :from="assets.from" :to="assets.to" :total="assets.total" item-label="assets" :filtered="activeFilters.length > 0" />
+                <PublicActiveFilters :items="activeFilters" @remove="removeFilter" @clear="resetFilters" />
+            </div>
+            <GalleryGrid v-if="assets.data.length" :assets="assets.data" />
+            <GalleryEmpty v-else @reset="resetFilters" />
+            <PublicPagination class="mt-10" :pagination="assets" />
+        </section>
+    </PublicPageLayout>
 </template>

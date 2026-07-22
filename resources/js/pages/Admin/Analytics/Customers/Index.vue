@@ -3,7 +3,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Download, ShoppingCart, UserRoundCheck, UserRoundPlus, Users } from '@lucide/vue';
 import { reactive } from 'vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import { Button } from '@/components/ui/button';
@@ -20,19 +21,19 @@ const exportHref = () => `/admin/analytics/customers/export?${new URLSearchParam
 
 <template>
 <Head title="Customer and Conversion Analytics" />
-<div class="space-y-8 p-6">
-<PageHeader title="Customer and Conversion Analytics" description="Understand who buys, how customers move through the funnel, and where revenue or re-engagement opportunities exist.">
+<div class="analytics-report-page space-y-8 p-6">
+<AnalyticsHeader title="Customer and Conversion Analytics" description="Understand who buys, how customers move through the funnel, and where revenue or re-engagement opportunities exist.">
   <template #actions><Button variant="outline" as-child><a :href="exportHref()"><Download class="mr-2 h-4 w-4"/>Export CSV</a></Button></template>
-</PageHeader>
+</AnalyticsHeader>
 
-<form class="grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end" @submit.prevent="apply">
+<AnalyticsFilterPanel content-class="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end" @submit="apply">
 <div class="grid gap-2"><Label>Period</Label><select v-model="filters.period" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="7_days">Last 7 days</option><option value="30_days">Last 30 days</option><option value="90_days">Last 90 days</option><option value="year_to_date">Year to date</option><option value="custom">Custom</option></select></div>
 <div class="grid gap-2"><Label>Search</Label><Input v-model="filters.search" placeholder="Name, username, or email"/></div>
 <div class="grid gap-2"><Label>Segment</Label><select v-model="filters.segment" class="h-10 rounded-md border bg-background px-3 text-sm"><option value="all">All buyers</option><option value="first_time">First-time</option><option value="repeat">Repeat</option></select></div>
 <div class="grid gap-2"><Label>Start date</Label><Input v-model="filters.start_date" type="date" :disabled="filters.period !== 'custom'"/></div>
 <div class="grid gap-2"><Label>End date</Label><Input v-model="filters.end_date" type="date" :disabled="filters.period !== 'custom'"/></div>
 <Button type="submit">Apply</Button>
-</form>
+</AnalyticsFilterPanel>
 
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 <MetricCard label="Buyers" :value="report.summary.buyers.toLocaleString()"><template #icon><Users class="h-5 w-5"/></template></MetricCard>
