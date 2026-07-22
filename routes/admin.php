@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
 use App\Http\Controllers\Admin\MarketingCampaignController;
+use App\Http\Controllers\Admin\MarketingCampaignPerformanceReportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteSettingController;
@@ -82,6 +83,13 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/analytics/blog/{blogPost}', [BlogContentPerformanceReportController::class, 'show'])
             ->middleware('permission:view_reports')
             ->name('analytics.blog.show');
+
+        Route::get('/analytics/campaigns', [MarketingCampaignPerformanceReportController::class, 'index'])
+            ->middleware('permission:view_reports')->name('analytics.campaigns.index');
+        Route::get('/analytics/campaigns/export', [MarketingCampaignPerformanceReportController::class, 'export'])
+            ->middleware('permission:view_reports')->name('analytics.campaigns.export');
+        Route::get('/analytics/campaigns/{marketingCampaign}', [MarketingCampaignPerformanceReportController::class, 'show'])
+            ->middleware('permission:view_reports')->name('analytics.campaigns.show');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')

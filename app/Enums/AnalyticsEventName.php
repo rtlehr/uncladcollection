@@ -11,4 +11,6 @@ enum AnalyticsEventName: string
     case OrderPaid = 'order_paid';
     case AssetDownloaded = 'asset_downloaded';
     case BlogPostViewed = 'blog_post_viewed';
+    case CampaignViewed = 'campaign_viewed';
+    case CampaignClicked = 'campaign_clicked';
 }

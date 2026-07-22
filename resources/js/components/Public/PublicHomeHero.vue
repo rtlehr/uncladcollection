@@ -37,7 +37,30 @@ const mediaPosition = computed(() => ({ center: 'object-center', top: 'object-to
 const heightClass = computed(() => ({ compact: 'min-h-[520px]', medium: 'min-h-[620px]', large: 'min-h-[720px]', fullscreen: 'min-h-[calc(100vh-5rem)]' }[props.campaign?.hero_height ?? 'large']));
 const textClass = computed(() => ({ left: 'text-left items-start', center: 'text-center items-center', right: 'text-right items-end' }[props.campaign?.text_alignment ?? 'left']));
 
+function csrfToken(): string {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
+    if (meta) return meta;
+    const cookie = document.cookie.split('; ').find((item) => item.startsWith('XSRF-TOKEN='));
+    return cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '';
+}
+
+function trackCampaign(action: 'impression' | 'click', button?: 'primary' | 'secondary'): void {
+    if (!props.campaign?.id) return;
+    void fetch(`/marketing-campaigns/${props.campaign.id}/${action}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true,
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-XSRF-TOKEN': csrfToken(),
+        },
+        body: JSON.stringify(button ? { button } : {}),
+    }).catch(() => undefined);
+}
+
 onMounted(async () => {
+    if (props.campaign) trackCampaign('impression');
     if (!props.campaign || props.campaign.media_type !== 'video' || !props.campaign.autoplay_first_visit) return;
     const played = sessionStorage.getItem('unclad-home-hero-played') === '1';
     const mobile = window.matchMedia('(max-width: 767px)').matches;
@@ -89,8 +112,8 @@ async function playVideo(): Promise<void> {
                 </form>
 
                 <div class="mt-6 flex flex-wrap gap-3">
-                    <Link :href="effectivePrimaryHref" class="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-sm font-semibold text-white">{{ effectivePrimaryLabel }}<ArrowRight class="h-4 w-4" /></Link>
-                    <Link v-if="effectiveSecondaryLabel" :href="effectiveSecondaryHref" class="inline-flex h-12 items-center rounded-full border border-current/30 bg-white/10 px-6 text-sm font-semibold backdrop-blur">{{ effectiveSecondaryLabel }}</Link>
+                    <Link :href="effectivePrimaryHref" @click="trackCampaign('click', 'primary')" class="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-sm font-semibold text-white">{{ effectivePrimaryLabel }}<ArrowRight class="h-4 w-4" /></Link>
+                    <Link v-if="effectiveSecondaryLabel" :href="effectiveSecondaryHref" @click="trackCampaign('click', 'secondary')" class="inline-flex h-12 items-center rounded-full border border-current/30 bg-white/10 px-6 text-sm font-semibold backdrop-blur">{{ effectiveSecondaryLabel }}</Link>
                 </div>
             </div>
 
