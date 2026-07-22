@@ -66,7 +66,7 @@ final class CheckoutEngine
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => Order::STATUS_PENDING,
-                'fulfillment_status' => 'pending',
+                'fulfillment_status' => OrderFulfillmentStatus::New->value,
                 'commerce_version' => self::COMMERCE_VERSION,
                 'subtotal_cents' => $subtotal,
                 'discount_cents' => 0,

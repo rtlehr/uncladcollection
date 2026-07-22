@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Commerce\Checkout\CheckoutEngine;
+use App\Enums\OrderFulfillmentStatus;
 use App\Models\Image;
 use App\Models\License;
 use App\Models\LicenseType;
@@ -21,7 +22,7 @@ class PurchaseService
             $order = Order::create([
                 'user_id' => $user->id,
                 'status' => Order::STATUS_PENDING,
-                'fulfillment_status' => 'pending',
+                'fulfillment_status' => OrderFulfillmentStatus::New->value,
                 'commerce_version' => '1.0',
                 'subtotal_cents' => $licenseType->price_cents,
                 'discount_cents' => 0,

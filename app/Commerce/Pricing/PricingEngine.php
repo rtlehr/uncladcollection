@@ -14,6 +14,7 @@ class PricingEngine
     public function __construct(
         private readonly ConfigurationManager $configurationManager,
         private readonly AssetPricingService $pricingService,
+        private readonly DynamicLicensePriceCalculator $dynamicPriceCalculator,
     ) {}
 
     public function quote(
@@ -32,7 +33,9 @@ class PricingEngine
             $offering->id,
         );
 
-        $configuredUnit = max(0, (int) $offering->price_cents + $adjustment);
+        $dynamicPrice = $this->dynamicPriceCalculator->calculate($offering);
+        $basePrice = (int) $dynamicPrice['final_price_cents'];
+        $configuredUnit = max(0, $basePrice + $adjustment);
         $tiers = $this->pricingService->activeForOffering($offering->asset, $offering);
 
         /** @var AssetPricingTier|null $tier */
@@ -48,7 +51,7 @@ class PricingEngine
         return new PriceBreakdown(
             quantity: $quantity,
             aggregateQuantity: $aggregateQuantity,
-            baseUnitPriceCents: (int) $offering->price_cents,
+            baseUnitPriceCents: $basePrice,
             configurationAdjustmentCents: $adjustment,
             configuredUnitPriceCents: $configuredUnit,
             tierDiscountCents: max(0, $configuredUnit - $finalUnit),

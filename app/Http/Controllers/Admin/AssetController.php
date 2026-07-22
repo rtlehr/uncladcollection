@@ -154,7 +154,7 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
             'assetRecord' => $this->formatAsset($asset, detailed: true),
-            'licenseTypes' => LicenseType::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'description', 'price_cents', 'currency', 'download_limit', 'expires_after_days']),
+            'licenseTypes' => LicenseType::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'description', 'price_cents', 'image_unit_price_cents', 'video_unit_price_cents', 'minimum_price_cents', 'currency', 'download_limit', 'expires_after_days']),
         ]);
     }
 
@@ -403,7 +403,11 @@ class AssetController extends Controller
             'offerings.*.license_type_id' => ['required', 'integer', 'exists:license_types,id'],
             'offerings.*.name' => ['required', 'string', 'max:255'],
             'offerings.*.description' => ['nullable', 'string'],
-            'offerings.*.price_cents' => ['required', 'integer', 'min:0'],
+            'offerings.*.image_units' => ['required', 'integer', 'min:0'],
+            'offerings.*.video_units' => ['required', 'integer', 'min:0'],
+            'offerings.*.price_adjustment_cents' => ['nullable', 'integer'],
+            'offerings.*.price_override_cents' => ['nullable', 'integer', 'min:0'],
+            'offerings.*.price_cents' => ['nullable', 'integer', 'min:0'],
             'offerings.*.currency' => ['required', 'string', 'size:3'],
             'offerings.*.download_limit' => ['nullable', 'integer', 'min:1'],
             'offerings.*.expires_after_days' => ['nullable', 'integer', 'min:1'],
@@ -672,6 +676,10 @@ class AssetController extends Controller
                 'license_type_id' => $offering->license_type_id,
                 'name' => $offering->name,
                 'description' => $offering->description,
+                'image_units' => $offering->image_units,
+                'video_units' => $offering->video_units,
+                'price_adjustment_cents' => $offering->price_adjustment_cents,
+                'price_override_cents' => $offering->price_override_cents,
                 'price_cents' => $offering->price_cents,
                 'currency' => $offering->currency,
                 'download_limit' => $offering->download_limit,

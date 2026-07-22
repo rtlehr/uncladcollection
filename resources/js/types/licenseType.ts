@@ -4,6 +4,9 @@ export interface AdminLicenseType {
     slug: string;
     description: string | null;
     price_cents: number;
+    image_unit_price_cents: number;
+    video_unit_price_cents: number;
+    minimum_price_cents: number | null;
     currency: string;
     download_limit: number | null;
     expires_after_days: number | null;
@@ -18,7 +21,9 @@ export interface EditableAdminLicenseType {
     name: string;
     slug: string;
     description: string | null;
-    price: string;
+    image_unit_price: string;
+    video_unit_price: string;
+    minimum_price: string;
     currency: string;
     download_limit: number | null;
     expires_after_days: number | null;

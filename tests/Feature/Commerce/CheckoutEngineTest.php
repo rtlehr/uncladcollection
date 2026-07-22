@@ -4,6 +4,7 @@ use App\Commerce\Cart\CartEngine;
 use App\Commerce\Checkout\CheckoutEngine;
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
+use App\Enums\OrderFulfillmentStatus;
 use App\Models\Asset;
 use App\Models\AssetOffering;
 use App\Models\CartItem;
@@ -76,6 +77,7 @@ it('creates a pending order snapshot from configured asset cart lines', function
     $plan = app(CheckoutEngine::class)->prepareCartCheckout($user, $cartItems);
 
     expect($plan->order->status)->toBe(Order::STATUS_PENDING)
+        ->and($plan->order->fulfillment_status)->toBe(OrderFulfillmentStatus::New)
         ->and($plan->order->commerce_version)->toBe('2.0')
         ->and($plan->order->total_cents)->toBe(5000)
         ->and($plan->order->checkout_snapshot)->toBeArray()
@@ -107,7 +109,7 @@ it('finalizes a configured asset order idempotently and creates a license', func
     $second = app(CheckoutEngine::class)->markPaid($plan->order);
 
     expect($first->status)->toBe(Order::STATUS_PAID)
-        ->and($first->fulfillment_status)->toBe('ready')
+        ->and($first->fulfillment_status)->toBe(OrderFulfillmentStatus::ReadyToPackage)
         ->and($second->status)->toBe(Order::STATUS_PAID)
         ->and(License::query()->where('order_id', $plan->order->id)->count())->toBe(1)
         ->and(CartItem::query()->where('user_id', $user->id)->count())->toBe(0);

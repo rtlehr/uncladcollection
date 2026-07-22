@@ -31,7 +31,11 @@ function addOffering(): void {
         license_type_id: license.id,
         name: license.name,
         description: license.description ?? '',
-        price_cents: license.price_cents,
+        image_units: 1,
+        video_units: 0,
+        price_adjustment_cents: 0,
+        price_override_cents: null,
+        price_cents: license.image_unit_price_cents,
         currency: license.currency,
         download_limit: license.download_limit,
         expires_after_days: license.expires_after_days,
@@ -85,13 +89,35 @@ function formatRole(role: string): string {
     return role.replaceAll('_', ' ');
 }
 
-function priceValue(offering: AdminAssetOffering): string {
-    return (offering.price_cents / 100).toFixed(2);
+
+function moneyInput(cents: number | null): string {
+    return cents === null ? '' : (cents / 100).toFixed(2);
 }
 
-function updatePrice(offering: AdminAssetOffering, event: Event): void {
-    const value = Number((event.target as HTMLInputElement).value);
-    offering.price_cents = Number.isFinite(value) ? Math.max(0, Math.round(value * 100)) : 0;
+function updateMoney(offering: AdminAssetOffering, key: 'price_adjustment_cents' | 'price_override_cents', event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    if (key === 'price_override_cents' && raw === '') {
+        offering.price_override_cents = null;
+        return;
+    }
+    const value = Number(raw);
+    offering[key] = Number.isFinite(value) ? Math.round(value * 100) : 0;
+}
+
+function licenseFor(offering: AdminAssetOffering): LicenseTypeOption | undefined {
+    return props.licenseTypes.find((license) => license.id === offering.license_type_id);
+}
+
+function calculatedPriceCents(offering: AdminAssetOffering): number {
+    const license = licenseFor(offering);
+    if (!license) return 0;
+    const subtotal = (offering.image_units * license.image_unit_price_cents)
+        + (offering.video_units * license.video_unit_price_cents)
+        + offering.price_adjustment_cents;
+    const withMinimum = license.minimum_price_cents === null
+        ? subtotal
+        : Math.max(subtotal, license.minimum_price_cents);
+    return offering.price_override_cents ?? Math.max(0, withMinimum);
 }
 
 function packageStatus(offering: AdminAssetOffering): string {
@@ -170,19 +196,29 @@ function packageStatus(offering: AdminAssetOffering): string {
                         </label>
 
                         <label class="space-y-1.5 text-sm">
-                            <span class="font-medium">Price</span>
-                            <div class="relative">
-                                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">$</span>
-                                <input
-                                    :value="priceValue(offering)"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    class="h-10 w-full rounded-md border bg-background pl-7 pr-3"
-                                    @input="updatePrice(offering, $event)"
-                                />
-                            </div>
+                            <span class="font-medium">Image units</span>
+                            <input v-model.number="offering.image_units" type="number" min="0" class="h-10 w-full rounded-md border bg-background px-3" />
                         </label>
+
+                        <label class="space-y-1.5 text-sm">
+                            <span class="font-medium">Video units</span>
+                            <input v-model.number="offering.video_units" type="number" min="0" class="h-10 w-full rounded-md border bg-background px-3" />
+                        </label>
+
+                        <label class="space-y-1.5 text-sm">
+                            <span class="font-medium">Price adjustment</span>
+                            <div class="relative"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">$</span><input :value="moneyInput(offering.price_adjustment_cents)" type="number" step="0.01" class="h-10 w-full rounded-md border bg-background pl-7 pr-3" @input="updateMoney(offering, 'price_adjustment_cents', $event)" /></div>
+                        </label>
+
+                        <label class="space-y-1.5 text-sm">
+                            <span class="font-medium">Manual price override</span>
+                            <div class="relative"><span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">$</span><input :value="moneyInput(offering.price_override_cents)" type="number" min="0" step="0.01" placeholder="Optional" class="h-10 w-full rounded-md border bg-background pl-7 pr-3" @input="updateMoney(offering, 'price_override_cents', $event)" /></div>
+                        </label>
+
+                        <div class="rounded-lg border bg-muted/20 p-3 text-sm md:col-span-2">
+                            <div class="font-medium">Calculated package price: {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: offering.currency || 'USD' }).format(calculatedPriceCents(offering) / 100) }}</div>
+                            <div class="mt-1 text-xs text-muted-foreground">Based on this license's per-image and per-video prices, the package unit counts, minimum price, adjustment, and optional override.</div>
+                        </div>
 
                         <label class="space-y-1.5 text-sm">
                             <span class="font-medium">Currency</span>

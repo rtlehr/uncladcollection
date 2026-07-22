@@ -17,7 +17,9 @@ interface LicenseTypeForm {
     name: string;
     slug: string;
     description: string;
-    price: string;
+    image_unit_price: string;
+    video_unit_price: string;
+    minimum_price: string;
     currency: string;
     download_limit: number | null;
     expires_after_days: number | null;
@@ -71,18 +73,24 @@ defineEmits<{
             </div>
 
             <div class="space-y-2">
-                <Label for="price">Price</Label>
-                <Input
-                    id="price"
-                    v-model="form.price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="9.99"
-                />
-                <p v-if="form.errors.price" class="text-sm text-red-600">
-                    {{ form.errors.price }}
-                </p>
+                <Label for="image_unit_price">Price per image</Label>
+                <Input id="image_unit_price" v-model="form.image_unit_price" type="number" min="0" step="0.01" placeholder="1.00" />
+                <p class="text-xs text-muted-foreground">Applied to each chargeable image unit in the asset package.</p>
+                <p v-if="form.errors.image_unit_price" class="text-sm text-red-600">{{ form.errors.image_unit_price }}</p>
+            </div>
+
+            <div class="space-y-2">
+                <Label for="video_unit_price">Price per video</Label>
+                <Input id="video_unit_price" v-model="form.video_unit_price" type="number" min="0" step="0.01" placeholder="5.00" />
+                <p class="text-xs text-muted-foreground">Applied to each chargeable video unit in the asset package.</p>
+                <p v-if="form.errors.video_unit_price" class="text-sm text-red-600">{{ form.errors.video_unit_price }}</p>
+            </div>
+
+            <div class="space-y-2">
+                <Label for="minimum_price">Minimum package price</Label>
+                <Input id="minimum_price" v-model="form.minimum_price" type="number" min="0" step="0.01" placeholder="Optional" />
+                <p class="text-xs text-muted-foreground">Optional floor applied before an offering-level override.</p>
+                <p v-if="form.errors.minimum_price" class="text-sm text-red-600">{{ form.errors.minimum_price }}</p>
             </div>
 
             <div class="space-y-2">

@@ -20,7 +20,11 @@ class AssetOfferingService
                     [
                         'name' => $data['name'],
                         'description' => Arr::get($data, 'description'),
-                        'price_cents' => $data['price_cents'],
+                        'image_units' => (int) ($data['image_units'] ?? 1),
+                        'video_units' => (int) ($data['video_units'] ?? 0),
+                        'price_adjustment_cents' => (int) ($data['price_adjustment_cents'] ?? 0),
+                        'price_override_cents' => Arr::get($data, 'price_override_cents'),
+                        'price_cents' => (int) ($data['price_cents'] ?? 0),
                         'currency' => strtoupper($data['currency'] ?? 'USD'),
                         'download_limit' => Arr::get($data, 'download_limit'),
                         'expires_after_days' => Arr::get($data, 'expires_after_days'),

@@ -39,7 +39,10 @@ it('creates asset-specific offerings with selected files', function (): void {
         'file_ids' => [$file->id],
     ]]);
 
-    $offering = AssetOffering::query()->firstOrFail();
+    $offering = AssetOffering::query()
+        ->where('asset_id', $asset->id)
+        ->where('license_type_id', $licenseType->id)
+        ->firstOrFail();
 
     expect($offering->asset_id)->toBe($asset->id)
         ->and($offering->license_type_id)->toBe($licenseType->id)

@@ -15,7 +15,9 @@ const form = useForm({
     name: props.licenseType.name ?? '',
     slug: props.licenseType.slug ?? '',
     description: props.licenseType.description ?? '',
-    price: props.licenseType.price ?? '0.00',
+    image_unit_price: props.licenseType.image_unit_price ?? '0.00',
+    video_unit_price: props.licenseType.video_unit_price ?? '0.00',
+    minimum_price: props.licenseType.minimum_price ?? '',
     currency: props.licenseType.currency ?? 'USD',
     download_limit: props.licenseType.download_limit,
     expires_after_days: props.licenseType.expires_after_days,
@@ -44,7 +46,7 @@ function submit() {
 
             <FormSection
                 title="License Details"
-                description="Update pricing, download limits, resolution, and usage terms."
+                description="Update unit pricing, minimums, download limits, resolution, and usage terms."
             >
                 <LicenseTypeForm
                     :form="form"

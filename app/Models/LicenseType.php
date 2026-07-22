@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LicenseType extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name',
         'slug',
         'description',
         'price_cents',
+        'image_unit_price_cents',
+        'video_unit_price_cents',
+        'minimum_price_cents',
         'currency',
         'download_limit',
         'expires_after_days',
@@ -23,6 +28,9 @@ class LicenseType extends Model
 
     protected $casts = [
         'price_cents' => 'integer',
+        'image_unit_price_cents' => 'integer',
+        'video_unit_price_cents' => 'integer',
+        'minimum_price_cents' => 'integer',
         'download_limit' => 'integer',
         'expires_after_days' => 'integer',
         'is_active' => 'boolean',

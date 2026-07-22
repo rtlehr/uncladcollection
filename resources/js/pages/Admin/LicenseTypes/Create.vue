@@ -9,7 +9,9 @@ const form = useForm({
     name: '',
     slug: '',
     description: '',
-    price: '0.00',
+    image_unit_price: '0.00',
+    video_unit_price: '0.00',
+    minimum_price: '',
     currency: 'USD',
     download_limit: null as number | null,
     expires_after_days: null as number | null,
@@ -33,12 +35,12 @@ function submit() {
         <div class="space-y-6 p-6">
             <PageHeader
                 title="Create License Type"
-                description="Create a new image licensing option."
+                description="Create a reusable license with per-image and per-video pricing."
             />
 
             <FormSection
                 title="License Details"
-                description="Configure pricing, download limits, resolution, and usage terms."
+                description="Configure unit pricing, minimums, download limits, resolution, and usage terms."
             >
                 <LicenseTypeForm
                     :form="form"

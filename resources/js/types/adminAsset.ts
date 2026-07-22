@@ -129,6 +129,10 @@ export interface AdminAssetOffering {
     license_type_id: number;
     name: string;
     description: string | null;
+    image_units: number;
+    video_units: number;
+    price_adjustment_cents: number;
+    price_override_cents: number | null;
     price_cents: number;
     currency: string;
     download_limit: number | null;
@@ -144,6 +148,9 @@ export interface LicenseTypeOption {
     name: string;
     description: string | null;
     price_cents: number;
+    image_unit_price_cents: number;
+    video_unit_price_cents: number;
+    minimum_price_cents: number | null;
     currency: string;
     download_limit: number | null;
     expires_after_days: number | null;

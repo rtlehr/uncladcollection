@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,16 +11,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetOffering extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
-        'asset_id', 'license_type_id', 'name', 'description', 'price_cents', 'currency',
+        'asset_id', 'license_type_id', 'name', 'description', 'image_units', 'video_units',
+        'price_cents', 'price_adjustment_cents', 'price_override_cents', 'currency',
         'download_limit', 'expires_after_days', 'include_all_active_files', 'is_active',
         'sort_order', 'metadata',
     ];
 
     protected $casts = [
+        'image_units' => 'integer',
+        'video_units' => 'integer',
         'price_cents' => 'integer',
+        'price_adjustment_cents' => 'integer',
+        'price_override_cents' => 'integer',
         'download_limit' => 'integer',
         'expires_after_days' => 'integer',
         'include_all_active_files' => 'boolean',
