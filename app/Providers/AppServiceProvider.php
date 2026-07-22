@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Contracts\AssetVirusScanner;
+use App\Analytics\AnalyticsReportCache;
+use App\Models\AnalyticsEvent;
 use App\Models\User;
 use App\Services\NullAssetVirusScanner;
 use Carbon\CarbonImmutable;
@@ -26,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        AnalyticsEvent::created(fn () => app(AnalyticsReportCache::class)->flush());
+        AnalyticsEvent::deleted(fn () => app(AnalyticsReportCache::class)->flush());
 
         Gate::before(function (User $user, string $ability) {
             return $user->hasPermission($ability) ? true : null;

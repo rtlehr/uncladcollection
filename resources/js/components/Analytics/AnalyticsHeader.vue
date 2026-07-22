@@ -28,6 +28,7 @@ const items = [
     { label: 'Campaigns', href: '/admin/analytics/campaigns', match: (url: string) => url.startsWith('/admin/analytics/campaigns') },
     { label: 'Search', href: '/admin/analytics/search', match: (url: string) => url.startsWith('/admin/analytics/search') },
     { label: 'Downloads', href: '/admin/analytics/downloads', match: (url: string) => url.startsWith('/admin/analytics/downloads') },
+    { label: 'Operations', href: '/admin/analytics/operations', match: (url: string) => url.startsWith('/admin/analytics/operations') },
 ];
 
 const currentUrl = computed(() => page.url.split('?')[0].replace(/\/$/, '') || '/');

@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
 use App\Http\Controllers\Admin\MarketingCampaignController;
 use App\Http\Controllers\Admin\MarketingCampaignPerformanceReportController;
+use App\Http\Controllers\Admin\MarketplaceOperationsReportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SearchDiscoveryReportController;
@@ -106,6 +107,13 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:view_reports')->name('analytics.downloads.export');
         Route::get('/analytics/downloads/{license}', [DownloadLicenseUtilizationReportController::class, 'show'])
             ->middleware('permission:view_reports')->name('analytics.downloads.show');
+
+        Route::get('/analytics/operations', [MarketplaceOperationsReportController::class, 'index'])
+            ->middleware('permission:view_reports')->name('analytics.operations.index');
+        Route::get('/analytics/operations/export', [MarketplaceOperationsReportController::class, 'export'])
+            ->middleware('permission:view_reports')->name('analytics.operations.export');
+        Route::get('/analytics/operations/{order}', [MarketplaceOperationsReportController::class, 'show'])
+            ->middleware('permission:view_reports')->name('analytics.operations.show');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')
