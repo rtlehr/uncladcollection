@@ -72,6 +72,23 @@ class AdCreativeController extends Controller
         return back()->with('success', 'Creative decision recorded.');
     }
 
+
+    public function returnToDraft(AdvertisingCampaign $adCampaign, AdCreative $creative)
+    {
+        $this->ensureCampaign($adCampaign, $creative);
+        abort_unless($creative->status === 'approved', 422, 'Only approved creatives can be returned to draft.');
+
+        $creative->update([
+            'status' => 'draft',
+            'approved_at' => null,
+            'approved_by' => null,
+            'submitted_at' => null,
+            'rejection_reason' => null,
+        ]);
+
+        return back()->with('success', 'Creative returned to draft and removed from public ad rotation.');
+    }
+
     public function destroy(AdvertisingCampaign $adCampaign, AdCreative $creative, AdCreativeMediaService $media)
     {
         $this->ensureCampaign($adCampaign, $creative);

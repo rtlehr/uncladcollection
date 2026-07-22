@@ -171,6 +171,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::delete('/ad-campaigns/{adCampaign}/creatives/{creative}', [AdCreativeController::class, 'destroy'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.destroy');
         Route::post('/ad-campaigns/{adCampaign}/creatives/{creative}/submit', [AdCreativeController::class, 'submit'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.submit');
         Route::post('/ad-campaigns/{adCampaign}/creatives/{creative}/decision', [AdCreativeController::class, 'decision'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.creatives.decision');
+        Route::post('/ad-campaigns/{adCampaign}/creatives/{creative}/return-to-draft', [AdCreativeController::class, 'returnToDraft'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.creatives.return-to-draft');
 
         Route::resource('marketing-campaigns', MarketingCampaignController::class)
             ->except(['show'])

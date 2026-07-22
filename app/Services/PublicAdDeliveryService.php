@@ -26,9 +26,10 @@ class PublicAdDeliveryService
             ->where('status', 'approved')
             ->whereNotNull('media_path')
             ->whereHas('campaign', fn ($query) => $query->current())
+            ->orderByDesc('approved_at')
+            ->orderByDesc('id')
             ->get()
             ->filter(fn (AdCreative $creative) => $this->isEligible($creative, $placement))
-            ->take(max(1, $placement->max_active_campaigns))
             ->values();
 
         if ($creatives->isEmpty()) {
