@@ -12,7 +12,7 @@ class AssetColorAnalysisService
     {
         try {
             $image = (new ImageManager(new Driver()))
-                ->read($absolutePath)
+                ->decode($absolutePath)
                 ->scaleDown(width: 120, height: 120);
             $colors = [];
 

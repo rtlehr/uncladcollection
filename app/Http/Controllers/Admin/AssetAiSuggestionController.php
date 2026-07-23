@@ -7,7 +7,8 @@ use App\Models\AiAssetSuggestion;
 use App\Models\Asset;
 use App\Services\AssetAiSourceService;
 use App\Services\AssetColorAnalysisService;
-use App\Services\OpenAiAssetAssistantService;
+use App\Services\AssetAiAssistantService;
+use App\Services\AssetAiPreviewService;
 use App\Services\AssetTagService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,27 +17,41 @@ use Throwable;
 
 class AssetAiSuggestionController extends Controller
 {
-    public function store(Request $request, Asset $asset, AssetAiSourceService $sourceService, AssetColorAnalysisService $colors, OpenAiAssetAssistantService $assistant): RedirectResponse
+    public function store(Request $request, Asset $asset, AssetAiSourceService $sourceService, AssetColorAnalysisService $colors, AssetAiPreviewService $previews, AssetAiAssistantService $assistant): RedirectResponse
     {
-        $request->validate([
+        $this->extendExecutionTime();
+
+        $validated = $request->validate([
             'adult_content_confirmed' => ['accepted'],
             'non_sexual_content_confirmed' => ['accepted'],
+            'provider' => ['nullable', 'string', 'in:ollama,openai'],
         ]);
+
+        $requestedProvider = $validated['provider'] ?? $assistant->defaultProvider();
 
         $record = $asset->aiSuggestions()->create([
             'requested_by' => $request->user()?->id,
-            'provider' => 'openai',
-            'model' => config('ai-assets.model'),
+            'provider' => $requestedProvider,
+            'model' => $assistant->modelFor($requestedProvider),
             'status' => 'processing',
         ]);
+
+        $previewPath = null;
 
         try {
             $source = $sourceService->resolve($asset);
             $local = $colors->analyze($source['path']);
-            $result = $assistant->analyze($source['path'], ['title' => $asset->title]);
+            $previewPath = $previews->create($source['path']);
+            $result = $assistant->analyze(
+                $previewPath,
+                ['title' => $asset->title],
+                $requestedProvider,
+            );
 
             $record->update([
                 'status' => 'completed',
+                'provider' => $result['provider'],
+                'model' => $result['model'],
                 'source_type' => $source['type'],
                 'source_reference' => $source['reference'],
                 'suggestions' => $result['suggestions'],
@@ -52,6 +67,23 @@ class AssetAiSuggestionController extends Controller
             report($exception);
             $record->update(['status' => 'failed', 'error_message' => $exception->getMessage(), 'completed_at' => now()]);
             return back()->withErrors(['ai_assistant' => $exception->getMessage()]);
+        } finally {
+            $previews->delete($previewPath);
+        }
+    }
+
+    private function extendExecutionTime(): void
+    {
+        $seconds = max(30, (int) config('ai-assets.request_max_execution_seconds', 360));
+
+        try {
+            if (function_exists('set_time_limit')) {
+                set_time_limit($seconds);
+            }
+
+            ini_set('max_execution_time', (string) $seconds);
+        } catch (Throwable) {
+            // Some managed hosts disable runtime changes. Their PHP setting must be raised separately.
         }
     }
 

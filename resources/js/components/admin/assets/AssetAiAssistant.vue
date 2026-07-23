@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 interface SuggestionRecord {
     id: number;
     status: string;
+    provider?: string | null;
     model?: string | null;
     suggestions?: Record<string, any> | null;
     local_analysis?: Record<string, any> | null;
@@ -31,6 +32,8 @@ const props = defineProps<{
         detected_objects?: string[];
     };
     history: SuggestionRecord[];
+    providers: Array<{ value: string; label: string; model: string }>;
+    defaultProvider: string;
 }>();
 
 const confirming = ref(false);
@@ -41,6 +44,9 @@ const applying = ref(false);
 const selected = ref<string[]>([]);
 const keywordMode = ref<'replace' | 'append'>('replace');
 const selectedKeywords = ref<string[]>([]);
+const selectedProvider = ref(props.providers.some((provider) => provider.value === props.defaultProvider)
+    ? props.defaultProvider
+    : (props.providers[0]?.value ?? props.defaultProvider));
 
 const latest = computed(() => props.history.find((item) => item.status === 'completed') ?? props.history[0] ?? null);
 const suggestions = computed(() => latest.value?.suggestions ?? {});
@@ -70,6 +76,7 @@ function generate(): void {
     router.post(`/admin/assets/${props.assetId}/ai-suggestions`, {
         adult_content_confirmed: adultConfirmed.value,
         non_sexual_content_confirmed: nonSexualConfirmed.value,
+        provider: selectedProvider.value,
     }, {
         preserveScroll: true,
         onFinish: () => { generating.value = false; confirming.value = false; },
@@ -129,7 +136,7 @@ function display(value: any): string {
         <div v-if="latest?.status === 'completed'" class="mt-5 space-y-4">
             <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <History class="h-4 w-4" />
-                <span>{{ latest.model }}</span><span>•</span><span>{{ latest.total_tokens ?? 0 }} tokens</span>
+                <span>{{ latest.provider || 'AI' }}</span><span>•</span><span>{{ latest.model }}</span><span>•</span><span>{{ latest.total_tokens ?? 0 }} tokens</span>
                 <span v-if="latest.requested_by">• requested by {{ latest.requested_by }}</span>
             </div>
 
@@ -148,6 +155,21 @@ function display(value: any): string {
                         </span>
                     </div>
                 </button>
+            </div>
+
+            <div v-if="suggestions.scene || suggestions.composition || suggestions.relationship_suggestions" class="grid gap-3 lg:grid-cols-3">
+                <div v-if="suggestions.scene" class="rounded-xl border bg-muted/20 p-4">
+                    <p class="text-sm font-medium">Scene</p>
+                    <p class="mt-2 text-sm text-muted-foreground">{{ display(suggestions.scene) }}</p>
+                </div>
+                <div v-if="suggestions.composition" class="rounded-xl border bg-muted/20 p-4">
+                    <p class="text-sm font-medium">Composition</p>
+                    <p class="mt-2 text-sm text-muted-foreground">{{ display(suggestions.composition) }}</p>
+                </div>
+                <div v-if="suggestions.relationship_suggestions" class="rounded-xl border bg-muted/20 p-4">
+                    <p class="text-sm font-medium">Relationship themes</p>
+                    <p class="mt-2 text-sm text-muted-foreground">{{ display(suggestions.relationship_suggestions) }}</p>
+                </div>
             </div>
 
             <div v-if="selected.includes('keywords')" class="space-y-3 rounded-xl border bg-muted/20 p-4 text-sm">
@@ -174,7 +196,19 @@ function display(value: any): string {
         <div v-if="confirming" class="mt-5 rounded-xl border bg-muted/20 p-4">
             <h3 class="font-medium">Confirm before analysis</h3>
             <p class="mt-1 text-sm text-muted-foreground">A reduced marketplace preview will be sent to the configured AI provider. Confirm both statements.</p>
-            <div class="mt-4 space-y-3 text-sm">
+            <div class="mt-4 space-y-4 text-sm">
+                <label v-if="providers.length > 1" class="block">
+                    <span class="mb-1 block font-medium">AI provider</span>
+                    <select v-model="selectedProvider" class="h-10 w-full rounded-md border bg-background px-3 text-sm sm:max-w-sm">
+                        <option v-for="provider in providers" :key="provider.value" :value="provider.value">
+                            {{ provider.label }} — {{ provider.model }}
+                        </option>
+                    </select>
+                    <span class="mt-1 block text-xs text-muted-foreground">If the selected provider fails, the configured fallback may be used automatically.</span>
+                </label>
+                <div v-else-if="providers[0]" class="rounded-lg border bg-background p-3">
+                    <span class="font-medium">Provider:</span> {{ providers[0].label }} — {{ providers[0].model }}
+                </div>
                 <label class="flex items-start gap-2"><input v-model="adultConfirmed" type="checkbox" class="mt-1" /><span>All visible people are confirmed consenting adults.</span></label>
                 <label class="flex items-start gap-2"><input v-model="nonSexualConfirmed" type="checkbox" class="mt-1" /><span>The asset depicts non-sexual content and contains no sexual activity.</span></label>
             </div>

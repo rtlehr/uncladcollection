@@ -17,6 +17,7 @@ use App\Models\LicenseType;
 use App\Services\AssetOfferingService;
 use App\Commerce\Configuration\ConfigurationManager;
 use App\Services\AssetHealthService;
+use App\Services\AssetAiAssistantService;
 use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
 use App\Services\AssetFileRelationshipService;
@@ -649,6 +650,7 @@ class AssetController extends Controller
             $data['ai_suggestions'] = $asset->aiSuggestions->map(fn ($suggestion) => [
                 'id' => $suggestion->id,
                 'status' => $suggestion->status,
+                'provider' => $suggestion->provider,
                 'model' => $suggestion->model,
                 'suggestions' => $suggestion->suggestions,
                 'local_analysis' => $suggestion->local_analysis,
@@ -659,7 +661,10 @@ class AssetController extends Controller
                 'completed_at' => $suggestion->completed_at?->toISOString(),
                 'reviewed_at' => $suggestion->reviewed_at?->toISOString(),
             ])->values();
-            $data['ai_assistant_enabled'] = (bool) config('ai-assets.enabled');
+            $assistant = app(AssetAiAssistantService::class);
+            $data['ai_assistant_enabled'] = $assistant->isEnabled();
+            $data['ai_default_provider'] = $assistant->defaultProvider();
+            $data['ai_providers'] = $assistant->availableProviders();
 
             $data['files'] = $asset->activeFiles->map(fn (AssetFile $file) => [
                 'id' => $file->id,

@@ -103,9 +103,12 @@ export interface AdminAsset {
     dominant_colors?: string[];
     detected_objects?: string[];
     ai_assistant_enabled?: boolean;
+    ai_default_provider?: string;
+    ai_providers?: Array<{ value: string; label: string; model: string }>;
     ai_suggestions?: Array<{
         id: number;
         status: string;
+        provider?: string | null;
         model?: string | null;
         suggestions?: Record<string, unknown> | null;
         local_analysis?: Record<string, unknown> | null;

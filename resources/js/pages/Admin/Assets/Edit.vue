@@ -347,6 +347,8 @@ function reorderFiles(files: AdminAssetFile[]): void {
             :enabled="assetRecord.ai_assistant_enabled ?? false"
             :current="assetRecord"
             :history="assetRecord.ai_suggestions ?? []"
+            :providers="assetRecord.ai_providers ?? []"
+            :default-provider="assetRecord.ai_default_provider ?? 'ollama'"
         />
 
         <AdminSectionNavigator :sections="adminSections" :errors="{ ...form.errors, ...presentationForm.errors, ...relationshipForm.errors, ...configurationForm.errors, ...offeringForm.errors, ...uploadForm.errors }" label="Asset sections" storage-key="admin.assets.edit.workspace" v-slot="{ activeSection }">
