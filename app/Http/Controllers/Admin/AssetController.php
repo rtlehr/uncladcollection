@@ -149,6 +149,7 @@ class AssetController extends Controller
             'offerings.pricingTiers',
             'configurationGroups.values.rules',
             'pricingTiers',
+            'aiSuggestions.requestedBy:id,name',
         ]);
 
         return Inertia::render('Admin/Assets/Edit', [
@@ -594,6 +595,12 @@ class AssetController extends Controller
             'title' => $asset->title,
             'slug' => $asset->slug,
             'description' => $asset->description,
+            'alt_text' => $asset->alt_text,
+            'seo_title' => $asset->seo_title,
+            'seo_description' => $asset->seo_description,
+            'keywords' => $asset->keywords ?? [],
+            'dominant_colors' => $asset->dominant_colors ?? [],
+            'detected_objects' => $asset->detected_objects ?? [],
             'collection_id' => $asset->collection_id,
             'collection' => $asset->collection ? ['id' => $asset->collection->id, 'name' => $asset->collection->name] : null,
             'asset_type' => $asset->asset_type->value,
@@ -629,6 +636,21 @@ class AssetController extends Controller
         if ($detailed) {
             $presentation = app(AssetMediaPresentationService::class);
             $posterUrl = $asset->posterFile ? $presentation->url($asset, $asset->posterFile, true) : null;
+
+            $data['ai_suggestions'] = $asset->aiSuggestions->map(fn ($suggestion) => [
+                'id' => $suggestion->id,
+                'status' => $suggestion->status,
+                'model' => $suggestion->model,
+                'suggestions' => $suggestion->suggestions,
+                'local_analysis' => $suggestion->local_analysis,
+                'error_message' => $suggestion->error_message,
+                'total_tokens' => $suggestion->total_tokens,
+                'requested_by' => $suggestion->requestedBy?->name,
+                'created_at' => $suggestion->created_at?->toISOString(),
+                'completed_at' => $suggestion->completed_at?->toISOString(),
+                'reviewed_at' => $suggestion->reviewed_at?->toISOString(),
+            ])->values();
+            $data['ai_assistant_enabled'] = (bool) config('ai-assets.enabled');
 
             $data['files'] = $asset->activeFiles->map(fn (AssetFile $file) => [
                 'id' => $file->id,

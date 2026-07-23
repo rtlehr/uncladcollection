@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AdminDownloadController;
 use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\AssetAiSuggestionController;
 use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
@@ -219,6 +220,14 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
+
+        Route::post('/assets/{asset}/ai-suggestions', [AssetAiSuggestionController::class, 'store'])
+            ->middleware('permission:manage_images')
+            ->name('assets.ai-suggestions.store');
+
+        Route::post('/assets/{asset}/ai-suggestions/{suggestion}/apply', [AssetAiSuggestionController::class, 'apply'])
+            ->middleware('permission:manage_images')
+            ->name('assets.ai-suggestions.apply');
 
         Route::get('/assets/{asset}/files/{assetFile}/preview', [AssetController::class, 'previewFile'])
             ->middleware('permission:manage_images')

@@ -96,6 +96,25 @@ export interface AdminAsset {
     marketplace_source_asset_file_id: number | null;
     legacy_image_id: number | null;
     health: AssetHealth;
+    alt_text?: string | null;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    keywords?: string[];
+    dominant_colors?: string[];
+    detected_objects?: string[];
+    ai_assistant_enabled?: boolean;
+    ai_suggestions?: Array<{
+        id: number;
+        status: string;
+        model?: string | null;
+        suggestions?: Record<string, unknown> | null;
+        local_analysis?: Record<string, unknown> | null;
+        error_message?: string | null;
+        total_tokens?: number | null;
+        requested_by?: string | null;
+        created_at?: string | null;
+        reviewed_at?: string | null;
+    }>;
     files?: AdminAssetFile[];
     file_relationships?: AdminAssetFileRelationship[];
     offerings?: AdminAssetOffering[];

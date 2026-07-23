@@ -23,6 +23,7 @@ class Asset extends Model
 
     protected $fillable = [
         'uuid', 'legacy_image_id', 'collection_id', 'title', 'slug', 'description',
+        'alt_text', 'seo_title', 'seo_description', 'keywords', 'dominant_colors', 'detected_objects',
         'asset_type', 'status', 'photographer', 'sort_order', 'is_active',
         'is_featured', 'is_ai_generated', 'allows_quantity', 'fulfillment_type',
         'collects_shipping_address', 'shipping_address_required', 'downloads_count', 'favorites_count',
@@ -49,6 +50,9 @@ class Asset extends Model
             'views_count' => 'integer',
             'published_at' => 'datetime',
             'metadata' => 'array',
+            'keywords' => 'array',
+            'dominant_colors' => 'array',
+            'detected_objects' => 'array',
             'presentation_images' => 'array',
             'primary_preview_file_id' => 'integer',
             'poster_file_id' => 'integer',
@@ -119,6 +123,11 @@ class Asset extends Model
     public function activeConfigurationGroups(): HasMany
     {
         return $this->configurationGroups()->where('is_active', true);
+    }
+
+    public function aiSuggestions(): HasMany
+    {
+        return $this->hasMany(AiAssetSuggestion::class)->latest();
     }
 
     public function pricingTiers(): HasMany

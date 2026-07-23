@@ -15,6 +15,7 @@ import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder
 import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
 import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
+import AssetAiAssistant from '@/components/admin/assets/AssetAiAssistant.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
@@ -336,6 +337,13 @@ function reorderFiles(files: AdminAssetFile[]): void {
             :asset="assetRecord"
             :can-view-public-page="canViewPublicPage"
             @view-public-page="viewPublicPage"
+        />
+
+        <AssetAiAssistant
+            :asset-id="assetRecord.id"
+            :enabled="assetRecord.ai_assistant_enabled ?? false"
+            :current="assetRecord"
+            :history="assetRecord.ai_suggestions ?? []"
         />
 
         <AdminSectionNavigator :sections="adminSections" :errors="{ ...form.errors, ...presentationForm.errors, ...relationshipForm.errors, ...configurationForm.errors, ...offeringForm.errors, ...uploadForm.errors }" label="Asset sections" storage-key="admin.assets.edit.workspace" v-slot="{ activeSection }">
