@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AreaDashboardController;
 use App\Http\Controllers\Admin\AnalyticsDashboardController;
 use App\Http\Controllers\Admin\AssetPerformanceReportController;
 use App\Http\Controllers\Admin\BlogContentPerformanceReportController;
@@ -47,6 +48,12 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
     ->group(function () {
         Route::get('/', AdminDashboardController::class)
             ->name('dashboard');
+
+        Route::get('/assets-dashboard', [AreaDashboardController::class, 'assets'])->name('dashboards.assets');
+        Route::get('/blog-dashboard', [AreaDashboardController::class, 'blog'])->name('dashboards.blog');
+        Route::get('/advertising-dashboard', [AreaDashboardController::class, 'advertising'])->name('dashboards.advertising');
+        Route::get('/marketing-dashboard', [AreaDashboardController::class, 'marketing'])->name('dashboards.marketing');
+        Route::get('/administration-dashboard', [AreaDashboardController::class, 'administration'])->name('dashboards.administration');
 
         Route::get('/analytics', AnalyticsDashboardController::class)
             ->middleware('permission:view_reports')
