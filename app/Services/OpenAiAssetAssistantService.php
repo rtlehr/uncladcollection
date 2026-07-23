@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use Illuminate\Support\Arr;
+use JsonException;
 
 class OpenAiAssetAssistantService
 {
@@ -77,11 +79,80 @@ PROMPT;
         }
 
         $json = $response->json();
-        $text = data_get($json, 'output.0.content.0.text') ?? data_get($json, 'output_text');
-        $suggestions = is_string($text) ? json_decode($text, true) : null;
+
+        if (! is_array($json)) {
+            throw new RuntimeException('The AI service returned an unreadable response.');
+        }
+
+        if (($json['status'] ?? null) === 'incomplete') {
+            $reason = data_get(
+                $json,
+                'incomplete_details.reason',
+                'The response was incomplete.'
+            );
+
+            throw new RuntimeException(
+                'The AI analysis could not be completed: '.$reason
+            );
+        }
+
+        $text = null;
+        $refusal = null;
+        $contentTypes = [];
+
+        foreach (Arr::wrap($json['output'] ?? []) as $outputItem) {
+            foreach (Arr::wrap($outputItem['content'] ?? []) as $contentItem) {
+                $type = $contentItem['type'] ?? 'unknown';
+                $contentTypes[] = $type;
+
+                if ($type === 'refusal') {
+                    $refusal = $contentItem['refusal']
+                        ?? $contentItem['text']
+                        ?? 'The AI declined to analyze this image.';
+                }
+
+                if ($type === 'output_text' && is_string($contentItem['text'] ?? null)) {
+                    $text = $contentItem['text'];
+                    break 2;
+                }
+            }
+        }
+
+        if ($refusal !== null) {
+            throw new RuntimeException(
+                'The AI declined to analyze this asset: '.trim((string) $refusal)
+            );
+        }
+
+        if (! is_string($text) || trim($text) === '') {
+            $types = array_values(array_unique($contentTypes));
+
+            throw new RuntimeException(
+                'The AI response did not contain metadata text.'
+                .($types !== [] ? ' Response content types: '.implode(', ', $types).'.' : '')
+            );
+        }
+
+        $text = trim($text);
+
+        // Defensive handling in case a model wraps JSON in a Markdown code block.
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text) ?? $text;
+        $text = preg_replace('/\s*```$/', '', $text) ?? $text;
+
+        try {
+            $suggestions = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new RuntimeException(
+                'The AI returned metadata that could not be decoded as JSON: '
+                .$exception->getMessage(),
+                previous: $exception,
+            );
+        }
 
         if (! is_array($suggestions)) {
-            throw new RuntimeException('The AI response did not contain valid structured metadata.');
+            throw new RuntimeException(
+                'The AI response contained JSON, but not the expected metadata object.'
+            );
         }
 
         return [

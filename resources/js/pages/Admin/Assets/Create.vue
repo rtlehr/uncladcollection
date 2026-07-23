@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import type { AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
 import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
@@ -24,6 +25,7 @@ const props = defineProps<{
     fulfillmentTypes: SelectOption[];
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
     configurationTemplates: ConfigurationTemplateSummary[];
+    imageTags: NamedOption[];
 }>();
 
 const pendingFiles: PendingAssetFile[] = [];
@@ -31,6 +33,7 @@ const form = useForm({
     collection_id: '' as string | number,
     title: '',
     description: '',
+    tag_names: [] as string[],
     photographer: '',
     asset_type: 'image',
     status: 'draft',
@@ -138,6 +141,7 @@ function submit() {
                             <FormField label="Title" for-id="title" required :error="form.errors.title"><Input id="title" v-model="form.title" /></FormField>
                             <FormField label="Photographer / Creator" for-id="photographer" :error="form.errors.photographer"><Input id="photographer" v-model="form.photographer" /></FormField>
                             <FormField class="md:col-span-2" label="Description" for-id="description" :error="form.errors.description"><textarea id="description" v-model="form.description" rows="5" class="w-full rounded-md border bg-background px-3 py-2 text-sm" /></FormField>
+                            <FormField class="md:col-span-2" label="Keywords" for-id="keywords" :error="form.errors.tag_names"><CreatableTagInput v-model="form.tag_names" :options="imageTags" /></FormField>
                         </div>
                     </FormSection>
                     <FormSection v-show="activeSection === 'asset-files'"

@@ -17,6 +17,15 @@ class Tag extends Model
         'description',
     ];
 
+
+    public function assets(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Asset::class,
+            'asset_tag'
+        )->withTimestamps();
+    }
+
     public function blogPosts(): BelongsToMany
     {
         return $this->belongsToMany(

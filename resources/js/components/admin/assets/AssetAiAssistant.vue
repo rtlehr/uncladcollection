@@ -40,10 +40,18 @@ const generating = ref(false);
 const applying = ref(false);
 const selected = ref<string[]>([]);
 const keywordMode = ref<'replace' | 'append'>('replace');
+const selectedKeywords = ref<string[]>([]);
 
 const latest = computed(() => props.history.find((item) => item.status === 'completed') ?? props.history[0] ?? null);
 const suggestions = computed(() => latest.value?.suggestions ?? {});
 const colors = computed(() => latest.value?.local_analysis?.dominant_colors ?? []);
+const suggestedKeywords = computed<string[]>(() => Array.isArray(suggestions.value.keywords) ? suggestions.value.keywords : []);
+
+function toggleKeyword(keyword: string): void {
+    selectedKeywords.value = selectedKeywords.value.includes(keyword)
+        ? selectedKeywords.value.filter((item) => item !== keyword)
+        : [...selectedKeywords.value, keyword];
+}
 
 const fields = computed(() => [
     ['title', 'Title', suggestions.value.title],
@@ -69,6 +77,9 @@ function generate(): void {
 }
 
 function toggle(field: string): void {
+    if (field === 'keywords' && !selected.value.includes(field) && selectedKeywords.value.length === 0) {
+        selectedKeywords.value = [...suggestedKeywords.value];
+    }
     selected.value = selected.value.includes(field)
         ? selected.value.filter((item) => item !== field)
         : [...selected.value, field];
@@ -80,6 +91,7 @@ function apply(): void {
     router.post(`/admin/assets/${props.assetId}/ai-suggestions/${latest.value.id}/apply`, {
         fields: selected.value,
         keyword_mode: keywordMode.value,
+        keyword_names: selectedKeywords.value,
     }, {
         preserveScroll: true,
         onFinish: () => { applying.value = false; selected.value = []; },
@@ -138,10 +150,18 @@ function display(value: any): string {
                 </button>
             </div>
 
-            <div v-if="selected.includes('keywords')" class="flex items-center gap-3 text-sm">
-                <span class="font-medium">Keywords:</span>
-                <label><input v-model="keywordMode" type="radio" value="replace" /> Replace</label>
-                <label><input v-model="keywordMode" type="radio" value="append" /> Append</label>
+            <div v-if="selected.includes('keywords')" class="space-y-3 rounded-xl border bg-muted/20 p-4 text-sm">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="font-medium">Apply keywords:</span>
+                    <label><input v-model="keywordMode" type="radio" value="replace" /> Replace existing</label>
+                    <label><input v-model="keywordMode" type="radio" value="append" /> Add to existing</label>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <label v-for="keyword in suggestedKeywords" :key="keyword" class="flex cursor-pointer items-center gap-2 rounded-full border bg-background px-3 py-1.5">
+                        <input type="checkbox" :checked="selectedKeywords.includes(keyword)" @change="toggleKeyword(keyword)" />
+                        <span>{{ keyword }}</span>
+                    </label>
+                </div>
             </div>
 
             <div class="flex justify-end">

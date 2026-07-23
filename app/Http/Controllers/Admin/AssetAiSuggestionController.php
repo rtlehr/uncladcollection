@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Services\AssetAiSourceService;
 use App\Services\AssetColorAnalysisService;
 use App\Services\OpenAiAssetAssistantService;
+use App\Services\AssetTagService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -54,7 +55,7 @@ class AssetAiSuggestionController extends Controller
         }
     }
 
-    public function apply(Request $request, Asset $asset, AiAssetSuggestion $suggestion): RedirectResponse
+    public function apply(Request $request, Asset $asset, AiAssetSuggestion $suggestion, AssetTagService $tagService): RedirectResponse
     {
         abort_unless($suggestion->asset_id === $asset->id && $suggestion->status === 'completed', 404);
 
@@ -62,6 +63,8 @@ class AssetAiSuggestionController extends Controller
             'fields' => ['required', 'array', 'min:1'],
             'fields.*' => ['string', 'in:title,description,alt_text,seo_title,seo_description,keywords,dominant_colors,detected_objects'],
             'keyword_mode' => ['nullable', 'in:replace,append'],
+            'keyword_names' => ['nullable', 'array', 'max:50'],
+            'keyword_names.*' => ['string', 'max:100'],
         ]);
 
         $data = [];
@@ -75,8 +78,14 @@ class AssetAiSuggestionController extends Controller
                 default => $suggestions[$field] ?? null,
             };
 
-            if ($field === 'keywords' && ($validated['keyword_mode'] ?? 'replace') === 'append') {
-                $value = array_values(array_unique(array_merge($asset->keywords ?? [], Arr::wrap($value))));
+            if ($field === 'keywords') {
+                $names = $validated['keyword_names'] ?? Arr::wrap($value);
+                if (($validated['keyword_mode'] ?? 'replace') === 'append') {
+                    $tagService->mergeNames($asset, $names);
+                } else {
+                    $tagService->syncNames($asset, $names);
+                }
+                continue;
             }
 
             if ($value !== null) {

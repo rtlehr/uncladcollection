@@ -21,7 +21,9 @@ use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
 use App\Services\AssetFileRelationshipService;
 use App\Models\Collection;
+use App\Models\Tag;
 use App\Services\AssetService;
+use App\Services\AssetTagService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Http\Request;
@@ -43,7 +45,7 @@ class AssetController extends Controller
 
         $assets = Asset::query()
             ->withCount(['files', 'activeFiles'])
-            ->with(['collection:id,name', 'primaryPreviewFile', 'activeFiles', 'offerings'])
+            ->with(['collection:id,name', 'primaryPreviewFile', 'activeFiles', 'offerings', 'tags:id,name'])
             ->when($search, fn ($query) => $query->where(fn ($query) => $query
                 ->where('title', 'like', "%{$search}%")
                 ->orWhere('slug', 'like', "%{$search}%")
@@ -68,11 +70,11 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Create', $this->formOptions());
     }
 
-    public function store(Request $request, AssetService $assetService, ConfigurationManager $configurationService, AssetPresentationService $presentationService): RedirectResponse
+    public function store(Request $request, AssetService $assetService, ConfigurationManager $configurationService, AssetPresentationService $presentationService, AssetTagService $tagService): RedirectResponse
     {
         $validated = $this->validateAsset($request, requireFiles: true);
 
-        $asset = DB::transaction(function () use ($request, $validated, $assetService, $configurationService, $presentationService): Asset {
+        $asset = DB::transaction(function () use ($request, $validated, $assetService, $configurationService, $presentationService, $tagService): Asset {
             $asset = $assetService->create([
                 'collection_id' => $validated['collection_id'] ?? null,
                 'title' => $validated['title'],
@@ -129,6 +131,7 @@ class AssetController extends Controller
             }
 
             $configurationService->saveMany($asset, $validated['configurations'] ?? []);
+            $tagService->syncNames($asset, $validated['tag_names'] ?? []);
 
             return $asset;
         });
@@ -150,6 +153,7 @@ class AssetController extends Controller
             'configurationGroups.values.rules',
             'pricingTiers',
             'aiSuggestions.requestedBy:id,name',
+            'tags:id,name',
         ]);
 
         return Inertia::render('Admin/Assets/Edit', [
@@ -159,7 +163,7 @@ class AssetController extends Controller
         ]);
     }
 
-    public function update(Request $request, Asset $asset): RedirectResponse
+    public function update(Request $request, Asset $asset, AssetTagService $tagService): RedirectResponse
     {
         $validated = $this->validateAsset($request, requireFiles: false, asset: $asset);
 
@@ -181,6 +185,8 @@ class AssetController extends Controller
             'shipping_address_required' => $request->boolean('collects_shipping_address')
                 && $request->boolean('shipping_address_required'),
         ]);
+
+        $tagService->syncNames($asset, $validated['tag_names'] ?? []);
 
         return back()->with('success', 'Asset details updated successfully.');
     }
@@ -463,6 +469,8 @@ class AssetController extends Controller
             'fulfillment_type' => ['required', Rule::enum(AssetFulfillmentType::class)],
             'collects_shipping_address' => ['boolean'],
             'shipping_address_required' => ['boolean'],
+            'tag_names' => ['nullable', 'array', 'max:50'],
+            'tag_names.*' => ['required', 'string', 'max:100'],
             'files' => [$requireFiles ? 'required' : 'nullable', 'array', $requireFiles ? 'min:1' : 'min:0', 'max:25'],
             'files.*' => ['file', 'max:'.config('asset-media.max_upload_kilobytes', 512000)],
             'file_roles' => [$requireFiles ? 'required' : 'nullable', 'array'],
@@ -485,6 +493,7 @@ class AssetController extends Controller
     private function formOptions(): array
     {
         return [
+            'imageTags' => Tag::query()->where('tag_type', 'image')->orderBy('name')->get(['id', 'name']),
             'collections' => Collection::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']),
             'assetTypes' => $this->assetTypes(),
             'statuses' => $this->statuses(),
@@ -598,7 +607,7 @@ class AssetController extends Controller
             'alt_text' => $asset->alt_text,
             'seo_title' => $asset->seo_title,
             'seo_description' => $asset->seo_description,
-            'keywords' => $asset->keywords ?? [],
+            'keywords' => $asset->tags->pluck('name')->values()->all() ?: ($asset->keywords ?? []),
             'dominant_colors' => $asset->dominant_colors ?? [],
             'detected_objects' => $asset->detected_objects ?? [],
             'collection_id' => $asset->collection_id,

@@ -19,6 +19,7 @@ import AssetAiAssistant from '@/components/admin/assets/AssetAiAssistant.vue';
 import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
 import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
 import AssetFileRelationshipManager from '@/components/admin/assets/AssetFileRelationshipManager.vue';
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import type {
@@ -48,6 +49,7 @@ const props = defineProps<{
     fulfillmentTypes: SelectOption[];
     configurationDisplayTypes: ConfigurationDisplayTypeOption[];
     configurationTemplates: ConfigurationTemplateSummary[];
+    imageTags: NamedOption[];
     relationshipTypes: AssetFileRelationshipTypeOption[];
 }>();
 
@@ -55,6 +57,7 @@ const form = useForm({
     collection_id: props.assetRecord.collection_id ?? '' as string | number,
     title: props.assetRecord.title,
     description: props.assetRecord.description ?? '',
+    tag_names: [...(props.assetRecord.keywords ?? [])] as string[],
     photographer: props.assetRecord.photographer ?? '',
     asset_type: props.assetRecord.asset_type,
     status: props.assetRecord.status,
@@ -357,6 +360,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
                         <FormField label="Title" for-id="title" :error="form.errors.title"><Input id="title" v-model="form.title" /></FormField>
                         <FormField label="Creator" for-id="photographer"><Input id="photographer" v-model="form.photographer" /></FormField>
                         <FormField class="md:col-span-2" label="Description" for-id="description"><textarea id="description" v-model="form.description" rows="5" class="w-full rounded-md border bg-background px-3 py-2 text-sm" /></FormField>
+                        <FormField class="md:col-span-2" label="Keywords" for-id="keywords" :error="form.errors.tag_names"><CreatableTagInput v-model="form.tag_names" :options="imageTags" /></FormField>
                     </div>
                 </FormSection>
                 <FormSection title="Publishing" description="Asset type, workflow, and public availability.">
