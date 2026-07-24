@@ -29,7 +29,6 @@ class AssetAiAssistantTest extends TestCase
         $user = $this->assetAdministrator();
 
         $this->actingAs($user)->post("/admin/assets/{$asset->id}/ai-suggestions", [
-            'adult_content_confirmed' => true,
             'non_sexual_content_confirmed' => true,
             'provider' => 'ollama',
         ])->assertRedirect()->assertSessionHasNoErrors();
@@ -100,8 +99,7 @@ class AssetAiAssistantTest extends TestCase
 
         $this->actingAs($this->assetAdministrator())
             ->post("/admin/assets/{$asset->id}/ai-suggestions", [
-                'adult_content_confirmed' => true,
-                'non_sexual_content_confirmed' => true,
+                    'non_sexual_content_confirmed' => true,
                 'provider' => 'ollama',
             ])
             ->assertRedirect()
@@ -139,8 +137,7 @@ class AssetAiAssistantTest extends TestCase
 
         $this->actingAs($this->assetAdministrator())
             ->post("/admin/assets/{$asset->id}/ai-suggestions", [
-                'adult_content_confirmed' => true,
-                'non_sexual_content_confirmed' => true,
+                    'non_sexual_content_confirmed' => true,
                 'provider' => 'ollama',
             ])
             ->assertRedirect()
@@ -161,7 +158,7 @@ class AssetAiAssistantTest extends TestCase
 
         $this->actingAs($this->assetAdministrator())
             ->post("/admin/assets/{$asset->id}/ai-suggestions", [])
-            ->assertSessionHasErrors(['adult_content_confirmed', 'non_sexual_content_confirmed']);
+            ->assertSessionHasErrors(['non_sexual_content_confirmed']);
     }
 
     private function configureOllama(): void

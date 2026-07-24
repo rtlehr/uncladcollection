@@ -81,7 +81,13 @@ function generate(): void {
         provider: selectedProvider.value,
     }, {
         preserveScroll: true,
-        onFinish: () => { generating.value = false; confirming.value = false; },
+        onSuccess: () => {
+            confirming.value = false;
+            nonSexualConfirmed.value = false;
+        },
+        onFinish: () => {
+            generating.value = false;
+        },
     });
 }
 

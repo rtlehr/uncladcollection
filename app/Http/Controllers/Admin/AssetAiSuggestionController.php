@@ -22,7 +22,6 @@ class AssetAiSuggestionController extends Controller
         $this->extendExecutionTime();
 
         $validated = $request->validate([
-            'adult_content_confirmed' => ['accepted'],
             'non_sexual_content_confirmed' => ['accepted'],
             'provider' => ['nullable', 'string', 'in:ollama,openai'],
         ]);
