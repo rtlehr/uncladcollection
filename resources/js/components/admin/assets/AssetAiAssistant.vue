@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { Bot, Check, History, LoaderCircle, Sparkles } from '@lucide/vue';
+import { Ban, Bot, Check, History, LoaderCircle, Sparkles } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 
 interface SuggestionRecord {
@@ -47,6 +47,8 @@ const applying = ref(false);
 const selected = ref<string[]>([]);
 const keywordMode = ref<'replace' | 'append'>('replace');
 const selectedKeywords = ref<string[]>([]);
+const locallyExcludedKeywords = ref<string[]>([]);
+const excludingKeywords = ref<string[]>([]);
 const selectedProvider = ref(props.providers.some((provider) => provider.value === props.defaultProvider)
     ? props.defaultProvider
     : (props.providers[0]?.value ?? props.defaultProvider));
@@ -54,12 +56,73 @@ const selectedProvider = ref(props.providers.some((provider) => provider.value =
 const latest = computed(() => props.history.find((item) => item.status === 'completed') ?? props.history[0] ?? null);
 const suggestions = computed(() => latest.value?.suggestions ?? {});
 const colors = computed(() => latest.value?.local_analysis?.dominant_colors ?? []);
-const suggestedKeywords = computed<string[]>(() => Array.isArray(suggestions.value.keywords) ? suggestions.value.keywords : []);
+const suggestedKeywords = computed<string[]>(() => {
+    const keywords = Array.isArray(suggestions.value.keywords) ? suggestions.value.keywords : [];
+
+    return keywords.filter((keyword: string) => !locallyExcludedKeywords.value.includes(keyword));
+});
+
+const uncheckedKeywords = computed<string[]>(() =>
+    suggestedKeywords.value.filter((keyword) => !selectedKeywords.value.includes(keyword)),
+);
 
 function toggleKeyword(keyword: string): void {
     selectedKeywords.value = selectedKeywords.value.includes(keyword)
         ? selectedKeywords.value.filter((item) => item !== keyword)
         : [...selectedKeywords.value, keyword];
+}
+
+function excludeKeyword(keyword: string): void {
+    if (excludingKeywords.value.includes(keyword)) return;
+
+    selectedKeywords.value = selectedKeywords.value.filter((item) => item !== keyword);
+    locallyExcludedKeywords.value = [...locallyExcludedKeywords.value, keyword];
+    excludingKeywords.value = [...excludingKeywords.value, keyword];
+
+    router.post('/admin/ai-keyword-exclusions', {
+        keyword,
+        notes: 'Added directly from an AI keyword suggestion.',
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onError: () => {
+            locallyExcludedKeywords.value = locallyExcludedKeywords.value.filter((item) => item !== keyword);
+        },
+        onFinish: () => {
+            excludingKeywords.value = excludingKeywords.value.filter((item) => item !== keyword);
+        },
+    });
+}
+
+function excludeUncheckedKeywords(): void {
+    const keywords = [...uncheckedKeywords.value];
+    if (keywords.length === 0) return;
+
+    locallyExcludedKeywords.value = Array.from(new Set([
+        ...locallyExcludedKeywords.value,
+        ...keywords,
+    ]));
+    excludingKeywords.value = Array.from(new Set([
+        ...excludingKeywords.value,
+        ...keywords,
+    ]));
+
+    router.post('/admin/ai-keyword-exclusions/bulk', {
+        keywords: keywords.join('\n'),
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onError: () => {
+            locallyExcludedKeywords.value = locallyExcludedKeywords.value.filter(
+                (item) => !keywords.includes(item),
+            );
+        },
+        onFinish: () => {
+            excludingKeywords.value = excludingKeywords.value.filter(
+                (item) => !keywords.includes(item),
+            );
+        },
+    });
 }
 
 const fields = computed(() => [
@@ -226,10 +289,49 @@ function display(value: any): string {
                     <label><input v-model="keywordMode" type="radio" value="append" /> Add to existing</label>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <label v-for="keyword in suggestedKeywords" :key="keyword" class="flex cursor-pointer items-center gap-2 rounded-full border bg-background px-3 py-1.5">
-                        <input type="checkbox" :checked="selectedKeywords.includes(keyword)" @change="toggleKeyword(keyword)" />
-                        <span>{{ keyword }}</span>
-                    </label>
+                    <div
+                        v-for="keyword in suggestedKeywords"
+                        :key="keyword"
+                        class="flex items-center overflow-hidden rounded-full border bg-background"
+                    >
+                        <label class="flex cursor-pointer items-center gap-2 px-3 py-1.5">
+                            <input
+                                type="checkbox"
+                                :checked="selectedKeywords.includes(keyword)"
+                                @change="toggleKeyword(keyword)"
+                            />
+                            <span>{{ keyword }}</span>
+                        </label>
+                        <button
+                            type="button"
+                            class="flex self-stretch items-center border-l px-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:cursor-wait disabled:opacity-50"
+                            :disabled="excludingKeywords.includes(keyword)"
+                            :aria-label="`Exclude ${keyword} from future AI keyword suggestions`"
+                            :title="`Exclude “${keyword}” from future AI suggestions`"
+                            @click="excludeKeyword(keyword)"
+                        >
+                            <LoaderCircle
+                                v-if="excludingKeywords.includes(keyword)"
+                                class="h-3.5 w-3.5 animate-spin"
+                            />
+                            <Ban v-else class="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+                    <p class="text-xs text-muted-foreground">
+                        Click the exclusion icon on a keyword to remove it now and block it from future AI suggestions.
+                    </p>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        :disabled="uncheckedKeywords.length === 0 || excludingKeywords.length > 0"
+                        @click="excludeUncheckedKeywords"
+                    >
+                        <Ban class="mr-2 h-4 w-4" />
+                        Exclude unchecked keywords ({{ uncheckedKeywords.length }})
+                    </Button>
                 </div>
             </div>
 

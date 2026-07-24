@@ -15,7 +15,7 @@ class AiKeywordExclusion extends Model
     protected static function booted(): void
     {
         static::saving(function (self $exclusion): void {
-            $exclusion->keyword = trim($exclusion->keyword);
+            $exclusion->keyword = Str::of($exclusion->keyword)->squish()->toString();
             $exclusion->normalized_keyword = self::normalize($exclusion->keyword);
         });
     }
