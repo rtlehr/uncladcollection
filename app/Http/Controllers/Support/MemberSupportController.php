@@ -105,7 +105,7 @@ class MemberSupportController extends Controller
     public function download(Request $request, SupportTicket $ticket, SupportTicketAttachment $attachment)
     {
         $this->authorize('view', $ticket);
-        abort_unless($attachment->support_ticket_id === $ticket->id && $attachment->is_customer_visible, 404);
+        abort_unless($attachment->support_ticket_id === $ticket->id && $attachment->is_customer_visible && ! $attachment->isRedacted(), 404);
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_filename);
     }
 }

@@ -1422,3 +1422,26 @@
     .blog-content .uc-smart-asset-card:hover,.blog-content .uc-smart-asset-card:hover .uc-smart-asset-image img,.blog-content .uc-smart-asset-actions a:hover { transform:none; }
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Persistent Page Help Workspace
+|--------------------------------------------------------------------------
+*/
+
+@media (min-width: 1024px) {
+    body {
+        transition: padding-right 180ms ease;
+    }
+
+    body.page-help-workspace-open {
+        padding-right: var(--page-help-workspace-width, 420px);
+    }
+
+    body.page-help-workspace-resizing,
+    body.page-help-workspace-resizing * {
+        cursor: col-resize !important;
+        user-select: none !important;
+        transition: none !important;
+    }
+}

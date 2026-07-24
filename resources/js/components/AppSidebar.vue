@@ -74,6 +74,7 @@ if (can('view_support_tickets')) supportItems.push(
  { title: 'My Tickets', href: '/admin/support/tickets?assignee=mine', icon: UserRoundCheck },
  { title: 'Unassigned', href: '/admin/support/tickets?assignee=unassigned', icon: Inbox },
 );
+if (can('view_support_reports')) supportItems.push({ title: 'Reports', href: '/admin/support/reports', icon: BarChart3 });
 if (can('manage_support_categories')) supportItems.push({ title: 'Categories', href: '/admin/support/categories', icon: Tags });
 
 const systemItems: NavItem[] = [];

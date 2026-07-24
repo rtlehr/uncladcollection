@@ -97,7 +97,7 @@ class GuestSupportController extends Controller
     public function download(SupportTicket $ticket, string $token, SupportTicketAttachment $attachment, GuestTicketAccessService $access)
     {
         abort_unless($ticket->isGuestTicket() && $access->validate($ticket, $token), 404);
-        abort_unless($attachment->support_ticket_id === $ticket->id && $attachment->is_customer_visible, 404);
+        abort_unless($attachment->support_ticket_id === $ticket->id && $attachment->is_customer_visible && ! $attachment->isRedacted(), 404);
 
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_filename);
     }

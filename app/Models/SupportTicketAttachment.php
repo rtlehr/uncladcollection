@@ -12,6 +12,7 @@ class SupportTicketAttachment extends Model
         'uuid', 'support_ticket_id', 'support_ticket_message_id', 'uploaded_by',
         'disk', 'path', 'original_filename', 'mime_type', 'extension', 'size_bytes',
         'checksum_sha256', 'scan_status', 'is_customer_visible',
+        'redacted_at', 'redacted_by', 'redaction_reason',
     ];
 
     protected function casts(): array
@@ -20,10 +21,17 @@ class SupportTicketAttachment extends Model
             'scan_status' => SupportAttachmentScanStatus::class,
             'size_bytes' => 'integer',
             'is_customer_visible' => 'boolean',
+            'redacted_at' => 'datetime',
         ];
     }
 
     public function ticket(): BelongsTo { return $this->belongsTo(SupportTicket::class, 'support_ticket_id'); }
     public function message(): BelongsTo { return $this->belongsTo(SupportTicketMessage::class, 'support_ticket_message_id'); }
     public function uploader(): BelongsTo { return $this->belongsTo(User::class, 'uploaded_by'); }
+    public function redactor(): BelongsTo { return $this->belongsTo(User::class, 'redacted_by'); }
+
+    public function isRedacted(): bool
+    {
+        return $this->redacted_at !== null;
+    }
 }

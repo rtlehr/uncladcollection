@@ -103,8 +103,9 @@ onBeforeUnmount(() => {
                 </Link>
             </nav>
 
+            <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
+
             <div class="hidden items-center gap-3 lg:flex">
-                <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
                 <PublicCartMenu />
 
                 <Link
@@ -130,7 +131,6 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="flex shrink-0 items-center gap-2 lg:hidden">
-                <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
                 <PublicCartMenu compact />
 
                 <button

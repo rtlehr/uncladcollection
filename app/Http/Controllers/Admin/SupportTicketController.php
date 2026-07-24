@@ -97,6 +97,13 @@ class SupportTicketController extends Controller
                     'id' => $m->id, 'body' => $m->body, 'type' => $m->message_type->value,
                     'is_customer_visible' => $m->is_customer_visible, 'author_name' => $m->author_name,
                     'created_at' => $m->created_at?->format('M j, Y g:i A'),
+                    'attachments' => $m->attachments->map(fn ($attachment) => [
+                        'id' => $attachment->id,
+                        'name' => $attachment->original_filename,
+                        'size_bytes' => $attachment->size_bytes,
+                        'redacted_at' => $attachment->redacted_at?->toIso8601String(),
+                        'redaction_reason' => $attachment->redaction_reason,
+                    ]),
                 ]),
                 'history' => $ticket->statusHistories->map(fn ($h) => [
                     'id' => $h->id, 'event_type' => $h->event_type, 'actor' => $h->actor?->name,

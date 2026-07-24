@@ -136,3 +136,93 @@ Artisan::command('analytics:validate {--strict : Treat missing analytics permiss
     $this->info('Analytics validation passed.');
     return 0;
 })->purpose('Validate the Epic 1 analytics routes, permissions, schema, and configuration');
+
+
+Artisan::command('support:prune {--dry-run} {--attachments-only}', function (): int {
+    $attachmentCutoff = now()->subDays(max(1, (int) config('support.attachments.retention_days', 365)));
+    $ticketCutoff = now()->subDays(max(1, (int) config('support.retention.closed_ticket_days', 2555)));
+    $chunk = max(50, (int) config('support.retention.prune_chunk_size', 500));
+
+    $attachments = \App\Models\SupportTicketAttachment::query()
+        ->whereNull('redacted_at')
+        ->whereHas('ticket', fn ($q) => $q->whereNotNull('closed_at')->where('closed_at', '<', $attachmentCutoff));
+    $attachmentCount = (clone $attachments)->count();
+
+    $tickets = \App\Models\SupportTicket::onlyTrashed()
+        ->where('deleted_at', '<', $ticketCutoff);
+    $ticketCount = (clone $tickets)->count();
+
+    if ($this->option('dry-run')) {
+        $this->info("{$attachmentCount} closed-ticket attachments would be removed.");
+        if (! $this->option('attachments-only')) {
+            $this->info("{$ticketCount} soft-deleted tickets would be permanently deleted.");
+        }
+        return 0;
+    }
+
+    $removed = 0;
+    $attachments->orderBy('id')->chunkById($chunk, function ($rows) use (&$removed): void {
+        foreach ($rows as $attachment) {
+            \Illuminate\Support\Facades\Storage::disk($attachment->disk)->delete($attachment->path);
+            $attachment->update([
+                'redacted_at' => now(),
+                'redaction_reason' => 'Removed by configured retention policy.',
+                'path' => '',
+                'is_customer_visible' => false,
+            ]);
+            $removed++;
+        }
+    });
+
+    $deleted = 0;
+    if (! $this->option('attachments-only')) {
+        $tickets->orderBy('id')->chunkById($chunk, function ($rows) use (&$deleted): void {
+            foreach ($rows as $ticket) {
+                $ticket->forceDelete();
+                $deleted++;
+            }
+        });
+    }
+
+    $this->info("Removed {$removed} retained attachments and permanently deleted {$deleted} tickets.");
+    return 0;
+})->purpose('Apply configured support attachment and ticket retention policies');
+
+Artisan::command('support:validate', function (): int {
+    $errors = [];
+    foreach ([
+        'admin.support.dashboard',
+        'admin.support.reports',
+        'admin.support.tickets.index',
+        'support.store',
+        'support.guest.reply',
+    ] as $routeName) {
+        if (! \Illuminate\Support\Facades\Route::has($routeName)) {
+            $errors[] = "Missing route: {$routeName}";
+        }
+    }
+
+    foreach (['view_support_tickets', 'view_support_reports', 'manage_support_tickets'] as $permission) {
+        if (! \App\Models\Permission::query()->where('name', $permission)->exists()) {
+            $errors[] = "Missing permission: {$permission}";
+        }
+    }
+
+    foreach (['support_tickets', 'support_ticket_messages', 'support_ticket_attachments'] as $table) {
+        if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
+            $errors[] = "Missing table: {$table}";
+        }
+    }
+
+    foreach ($errors as $error) {
+        $this->error($error);
+    }
+
+    if ($errors !== []) {
+        $this->error('Support validation failed.');
+        return 1;
+    }
+
+    $this->info('Support validation passed.');
+    return 0;
+})->purpose('Validate support routes, permissions, and schema');

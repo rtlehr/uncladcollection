@@ -381,7 +381,15 @@ Route::middleware(['auth', 'verified', 'permission:manage_comments'])
         Route::patch('/comment-reports/{commentReport}/reviewed', [CommentModerationController::class, 'markReportReviewed'])
             ->name('comment-reports.reviewed');
 
-        Route::get('/page-help/coverage', [PageHelpController::class, 'coverage'])->middleware('permission:view_page_help_admin')->name('page-help.coverage');
-        Route::resource('page-help', PageHelpController::class)->except(['show'])->middleware('permission:view_page_help_admin');
+    });
 
+Route::middleware(['auth', 'verified', 'permission:view_admin', 'permission:view_page_help_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/page-help/coverage', [PageHelpController::class, 'coverage'])
+            ->name('page-help.coverage');
+
+        Route::resource('page-help', PageHelpController::class)
+            ->except(['show']);
     });
