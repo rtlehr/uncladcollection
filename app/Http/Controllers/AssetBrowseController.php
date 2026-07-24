@@ -30,6 +30,7 @@ class AssetBrowseController extends Controller
             'primaryPreviewFile',
             'posterFile',
             'legacyImage:id,slug,title',
+            'tags:id,name',
             'configurationGroups' => fn ($query) => $query->where('is_active', true)->with(['values' => fn ($query) => $query->where('is_active', true)->with(['rules' => fn ($query) => $query->where('is_active', true)])]),
             'offerings' => fn ($query) => $query
                 ->where('is_active', true)
@@ -89,6 +90,7 @@ class AssetBrowseController extends Controller
                 'title' => $asset->title,
                 'slug' => $asset->slug,
                 'description' => $asset->description,
+                'keywords' => $asset->tags->pluck('name')->filter()->values()->all() ?: ($asset->keywords ?? []),
                 'asset_type' => $asset->asset_type->value,
                 'asset_type_label' => $asset->asset_type->label(),
                 'photographer' => $asset->photographer,

@@ -8,6 +8,7 @@ export interface PublicAssetOffering {
     id: number;
     name: string;
     description: string | null;
+    keywords: string[];
     price_cents: number;
     currency: string;
     download_limit: number | null;

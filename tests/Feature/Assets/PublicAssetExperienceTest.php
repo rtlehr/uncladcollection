@@ -8,6 +8,7 @@ use App\Enums\AssetStatus;
 use App\Enums\AssetType;
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -24,12 +25,26 @@ it('renders a published public asset experience', function (): void {
     $asset = publicAssetTestAsset(AssetStatus::Published);
     publicAssetTestFile($asset);
 
+    $asset->tags()->attach([
+        Tag::query()->create([
+            'name' => 'Naturist',
+            'slug' => 'naturist',
+            'tag_type' => 'image',
+        ])->id,
+        Tag::query()->create([
+            'name' => 'Waterfront',
+            'slug' => 'waterfront',
+            'tag_type' => 'image',
+        ])->id,
+    ]);
+
     $this->get(route('assets.show', $asset))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Assets/Show')
             ->where('asset.id', $asset->id)
             ->where('asset.title', $asset->title)
+            ->where('asset.keywords', ['Naturist', 'Waterfront'])
             ->has('asset.files', 1));
 });
 
@@ -42,10 +57,19 @@ it('serves an approved private preview inline', function (): void {
     Storage::fake('asset-files');
     $asset = publicAssetTestAsset(AssetStatus::Published);
     $file = publicAssetTestFile($asset);
-    Storage::disk('asset-files')->put($file->path, 'preview-content');
+    $image = imagecreatetruecolor(2, 2);
+    imagefill($image, 0, 0, imagecolorallocate($image, 220, 220, 220));
+
+    ob_start();
+    imagejpeg($image, null, 90);
+    $jpeg = ob_get_clean();
+
+    imagedestroy($image);
+
+    Storage::disk('asset-files')->put($file->path, $jpeg);
 
     $response = $this->get(route('assets.preview', [$asset, $file]));
-    $response->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+    $response->assertOk()->assertHeader('Content-Type', 'image/webp');
 });
 
 function publicAssetTestAsset(AssetStatus $status): Asset

@@ -119,6 +119,21 @@ defineProps<{
                             {{ asset.description }}
                         </p>
 
+                        <div v-if="asset.keywords.length" class="mt-5">
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">
+                                Keywords
+                            </p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                <span
+                                    v-for="keyword in asset.keywords"
+                                    :key="keyword"
+                                    class="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                                >
+                                    {{ keyword }}
+                                </span>
+                            </div>
+                        </div>
+
                         <div class="mt-5 flex flex-wrap gap-2">
                             <AssetFormatBadge
                                 v-for="format in asset.formats"
