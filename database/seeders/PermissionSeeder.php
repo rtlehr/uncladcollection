@@ -136,6 +136,16 @@ class PermissionSeeder extends Seeder
             ['group_name'=>'Sponsorship Sales','name'=>'manage_ad_inventory','label'=>'Manage Ad Inventory','description'=>'Review and manage placement availability and reservations.'],
             ['group_name'=>'Sponsorship Sales','name'=>'convert_sponsorship_proposals','label'=>'Convert Sponsorship Proposals','description'=>'Convert accepted proposals into campaigns and invoices.'],
 
+            // Support
+            ['group_name' => 'Support', 'name' => 'view_support_tickets', 'label' => 'View Support Tickets', 'description' => 'Access the internal support ticket workspace.'],
+            ['group_name' => 'Support', 'name' => 'reply_support_tickets', 'label' => 'Reply to Support Tickets', 'description' => 'Send customer-visible staff replies.'],
+            ['group_name' => 'Support', 'name' => 'assign_support_tickets', 'label' => 'Assign Support Tickets', 'description' => 'Assign and reassign support tickets.'],
+            ['group_name' => 'Support', 'name' => 'manage_support_tickets', 'label' => 'Manage Support Tickets', 'description' => 'Change ticket category, priority, related records, and operational details.'],
+            ['group_name' => 'Support', 'name' => 'add_support_internal_notes', 'label' => 'Add Support Internal Notes', 'description' => 'Add staff-only notes to support tickets.'],
+            ['group_name' => 'Support', 'name' => 'resolve_support_tickets', 'label' => 'Resolve Support Tickets', 'description' => 'Resolve, close, cancel, and reopen support tickets.'],
+            ['group_name' => 'Support', 'name' => 'manage_support_categories', 'label' => 'Manage Support Categories', 'description' => 'Manage support ticket categories and defaults.'],
+            ['group_name' => 'Support', 'name' => 'view_support_reports', 'label' => 'View Support Reports', 'description' => 'View support workload and performance reporting.'],
+
             // Reports
             [
                 'group_name' => 'Reports',

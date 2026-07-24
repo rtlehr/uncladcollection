@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+require __DIR__.'/support.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/favorite.php';
 require __DIR__.'/user-images.php';

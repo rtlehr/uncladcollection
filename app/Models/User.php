@@ -184,6 +184,16 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(BlogPost::class);
     }
 
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
+    public function assignedSupportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class, 'assigned_user_id');
+    }
+
     public function getAvatarUrlAttribute(): ?string
     {
         return $this->avatar_path

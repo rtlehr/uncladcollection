@@ -87,6 +87,10 @@ onBeforeUnmount(() => {
                 <Link href="/public-page" class="transition hover:text-[var(--brand-accent)]">
                     About
                 </Link>
+                <Link href="/support" class="transition hover:text-[var(--brand-accent)]">
+                    Support
+                </Link>
+
 
                 <Link
                     v-if="isAuthenticated"
@@ -167,6 +171,15 @@ onBeforeUnmount(() => {
                     @click="closeMenu"
                 >
                     About
+                </Link>
+
+
+                <Link
+                    href="/support"
+                    class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
+                    @click="closeMenu"
+                >
+                    Support
                 </Link>
 
                 <Link

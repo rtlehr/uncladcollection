@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             AiKeywordExclusionSeeder::class,
             CollectionSeeder::class,
             LicenseTypeSeeder::class,
+            SupportTicketCategorySeeder::class,
         ]);
 
         if (app()->environment(['local', 'testing'])) {

@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BadgeDollarSign, Ban, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
-    Heart, ImageIcon, LayoutGrid, Megaphone, Settings, ShieldCheck,
+    Heart, ImageIcon, LayoutGrid, LifeBuoy, Megaphone, Settings, ShieldCheck,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -22,6 +22,7 @@ const mainNavItems: NavItem[] = [
     { title: 'Stories', href: '/blog', icon: FileText },
     { title: 'Favorites', href: '/favorites', icon: Heart },
     { title: 'My Library', href: '/purchases', icon: BadgeDollarSign },
+    { title: 'Support', href: '/support/tickets', icon: LifeBuoy },
 ];
 if (authUser?.has_advertiser_portal) mainNavItems.push({ title: 'Advertiser Portal', href: '/advertiser', icon: Building2 });
 
