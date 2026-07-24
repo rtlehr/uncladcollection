@@ -146,6 +146,11 @@ class PermissionSeeder extends Seeder
             ['group_name' => 'Support', 'name' => 'manage_support_categories', 'label' => 'Manage Support Categories', 'description' => 'Manage support ticket categories and defaults.'],
             ['group_name' => 'Support', 'name' => 'view_support_reports', 'label' => 'View Support Reports', 'description' => 'View support workload and performance reporting.'],
 
+            // Page Help
+            ['group_name' => 'Page Help', 'name' => 'view_page_help_admin', 'label' => 'View Page Help Administration', 'description' => 'View Page Help entries and coverage.'],
+            ['group_name' => 'Page Help', 'name' => 'manage_page_help', 'label' => 'Manage Page Help', 'description' => 'Create, edit, and delete Page Help content.'],
+            ['group_name' => 'Page Help', 'name' => 'publish_page_help', 'label' => 'Publish Page Help', 'description' => 'Publish and unpublish Page Help content.'],
+
             // Reports
             [
                 'group_name' => 'Reports',

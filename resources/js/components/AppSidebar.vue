@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BadgeDollarSign, Ban, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
-    Heart, ImageIcon, LayoutGrid, LifeBuoy, Megaphone, Settings, ShieldCheck,
+    Heart, ImageIcon, Inbox, LayoutGrid, LifeBuoy, Megaphone, Settings, ShieldCheck, Tags, UserRoundCheck, CircleHelp,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -34,6 +34,7 @@ if (can('view_admin')) {
         { title: 'Blog Dashboard', href: '/admin/blog-dashboard', icon: FileText },
         { title: 'Advertising Dashboard', href: '/admin/advertising-dashboard', icon: Megaphone },
         { title: 'Marketing Dashboard', href: '/admin/marketing-dashboard', icon: BarChart3 },
+        ...(can('view_support_tickets') ? [{ title: 'Support Dashboard', href: '/admin/support/dashboard', icon: LifeBuoy }] : []),
         { title: 'Administration Dashboard', href: '/admin/administration-dashboard', icon: ShieldCheck },
     );
 }
@@ -67,12 +68,21 @@ if (can('manage_site_settings')) {
     );
 }
 
+const supportItems: NavItem[] = [];
+if (can('view_support_tickets')) supportItems.push(
+ { title: 'All Tickets', href: '/admin/support/tickets', icon: LifeBuoy },
+ { title: 'My Tickets', href: '/admin/support/tickets?assignee=mine', icon: UserRoundCheck },
+ { title: 'Unassigned', href: '/admin/support/tickets?assignee=unassigned', icon: Inbox },
+);
+if (can('manage_support_categories')) supportItems.push({ title: 'Categories', href: '/admin/support/categories', icon: Tags });
+
 const systemItems: NavItem[] = [];
 if (can('manage_users')) systemItems.push({ title: 'Users', href: '/admin/users', icon: ShieldCheck });
 if (can('manage_roles')) systemItems.push({ title: 'Roles', href: '/admin/roles', icon: ShieldCheck });
 if (can('manage_permissions')) systemItems.push({ title: 'Permissions', href: '/admin/permissions', icon: ShieldCheck });
 if (can('manage_categories')) systemItems.push({ title: 'Categories', href: '/admin/categories', icon: FileText });
 if (can('manage_tags')) systemItems.push({ title: 'Tags', href: '/admin/tags', icon: FileText });
+if (can('view_page_help_admin')) systemItems.push({ title: 'Page Help', href: '/admin/page-help', icon: CircleHelp });
 
 const footerNavItems: NavItem[] = [
     { title: 'Repository', href: 'https://github.com/laravel/vue-starter-kit', icon: FolderGit2 },
@@ -90,6 +100,7 @@ const footerNavItems: NavItem[] = [
             <NavMain v-if="blogItems.length" label="Blog" :items="blogItems" />
             <NavMain v-if="advertisingItems.length" label="Advertising" :items="advertisingItems" />
             <NavMain v-if="marketingItems.length" label="Marketing" :items="marketingItems" />
+            <NavMain v-if="supportItems.length" label="Support" :items="supportItems" />
             <NavMain v-if="systemItems.length" label="Administration" :items="systemItems" />
         </SidebarContent>
         <SidebarFooter><NavFooter :items="footerNavItems" /><NavUser /></SidebarFooter>

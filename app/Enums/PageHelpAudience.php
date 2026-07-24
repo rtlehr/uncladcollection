@@ -1,0 +1,3 @@
+<?php
+namespace App\Enums;
+enum PageHelpAudience:string { case All='all'; case Public='public'; case Guest='guest'; case Member='member'; case Advertiser='advertiser'; case Admin='admin'; case Authenticated='authenticated'; case Custom='custom'; public static function values():array{return array_column(self::cases(),'value');} public function label():string{return match($this){self::All=>'Everyone',self::Public=>'Public pages',self::Guest=>'Guests only',self::Member=>'Members',self::Advertiser=>'Advertiser portal',self::Admin=>'Administration',self::Authenticated=>'Any signed-in user',self::Custom=>'Selected roles or permissions'};} }

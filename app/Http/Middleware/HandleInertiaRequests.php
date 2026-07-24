@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\CartItem;
+use App\Services\PageHelp\PageHelpContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -58,6 +59,8 @@ class HandleInertiaRequests extends Middleware
                 || $request->cookie('sidebar_state') === 'true',
 
             'cart' => fn () => $this->cartPayload($user?->id),
+
+            'page_help' => fn () => app(PageHelpContext::class)->forRequest($request),
         ];
     }
 

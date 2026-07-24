@@ -1,0 +1,3 @@
+<?php
+namespace App\Policies; use App\Models\PageHelp; use App\Models\User;
+class PageHelpPolicy { public function viewAny(User $u):bool{return $u->hasPermission('view_page_help_admin');} public function view(User $u,PageHelp $h):bool{return $u->hasPermission('view_page_help_admin');} public function create(User $u):bool{return $u->hasPermission('manage_page_help');} public function update(User $u,PageHelp $h):bool{return $u->hasPermission('manage_page_help');} public function delete(User $u,PageHelp $h):bool{return $u->hasPermission('manage_page_help');} public function publish(User $u,PageHelp $h):bool{return $u->hasPermission('publish_page_help');} }

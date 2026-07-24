@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\SponsorshipPackageController;
 use App\Http\Controllers\Admin\SponsorshipLeadController;
 use App\Http\Controllers\Admin\SponsorshipProposalController;
 use App\Http\Controllers\Admin\AdInventoryController;
+use App\Http\Controllers\Admin\PageHelpController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -379,4 +380,8 @@ Route::middleware(['auth', 'verified', 'permission:manage_comments'])
 
         Route::patch('/comment-reports/{commentReport}/reviewed', [CommentModerationController::class, 'markReportReviewed'])
             ->name('comment-reports.reviewed');
+
+        Route::get('/page-help/coverage', [PageHelpController::class, 'coverage'])->middleware('permission:view_page_help_admin')->name('page-help.coverage');
+        Route::resource('page-help', PageHelpController::class)->except(['show'])->middleware('permission:view_page_help_admin');
+
     });

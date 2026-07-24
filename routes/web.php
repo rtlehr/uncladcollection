@@ -29,3 +29,4 @@ require __DIR__.'/public-demo.php';
 require __DIR__.'/seo.php';
 
 require __DIR__.'/advertiser.php';
+require __DIR__.'/admin-support.php';

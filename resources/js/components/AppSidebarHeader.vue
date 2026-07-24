@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CartDropdown from '@/components/CartDropdown.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
+
+const page = usePage();
+const pageHelp = computed(() => page.props.page_help as any);
 
 withDefaults(
     defineProps<{
@@ -27,6 +33,7 @@ withDefaults(
         </div>
 
         <div class="flex items-center gap-2">
+            <PageHelpPanel v-if="pageHelp" :help="pageHelp" />
             <CartDropdown />
         </div>
     </header>

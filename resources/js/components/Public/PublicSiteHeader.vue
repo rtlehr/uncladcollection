@@ -9,11 +9,13 @@ import {
 } from 'vue';
 
 import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
+import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import { dashboard, login, register } from '@/routes';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
 
+const pageHelp = computed(() => page.props.page_help as any);
 const site = computed(() => (page.props.site ?? {}) as Record<string, any>);
 const isAuthenticated = computed(() =>
     Boolean((page.props.auth as any)?.user),
@@ -102,6 +104,7 @@ onBeforeUnmount(() => {
             </nav>
 
             <div class="hidden items-center gap-3 lg:flex">
+                <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
                 <PublicCartMenu />
 
                 <Link
@@ -127,6 +130,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="flex shrink-0 items-center gap-2 lg:hidden">
+                <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
                 <PublicCartMenu compact />
 
                 <button

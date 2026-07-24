@@ -1,0 +1,3 @@
+<?php
+namespace Database\Factories; use App\Enums\PageHelpAudience; use App\Models\PageHelp; use Illuminate\Database\Eloquent\Factories\Factory;
+class PageHelpFactory extends Factory { protected $model=PageHelp::class; public function definition():array{return ['page_key'=>'admin.assets.index','title'=>$this->faker->sentence(4),'summary'=>$this->faker->sentence(),'content'=>'<p>'.$this->faker->paragraph().'</p>','audience'=>PageHelpAudience::Admin,'is_active'=>true,'is_published'=>true,'published_at'=>now(),'sort_order'=>0];} public function draft():static{return $this->state(fn()=>['is_published'=>false,'published_at'=>null]);} }
