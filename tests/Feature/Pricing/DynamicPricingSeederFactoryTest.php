@@ -13,9 +13,10 @@ it('seeds explicit image and video unit prices', function (): void {
 
     $personal = LicenseType::query()->where('slug', 'personal-use')->firstOrFail();
 
-    expect($personal->image_unit_price_cents)->toBe(999)
-        ->and($personal->video_unit_price_cents)->toBe(1999)
-        ->and($personal->minimum_price_cents)->toBe(499);
+    expect($personal->price_cents)->toBe(100)
+        ->and($personal->image_unit_price_cents)->toBe(100)
+        ->and($personal->video_unit_price_cents)->toBe(500)
+        ->and($personal->minimum_price_cents)->toBe(100);
 });
 
 it('creates dynamically priced offerings from factories', function (): void {
