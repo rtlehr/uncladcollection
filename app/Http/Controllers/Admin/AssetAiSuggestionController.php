@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiAssetSuggestion;
 use App\Models\Asset;
 use App\Services\AssetAiSourceService;
+use App\Services\Ai\Support\AiKeywordExclusionFilter;
 use App\Services\AssetColorAnalysisService;
 use App\Services\AssetAiAssistantService;
 use App\Services\AssetAiPreviewService;
@@ -17,7 +18,7 @@ use Throwable;
 
 class AssetAiSuggestionController extends Controller
 {
-    public function store(Request $request, Asset $asset, AssetAiSourceService $sourceService, AssetColorAnalysisService $colors, AssetAiPreviewService $previews, AssetAiAssistantService $assistant): RedirectResponse
+    public function store(Request $request, Asset $asset, AssetAiSourceService $sourceService, AssetColorAnalysisService $colors, AssetAiPreviewService $previews, AssetAiAssistantService $assistant, AiKeywordExclusionFilter $keywordFilter): RedirectResponse
     {
         $this->extendExecutionTime();
 
@@ -46,6 +47,8 @@ class AssetAiSuggestionController extends Controller
                 ['title' => $asset->title],
                 $requestedProvider,
             );
+
+            $result['suggestions'] = $keywordFilter->filterMetadata($result['suggestions']);
 
             $record->update([
                 'status' => 'completed',
@@ -86,7 +89,7 @@ class AssetAiSuggestionController extends Controller
         }
     }
 
-    public function apply(Request $request, Asset $asset, AiAssetSuggestion $suggestion, AssetTagService $tagService): RedirectResponse
+    public function apply(Request $request, Asset $asset, AiAssetSuggestion $suggestion, AssetTagService $tagService, AiKeywordExclusionFilter $keywordFilter): RedirectResponse
     {
         abort_unless($suggestion->asset_id === $asset->id && $suggestion->status === 'completed', 404);
 
@@ -110,7 +113,7 @@ class AssetAiSuggestionController extends Controller
             };
 
             if ($field === 'keywords') {
-                $names = $validated['keyword_names'] ?? Arr::wrap($value);
+                $names = $keywordFilter->filter($validated['keyword_names'] ?? Arr::wrap($value));
                 if (($validated['keyword_mode'] ?? 'replace') === 'append') {
                     $tagService->mergeNames($asset, $names);
                 } else {

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             DevelopmentUserSeeder::class,
             CategorySeeder::class,
             TagSeeder::class,
+            AiKeywordExclusionSeeder::class,
             CollectionSeeder::class,
             LicenseTypeSeeder::class,
         ]);

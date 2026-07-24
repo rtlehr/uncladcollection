@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BadgeDollarSign, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
+    BadgeDollarSign, Ban, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
     Heart, ImageIcon, LayoutGrid, Megaphone, Settings, ShieldCheck,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -39,7 +39,12 @@ if (can('view_admin')) {
 if (can('view_reports')) adminDashboardItems.push({ title: 'Marketplace Intelligence', href: '/admin/analytics', icon: BarChart3 });
 
 const assetItems: NavItem[] = [];
-if (can('manage_images')) assetItems.push({ title: 'Assets', href: '/admin/assets', icon: Boxes });
+if (can('manage_images')) {
+    assetItems.push(
+        { title: 'Assets', href: '/admin/assets', icon: Boxes },
+        { title: 'AI Keyword Exclusions', href: '/admin/ai-keyword-exclusions', icon: Ban },
+    );
+}
 if (can('manage_collections')) assetItems.push({ title: 'Collections', href: '/admin/collections', icon: FolderGit2 });
 if (can('manage_orders')) assetItems.push({ title: 'Orders', href: '/admin/orders', icon: BadgeDollarSign });
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Asset;
+use App\Models\AiKeywordExclusion;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,7 @@ class AssetAiAssistantTest extends TestCase
         Storage::fake('public');
         $this->configureOllama();
         $asset = $this->assetWithPreview();
+        AiKeywordExclusion::query()->create(['keyword' => 'water', 'is_active' => true]);
 
         Http::fake([
             'https://ai.example.test/api/chat' => Http::response($this->streamedMetadataResponse(), 200, [
@@ -38,6 +40,7 @@ class AssetAiAssistantTest extends TestCase
         $this->assertSame('ollama', $suggestion->provider);
         $this->assertSame('qwen3-vl:8b', $suggestion->model);
         $this->assertSame('Quiet Morning by the Water', $suggestion->suggestions['title']);
+        $this->assertSame(['outdoors', 'relaxation'], $suggestion->suggestions['keywords']);
         $this->assertSame(180, $suggestion->total_tokens);
 
         Http::assertSent(fn ($request): bool =>
@@ -61,7 +64,7 @@ class AssetAiAssistantTest extends TestCase
         $this->assertSame('Adults relaxing beside calm water in a natural setting.', $asset->alt_text);
         $this->assertSame('Quiet Waterside Lifestyle Image', $asset->seo_title);
         $this->assertSame('A peaceful outdoor lifestyle stock image beside calm water.', $asset->seo_description);
-        $this->assertSame(['outdoors', 'water', 'relaxation'], $asset->keywords);
+        $this->assertSame(['outdoors', 'relaxation'], $asset->keywords);
         $this->assertNotEmpty($asset->dominant_colors);
         $this->assertSame(['water', 'trees'], $asset->detected_objects);
     }

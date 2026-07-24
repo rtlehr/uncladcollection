@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminLicenseController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetAiSuggestionController;
+use App\Http\Controllers\Admin\AiKeywordExclusionController;
 use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
@@ -220,6 +221,22 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
+
+        Route::get('/ai-keyword-exclusions', [AiKeywordExclusionController::class, 'index'])
+            ->middleware('permission:manage_images')
+            ->name('ai-keyword-exclusions.index');
+        Route::post('/ai-keyword-exclusions', [AiKeywordExclusionController::class, 'store'])
+            ->middleware('permission:manage_images')
+            ->name('ai-keyword-exclusions.store');
+        Route::post('/ai-keyword-exclusions/bulk', [AiKeywordExclusionController::class, 'bulkStore'])
+            ->middleware('permission:manage_images')
+            ->name('ai-keyword-exclusions.bulk-store');
+        Route::patch('/ai-keyword-exclusions/{aiKeywordExclusion}', [AiKeywordExclusionController::class, 'update'])
+            ->middleware('permission:manage_images')
+            ->name('ai-keyword-exclusions.update');
+        Route::delete('/ai-keyword-exclusions/{aiKeywordExclusion}', [AiKeywordExclusionController::class, 'destroy'])
+            ->middleware('permission:manage_images')
+            ->name('ai-keyword-exclusions.destroy');
 
         Route::post('/assets/{asset}/ai-suggestions', [AssetAiSuggestionController::class, 'store'])
             ->middleware('permission:manage_images')

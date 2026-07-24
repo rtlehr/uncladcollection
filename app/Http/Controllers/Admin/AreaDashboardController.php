@@ -132,6 +132,7 @@ class AreaDashboardController extends Controller
             ['title' => 'Permissions', 'description' => 'Manage individual application capabilities.', 'href' => '/admin/permissions'],
             ['title' => 'Categories', 'description' => 'Manage shared content classifications.', 'href' => '/admin/categories'],
             ['title' => 'Tags', 'description' => 'Manage shared discovery terms.', 'href' => '/admin/tags'],
+            ['title' => 'AI Keyword Exclusions', 'description' => 'Manage words and phrases automatically removed from AI-generated keyword suggestions.', 'href' => '/admin/ai-keyword-exclusions'],
             ['title' => 'License Types', 'description' => 'Configure marketplace license definitions.', 'href' => '/admin/license-types'],
             ['title' => 'Site Settings', 'description' => 'Manage site identity, branding, and system-wide settings.', 'href' => '/admin/site-settings'],
             ['title' => 'Admin Overview', 'description' => 'Return to the main operational dashboard.', 'href' => '/admin'],

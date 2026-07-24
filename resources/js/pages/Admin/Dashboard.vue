@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     BadgeDollarSign,
+    Ban,
     CircleDollarSign,
     Download,
     Image,
@@ -140,7 +141,7 @@ function formatDownloadType(value: string): string {
             title="Quick Access"
             description="Open the most frequently used administration areas."
         >
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 <Button
                     variant="outline"
                     class="h-auto justify-start gap-3 px-4 py-4"
@@ -204,6 +205,23 @@ function formatDownloadType(value: string): string {
                             <span class="block font-medium">Images</span>
                             <span class="block text-xs text-muted-foreground">
                                 Manage marketplace assets
+                            </span>
+                        </span>
+                    </Link>
+                </Button>
+
+                <Button
+                    variant="outline"
+                    class="h-auto justify-start gap-3 px-4 py-4"
+                    as-child
+                >
+                    <Link href="/admin/ai-keyword-exclusions">
+                        <Ban class="h-5 w-5" />
+
+                        <span class="text-left">
+                            <span class="block font-medium">AI Exclusions</span>
+                            <span class="block text-xs text-muted-foreground">
+                                Filter AI keywords
                             </span>
                         </span>
                     </Link>
