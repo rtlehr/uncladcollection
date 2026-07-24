@@ -69,7 +69,7 @@ export const IMAGE_EDITOR_PRESETS: Record<string, ImageEditorPreset> = {
         key: 'collection-cover',
         label: 'Collection cover',
         width: 1200,
-        height: 800,
+        height: 750,
         outputType: 'image/jpeg',
         quality: 0.9,
     },
@@ -112,3 +112,6 @@ export const BLOG_CONTENT_PRESETS = [
     IMAGE_EDITOR_PRESETS.blogContentPortrait,
     IMAGE_EDITOR_PRESETS.blogContentSquare,
 ];
+
+export const COLLECTION_COVER_PRESET =
+    IMAGE_EDITOR_PRESETS.collectionCover;

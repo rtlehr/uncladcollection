@@ -1,8 +1,30 @@
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import type {
     GalleryImage,
     PaginatedGalleryImages,
 } from '@/types/gallery';
 import type { BlogPost } from '@/types/blog';
+
+export interface AdminCollection {
+    id: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    sort_order: number;
+    is_active: boolean;
+    cover_image_url: string | null;
+    cover_original_url: string | null;
+    cover_edit_data: ImageEditData | null;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface AdminCollectionFilters {
+    search: string | null;
+    status: string | null;
+    sort: string;
+    direction: 'asc' | 'desc';
+}
 
 export interface PublicCollection {
     id: number;

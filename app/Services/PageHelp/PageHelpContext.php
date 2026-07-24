@@ -14,7 +14,13 @@ class PageHelpContext
 
     public function forRequest(Request $request): ?array
     {
-        $page = $this->registry->forRoute($request->route()?->getName());
+        $route = $request->route();
+
+        $page = $this->registry->forRoute(
+            $route?->getName(),
+            $route?->gatherMiddleware() ?? [],
+            $route?->uri(),
+        );
 
         if (! $page) {
             return null;

@@ -179,6 +179,8 @@ function confirmDelete() {
         <DataTable min-width="900px">
             <thead>
                 <tr class="border-b bg-muted/30">
+                    <DataTableHeaderCell label="Cover" />
+
                     <DataTableHeaderCell
                         label="Name"
                         column="name"
@@ -230,6 +232,17 @@ function confirmDelete() {
                     :key="collection.id"
                     class="border-b last:border-0 hover:bg-muted/20"
                 >
+                    <td class="p-4">
+                        <div class="h-14 w-24 overflow-hidden rounded-md border bg-muted">
+                            <img
+                                v-if="collection.cover_image_url"
+                                :src="collection.cover_image_url"
+                                :alt="`${collection.name} cover`"
+                                class="h-full w-full object-cover"
+                            />
+                        </div>
+                    </td>
+
                     <td class="p-4 font-medium">
                         {{ collection.name }}
                     </td>
@@ -277,7 +290,7 @@ function confirmDelete() {
 
                 <DataTableEmpty
                     v-if="collections.length === 0"
-                    :colspan="6"
+                    :colspan="7"
                     message="No collections found."
                 />
             </tbody>

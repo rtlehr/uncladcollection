@@ -253,10 +253,11 @@ class CollectionBrowseController extends Controller
                 'name',
                 'slug',
                 'description',
+                'cover_image_path',
                 'sort_order',
             ])
             ->map(function (Collection $relatedCollection) {
-                $cover = $relatedCollection->images->first();
+                $fallbackImage = $relatedCollection->images->first();
 
                 return [
                     'id' => $relatedCollection->id,
@@ -264,9 +265,10 @@ class CollectionBrowseController extends Controller
                     'slug' => $relatedCollection->slug,
                     'description' => $relatedCollection->description,
                     'images_count' => $relatedCollection->images_count,
-                    'cover_image_url' => $cover
-                        ? ($cover->thumbnail_url ?? $cover->icon_url)
-                        : null,
+                    'cover_image_url' => $relatedCollection->cover_image_url
+                        ?? ($fallbackImage
+                            ? ($fallbackImage->thumbnail_url ?? $fallbackImage->icon_url)
+                            : null),
                 ];
             })
             ->values();

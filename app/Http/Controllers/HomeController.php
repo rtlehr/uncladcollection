@@ -186,16 +186,17 @@ class HomeController extends Controller
         }
 
         return $query
-            ->limit(3)
+            ->limit(6)
             ->get([
                 'id',
                 'name',
                 'slug',
                 'description',
+                'cover_image_path',
                 'sort_order',
             ])
             ->map(function (Collection $collection) {
-                $coverImage = $collection->images->first();
+                $fallbackImage = $collection->images->first();
 
                 return [
                     'id' => $collection->id,
@@ -204,15 +205,22 @@ class HomeController extends Controller
                     'description' => $collection->description,
                     'images_count' => $collection->images_count,
 
-                    'cover_image' => $coverImage
+                    'cover_image' => $collection->cover_image_url
                         ? [
-                            'id' => $coverImage->id,
-                            'title' => $coverImage->title,
-                            'slug' => $coverImage->slug,
-                            'thumbnail_url' => $coverImage->thumbnail_url,
-                            'icon_url' => $coverImage->icon_url,
+                            'title' => $collection->name.' collection cover',
+                            'slug' => $collection->slug,
+                            'thumbnail_url' => $collection->cover_image_url,
+                            'icon_url' => null,
                         ]
-                        : null,
+                        : ($fallbackImage
+                            ? [
+                                'id' => $fallbackImage->id,
+                                'title' => $fallbackImage->title,
+                                'slug' => $fallbackImage->slug,
+                                'thumbnail_url' => $fallbackImage->thumbnail_url,
+                                'icon_url' => $fallbackImage->icon_url,
+                            ]
+                            : null),
                 ];
             })
             ->values()
