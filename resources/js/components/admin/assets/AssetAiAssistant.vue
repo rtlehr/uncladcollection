@@ -18,6 +18,10 @@ interface SuggestionRecord {
     reviewed_at?: string | null;
 }
 
+const emit = defineEmits<{
+    applied: [values: Record<string, unknown>];
+}>();
+
 const props = defineProps<{
     assetId: number;
     enabled: boolean;
@@ -37,7 +41,6 @@ const props = defineProps<{
 }>();
 
 const confirming = ref(false);
-const adultConfirmed = ref(false);
 const nonSexualConfirmed = ref(false);
 const generating = ref(false);
 const applying = ref(false);
@@ -71,10 +74,9 @@ const fields = computed(() => [
 ].filter(([, , value]) => Array.isArray(value) ? value.length : Boolean(value)));
 
 function generate(): void {
-    if (!adultConfirmed.value || !nonSexualConfirmed.value) return;
+    if (!nonSexualConfirmed.value) return;
     generating.value = true;
     router.post(`/admin/assets/${props.assetId}/ai-suggestions`, {
-        adult_content_confirmed: adultConfirmed.value,
         non_sexual_content_confirmed: nonSexualConfirmed.value,
         provider: selectedProvider.value,
     }, {
@@ -92,15 +94,54 @@ function toggle(field: string): void {
         : [...selected.value, field];
 }
 
+function appliedValues(): Record<string, unknown> {
+    const values: Record<string, unknown> = {};
+
+    for (const field of selected.value) {
+        if (field === 'keywords') {
+            values.keywords = keywordMode.value === 'append'
+                ? Array.from(new Set([...(props.current.keywords ?? []), ...selectedKeywords.value]))
+                : [...selectedKeywords.value];
+            continue;
+        }
+
+        if (field === 'dominant_colors') {
+            values.dominant_colors = [...colors.value];
+            continue;
+        }
+
+        if (field === 'detected_objects') {
+            values.detected_objects = Array.isArray(suggestions.value.objects)
+                ? [...suggestions.value.objects]
+                : [];
+            continue;
+        }
+
+        values[field] = suggestions.value[field] ?? null;
+    }
+
+    return values;
+}
+
 function apply(): void {
     if (!latest.value || selected.value.length === 0) return;
+
+    const values = appliedValues();
+
+    // Give immediate feedback, then apply the same values again after the
+    // redirect has finished. The second emit is intentional: Inertia can replace
+    // page props during the POST response and otherwise restore stale control DOM.
+    emit('applied', values);
     applying.value = true;
+
     router.post(`/admin/assets/${props.assetId}/ai-suggestions/${latest.value.id}/apply`, {
         fields: selected.value,
         keyword_mode: keywordMode.value,
         keyword_names: selectedKeywords.value,
     }, {
         preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => emit('applied', values),
         onFinish: () => { applying.value = false; selected.value = []; },
     });
 }
@@ -195,7 +236,7 @@ function display(value: any): string {
 
         <div v-if="confirming" class="mt-5 rounded-xl border bg-muted/20 p-4">
             <h3 class="font-medium">Confirm before analysis</h3>
-            <p class="mt-1 text-sm text-muted-foreground">A reduced marketplace preview will be sent to the configured AI provider. Confirm both statements.</p>
+            <p class="mt-1 text-sm text-muted-foreground">A reduced marketplace preview will be sent to the configured AI provider. Confirm the statement below.</p>
             <div class="mt-4 space-y-4 text-sm">
                 <label v-if="providers.length > 1" class="block">
                     <span class="mb-1 block font-medium">AI provider</span>
@@ -209,12 +250,11 @@ function display(value: any): string {
                 <div v-else-if="providers[0]" class="rounded-lg border bg-background p-3">
                     <span class="font-medium">Provider:</span> {{ providers[0].label }} — {{ providers[0].model }}
                 </div>
-                <label class="flex items-start gap-2"><input v-model="adultConfirmed" type="checkbox" class="mt-1" /><span>All visible people are confirmed consenting adults.</span></label>
                 <label class="flex items-start gap-2"><input v-model="nonSexualConfirmed" type="checkbox" class="mt-1" /><span>The asset depicts non-sexual content and contains no sexual activity.</span></label>
             </div>
             <div class="mt-4 flex justify-end gap-2">
                 <Button type="button" variant="outline" @click="confirming = false">Cancel</Button>
-                <Button type="button" :disabled="!adultConfirmed || !nonSexualConfirmed || generating" @click="generate">Analyze Preview</Button>
+                <Button type="button" :disabled="!nonSexualConfirmed || generating" @click="generate">Analyze Preview</Button>
             </div>
         </div>
     </section>

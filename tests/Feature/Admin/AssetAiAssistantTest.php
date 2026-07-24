@@ -21,15 +21,8 @@ class AssetAiAssistantTest extends TestCase
         $asset = $this->assetWithPreview();
 
         Http::fake([
-            'https://ai.example.test/api/chat' => Http::response([
-                'model' => 'qwen3-vl:8b',
-                'message' => [
-                    'role' => 'assistant',
-                    'content' => json_encode($this->metadata()),
-                ],
-                'done' => true,
-                'prompt_eval_count' => 100,
-                'eval_count' => 80,
+            'https://ai.example.test/api/chat' => Http::response($this->streamedMetadataResponse(), 200, [
+                'Content-Type' => 'application/x-ndjson',
             ]),
         ]);
 
@@ -52,20 +45,25 @@ class AssetAiAssistantTest extends TestCase
             $request->url() === 'https://ai.example.test/api/chat'
             && $request->hasHeader('Authorization', 'Bearer test-ollama-token')
             && $request['model'] === 'qwen3-vl:8b'
-            && $request['stream'] === false
+            && $request['stream'] === true
             && $request['think'] === false
             && $request['messages'][0]['role'] === 'user'
             && count($request['messages'][0]['images']) === 1
         );
 
         $this->actingAs($user)->post("/admin/assets/{$asset->id}/ai-suggestions/{$suggestion->id}/apply", [
-            'fields' => ['title', 'alt_text', 'keywords', 'detected_objects'],
+            'fields' => ['title', 'description', 'alt_text', 'seo_title', 'seo_description', 'keywords', 'dominant_colors', 'detected_objects'],
             'keyword_mode' => 'replace',
         ])->assertRedirect();
 
         $asset->refresh();
         $this->assertSame('Quiet Morning by the Water', $asset->title);
+        $this->assertSame('A calm outdoor lifestyle scene beside the water.', $asset->description);
+        $this->assertSame('Adults relaxing beside calm water in a natural setting.', $asset->alt_text);
+        $this->assertSame('Quiet Waterside Lifestyle Image', $asset->seo_title);
+        $this->assertSame('A peaceful outdoor lifestyle stock image beside calm water.', $asset->seo_description);
         $this->assertSame(['outdoors', 'water', 'relaxation'], $asset->keywords);
+        $this->assertNotEmpty($asset->dominant_colors);
         $this->assertSame(['water', 'trees'], $asset->detected_objects);
     }
 
@@ -75,18 +73,28 @@ class AssetAiAssistantTest extends TestCase
         $this->configureOllama();
         $asset = $this->assetWithPreview();
 
-        Http::fake([
-            'https://ai.example.test/api/chat' => Http::response([
+        $thinking = "I will return the requested object.\n".json_encode($this->metadata());
+        $split = intdiv(strlen($thinking), 2);
+
+        $body = implode("\n", [
+            json_encode([
                 'model' => 'qwen3-vl:8b',
-                'message' => [
-                    'role' => 'assistant',
-                    'content' => '',
-                    'thinking' => "I will return the requested object.\n".json_encode($this->metadata()),
-                ],
+                'message' => ['role' => 'assistant', 'content' => '', 'thinking' => substr($thinking, 0, $split)],
+                'done' => false,
+            ]),
+            json_encode([
+                'model' => 'qwen3-vl:8b',
+                'message' => ['role' => 'assistant', 'content' => '', 'thinking' => substr($thinking, $split)],
                 'done' => true,
                 'done_reason' => 'stop',
                 'prompt_eval_count' => 100,
                 'eval_count' => 80,
+            ]),
+        ])."\n";
+
+        Http::fake([
+            'https://ai.example.test/api/chat' => Http::response($body, 200, [
+                'Content-Type' => 'application/x-ndjson',
             ]),
         ]);
 
@@ -165,6 +173,28 @@ class AssetAiAssistantTest extends TestCase
         config()->set('ai-assets.providers.ollama.token', 'test-ollama-token');
         config()->set('ai-assets.providers.ollama.model', 'qwen3-vl:8b');
         config()->set('ai-assets.providers.ollama.retry_times', 1);
+    }
+
+    private function streamedMetadataResponse(): string
+    {
+        $json = json_encode($this->metadata());
+        $split = intdiv(strlen($json), 2);
+
+        return implode("\n", [
+            json_encode([
+                'model' => 'qwen3-vl:8b',
+                'message' => ['role' => 'assistant', 'content' => substr($json, 0, $split)],
+                'done' => false,
+            ]),
+            json_encode([
+                'model' => 'qwen3-vl:8b',
+                'message' => ['role' => 'assistant', 'content' => substr($json, $split)],
+                'done' => true,
+                'done_reason' => 'stop',
+                'prompt_eval_count' => 100,
+                'eval_count' => 80,
+            ]),
+        ])."\n";
     }
 
     private function assetWithPreview(): Asset

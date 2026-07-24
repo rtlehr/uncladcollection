@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
@@ -57,6 +57,11 @@ const form = useForm({
     collection_id: props.assetRecord.collection_id ?? '' as string | number,
     title: props.assetRecord.title,
     description: props.assetRecord.description ?? '',
+    alt_text: props.assetRecord.alt_text ?? '',
+    seo_title: props.assetRecord.seo_title ?? '',
+    seo_description: props.assetRecord.seo_description ?? '',
+    dominant_colors: [...(props.assetRecord.dominant_colors ?? [])] as string[],
+    detected_objects: [...(props.assetRecord.detected_objects ?? [])] as string[],
     tag_names: [...(props.assetRecord.keywords ?? [])] as string[],
     photographer: props.assetRecord.photographer ?? '',
     asset_type: props.assetRecord.asset_type,
@@ -71,6 +76,7 @@ const form = useForm({
     shipping_address_required: props.assetRecord.shipping_address_required,
 });
 
+const formRevision = ref(0);
 const pendingFiles = ref<PendingAssetFile[]>([]);
 const uploadForm = useForm({ files: [] as File[], file_roles: [] as string[], file_downloadable: [] as number[] });
 const replacingId = ref<number | null>(null);
@@ -323,6 +329,32 @@ function saveOfferings(): void {
     offeringForm.put(`/admin/assets/${props.assetRecord.id}/offerings`, { preserveScroll: true });
 }
 
+async function applyAiSuggestionsToForm(values: Record<string, unknown>): Promise<void> {
+    if (typeof values.title === 'string') form.title = values.title;
+    if (typeof values.description === 'string') form.description = values.description;
+    if (typeof values.alt_text === 'string') form.alt_text = values.alt_text;
+    if (typeof values.seo_title === 'string') form.seo_title = values.seo_title;
+    if (typeof values.seo_description === 'string') form.seo_description = values.seo_description;
+
+    if (Array.isArray(values.keywords)) {
+        form.tag_names = values.keywords.filter((value): value is string => typeof value === 'string');
+    }
+
+    if (Array.isArray(values.dominant_colors)) {
+        form.dominant_colors = values.dominant_colors.filter((value): value is string => typeof value === 'string');
+    }
+
+    if (Array.isArray(values.detected_objects)) {
+        form.detected_objects = values.detected_objects.filter((value): value is string => typeof value === 'string');
+    }
+
+    // The Apply Selected POST returns an Inertia redirect. Remount the controls only
+    // after the final values have been assigned so native textareas and tag chips
+    // cannot retain pre-visit DOM state.
+    await nextTick();
+    formRevision.value += 1;
+}
+
 function reorderFiles(files: AdminAssetFile[]): void {
     router.put(`/admin/assets/${props.assetRecord.id}/files/order`, {
         files: files.map((file, position) => ({
@@ -349,6 +381,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
             :history="assetRecord.ai_suggestions ?? []"
             :providers="assetRecord.ai_providers ?? []"
             :default-provider="assetRecord.ai_default_provider ?? 'ollama'"
+            @applied="applyAiSuggestionsToForm"
         />
 
         <AdminSectionNavigator :sections="adminSections" :errors="{ ...form.errors, ...presentationForm.errors, ...relationshipForm.errors, ...configurationForm.errors, ...offeringForm.errors, ...uploadForm.errors }" label="Asset sections" storage-key="admin.assets.edit.workspace" v-slot="{ activeSection }">
@@ -358,11 +391,16 @@ function reorderFiles(files: AdminAssetFile[]): void {
         <form class="space-y-6" @submit.prevent="updateAsset">
             <div class="grid gap-6 xl:grid-cols-2">
                 <FormSection title="Asset Details" description="Customer-facing information and classification.">
-                    <div class="grid gap-4 md:grid-cols-2">
+                    <div :key="formRevision" class="grid gap-4 md:grid-cols-2">
                         <FormField label="Title" for-id="title" :error="form.errors.title"><Input id="title" v-model="form.title" /></FormField>
                         <FormField label="Creator" for-id="photographer"><Input id="photographer" v-model="form.photographer" /></FormField>
-                        <FormField class="md:col-span-2" label="Description" for-id="description"><textarea id="description" v-model="form.description" rows="5" class="w-full rounded-md border bg-background px-3 py-2 text-sm" /></FormField>
-                        <FormField class="md:col-span-2" label="Keywords" for-id="keywords" :error="form.errors.tag_names"><CreatableTagInput v-model="form.tag_names" :options="imageTags" /></FormField>
+                        <FormField class="md:col-span-2" label="Description" for-id="description"><textarea id="description" v-model="form.description" rows="5" class="w-full rounded-md border bg-background px-3 py-2 text-sm"></textarea></FormField>
+                        <FormField class="md:col-span-2" label="Alternative Text" for-id="alt_text" :error="form.errors.alt_text"><textarea id="alt_text" v-model="form.alt_text" rows="3" class="w-full rounded-md border bg-background px-3 py-2 text-sm"></textarea></FormField>
+                        <FormField label="SEO Title" for-id="seo_title" :error="form.errors.seo_title"><Input id="seo_title" v-model="form.seo_title" /></FormField>
+                        <FormField label="SEO Description" for-id="seo_description" :error="form.errors.seo_description"><textarea id="seo_description" v-model="form.seo_description" rows="3" class="w-full rounded-md border bg-background px-3 py-2 text-sm"></textarea></FormField>
+                        <FormField class="md:col-span-2" label="Keywords" for-id="keywords" :error="form.errors.tag_names"><CreatableTagInput :key="`keywords-${form.tag_names.join('|')}`" v-model="form.tag_names" :options="imageTags" /></FormField>
+                        <FormField class="md:col-span-2" label="Detected Objects" for-id="detected_objects" :error="form.errors.detected_objects"><CreatableTagInput :key="`objects-${form.detected_objects.join('|')}`" v-model="form.detected_objects" :options="[]" /></FormField>
+                        <FormField class="md:col-span-2" label="Dominant Colors" for-id="dominant_colors" :error="form.errors.dominant_colors"><CreatableTagInput :key="`colors-${form.dominant_colors.join('|')}`" v-model="form.dominant_colors" :options="[]" /></FormField>
                     </div>
                 </FormSection>
                 <FormSection title="Publishing" description="Asset type, workflow, and public availability.">

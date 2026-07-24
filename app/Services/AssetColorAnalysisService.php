@@ -14,12 +14,14 @@ class AssetColorAnalysisService
             $image = (new ImageManager(new Driver()))
                 ->decode($absolutePath)
                 ->scaleDown(width: 120, height: 120);
+
             $colors = [];
 
             for ($y = 0; $y < $image->height(); $y += 6) {
                 for ($x = 0; $x < $image->width(); $x += 6) {
-                    $hex = strtoupper($image->pickColor($x, $y)->toHex());
-                    $bucket = substr($hex, 0, 4).'00';
+                    $hex = strtoupper($image->colorAt($x, $y)->toHex());
+                    $rgb = substr($hex, 0, 6);
+                    $bucket = substr($rgb, 0, 4).'00';
                     $colors[$bucket] = ($colors[$bucket] ?? 0) + 1;
                 }
             }

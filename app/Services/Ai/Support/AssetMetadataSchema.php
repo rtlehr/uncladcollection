@@ -34,7 +34,7 @@ final class AssetMetadataSchema
     public static function prompt(array $context = []): string
     {
         $prompt = <<<'PROMPT'
-Analyze this marketplace asset preview for cataloging. The administrator has confirmed that every visible person is a consenting adult and that the content is respectful and non-sexual.
+Analyze this marketplace asset preview for cataloging. The administrator has confirmed that the content is respectful and non-sexual and does not depict sexual activity.
 
 Return factual, neutral stock-marketplace metadata. Do not identify people. Do not infer ethnicity, religion, health, disability, sexual orientation, political beliefs, or other sensitive traits. Do not describe intimate anatomy in detail. Nudity, when present, should be described neutrally using terms such as naturist, nudist, nude lifestyle, or clothing-optional only when visually relevant.
 
