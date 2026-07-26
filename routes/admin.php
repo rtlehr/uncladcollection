@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\SponsorshipLeadController;
 use App\Http\Controllers\Admin\SponsorshipProposalController;
 use App\Http\Controllers\Admin\AdInventoryController;
 use App\Http\Controllers\Admin\PageHelpController;
+use App\Http\Controllers\Admin\PageHelpTransferController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -389,6 +390,12 @@ Route::middleware(['auth', 'verified', 'permission:view_admin', 'permission:view
     ->group(function () {
         Route::get('/page-help/coverage', [PageHelpController::class, 'coverage'])
             ->name('page-help.coverage');
+
+        Route::get('/page-help/export', [PageHelpTransferController::class, 'export'])
+            ->name('page-help.export');
+
+        Route::post('/page-help/import', [PageHelpTransferController::class, 'import'])
+            ->name('page-help.import');
 
         Route::resource('page-help', PageHelpController::class)
             ->except(['show']);

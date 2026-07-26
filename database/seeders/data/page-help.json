@@ -1,0 +1,47 @@
+{
+    "format": "unclad-page-help",
+    "version": 1,
+    "exported_at": "2026-07-26T13:21:35+00:00",
+    "entry_count": 3,
+    "entries": [
+        {
+            "page_key": "admin.dashboard",
+            "title": "Admin overview help",
+            "summary": "Use this dashboard to monitor the major operational areas of Unclad Collection.",
+            "content": "<p>Use this dashboard to monitor the major operational areas of Unclad Collection.</p>",
+            "audience": "admin",
+            "is_active": true,
+            "is_published": true,
+            "published_at": "2026-07-24T18:52:45+00:00",
+            "sort_order": 0,
+            "roles": [],
+            "permissions": []
+        },
+        {
+            "page_key": "admin.page-help.index",
+            "title": "Page Help administration",
+            "summary": "Create and maintain contextual documentation associated with registered page keys.",
+            "content": "<p>Create and maintain contextual documentation associated with registered page keys.</p>",
+            "audience": "admin",
+            "is_active": true,
+            "is_published": true,
+            "published_at": "2026-07-24T18:52:45+00:00",
+            "sort_order": 0,
+            "roles": [],
+            "permissions": []
+        },
+        {
+            "page_key": "admin.support.dashboard",
+            "title": "Support dashboard help",
+            "summary": "Review ticket workload, response queues, priorities, and assignments.",
+            "content": "<p>Review ticket workload, response queues, priorities, and assignments.</p>",
+            "audience": "admin",
+            "is_active": true,
+            "is_published": true,
+            "published_at": "2026-07-24T18:52:45+00:00",
+            "sort_order": 0,
+            "roles": [],
+            "permissions": []
+        }
+    ]
+}

@@ -226,3 +226,60 @@ Artisan::command('support:validate', function (): int {
     $this->info('Support validation passed.');
     return 0;
 })->purpose('Validate support routes, permissions, and schema');
+
+
+Artisan::command('page-help:export {--path= : Output path relative to the project root}', function (): int {
+    $path = (string) ($this->option('path') ?: 'database/seeders/data/page-help.json');
+    $absolutePath = str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path)
+        ? $path
+        : base_path($path);
+
+    \Illuminate\Support\Facades\File::ensureDirectoryExists(dirname($absolutePath));
+    \Illuminate\Support\Facades\File::put(
+        $absolutePath,
+        app(\App\Services\PageHelp\PageHelpTransferService::class)->exportJson(),
+    );
+
+    $this->info('Exported Page Help content to '.$absolutePath);
+    return 0;
+})->purpose('Export database Page Help content to the version-controlled seed JSON file');
+
+Artisan::command('page-help:import {path? : JSON path relative to the project root} {--replace} {--dry-run}', function (): int {
+    $path = (string) ($this->argument('path') ?: 'database/seeders/data/page-help.json');
+    $absolutePath = str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path)
+        ? $path
+        : base_path($path);
+
+    if (! \Illuminate\Support\Facades\File::exists($absolutePath)) {
+        $this->error('Page Help export not found: '.$absolutePath);
+        return 1;
+    }
+
+    try {
+        $summary = app(\App\Services\PageHelp\PageHelpTransferService::class)->importJson(
+            \Illuminate\Support\Facades\File::get($absolutePath),
+            $this->option('replace') ? 'replace' : 'merge',
+            dryRun: (bool) $this->option('dry-run'),
+        );
+    } catch (\InvalidArgumentException $exception) {
+        $this->error($exception->getMessage());
+        return 1;
+    }
+
+    $this->table(['Created', 'Updated', 'Unchanged', 'Deleted'], [[
+        $summary['created'], $summary['updated'], $summary['unchanged'], $summary['deleted'],
+    ]]);
+
+    foreach ($summary['missing_roles'] as $role) {
+        $this->warn('Missing role: '.$role);
+    }
+    foreach ($summary['missing_permissions'] as $permission) {
+        $this->warn('Missing permission: '.$permission);
+    }
+
+    if ($summary['dry_run']) {
+        $this->comment('Dry run only; no Page Help records were changed.');
+    }
+
+    return 0;
+})->purpose('Import a Page Help JSON export in merge or replace mode');
