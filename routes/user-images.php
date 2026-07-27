@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssetBrowseController;
 use App\Http\Controllers\AssetCardController;
+use App\Http\Controllers\AssetFavoriteController;
 use App\Http\Controllers\CollectionBrowseController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\ImageBrowseController;
@@ -31,6 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('purchases.licenses.show');
     Route::get('/purchases/{image:slug}', [PurchaseBrowseController::class, 'show'])->name('purchases.show');
     Route::get('/favorites', [ImageBrowseController::class, 'favorites'])->name('images.favorites');
+    Route::post('/assets/{asset}/favorite', [AssetFavoriteController::class, 'store'])
+        ->middleware('throttle:60,1')->name('assets.favorite');
+    Route::delete('/assets/{asset}/favorite', [AssetFavoriteController::class, 'destroy'])
+        ->middleware('throttle:60,1')->name('assets.unfavorite');
     Route::post('/images/{image}/favorite', [ImageFavoriteController::class, 'store'])
         ->middleware('throttle:60,1')->name('images.favorite');
     Route::delete('/images/{image}/favorite', [ImageFavoriteController::class, 'destroy'])

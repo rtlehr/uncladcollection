@@ -15,6 +15,9 @@ const props = defineProps<{
     aiGenerated: string;
     assetType: string;
     format: string;
+    orientation: string;
+    minWidth: string;
+    minHeight: string;
     sort: string;
 }>();
 
@@ -25,13 +28,16 @@ const emit = defineEmits<{
     'update:aiGenerated': [value: string];
     'update:assetType': [value: string];
     'update:format': [value: string];
+    'update:orientation': [value: string];
+    'update:minWidth': [value: string];
+    'update:minHeight': [value: string];
     'update:sort': [value: string];
     apply: [];
     reset: [];
 }>();
 
 const mobileOpen = ref(false);
-const activeCount = computed(() => [props.categoryId, props.tagId, props.collectionId, props.aiGenerated, props.assetType, props.format].filter(Boolean).length);
+const activeCount = computed(() => [props.categoryId, props.tagId, props.collectionId, props.aiGenerated, props.assetType, props.format, props.orientation, props.minWidth, props.minHeight].filter(Boolean).length);
 
 function selectValue(event: Event): string {
     return (event.target as HTMLSelectElement).value;
@@ -62,6 +68,7 @@ function selectValue(event: Event): string {
                     aria-label="Sort marketplace assets"
                     @change="emit('update:sort', selectValue($event)); emit('apply')"
                 >
+                    <option value="relevance">Most Relevant</option>
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                     <option value="most_viewed">Most Viewed</option>
@@ -76,7 +83,7 @@ function selectValue(event: Event): string {
                     'gap-3',
                     mobileOpen
                         ? 'mt-4 grid'
-                        : 'hidden lg:grid lg:grid-cols-4 xl:grid-cols-[repeat(6,minmax(0,1fr))_190px_auto_auto]',
+                        : 'hidden lg:grid lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-[repeat(9,minmax(0,1fr))_190px_auto_auto]',
                 ]"
             >
                 <label class="sr-only" for="filter-asset-type">Asset type</label>
@@ -109,6 +116,21 @@ function selectValue(event: Event): string {
                     <option v-for="option in tags" :key="option.id" :value="String(option.id)">{{ option.name }}</option>
                 </select>
 
+
+                <label class="sr-only" for="filter-orientation">Orientation</label>
+                <select id="filter-orientation" :value="orientation" class="h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm dark:border-stone-700" @change="emit('update:orientation', selectValue($event))">
+                    <option value="">Any Orientation</option>
+                    <option value="landscape">Landscape</option>
+                    <option value="portrait">Portrait</option>
+                    <option value="square">Square</option>
+                </select>
+
+                <label class="sr-only" for="filter-min-width">Minimum width in pixels</label>
+                <input id="filter-min-width" :value="minWidth" type="number" min="1" max="100000" inputmode="numeric" placeholder="Min width (px)" class="h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm dark:border-stone-700" @input="emit('update:minWidth', ($event.target as HTMLInputElement).value)" />
+
+                <label class="sr-only" for="filter-min-height">Minimum height in pixels</label>
+                <input id="filter-min-height" :value="minHeight" type="number" min="1" max="100000" inputmode="numeric" placeholder="Min height (px)" class="h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm dark:border-stone-700" @input="emit('update:minHeight', ($event.target as HTMLInputElement).value)" />
+
                 <label class="sr-only" for="filter-source">Content source</label>
                 <select id="filter-source" :value="aiGenerated" class="h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm dark:border-stone-700" @change="emit('update:aiGenerated', selectValue($event))">
                     <option value="">Any Source</option>
@@ -118,6 +140,7 @@ function selectValue(event: Event): string {
 
                 <label class="sr-only" for="filter-sort">Sort assets</label>
                 <select id="filter-sort" :value="sort" class="hidden h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm xl:block dark:border-stone-700" @change="emit('update:sort', selectValue($event))">
+                    <option value="relevance">Most Relevant</option>
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                     <option value="most_viewed">Most Viewed</option>

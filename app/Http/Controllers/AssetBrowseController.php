@@ -8,6 +8,7 @@ use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
 use App\Services\AssetWatermarkPreviewService;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -102,6 +103,12 @@ class AssetBrowseController extends Controller
                 'views_count' => $asset->views_count,
                 'downloads_count' => $asset->downloads_count,
                 'favorites_count' => $asset->favorites_count,
+                'is_favoritable' => true,
+                'is_favorited' => Auth::check()
+                    ? $asset->favorites()->where('user_id', Auth::id())->exists()
+                    : false,
+                'favorite_url' => route('assets.favorite', $asset),
+                'unfavorite_url' => route('assets.unfavorite', $asset),
                 'published_at' => $asset->published_at?->toDateString(),
                 'collection' => $asset->collection ? [
                     'id' => $asset->collection->id,

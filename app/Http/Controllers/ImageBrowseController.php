@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Analytics\AnalyticsTracker;
 use App\Enums\AnalyticsEventName;
+use App\Models\Asset;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Image;
@@ -30,7 +31,10 @@ class ImageBrowseController extends Controller
             'ai_generated' => ['nullable', 'in:0,1'],
             'asset_type' => ['nullable', 'string', 'max:40'],
             'format' => ['nullable', 'string', 'max:20'],
-            'sort' => ['nullable', 'in:newest,oldest,most_viewed,most_favorited,most_downloaded'],
+            'orientation' => ['nullable', 'in:landscape,portrait,square'],
+            'min_width' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'min_height' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'sort' => ['nullable', 'in:relevance,newest,oldest,most_viewed,most_favorited,most_downloaded'],
             'suggestion_type' => ['nullable', 'string', 'max:40'],
         ]);
 
@@ -42,7 +46,10 @@ class ImageBrowseController extends Controller
             'ai_generated' => (string) ($validated['ai_generated'] ?? ''),
             'asset_type' => (string) ($validated['asset_type'] ?? ''),
             'format' => strtolower((string) ($validated['format'] ?? '')),
-            'sort' => (string) ($validated['sort'] ?? 'newest'),
+            'orientation' => (string) ($validated['orientation'] ?? ''),
+            'min_width' => isset($validated['min_width']) ? (int) $validated['min_width'] : null,
+            'min_height' => isset($validated['min_height']) ? (int) $validated['min_height'] : null,
+            'sort' => (string) ($validated['sort'] ?? ((trim((string) ($validated['search'] ?? '')) !== '') ? 'relevance' : 'newest')),
         ];
 
         $assets = $catalog->paginate($filters, Auth::id());
@@ -77,7 +84,7 @@ class ImageBrowseController extends Controller
             }
         }
 
-        if ($activeFilterCount > 0 || $filters['sort'] !== 'newest') {
+        if ($activeFilterCount > 0 || ! in_array($filters['sort'], ['newest', 'relevance'], true)) {
             $tracker->record(
                 AnalyticsEventName::SearchFiltersApplied,
                 user: $request->user(),
@@ -327,21 +334,27 @@ class ImageBrowseController extends Controller
         ]);
     }
 
-    public function favorites(): Response
+    public function favorites(PublicAssetCatalogService $catalog): Response
     {
-        $images = $this->imageCardQuery()
-            ->where('is_active', true)
-            ->whereHas(
-                'favorites',
-                fn (Builder $query) => $query->where('user_id', Auth::id()),
-            )
-            ->latest()
+        $assets = Asset::query()
+            ->discoverable()
+            ->whereHas('favorites', fn (Builder $query) => $query->where('user_id', Auth::id()))
+            ->with([
+                'collection:id,name,slug',
+                'categories:id,name',
+                'tags:id,name',
+                'activeFiles',
+                'offerings' => fn ($query) => $query->where('is_active', true),
+                'legacyImage:id,title,slug',
+                'favorites' => fn ($query) => $query->where('user_id', Auth::id()),
+            ])
+            ->latest('assets.updated_at')
             ->paginate(24)
             ->withQueryString()
-            ->through(fn (Image $image) => $this->formatImageCard($image));
+            ->through(fn (Asset $asset) => $catalog->formatCard($asset));
 
         return Inertia::render('Images/Favorites', [
-            'images' => $images,
+            'assets' => $assets,
         ]);
     }
 

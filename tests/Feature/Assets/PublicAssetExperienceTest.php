@@ -9,6 +9,7 @@ use App\Enums\AssetType;
 use App\Models\Asset;
 use App\Models\AssetFile;
 use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -46,6 +47,25 @@ it('renders a published public asset experience', function (): void {
             ->where('asset.title', $asset->title)
             ->where('asset.keywords', ['Naturist', 'Waterfront'])
             ->has('asset.files', 1));
+});
+
+
+it('provides asset-native favorite state and routes to the detail page', function (): void {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $asset = publicAssetTestAsset(AssetStatus::Published);
+    publicAssetTestFile($asset);
+    $asset->favorites()->create(['user_id' => $user->id]);
+    $asset->updateQuietly(['favorites_count' => 1]);
+
+    $this->actingAs($user)
+        ->get(route('assets.show', $asset))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('asset.is_favoritable', true)
+            ->where('asset.is_favorited', true)
+            ->where('asset.favorites_count', 1)
+            ->where('asset.favorite_url', route('assets.favorite', $asset))
+            ->where('asset.unfavorite_url', route('assets.unfavorite', $asset)));
 });
 
 it('does not expose draft assets publicly', function (): void {

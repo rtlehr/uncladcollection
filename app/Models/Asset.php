@@ -127,9 +127,34 @@ class Asset extends Model
     }
 
 
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'asset_category')->withTimestamps();
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'asset_tag')->withTimestamps();
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(AssetFavorite::class);
+    }
+
+    public function scopeDiscoverable(Builder $query): Builder
+    {
+        return app(\App\Services\AssetDiscoveryEligibilityService::class)->applyDiscoverable($query);
+    }
+
+    public function scopePurchasable(Builder $query): Builder
+    {
+        return app(\App\Services\AssetDiscoveryEligibilityService::class)->applyPurchasable($query);
+    }
+
+    public function searchDocument(): HasOne
+    {
+        return $this->hasOne(AssetSearchDocument::class);
     }
 
     public function aiSuggestions(): HasMany

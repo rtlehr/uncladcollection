@@ -67,6 +67,9 @@ export interface GalleryFilters {
     ai_generated: string;
     asset_type: string;
     format: string;
+    orientation: string;
+    min_width: string;
+    min_height: string;
     sort: string;
 }
 

@@ -14,10 +14,10 @@ import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
-import type { PaginatedGalleryImages } from '@/types/gallery';
+import type { PaginatedGalleryAssets } from '@/types/gallery';
 
 defineProps<{
-    images: PaginatedGalleryImages;
+    assets: PaginatedGalleryAssets;
 }>();
 </script>
 
@@ -43,8 +43,8 @@ defineProps<{
 
         <section class="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 sm:py-10 sm:px-8 lg:px-12 lg:py-14">
             <GalleryGrid
-                v-if="images.data.length"
-                :images="images.data"
+                v-if="assets.data.length"
+                :assets="assets.data"
             />
 
             <div
@@ -73,7 +73,7 @@ defineProps<{
 
             <PublicPagination
                 class="mt-10"
-                :pagination="images"
+                :pagination="assets"
             />
         </section>
     </PublicPageLayout>

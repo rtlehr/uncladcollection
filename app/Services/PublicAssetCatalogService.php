@@ -18,12 +18,14 @@ use Illuminate\Support\Collection as SupportCollection;
 class PublicAssetCatalogService
 {
     /**
-     * @param array{search:string,category_id:?int,tag_id:?int,collection_id:?int,ai_generated:string,asset_type:string,format:string,sort:string} $filters
+     * @param array{search:string,category_id:?int,tag_id:?int,collection_id:?int,ai_generated:string,asset_type:string,format:string,orientation:string,min_width:?int,min_height:?int,sort:string} $filters
      */
     public function paginate(array $filters, ?int $userId = null): LengthAwarePaginator
     {
         $query = Asset::query()
-            ->published()
+            ->discoverable()
+            ->leftJoin('asset_search_documents as search_documents', 'search_documents.asset_id', '=', 'assets.id')
+            ->select('assets.*')
             ->with([
                 'collection:id,name,slug',
                 'activeFiles:id,asset_id,role,media_type,disk,directory,stored_filename,original_filename,extension,mime_type,size_bytes,width,height,duration_seconds,page_count,is_downloadable,is_active,sort_order',
@@ -31,40 +33,48 @@ class PublicAssetCatalogService
                     ->where('is_active', true)
                     ->select(['id', 'asset_id', 'name', 'price_cents', 'currency', 'is_active', 'sort_order']),
                 'legacyImage:id,title,slug',
-                'legacyImage.categories:id,name',
-                'legacyImage.tags:id,name',
+                'categories:id,name',
+                'tags:id,name',
             ])
             ->when($userId, fn (Builder $query) => $query->with([
-                'legacyImage.favorites' => fn ($query) => $query
+                'favorites' => fn ($query) => $query
                     ->where('user_id', $userId)
-                    ->select(['id', 'image_id', 'user_id']),
+                    ->select(['id', 'asset_id', 'user_id']),
             ]));
 
-        $search = $filters['search'];
+        $search = $this->normalizeSearch($filters['search']);
+        $relevanceExpression = null;
+
+        if ($search !== '') {
+            $like = "%{$search}%";
+            $prefix = "{$search}%";
+            $relevanceExpression = '(CASE WHEN search_documents.normalized_title = ? THEN ? ELSE 0 END)'
+                .'+(CASE WHEN search_documents.normalized_title LIKE ? THEN ? ELSE 0 END)'
+                .'+(CASE WHEN search_documents.normalized_title LIKE ? THEN ? ELSE 0 END)'
+                .'+(CASE WHEN search_documents.search_text LIKE ? THEN ? ELSE 0 END)'
+                .'+(CASE WHEN assets.is_featured = 1 THEN ? ELSE 0 END)';
+            $bindings = [
+                $search, config('discovery.search.title_exact_weight', 120),
+                $prefix, config('discovery.search.title_prefix_weight', 80),
+                $like, config('discovery.search.title_contains_weight', 50),
+                $like, config('discovery.search.document_contains_weight', 20),
+                config('discovery.search.featured_boost', 6),
+            ];
+
+            $query->where(function (Builder $query) use ($like): void {
+                $query->where('search_documents.search_text', 'like', $like)
+                    ->orWhere('assets.title', 'like', $like)
+                    ->orWhere('assets.description', 'like', $like);
+            })->selectRaw("{$relevanceExpression} as relevance_score", $bindings);
+        }
 
         $query
-            ->when($search !== '', function (Builder $query) use ($search): void {
-                $like = "%{$search}%";
-                $query->where(function (Builder $query) use ($like): void {
-                    $query
-                        ->where('assets.title', 'like', $like)
-                        ->orWhere('assets.description', 'like', $like)
-                        ->orWhere('assets.photographer', 'like', $like)
-                        ->orWhereHas('collection', fn (Builder $query) => $query->where('name', 'like', $like))
-                        ->orWhereHas('activeFiles', function (Builder $query) use ($like): void {
-                            $query->where('original_filename', 'like', $like)
-                                ->orWhere('extension', 'like', $like);
-                        })
-                        ->orWhereHas('legacyImage.categories', fn (Builder $query) => $query->where('name', 'like', $like))
-                        ->orWhereHas('legacyImage.tags', fn (Builder $query) => $query->where('name', 'like', $like));
-                });
-            })
             ->when($filters['category_id'], fn (Builder $query, int $id) => $query->whereHas(
-                'legacyImage.categories',
+                'categories',
                 fn (Builder $query) => $query->whereKey($id),
             ))
             ->when($filters['tag_id'], fn (Builder $query, int $id) => $query->whereHas(
-                'legacyImage.tags',
+                'tags',
                 fn (Builder $query) => $query->whereKey($id),
             ))
             ->when($filters['collection_id'], fn (Builder $query, int $id) => $query->where('collection_id', $id))
@@ -76,9 +86,15 @@ class PublicAssetCatalogService
             ->when($filters['format'] !== '', fn (Builder $query) => $query->whereHas(
                 'activeFiles',
                 fn (Builder $query) => $query->where('extension', strtolower($filters['format'])),
-            ));
+            ))
+            ->when($filters['orientation'] !== '', fn (Builder $query) => $query->where('search_documents.orientation', $filters['orientation']))
+            ->when($filters['min_width'], fn (Builder $query, int $width) => $query->where('search_documents.width', '>=', $width))
+            ->when($filters['min_height'], fn (Builder $query, int $height) => $query->where('search_documents.height', '>=', $height));
 
         match ($filters['sort']) {
+            'relevance' => $search !== '' && $relevanceExpression !== null
+                ? $query->orderByDesc('relevance_score')->orderByDesc('assets.is_featured')->orderByDesc('assets.created_at')
+                : $query->latest('assets.created_at'),
             'oldest' => $query->oldest('assets.created_at'),
             'most_viewed' => $query->orderByDesc('assets.views_count'),
             'most_favorited' => $query->orderByDesc('assets.favorites_count'),
@@ -162,8 +178,8 @@ class PublicAssetCatalogService
             'title' => $asset->title,
             'slug' => $asset->slug,
             'href' => $legacyImage ? route('images.show', $legacyImage) : route('assets.show', $asset),
-            'favorite_url' => $legacyImage ? route('images.favorite', $legacyImage) : null,
-            'unfavorite_url' => $legacyImage ? route('images.unfavorite', $legacyImage) : null,
+            'favorite_url' => route('assets.favorite', $asset),
+            'unfavorite_url' => route('assets.unfavorite', $asset),
             'photographer' => $asset->photographer,
             'preview_url' => app(AssetPresentationService::class)
                 ->marketplaceUrl($asset)
@@ -182,8 +198,8 @@ class PublicAssetCatalogService
             'license_href' => ($legacyImage ? route('images.show', $legacyImage) : route('assets.show', $asset)).'#purchase',
             'is_ai_generated' => $asset->is_ai_generated,
             'is_featured' => $asset->is_featured,
-            'is_favoritable' => $legacyImage !== null,
-            'is_favorited' => (bool) ($legacyImage?->favorites?->isNotEmpty()),
+            'is_favoritable' => true,
+            'is_favorited' => $asset->relationLoaded('favorites') && $asset->favorites->isNotEmpty(),
             'favorites_count' => $asset->favorites_count,
             'downloads_count' => $asset->downloads_count,
             'purchases_count' => $asset->purchases_count,
@@ -193,14 +209,14 @@ class PublicAssetCatalogService
                 'name' => $asset->collection->name,
                 'slug' => $asset->collection->slug,
             ] : null,
-            'categories' => $legacyImage?->categories
-                ?->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->name])
+            'categories' => $asset->categories
+                ->map(fn (Category $category) => ['id' => $category->id, 'name' => $category->name])
                 ->values()
-                ->all() ?? [],
-            'tags' => $legacyImage?->tags
-                ?->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->name])
+                ->all(),
+            'tags' => $asset->tags
+                ->map(fn (Tag $tag) => ['id' => $tag->id, 'name' => $tag->name])
                 ->values()
-                ->all() ?? [],
+                ->all(),
         ];
     }
 
@@ -216,7 +232,7 @@ class PublicAssetCatalogService
     {
         return AssetFile::query()
             ->where('is_active', true)
-            ->whereHas('asset', fn (Builder $query) => $query->published())
+            ->whereHas('asset', fn (Builder $query) => $query->discoverable())
             ->whereNotNull('extension')
             ->select('extension')
             ->distinct()
@@ -253,7 +269,7 @@ class PublicAssetCatalogService
                     'meta' => 'Collection',
                 ]))
             ->concat(Asset::query()
-                ->published()
+                ->discoverable()
                 ->where('title', 'like', $like)
                 ->limit(4)
                 ->get(['title', 'slug', 'legacy_image_id'])
@@ -265,7 +281,7 @@ class PublicAssetCatalogService
                     'meta' => 'Asset',
                 ]))
             ->concat(Asset::query()
-                ->published()
+                ->discoverable()
                 ->whereNotNull('photographer')
                 ->where('photographer', 'like', $like)
                 ->select('photographer')
@@ -283,6 +299,16 @@ class PublicAssetCatalogService
             ->take(8)
             ->values()
             ->all();
+    }
+
+    private function normalizeSearch(string $search): string
+    {
+        return \Illuminate\Support\Str::of($search)
+            ->lower()
+            ->replaceMatches('/[^\pL\pN]+/u', ' ')
+            ->squish()
+            ->limit(120, '')
+            ->toString();
     }
 
     private function resolvePreviewFile(Asset $asset, SupportCollection $files): ?AssetFile

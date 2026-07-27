@@ -21,6 +21,11 @@ class Category extends Model
         'sort_order' => 'integer',
     ];
 
+    public function assets(): BelongsToMany
+    {
+        return $this->belongsToMany(Asset::class, 'asset_category')->withTimestamps();
+    }
+
     public function blogPosts(): BelongsToMany
     {
         return $this->belongsToMany(

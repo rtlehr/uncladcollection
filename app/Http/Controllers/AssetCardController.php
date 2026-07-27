@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
+use App\Services\AssetDiscoveryEligibilityService;
 use App\Services\PublicAssetCatalogService;
 use Illuminate\Http\JsonResponse;
 
@@ -11,9 +12,10 @@ class AssetCardController extends Controller
     public function show(
         Asset $asset,
         PublicAssetCatalogService $catalog,
+        AssetDiscoveryEligibilityService $eligibility,
     ): JsonResponse {
         abort_unless(
-            $asset->is_active && $asset->status->value === 'published',
+            $eligibility->isDiscoverable($asset),
             404,
         );
 
@@ -27,8 +29,8 @@ class AssetCardController extends Controller
                     'files:id,asset_id,extension,is_active,is_downloadable,sort_order',
                 ])
                 ->orderBy('sort_order'),
-            'legacyImage.categories:id,name',
-            'legacyImage.tags:id,name',
+            'categories:id,name',
+            'tags:id,name',
         ]);
 
         return response()->json([

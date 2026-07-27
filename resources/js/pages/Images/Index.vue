@@ -38,7 +38,10 @@ const collectionId = ref(props.filters.collection_id ?? '');
 const aiGenerated = ref(props.filters.ai_generated ?? '');
 const assetType = ref(props.filters.asset_type ?? '');
 const format = ref(props.filters.format ?? '');
-const sort = ref(props.filters.sort ?? 'newest');
+const orientation = ref(props.filters.orientation ?? '');
+const minWidth = ref(props.filters.min_width ?? '');
+const minHeight = ref(props.filters.min_height ?? '');
+const sort = ref(props.filters.sort ?? (search.value ? 'relevance' : 'newest'));
 
 const activeFilters = computed<PublicActiveFilter[]>(() => {
     const items: PublicActiveFilter[] = [];
@@ -55,6 +58,9 @@ const activeFilters = computed<PublicActiveFilter[]>(() => {
     if (selectedFormat) items.push({ key: 'format', label: `Format: ${selectedFormat.label}` });
     if (aiGenerated.value === '1') items.push({ key: 'ai_generated', label: 'AI Generated' });
     if (aiGenerated.value === '0') items.push({ key: 'ai_generated', label: 'Photography Only' });
+    if (orientation.value) items.push({ key: 'orientation', label: `Orientation: ${orientation.value}` });
+    if (minWidth.value) items.push({ key: 'min_width', label: `Minimum width: ${minWidth.value}px` });
+    if (minHeight.value) items.push({ key: 'min_height', label: `Minimum height: ${minHeight.value}px` });
     return items;
 });
 
@@ -67,6 +73,9 @@ function queryPayload() {
         ai_generated: aiGenerated.value || undefined,
         asset_type: assetType.value || undefined,
         format: format.value || undefined,
+        orientation: orientation.value || undefined,
+        min_width: minWidth.value || undefined,
+        min_height: minHeight.value || undefined,
         sort: sort.value || undefined,
     };
 }
@@ -76,7 +85,7 @@ function reload(): void {
 }
 
 function resetFilters(): void {
-    search.value = ''; categoryId.value = ''; tagId.value = ''; collectionId.value = ''; aiGenerated.value = ''; assetType.value = ''; format.value = ''; sort.value = 'newest';
+    search.value = ''; categoryId.value = ''; tagId.value = ''; collectionId.value = ''; aiGenerated.value = ''; assetType.value = ''; format.value = ''; orientation.value = ''; minWidth.value = ''; minHeight.value = ''; sort.value = 'newest';
     router.get('/images', {}, { preserveState: true, preserveScroll: true, replace: true });
 }
 
@@ -88,6 +97,9 @@ function removeFilter(key: string): void {
     if (key === 'ai_generated') aiGenerated.value = '';
     if (key === 'asset_type') assetType.value = '';
     if (key === 'format') format.value = '';
+    if (key === 'orientation') orientation.value = '';
+    if (key === 'min_width') minWidth.value = '';
+    if (key === 'min_height') minHeight.value = '';
     reload();
 }
 
@@ -116,6 +128,9 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
             v-model:ai-generated="aiGenerated"
             v-model:asset-type="assetType"
             v-model:format="format"
+            v-model:orientation="orientation"
+            v-model:min-width="minWidth"
+            v-model:min-height="minHeight"
             v-model:sort="sort"
             :collections="collections"
             :categories="categories"

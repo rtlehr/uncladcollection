@@ -37,6 +37,10 @@ export interface PublicAsset {
     views_count: number;
     downloads_count: number;
     favorites_count: number;
+    is_favoritable: boolean;
+    is_favorited: boolean;
+    favorite_url: string;
+    unfavorite_url: string;
     published_at: string | null;
     collection: { id: number; name: string; slug: string } | null;
     presentation_url: string | null;

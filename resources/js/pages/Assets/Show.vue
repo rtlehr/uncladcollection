@@ -7,8 +7,9 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { ArrowLeft, ChevronRight, FolderOpen, ShieldCheck } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, ChevronRight, FolderOpen, Heart, ShieldCheck } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
 import AssetCartConfigurator from '@/components/Assets/Public/AssetCartConfigurator.vue';
 import AssetDetailSummary from '@/components/Assets/Public/AssetDetailSummary.vue';
@@ -29,11 +30,47 @@ import type {
     RelatedPublicAsset,
 } from '@/types/publicAsset';
 
-defineProps<{
+const props = defineProps<{
     asset: PublicAsset;
     offerings: PublicAssetOffering[];
     relatedAssets: RelatedPublicAsset[];
 }>();
+
+const page = usePage();
+const favoriteProcessing = ref(false);
+const favoriteState = ref(props.asset.is_favorited);
+const favoriteCount = ref(props.asset.favorites_count);
+const isAuthenticated = computed(() => Boolean((page.props.auth as any)?.user));
+
+function toggleFavorite(): void {
+    if (!props.asset.is_favoritable || favoriteProcessing.value) return;
+
+    if (!isAuthenticated.value) {
+        router.visit('/login');
+        return;
+    }
+
+    const wasFavorited = favoriteState.value;
+    favoriteProcessing.value = true;
+    favoriteState.value = !wasFavorited;
+    favoriteCount.value = Math.max(0, favoriteCount.value + (wasFavorited ? -1 : 1));
+
+    router[wasFavorited ? 'delete' : 'post'](
+        wasFavorited ? props.asset.unfavorite_url : props.asset.favorite_url,
+        {
+            preserveScroll: true,
+            preserveState: true,
+            only: [],
+            onError: () => {
+                favoriteState.value = wasFavorited;
+                favoriteCount.value = props.asset.favorites_count;
+            },
+            onFinish: () => {
+                favoriteProcessing.value = false;
+            },
+        } as any,
+    );
+}
 </script>
 
 <template>
@@ -118,6 +155,20 @@ defineProps<{
                         >
                             {{ asset.description }}
                         </p>
+
+                        <button
+                            v-if="asset.is_favoritable"
+                            type="button"
+                            class="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                            :aria-label="favoriteState ? `Remove ${asset.title} from favorites` : `Add ${asset.title} to favorites`"
+                            :aria-pressed="favoriteState"
+                            :disabled="favoriteProcessing"
+                            @click="toggleFavorite"
+                        >
+                            <Heart :class="['h-5 w-5', favoriteState ? 'fill-current text-[var(--brand-accent)]' : '']" aria-hidden="true" />
+                            {{ favoriteState ? 'Saved to Favorites' : 'Add to Favorites' }}
+                            <span class="text-xs font-medium text-stone-500 dark:text-stone-400">({{ favoriteCount.toLocaleString() }})</span>
+                        </button>
 
                         <div v-if="asset.keywords.length" class="mt-5">
                             <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-stone-400">
