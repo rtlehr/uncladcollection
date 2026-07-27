@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
 use App\Models\BlogPost;
 use App\Models\Collection;
 use App\Models\Image;
@@ -19,6 +21,16 @@ class CollectionBrowseController extends Controller
         Collection $collection,
     ): Response {
         abort_unless($collection->is_active, 404);
+
+        app(AnalyticsTracker::class)->record(
+            AnalyticsEventName::CollectionViewed,
+            $collection,
+            $request->user(),
+            [
+                'placement_id' => $request->integer('placement_id') ?: null,
+            ],
+            source: $request->string('discovery_source')->limit(50)->toString() ?: null,
+        );
 
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],

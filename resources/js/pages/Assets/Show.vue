@@ -19,10 +19,10 @@ import AssetPurchaseConfidence from '@/components/Assets/Public/AssetPurchaseCon
 import AssetPurchaseSummaryCard from '@/components/Assets/Public/AssetPurchaseSummaryCard.vue';
 import AssetTechnicalSpecs from '@/components/Assets/Public/AssetTechnicalSpecs.vue';
 import MarketplaceSectionHeader from '@/components/Marketplace/MarketplaceSectionHeader.vue';
-import PresentationMedia from '@/components/Marketplace/PresentationMedia.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
+import DiscoveryAssetGrid from '@/components/Discovery/DiscoveryAssetGrid.vue';
 
 import type {
     PublicAsset,
@@ -34,6 +34,7 @@ const props = defineProps<{
     asset: PublicAsset;
     offerings: PublicAssetOffering[];
     relatedAssets: RelatedPublicAsset[];
+    recentlyViewedAssets: RelatedPublicAsset[];
 }>();
 
 const page = usePage();
@@ -246,12 +247,24 @@ function toggleFavorite(): void {
                 <AssetPurchaseConfidence :fulfillment-type="asset.fulfillment_type" />
             </section>
 
+            <section v-if="recentlyViewedAssets.length" class="mt-20 border-t border-stone-200 pt-14 dark:border-stone-800">
+                <MarketplaceSectionHeader
+                    eyebrow="Pick up where you left off"
+                    title="Recently viewed"
+                    description="Return to marketplace assets you explored earlier. Your history stays private to your account or current browser session."
+                />
+
+                <div class="mt-8">
+                    <DiscoveryAssetGrid :assets="recentlyViewedAssets" />
+                </div>
+            </section>
+
             <section v-if="relatedAssets.length" class="mt-20 border-t border-stone-200 pt-14 dark:border-stone-800">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <MarketplaceSectionHeader
                         eyebrow="Keep exploring"
                         title="Related assets"
-                        description="More marketplace content selected from similar formats, subjects, and collections."
+                        description="More marketplace content ranked by shared collections, subjects, keywords, formats, and presentation."
                     />
 
                     <Link href="/images" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-primary)] transition hover:text-[var(--brand-accent)] dark:text-white">
@@ -260,39 +273,8 @@ function toggleFavorite(): void {
                     </Link>
                 </div>
 
-                <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                    <Link
-                        v-for="related in relatedAssets"
-                        :key="related.id"
-                        :href="`/assets/${related.slug}`"
-                        class="group overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900"
-                    >
-                        <PresentationMedia
-                            :src="related.preview_url"
-                            :alt="related.title"
-                            aspect-class="aspect-[4/3]"
-                            image-class="transition duration-500 group-hover:scale-[1.045]"
-                            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        />
-
-                        <div class="p-5">
-                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-accent)]">
-                                {{ related.asset_type_label }}
-                            </p>
-
-                            <h3 class="mt-2 text-lg font-semibold tracking-tight">
-                                {{ related.title }}
-                            </h3>
-
-                            <div class="mt-4 flex flex-wrap gap-1.5">
-                                <AssetFormatBadge
-                                    v-for="format in related.formats.slice(0, 4)"
-                                    :key="format"
-                                    :format="format"
-                                />
-                            </div>
-                        </div>
-                    </Link>
+                <div class="mt-8">
+                    <DiscoveryAssetGrid :assets="relatedAssets" />
                 </div>
             </section>
         </main>

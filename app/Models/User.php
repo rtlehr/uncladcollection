@@ -207,4 +207,9 @@ class User extends Authenticatable implements PasskeyUser
     }
 
 
+
+    public function recentlyViewedAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RecentlyViewedAsset::class);
+    }
 }

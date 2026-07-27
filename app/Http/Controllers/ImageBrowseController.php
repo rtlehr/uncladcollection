@@ -35,7 +35,7 @@ class ImageBrowseController extends Controller
             'orientation' => ['nullable', 'in:landscape,portrait,square'],
             'min_width' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'min_height' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'sort' => ['nullable', 'in:relevance,newest,oldest,most_viewed,most_favorited,most_downloaded'],
+            'sort' => ['nullable', 'in:relevance,trending,newest,oldest,most_viewed,most_favorited,most_downloaded'],
             'suggestion_type' => ['nullable', 'string', 'max:40'],
         ]);
 

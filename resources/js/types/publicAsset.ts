@@ -56,10 +56,13 @@ export interface RelatedPublicAsset {
     id: number;
     title: string;
     slug: string;
+    href: string;
     asset_type: string;
     asset_type_label: string;
     preview_url: string | null;
     formats: string[];
+    reason: string | null;
+    relevance_score: number | null;
 }
 
 

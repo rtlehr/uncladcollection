@@ -38,7 +38,12 @@ if (can('view_admin')) {
         { title: 'Administration Dashboard', href: '/admin/administration-dashboard', icon: ShieldCheck },
     );
 }
-if (can('view_reports')) adminDashboardItems.push({ title: 'Marketplace Intelligence', href: '/admin/analytics', icon: BarChart3 });
+if (can('view_reports')) {
+    adminDashboardItems.push(
+        { title: 'Marketplace Intelligence', href: '/admin/analytics', icon: BarChart3 },
+        { title: 'Trending Assets', href: '/admin/discovery/trending', icon: BarChart3 },
+    );
+}
 
 const assetItems: NavItem[] = [];
 if (can('manage_images')) {

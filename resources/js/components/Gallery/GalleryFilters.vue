@@ -69,6 +69,7 @@ function selectValue(event: Event): string {
                     @change="emit('update:sort', selectValue($event)); emit('apply')"
                 >
                     <option value="relevance">Most Relevant</option>
+                    <option value="trending">Trending</option>
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                     <option value="most_viewed">Most Viewed</option>
@@ -141,6 +142,7 @@ function selectValue(event: Event): string {
                 <label class="sr-only" for="filter-sort">Sort assets</label>
                 <select id="filter-sort" :value="sort" class="hidden h-11 rounded-full border border-stone-300 bg-transparent px-4 text-sm xl:block dark:border-stone-700" @change="emit('update:sort', selectValue($event))">
                     <option value="relevance">Most Relevant</option>
+                    <option value="trending">Trending</option>
                     <option value="newest">Newest</option>
                     <option value="oldest">Oldest</option>
                     <option value="most_viewed">Most Viewed</option>

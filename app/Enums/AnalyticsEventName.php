@@ -16,6 +16,7 @@ enum AnalyticsEventName: string
     case SearchPerformed = 'search_performed';
     case SearchFiltersApplied = 'search_filters_applied';
     case SearchSuggestionSelected = 'search_suggestion_selected';
+    case CollectionViewed = 'collection_viewed';
     case AdvertisingImpression = 'advertising_impression';
     case AdvertisingClicked = 'advertising_clicked';
 }

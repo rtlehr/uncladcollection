@@ -35,8 +35,10 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SearchDiscoveryReportController;
 use App\Http\Controllers\Admin\DownloadLicenseUtilizationReportController;
+use App\Http\Controllers\Admin\DiscoveryCollectionPlacementController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
+use App\Http\Controllers\Admin\TrendingAssetController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SponsorshipPackageController;
 use App\Http\Controllers\Admin\SponsorshipLeadController;
@@ -60,6 +62,30 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/advertising-dashboard', [AreaDashboardController::class, 'advertising'])->name('dashboards.advertising');
         Route::get('/marketing-dashboard', [AreaDashboardController::class, 'marketing'])->name('dashboards.marketing');
         Route::get('/administration-dashboard', [AreaDashboardController::class, 'administration'])->name('dashboards.administration');
+
+
+        Route::get('/discovery/trending', [TrendingAssetController::class, 'index'])
+            ->middleware('permission:view_reports')
+            ->name('discovery.trending.index');
+        Route::patch('/discovery/trending/{asset}', [TrendingAssetController::class, 'update'])
+            ->middleware('permission:manage_images')
+            ->name('discovery.trending.update');
+        Route::post('/discovery/trending/rebuild', [TrendingAssetController::class, 'rebuild'])
+            ->middleware('permission:manage_images')
+            ->name('discovery.trending.rebuild');
+
+        Route::get('/discovery/collections', [DiscoveryCollectionPlacementController::class, 'index'])
+            ->middleware('permission:manage_collections')
+            ->name('discovery.collections.index');
+        Route::post('/discovery/collections', [DiscoveryCollectionPlacementController::class, 'store'])
+            ->middleware('permission:manage_collections')
+            ->name('discovery.collections.store');
+        Route::put('/discovery/collections/{placement}', [DiscoveryCollectionPlacementController::class, 'update'])
+            ->middleware('permission:manage_collections')
+            ->name('discovery.collections.update');
+        Route::delete('/discovery/collections/{placement}', [DiscoveryCollectionPlacementController::class, 'destroy'])
+            ->middleware('permission:manage_collections')
+            ->name('discovery.collections.destroy');
 
         Route::get('/analytics', AnalyticsDashboardController::class)
             ->middleware('permission:view_reports')

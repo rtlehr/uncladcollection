@@ -43,6 +43,11 @@ class Collection extends Model
         return $this->hasMany(Asset::class);
     }
 
+    public function discoveryPlacements(): HasMany
+    {
+        return $this->hasMany(DiscoveryCollectionPlacement::class);
+    }
+
     public function getCoverImageUrlAttribute(): ?string
     {
         return $this->cover_image_path

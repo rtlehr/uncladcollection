@@ -6,6 +6,8 @@ use App\Models\BlogPost;
 use App\Models\Collection;
 use App\Models\Image;
 use App\Models\MarketingCampaign;
+use App\Services\TrendingAssetService;
+use App\Services\DiscoveryCollectionPlacementService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -89,7 +91,14 @@ class HomeController extends Controller
 
             'featuredCollections' => $featuredCollections,
 
+            'discoveryCollectionPlacements' => app(DiscoveryCollectionPlacementService::class)
+                ->homepage(auth()->check()),
+
             'featuredImages' => $featuredImages,
+
+            'trendingAssets' => app(TrendingAssetService::class)
+                ->assets('week', (int) config('discovery.trending.homepage_limit', 8))
+                ->all(),
 
             'latestArticles' => $latestArticles,
 

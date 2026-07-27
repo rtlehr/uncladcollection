@@ -99,6 +99,14 @@ class PublicAssetCatalogService
             'most_viewed' => $query->orderByDesc('assets.views_count'),
             'most_favorited' => $query->orderByDesc('assets.favorites_count'),
             'most_downloaded' => $query->orderByDesc('assets.downloads_count'),
+            'trending' => $query
+                ->leftJoin('asset_trending_scores as trending_scores', function ($join): void {
+                    $join->on('trending_scores.asset_id', '=', 'assets.id')
+                        ->where('trending_scores.period', '=', 'week');
+                })
+                ->orderByRaw('trending_scores.rank is null')
+                ->orderBy('trending_scores.rank')
+                ->orderByDesc('assets.created_at'),
             default => $query->latest('assets.created_at'),
         };
 

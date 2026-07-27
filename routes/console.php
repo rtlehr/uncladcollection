@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -283,3 +284,6 @@ Artisan::command('page-help:import {path? : JSON path relative to the project ro
 
     return 0;
 })->purpose('Import a Page Help JSON export in merge or replace mode');
+
+
+Schedule::command('assets:rebuild-trending')->hourly()->withoutOverlapping();

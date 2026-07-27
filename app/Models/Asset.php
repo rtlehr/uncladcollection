@@ -26,7 +26,7 @@ class Asset extends Model
         'uuid', 'legacy_image_id', 'collection_id', 'title', 'slug', 'description',
         'alt_text', 'seo_title', 'seo_description', 'keywords', 'dominant_colors', 'detected_objects',
         'asset_type', 'status', 'photographer', 'sort_order', 'is_active',
-        'is_featured', 'is_ai_generated', 'allows_quantity', 'fulfillment_type',
+        'is_featured', 'trending_boost', 'suppress_from_trending', 'is_ai_generated', 'allows_quantity', 'fulfillment_type',
         'collects_shipping_address', 'shipping_address_required', 'downloads_count', 'favorites_count',
         'purchases_count', 'views_count', 'published_at', 'metadata',
         'presentation_images', 'primary_preview_file_id', 'poster_file_id',
@@ -40,6 +40,8 @@ class Asset extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'trending_boost' => 'integer',
+            'suppress_from_trending' => 'boolean',
             'is_ai_generated' => 'boolean',
             'allows_quantity' => 'boolean',
             'fulfillment_type' => AssetFulfillmentType::class,
@@ -150,6 +152,17 @@ class Asset extends Model
     public function scopePurchasable(Builder $query): Builder
     {
         return app(\App\Services\AssetDiscoveryEligibilityService::class)->applyPurchasable($query);
+    }
+
+
+    public function trendingScores(): HasMany
+    {
+        return $this->hasMany(AssetTrendingScore::class);
+    }
+
+    public function recentViews(): HasMany
+    {
+        return $this->hasMany(RecentlyViewedAsset::class);
     }
 
     public function searchDocument(): HasOne

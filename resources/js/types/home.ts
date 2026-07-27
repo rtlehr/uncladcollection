@@ -93,3 +93,23 @@ export interface HomeHeroCampaign {
     loop_video: boolean;
     show_search: boolean;
 }
+
+export interface HomeDiscoveryCollectionPlacement {
+    id: number;
+    placement: 'homepage_primary' | 'homepage_secondary';
+    content_type: 'featured' | 'seasonal';
+    eyebrow: string;
+    heading: string;
+    description: string | null;
+    call_to_action: string;
+    source: string;
+    href: string;
+    collection: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+        assets_count: number;
+        cover_image_url: string | null;
+    };
+}

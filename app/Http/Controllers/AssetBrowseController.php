@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
+use App\Enums\DiscoverySource;
 use App\Services\AssetMediaPresentationService;
 use App\Services\AssetPresentationService;
 use App\Services\AssetWatermarkPreviewService;
+use App\Services\RecentlyViewedAssetService;
+use App\Services\RelatedAssetService;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -16,7 +22,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AssetBrowseController extends Controller
 {
-    public function show(Asset $asset, AssetMediaPresentationService $presentation): Response
+    public function show(
+        Request $request,
+        Asset $asset,
+        AssetMediaPresentationService $presentation,
+        RecentlyViewedAssetService $recentlyViewed,
+        RelatedAssetService $relatedAssetsService,
+        AnalyticsTracker $analytics,
+    ): Response
     {
         abort_unless(
             $asset->is_active
@@ -40,9 +53,6 @@ class AssetBrowseController extends Controller
                 ->orderBy('id'),
         ]);
 
-        $asset->increment('views_count');
-        $asset->views_count++;
-
         $files = $asset->activeFiles
             ->sortBy([['sort_order', 'asc'], ['id', 'asc']])
             ->values();
@@ -51,38 +61,44 @@ class AssetBrowseController extends Controller
         $preview = collect($gallery)->firstWhere('id', $asset->primary_preview_file_id)
             ?? collect($gallery)->firstWhere('can_preview', true);
 
-        $relatedAssets = Asset::query()
-            ->published()
-            ->whereKeyNot($asset->id)
-            ->where(function ($query) use ($asset): void {
-                $query->where('asset_type', $asset->asset_type->value);
+        $source = collect(DiscoverySource::cases())
+            ->first(fn (DiscoverySource $case) => $case->value === $request->string('discovery_source')->toString())
+            ?->value ?? DiscoverySource::Catalog->value;
 
-                if ($asset->collection_id) {
-                    $query->orWhere('collection_id', $asset->collection_id);
-                }
-            })
-            ->with(['primaryPreviewFile', 'posterFile', 'activeFiles'])
-            ->orderByDesc('is_featured')
-            ->orderByDesc('views_count')
-            ->limit(6)
-            ->get()
-            ->map(function (Asset $related) use ($presentation): array {
-                $gallery = $presentation->gallery($related, $related->activeFiles);
-                $preview = collect($gallery)->firstWhere('id', $related->primary_preview_file_id)
-                    ?? collect($gallery)->firstWhere('can_preview', true);
+        $recentAssets = $recentlyViewed->recent($request, $request->user(), $asset->id);
+        $countableView = $recentlyViewed->record($request, $asset, $request->user(), $source);
 
-                return [
-                    'id' => $related->id,
-                    'title' => $related->title,
-                    'slug' => $related->slug,
-                    'asset_type' => $related->asset_type->value,
-                    'asset_type_label' => $related->asset_type->label(),
-                    'preview_url' => app(AssetPresentationService::class)
-                        ->marketplaceUrl($related)
-                        ?? ($preview['preview_url'] ?? null),
-                    'formats' => $related->activeFiles->pluck('extension')->filter()->map(fn ($ext) => strtoupper($ext))->unique()->values()->all(),
-                ];
-            });
+        if ($countableView) {
+            $asset->increment('views_count');
+            $asset->views_count++;
+
+            $analytics->record(
+                AnalyticsEventName::AssetViewed,
+                $asset,
+                $request->user(),
+                [
+                    'discovery_source' => $source,
+                    'origin_asset_id' => $request->integer('origin_asset') ?: null,
+                ],
+                source: $source,
+                deduplicationKey: 'asset-view:'.$asset->id,
+            );
+        }
+
+        $relatedAssets = $relatedAssetsService->forAsset(
+            $asset,
+            (int) config('discovery.related.limit', 6),
+        );
+
+        $recentlyViewedAssets = $recentAssets
+            ->map(fn (Asset $recent) => $relatedAssetsService->format(
+                $recent,
+                'Recently viewed',
+                null,
+                DiscoverySource::RecentlyViewed->value,
+                $asset->id,
+            ))
+            ->values();
 
         return Inertia::render('Assets/Show', [
             'asset' => [
@@ -178,6 +194,7 @@ class AssetBrowseController extends Controller
                 ];
             })->values(),
             'relatedAssets' => $relatedAssets,
+            'recentlyViewedAssets' => $recentlyViewedAssets,
         ]);
     }
 
