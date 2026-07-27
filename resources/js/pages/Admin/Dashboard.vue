@@ -13,6 +13,7 @@ import {
 } from '@lucide/vue';
 
 import MetricCard from '@/Components/Shared/MetricCard.vue';
+import AdminCommandCenter, { type AdminToolGroup } from '@/components/admin/AdminCommandCenter.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
@@ -29,6 +30,7 @@ import type {
 } from '@/types/adminDashboard';
 
 defineProps<{
+    adminTools: AdminToolGroup[];
     stats: AdminDashboardStats;
     recentOrders: AdminDashboardOrder[];
     recentDownloads: AdminDashboardDownload[];
@@ -49,8 +51,10 @@ function formatDownloadType(value: string): string {
     <div class="space-y-8 p-6">
         <PageHeader
             title="Admin Dashboard"
-            description="Monitor sales, licenses, downloads, image performance, and user activity."
+            description="Search and open every administration tool, then monitor marketplace activity."
         />
+
+        <AdminCommandCenter :groups="adminTools" />
 
         <section class="grid gap-4 xl:grid-cols-4">
             <MetricCard

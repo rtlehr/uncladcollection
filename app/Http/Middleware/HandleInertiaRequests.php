@@ -6,6 +6,7 @@ use App\Models\CartItem;
 use App\Models\PublicPage;
 use Illuminate\Support\Facades\Schema;
 use App\Services\PageHelp\PageHelpContext;
+use App\Services\AdminToolRegistry;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -66,6 +67,8 @@ class HandleInertiaRequests extends Middleware
             'page_help' => fn () => app(PageHelpContext::class)->forRequest($request),
 
             'public_page_navigation' => fn () => $this->publicPageNavigation(),
+
+            'admin_tools' => fn () => app(AdminToolRegistry::class)->forUser($user),
         ];
     }
 

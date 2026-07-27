@@ -8,13 +8,14 @@ use App\Models\Image;
 use App\Models\License;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\AdminToolRegistry;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AdminDashboardController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(AdminToolRegistry $adminTools): Response
     {
         $dashboardSummary = Cache::remember(
             key: 'admin-dashboard:summary',
@@ -157,6 +158,7 @@ class AdminDashboardController extends Controller
             ->values();
 
         return Inertia::render('Admin/Dashboard', [
+            'adminTools' => $adminTools->forUser(request()->user()),
             'stats' => $dashboardSummary['stats'],
             'recentOrders' => $recentOrders,
             'recentDownloads' => $recentDownloads,
