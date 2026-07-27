@@ -9,6 +9,7 @@ use App\Models\MarketingCampaign;
 use App\Services\TrendingAssetService;
 use App\Services\PersonalizedRecommendationService;
 use App\Services\DiscoveryCollectionPlacementService;
+use App\Services\HomepageDiscoveryService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -60,6 +61,30 @@ class HomeController extends Controller
 
         $latestArticles = $this->getLatestArticles();
 
+        $discoveryCollectionPlacements = app(DiscoveryCollectionPlacementService::class)
+            ->homepage(auth()->check());
+
+        $recommendedAssets = auth()->check()
+            ? app(PersonalizedRecommendationService::class)
+                ->forUser(auth()->user(), 12)
+                ->all()
+            : [];
+
+        $trendingAssets = app(TrendingAssetService::class)
+            ->assets('week', 12)
+            ->all();
+
+        $homepageDiscoverySections = app(HomepageDiscoveryService::class)->compose(
+            auth()->check(),
+            [
+                'primary_collections' => $discoveryCollectionPlacements['homepage_primary'] ?? [],
+                'recommended' => $recommendedAssets,
+                'trending' => $trendingAssets,
+                'featured_assets' => $featuredImages,
+                'secondary_collections' => $discoveryCollectionPlacements['homepage_secondary'] ?? [],
+            ],
+        );
+
         return Inertia::render('Welcome', [
             'siteSettings' => $settings,
 
@@ -91,21 +116,13 @@ class HomeController extends Controller
             ] : null,
 
             'featuredCollections' => $featuredCollections,
-
-            'discoveryCollectionPlacements' => app(DiscoveryCollectionPlacementService::class)
-                ->homepage(auth()->check()),
+            'discoveryCollectionPlacements' => $discoveryCollectionPlacements,
 
             'featuredImages' => $featuredImages,
+            'recommendedAssets' => $recommendedAssets,
+            'trendingAssets' => $trendingAssets,
 
-            'recommendedAssets' => auth()->check()
-                ? app(PersonalizedRecommendationService::class)
-                    ->forUser(auth()->user(), (int) config('discovery.recommendations.homepage_limit', 8))
-                    ->all()
-                : [],
-
-            'trendingAssets' => app(TrendingAssetService::class)
-                ->assets('week', (int) config('discovery.trending.homepage_limit', 8))
-                ->all(),
+            'homepageDiscoverySections' => $homepageDiscoverySections,
 
             'latestArticles' => $latestArticles,
 

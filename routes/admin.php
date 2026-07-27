@@ -36,6 +36,8 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SearchDiscoveryReportController;
 use App\Http\Controllers\Admin\DownloadLicenseUtilizationReportController;
 use App\Http\Controllers\Admin\DiscoveryCollectionPlacementController;
+use App\Http\Controllers\Admin\HomepageDiscoveryController;
+use App\Http\Controllers\Admin\DiscoveryPerformanceReportController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TrendingAssetController;
@@ -86,6 +88,18 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::delete('/discovery/collections/{placement}', [DiscoveryCollectionPlacementController::class, 'destroy'])
             ->middleware('permission:manage_collections')
             ->name('discovery.collections.destroy');
+
+
+        Route::get('/discovery/homepage', [HomepageDiscoveryController::class, 'index'])
+            ->middleware('permission:manage_site_settings')
+            ->name('discovery.homepage.index');
+        Route::patch('/discovery/homepage/{section}', [HomepageDiscoveryController::class, 'update'])
+            ->middleware('permission:manage_site_settings')
+            ->name('discovery.homepage.update');
+
+        Route::get('/analytics/discovery', [DiscoveryPerformanceReportController::class, 'index'])
+            ->middleware('permission:view_reports')
+            ->name('analytics.discovery.index');
 
         Route::get('/analytics', AnalyticsDashboardController::class)
             ->middleware('permission:view_reports')

@@ -124,14 +124,19 @@ onBeforeUnmount(() => {
                     Favorites
                 </Link>
 
-                <Link
-                    v-for="item in headerPages"
-                    :key="item.href"
-                    :href="item.href"
-                    class="transition hover:text-[var(--brand-accent)]"
+                <div
+                    v-if="headerPages.length"
+                    class="ml-2 flex items-center gap-8"
                 >
-                    {{ item.label }}
-                </Link>
+                    <Link
+                        v-for="item in headerPages"
+                        :key="item.href"
+                        :href="item.href"
+                        class="transition hover:text-[var(--brand-accent)]"
+                    >
+                        {{ item.label }}
+                    </Link>
+                </div>
             </nav>
 
             <PageHelpPanel
