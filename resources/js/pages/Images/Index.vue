@@ -104,9 +104,18 @@ function removeFilter(key: string): void {
 }
 
 function selectSuggestion(suggestion: PublicSearchSuggestion): void {
-    if (suggestion.href) { router.visit(suggestion.href); return; }
+    if (suggestion.href) {
+        const url = new URL(suggestion.href, window.location.origin);
+        url.searchParams.set('suggestion_type', suggestion.type);
+        router.visit(`${url.pathname}${url.search}`);
+        return;
+    }
+
     search.value = suggestion.value;
-    reload();
+    router.get('/images', {
+        ...queryPayload(),
+        suggestion_type: suggestion.type,
+    }, { preserveState: true, preserveScroll: true, replace: true });
 }
 </script>
 

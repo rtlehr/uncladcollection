@@ -12,6 +12,7 @@ use App\Models\LicenseType;
 use App\Models\Tag;
 use App\Services\PublicAssetCatalogService;
 use App\Services\PurchaseService;
+use App\Services\PublicSearchSuggestionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ use Inertia\Response;
 
 class ImageBrowseController extends Controller
 {
-    public function index(Request $request, PublicAssetCatalogService $catalog, AnalyticsTracker $tracker): Response
+    public function index(Request $request, PublicAssetCatalogService $catalog, AnalyticsTracker $tracker, PublicSearchSuggestionService $suggestions): Response
     {
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:120'],
@@ -60,6 +61,9 @@ class ImageBrowseController extends Controller
             ->count();
 
         if ($filters['search'] !== '') {
+            if ($request->user()) {
+                $suggestions->rememberSearch($request->user()->id, $filters['search']);
+            }
             $event = $tracker->record(
                 AnalyticsEventName::SearchPerformed,
                 user: $request->user(),
@@ -112,7 +116,7 @@ class ImageBrowseController extends Controller
                 ->get(['id', 'name']),
             'assetTypes' => $catalog->assetTypeOptions(),
             'formats' => $catalog->formatOptions(),
-            'suggestions' => $catalog->suggestions($filters['search']),
+            'suggestions' => $suggestions->suggestions($filters['search'], $request->user()?->id),
             'filters' => [
                 ...$filters,
                 'category_id' => $filters['category_id'] ? (string) $filters['category_id'] : '',

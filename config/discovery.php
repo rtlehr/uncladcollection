@@ -4,6 +4,12 @@ return [
     'cache_version_key' => 'discovery:version',
     'catalog_per_page' => 24,
     'new_asset_days' => 30,
+    'suggestions' => [
+        'limit' => 8,
+        'debounce_ms' => 250,
+        'cache_minutes' => 10,
+        'popular_cache_minutes' => 30,
+    ],
     'search' => [
         'minimum_term_length' => 2,
         'title_exact_weight' => 120,

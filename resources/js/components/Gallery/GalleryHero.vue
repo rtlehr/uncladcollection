@@ -22,7 +22,7 @@ function formatNumber(value: number): string {
 </script>
 
 <template>
-    <section class="relative isolate overflow-hidden bg-[var(--brand-primary)] text-white">
+    <section class="relative z-30 isolate overflow-visible bg-[var(--brand-primary)] text-white">
         <div class="absolute inset-0 -z-20 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--brand-primary)_92%,black),var(--brand-primary))]" />
         <div class="absolute inset-0 -z-10 opacity-90 bg-[radial-gradient(circle_at_14%_18%,color-mix(in_srgb,var(--brand-accent)_34%,transparent),transparent_30%),radial-gradient(circle_at_84%_4%,color-mix(in_srgb,var(--brand-secondary)_48%,transparent),transparent_38%)]" />
         <div class="absolute inset-x-0 bottom-0 h-px bg-white/10" />

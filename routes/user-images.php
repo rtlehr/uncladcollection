@@ -8,9 +8,13 @@ use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\ImageBrowseController;
 use App\Http\Controllers\ImageFavoriteController;
 use App\Http\Controllers\PurchaseBrowseController;
+use App\Http\Controllers\PublicSearchSuggestionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/images', [ImageBrowseController::class, 'index'])->name('images.index');
+Route::get('/images/search-suggestions', PublicSearchSuggestionController::class)
+    ->middleware('throttle:120,1')
+    ->name('images.search-suggestions');
 Route::get('/collections/{collection:slug}', [CollectionBrowseController::class, 'show'])->name('collections.show');
 Route::get('/images/{image:slug}', [ImageBrowseController::class, 'show'])->name('images.show');
 
