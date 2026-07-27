@@ -8,6 +8,10 @@ const page = usePage();
 const site = computed(() => (page.props.site ?? {}) as Record<string, any>);
 const isAuthenticated = computed(() => Boolean((page.props.auth as any)?.user));
 const siteName = computed(() => site.value.name || 'Unclad Collection');
+const publicNavigation = computed(() => (page.props.public_page_navigation ?? {}) as Record<string, Array<{ label: string; href: string }>>);
+const companyPages = computed(() => publicNavigation.value.footer_company ?? []);
+const resourcePages = computed(() => publicNavigation.value.footer_resources ?? []);
+const legalPages = computed(() => publicNavigation.value.footer_legal ?? []);
 
 const socialLinks = computed(() => [
     { label: 'Instagram', href: site.value.social?.instagram_url || '', icon: Camera },
@@ -19,7 +23,7 @@ const socialLinks = computed(() => [
 
 <template>
     <footer class="border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
-        <div class="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 lg:grid-cols-4 lg:px-12">
+        <div class="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 lg:grid-cols-5 lg:px-12">
             <div class="lg:col-span-2">
                 <img
                     v-if="site.logo_horizontal_url || site.logo_url"
@@ -53,8 +57,15 @@ const socialLinks = computed(() => [
                 <nav class="mt-4 grid gap-3 text-sm text-stone-600 dark:text-stone-400">
                     <Link href="/images" class="hover:text-[var(--brand-accent)]">Marketplace</Link>
                     <Link href="/blog" class="hover:text-[var(--brand-accent)]">Stories</Link>
-                    <Link href="/public-page" class="hover:text-[var(--brand-accent)]">About</Link>
+                    <Link v-for="item in resourcePages" :key="item.href" :href="item.href" class="hover:text-[var(--brand-accent)]">{{ item.label }}</Link>
                     <Link v-if="isAuthenticated" href="/favorites" class="hover:text-[var(--brand-accent)]">Favorites</Link>
+                </nav>
+            </div>
+
+            <div v-if="companyPages.length">
+                <h2 class="text-sm font-semibold">Company</h2>
+                <nav class="mt-4 grid gap-3 text-sm text-stone-600 dark:text-stone-400">
+                    <Link v-for="item in companyPages" :key="item.href" :href="item.href" class="hover:text-[var(--brand-accent)]">{{ item.label }}</Link>
                 </nav>
             </div>
 
@@ -76,7 +87,7 @@ const socialLinks = computed(() => [
         <div class="border-t border-stone-200 dark:border-stone-800">
             <div class="mx-auto flex max-w-[1440px] flex-col gap-2 px-5 py-6 text-xs text-stone-500 sm:px-8 md:flex-row md:justify-between lg:px-12">
                 <span>{{ site.footer_text || `© ${siteName}. All rights reserved.` }}</span>
-                <span>Authentic media. Thoughtful representation.</span>
+                <nav v-if="legalPages.length" class="flex flex-wrap gap-x-4 gap-y-2"><Link v-for="item in legalPages" :key="item.href" :href="item.href" class="hover:text-[var(--brand-accent)]">{{ item.label }}</Link></nav><span v-else>Authentic media. Thoughtful representation.</span>
             </div>
         </div>
     </footer>

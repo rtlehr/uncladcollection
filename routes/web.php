@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarketingCampaignTrackingController;
 use App\Http\Controllers\PublicAdController;
+use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -30,3 +31,8 @@ require __DIR__.'/seo.php';
 
 require __DIR__.'/advertiser.php';
 require __DIR__.'/admin-support.php';
+
+// Keep this catch-all public-page route last so application routes retain priority.
+Route::get('/{slug}', [PublicPageController::class, 'show'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('public-pages.show');

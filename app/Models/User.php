@@ -179,6 +179,11 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(Download::class);
     }
 
+    public function publicPages(): HasMany
+    {
+        return $this->hasMany(PublicPage::class, 'created_by_user_id');
+    }
+
     public function blogPosts(): HasMany
     {
         return $this->hasMany(BlogPost::class);

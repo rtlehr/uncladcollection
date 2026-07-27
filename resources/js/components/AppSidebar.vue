@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BadgeDollarSign, Ban, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
-    Heart, ImageIcon, Inbox, LayoutGrid, LifeBuoy, Megaphone, Settings, ShieldCheck, Tags, UserRoundCheck, CircleHelp,
+    Heart, ImageIcon, Inbox, LayoutGrid, LifeBuoy, Megaphone, Settings, ShieldCheck, Tags, UserRoundCheck, CircleHelp, PanelsTopLeft,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -52,6 +52,7 @@ if (can('manage_orders')) assetItems.push({ title: 'Orders', href: '/admin/order
 
 const blogItems: NavItem[] = [];
 if (can('manage_blog_posts')) blogItems.push({ title: 'Blog Posts', href: '/admin/blog-posts', icon: FileText });
+if (can('manage_public_pages')) blogItems.push({ title: 'Public Pages', href: '/admin/public-pages', icon: PanelsTopLeft });
 if (can('manage_comments')) blogItems.push({ title: 'Comments', href: '/admin/comments', icon: FileText });
 
 const advertisingItems: NavItem[] = [];

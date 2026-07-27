@@ -23,6 +23,8 @@ const isAuthenticated = computed(() =>
 const siteName = computed(() =>
     site.value.name || 'Unclad Collection',
 );
+const publicNavigation = computed(() => (page.props.public_page_navigation ?? {}) as Record<string, Array<{ label: string; href: string }>>);
+const headerPages = computed(() => publicNavigation.value.header ?? []);
 
 function closeMenu(): void {
     mobileMenuOpen.value = false;
@@ -86,8 +88,13 @@ onBeforeUnmount(() => {
                     Stories
                 </Link>
 
-                <Link href="/public-page" class="transition hover:text-[var(--brand-accent)]">
-                    About
+                <Link
+                    v-for="item in headerPages"
+                    :key="item.href"
+                    :href="item.href"
+                    class="transition hover:text-[var(--brand-accent)]"
+                >
+                    {{ item.label }}
                 </Link>
                 <Link href="/support" class="transition hover:text-[var(--brand-accent)]">
                     Support
@@ -170,11 +177,13 @@ onBeforeUnmount(() => {
                 </Link>
 
                 <Link
-                    href="/public-page"
+                    v-for="item in headerPages"
+                    :key="item.href"
+                    :href="item.href"
                     class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
                     @click="closeMenu"
                 >
-                    About
+                    {{ item.label }}
                 </Link>
 
 

@@ -1,8 +1,8 @@
 {
     "format": "unclad-page-help",
     "version": 1,
-    "exported_at": "2026-07-26T13:21:35+00:00",
-    "entry_count": 3,
+    "exported_at": "2026-07-27T12:19:17+00:00",
+    "entry_count": 4,
     "entries": [
         {
             "page_key": "admin.dashboard",
@@ -13,6 +13,19 @@
             "is_active": true,
             "is_published": true,
             "published_at": "2026-07-24T18:52:45+00:00",
+            "sort_order": 0,
+            "roles": [],
+            "permissions": []
+        },
+        {
+            "page_key": "admin.dashboards.assets",
+            "title": "Asset Dashboard",
+            "summary": "Manage Assets",
+            "content": "<p>this is where we will manage assists</p>",
+            "audience": "all",
+            "is_active": true,
+            "is_published": true,
+            "published_at": "2026-07-27T12:18:55+00:00",
             "sort_order": 0,
             "roles": [],
             "permissions": []

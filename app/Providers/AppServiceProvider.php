@@ -6,8 +6,10 @@ use App\Contracts\AssetVirusScanner;
 use App\Analytics\AnalyticsReportCache;
 use App\Models\AnalyticsEvent;
 use App\Models\PageHelp;
+use App\Models\PublicPage;
 use App\Models\User;
 use App\Policies\PageHelpPolicy;
+use App\Policies\PublicPagePolicy;
 use App\Services\NullAssetVirusScanner;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -39,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         AnalyticsEvent::deleted(fn () => app(AnalyticsReportCache::class)->flush());
 
         Gate::policy(PageHelp::class, PageHelpPolicy::class);
+        Gate::policy(PublicPage::class, PublicPagePolicy::class);
 
         Gate::before(function (User $user, string $ability) {
             return $user->hasPermission($ability) ? true : null;

@@ -44,6 +44,7 @@ use App\Http\Controllers\Admin\SponsorshipProposalController;
 use App\Http\Controllers\Admin\AdInventoryController;
 use App\Http\Controllers\Admin\PageHelpController;
 use App\Http\Controllers\Admin\PageHelpTransferController;
+use App\Http\Controllers\Admin\PublicPageController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -332,6 +333,11 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/downloads/{download}', [AdminDownloadController::class, 'show'])
             ->middleware('permission:manage_downloads')
             ->name('downloads.show');
+
+        Route::resource('public-pages', PublicPageController::class)
+            ->parameters(['public-pages' => 'publicPage'])
+            ->except(['show'])
+            ->middleware('permission:manage_public_pages');
 
         Route::get('/blog-posts/image-library', [AdminBlogPostController::class, 'imageLibrary'])
             ->middleware('permission:manage_blog_posts')

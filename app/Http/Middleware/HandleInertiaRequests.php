@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\CartItem;
+use App\Models\PublicPage;
+use Illuminate\Support\Facades\Schema;
 use App\Services\PageHelp\PageHelpContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -61,6 +63,8 @@ class HandleInertiaRequests extends Middleware
             'cart' => fn () => $this->cartPayload($user?->id),
 
             'page_help' => fn () => app(PageHelpContext::class)->forRequest($request),
+
+            'public_page_navigation' => fn () => $this->publicPageNavigation(),
         ];
     }
 
@@ -189,6 +193,29 @@ class HandleInertiaRequests extends Middleware
             'x_username' => $xUsername,
             'locale' => str_replace('-', '_', app()->getLocale()),
         ];
+    }
+
+
+    private function publicPageNavigation(): array
+    {
+        if (! Schema::hasTable('public_pages')) {
+            return [];
+        }
+
+        $locations = array_keys(config('public-pages.navigation_locations', []));
+        $result = array_fill_keys($locations, []);
+
+        PublicPage::query()->published()->orderBy('sort_order')->orderBy('title')
+            ->get(['title','slug','navigation_label','navigation_locations'])
+            ->each(function (PublicPage $page) use (&$result): void {
+                foreach ($page->navigation_locations ?? [] as $location) {
+                    if (array_key_exists($location, $result)) {
+                        $result[$location][] = ['label'=>$page->navigationLabel(), 'href'=>'/'.$page->slug];
+                    }
+                }
+            });
+
+        return $result;
     }
 
     private function cartPayload(?int $userId): array

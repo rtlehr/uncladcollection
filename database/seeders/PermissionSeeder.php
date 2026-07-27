@@ -92,6 +92,10 @@ class PermissionSeeder extends Seeder
                 'description' => 'Manage tags.',
             ],
 
+            // Public Pages
+            ['group_name' => 'Content', 'name' => 'manage_public_pages', 'label' => 'Manage Public Pages', 'description' => 'Create, edit, and remove public informational pages.'],
+            ['group_name' => 'Content', 'name' => 'publish_public_pages', 'label' => 'Publish Public Pages', 'description' => 'Publish and unpublish public informational pages.'],
+
             // Blog
             [
                 'group_name' => 'Blog',
