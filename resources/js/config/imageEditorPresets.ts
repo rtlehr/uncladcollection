@@ -73,6 +73,9 @@ export const IMAGE_EDITOR_PRESETS: Record<string, ImageEditorPreset> = {
         outputType: 'image/jpeg',
         quality: 0.9,
     },
+    publicPageHeader: {
+        key: 'public-page-header', label: 'Public page header', width: 1600, height: 700, outputType: 'image/jpeg', quality: 0.9,
+    },
     socialShare: {
         key: 'social-share',
         label: 'Social share',
@@ -115,3 +118,5 @@ export const BLOG_CONTENT_PRESETS = [
 
 export const COLLECTION_COVER_PRESET =
     IMAGE_EDITOR_PRESETS.collectionCover;
+
+export const PUBLIC_PAGE_HEADER_PRESET = IMAGE_EDITOR_PRESETS.publicPageHeader;

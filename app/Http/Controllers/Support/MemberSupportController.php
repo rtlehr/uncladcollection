@@ -35,14 +35,13 @@ class MemberSupportController extends Controller
         return Inertia::render('Support/Index', ['tickets' => $tickets]);
     }
 
-    public function create(): Response
+    public function create(Request $request): RedirectResponse
     {
-        return Inertia::render('Support/MemberCreate', [
-            'mode' => 'member',
-            'categories' => SupportTicketCategory::query()->where('is_active', true)->where('is_member', true)
-                ->orderBy('sort_order')->get(['id', 'name', 'description']),
-            'attachmentRules' => ['max_kb' => config('support.attachments.max_kb'), 'extensions' => config('support.attachments.allowed_extensions')],
-        ]);
+        $query = $request->integer('category_id') > 0
+            ? '?category_id='.$request->integer('category_id')
+            : '';
+
+        return redirect('/support'.$query.'#submit-request');
     }
 
     public function store(Request $request, SupportTicketService $tickets, SupportTicketAttachmentService $attachments): RedirectResponse
@@ -61,7 +60,12 @@ class MemberSupportController extends Controller
         }
         $request->user()->notify(new SupportTicketCreatedNotification($ticket));
 
-        return redirect()->route('support.show', $ticket)->with('success', 'Your support request was submitted.');
+        return redirect('/support#submit-request')
+            ->with('support_success', [
+                'title' => 'Your ticket has been submitted.',
+                'message' => 'You can track replies and status changes from My Tickets.',
+                'show_tickets_link' => true,
+            ]);
     }
 
     public function show(Request $request, SupportTicket $ticket): Response

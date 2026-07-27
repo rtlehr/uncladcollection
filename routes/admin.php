@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\AdInventoryController;
 use App\Http\Controllers\Admin\PageHelpController;
 use App\Http\Controllers\Admin\PageHelpTransferController;
 use App\Http\Controllers\Admin\PublicPageController;
+use App\Http\Controllers\Admin\PublicPageTransferController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -333,6 +334,9 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/downloads/{download}', [AdminDownloadController::class, 'show'])
             ->middleware('permission:manage_downloads')
             ->name('downloads.show');
+
+        Route::get('/public-pages/export', [PublicPageTransferController::class, 'export'])->name('public-pages.export');
+        Route::post('/public-pages/import', [PublicPageTransferController::class, 'import'])->name('public-pages.import');
 
         Route::resource('public-pages', PublicPageController::class)
             ->parameters(['public-pages' => 'publicPage'])

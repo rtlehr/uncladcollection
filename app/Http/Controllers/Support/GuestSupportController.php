@@ -8,6 +8,7 @@ use App\Models\SupportTicketAttachment;
 use App\Models\SupportTicketCategory;
 use App\Notifications\SupportTicketCreatedNotification;
 use App\Services\Support\GuestTicketAccessService;
+use App\Services\Support\SupportPageContentService;
 use App\Services\Support\SupportTicketAttachmentService;
 use App\Services\Support\SupportTicketService;
 use Illuminate\Http\RedirectResponse;
@@ -19,30 +20,35 @@ use Inertia\Response;
 
 class GuestSupportController extends Controller
 {
-    public function landing(Request $request): Response|RedirectResponse
+    public function landing(Request $request, SupportPageContentService $content): Response
     {
-        if ($request->user()) {
-            return redirect()->route('support.index');
-        }
+        $mode = $request->user() ? 'member' : 'guest';
+        $categories = $this->categories($mode === 'member' ? 'member' : 'public');
 
-        return Inertia::render('Support/Landing');
-    }
-
-    public function create(Request $request): Response|RedirectResponse
-    {
-        if ($request->user()) {
-            return redirect()->route('support.member.create');
-        }
-
-        return Inertia::render('Support/GuestCreate', [
-            'mode' => 'guest',
-            'categories' => $this->categories('public'),
+        return Inertia::render('Support/Landing', [
+            'supportPage' => $content->resolve(),
+            'categories' => $categories,
+            'isAuthenticated' => (bool) $request->user(),
+            'mode' => $mode,
+            'initialCategoryId' => $this->initialCategoryId($request, $categories),
             'attachmentRules' => $this->attachmentRules(),
         ]);
     }
 
-    public function store(Request $request, SupportTicketService $tickets, SupportTicketAttachmentService $attachments): RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
+        $query = $request->integer('category_id') > 0
+            ? '?category_id='.$request->integer('category_id')
+            : '';
+
+        return redirect('/support'.$query.'#submit-request');
+    }
+
+    public function store(
+        Request $request,
+        SupportTicketService $tickets,
+        SupportTicketAttachmentService $attachments,
+    ): RedirectResponse {
         $data = $request->validate([
             'guest_name' => ['required', 'string', 'max:120'],
             'guest_email' => ['required', 'email:rfc', 'max:255'],
@@ -55,6 +61,7 @@ class GuestSupportController extends Controller
 
         $result = $tickets->createForGuest($data);
         $message = $result['ticket']->customerVisibleMessages()->oldest()->first();
+
         foreach (($request->allFiles()['attachments'] ?? []) as $file) {
             $attachments->store($result['ticket'], $file, $message, null, true);
         }
@@ -62,12 +69,19 @@ class GuestSupportController extends Controller
         Notification::route('mail', [$data['guest_email'] => $data['guest_name']])
             ->notify(new SupportTicketCreatedNotification($result['ticket'], $result['token']));
 
-        return redirect()->route('support.guest.show', [$result['ticket'], $result['token']])
-            ->with('success', 'Your support request was submitted. Save this secure link and check your email for a copy.');
+        return redirect('/support#submit-request')
+            ->with('support_success', [
+                'title' => 'Your ticket has been submitted.',
+                'message' => 'Check your email for a secure link to view and reply to your request.',
+                'show_tickets_link' => false,
+            ]);
     }
 
-    public function show(SupportTicket $ticket, string $token, GuestTicketAccessService $access): Response
-    {
+    public function show(
+        SupportTicket $ticket,
+        string $token,
+        GuestTicketAccessService $access,
+    ): Response {
         abort_unless($ticket->isGuestTicket() && $access->validate($ticket, $token), 404);
 
         return Inertia::render('Support/GuestShow', [
@@ -78,15 +92,30 @@ class GuestSupportController extends Controller
         ]);
     }
 
-    public function reply(Request $request, SupportTicket $ticket, string $token, GuestTicketAccessService $access, SupportTicketService $tickets, SupportTicketAttachmentService $attachments): RedirectResponse
-    {
+    public function reply(
+        Request $request,
+        SupportTicket $ticket,
+        string $token,
+        GuestTicketAccessService $access,
+        SupportTicketService $tickets,
+        SupportTicketAttachmentService $attachments,
+    ): RedirectResponse {
         abort_unless($ticket->isGuestTicket() && $access->validate($ticket, $token), 404);
+
         $data = $request->validate([
             'body' => ['required', 'string', 'max:10000'],
             'attachments' => ['nullable', 'array', 'max:5'],
             'attachments.*' => ['file'],
         ]);
-        $message = $tickets->addCustomerMessage($ticket, $data['body'], null, $ticket->guest_name, $ticket->guest_email);
+
+        $message = $tickets->addCustomerMessage(
+            $ticket,
+            $data['body'],
+            null,
+            $ticket->guest_name,
+            $ticket->guest_email,
+        );
+
         foreach (($request->allFiles()['attachments'] ?? []) as $file) {
             $attachments->store($ticket, $file, $message, null, true);
         }
@@ -94,23 +123,52 @@ class GuestSupportController extends Controller
         return back()->with('success', 'Your reply was added.');
     }
 
-    public function download(SupportTicket $ticket, string $token, SupportTicketAttachment $attachment, GuestTicketAccessService $access)
-    {
+    public function download(
+        SupportTicket $ticket,
+        string $token,
+        SupportTicketAttachment $attachment,
+        GuestTicketAccessService $access,
+    ) {
         abort_unless($ticket->isGuestTicket() && $access->validate($ticket, $token), 404);
-        abort_unless($attachment->support_ticket_id === $ticket->id && $attachment->is_customer_visible && ! $attachment->isRedacted(), 404);
+        abort_unless(
+            $attachment->support_ticket_id === $ticket->id
+            && $attachment->is_customer_visible
+            && ! $attachment->isRedacted(),
+            404,
+        );
 
-        return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_filename);
+        return Storage::disk($attachment->disk)
+            ->download($attachment->path, $attachment->original_filename);
     }
 
     private function categories(string $audience): array
     {
-        return SupportTicketCategory::query()->where('is_active', true)
+        return SupportTicketCategory::query()
+            ->where('is_active', true)
             ->where("is_{$audience}", true)
-            ->orderBy('sort_order')->get(['id', 'name', 'description'])->toArray();
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'description'])
+            ->toArray();
+    }
+
+    private function initialCategoryId(Request $request, array $categories): ?int
+    {
+        $requested = $request->integer('category_id');
+        $allowed = array_map(
+            static fn (array $category): int => (int) $category['id'],
+            $categories,
+        );
+
+        return $requested > 0 && in_array($requested, $allowed, true)
+            ? $requested
+            : null;
     }
 
     private function attachmentRules(): array
     {
-        return ['max_kb' => config('support.attachments.max_kb'), 'extensions' => config('support.attachments.allowed_extensions')];
+        return [
+            'max_kb' => config('support.attachments.max_kb'),
+            'extensions' => config('support.attachments.allowed_extensions'),
+        ];
     }
 }

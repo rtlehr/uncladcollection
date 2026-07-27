@@ -11,6 +11,7 @@ return [
         'contact' => 'Contact page',
         'faq' => 'FAQ page',
         'legal' => 'Legal page',
+        'support' => 'Support center page',
     ],
     'navigation_locations' => [
         'header' => 'Public header',

@@ -22,12 +22,14 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             PageHelpSeeder::class,
+            PublicPageSeeder::class,
             DevelopmentUserSeeder::class,
             CategorySeeder::class,
             TagSeeder::class,
             AiKeywordExclusionSeeder::class,
             CollectionSeeder::class,
             LicenseTypeSeeder::class,
+            AssetConfigurationTemplateSeeder::class,
             SupportTicketCategorySeeder::class,
         ]);
 

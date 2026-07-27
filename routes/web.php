@@ -4,6 +4,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarketingCampaignTrackingController;
 use App\Http\Controllers\PublicAdController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\PublicPageContactController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -31,6 +32,8 @@ require __DIR__.'/seo.php';
 
 require __DIR__.'/advertiser.php';
 require __DIR__.'/admin-support.php';
+
+Route::post('/{publicPage:slug}/contact', PublicPageContactController::class)->middleware('throttle:6,1')->name('public-pages.contact');
 
 // Keep this catch-all public-page route last so application routes retain priority.
 Route::get('/{slug}', [PublicPageController::class, 'show'])

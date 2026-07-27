@@ -1,1 +1,0 @@
-import{H as e}from"./vue.runtime.esm-bundler-D1VkVIB0.js";import{D as t}from"./app-Cow7nOWz.js";var n={};function r(t,n){return e(t.$slots,`default`)}var i=t(n,[[`render`,r]]);export{i as t};

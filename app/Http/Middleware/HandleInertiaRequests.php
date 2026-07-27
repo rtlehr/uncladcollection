@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
+                'support_success' => fn () => $request->session()->get('support_success'),
             ],
 
             'site' => fn () => $this->sitePayload(),
@@ -206,11 +207,11 @@ class HandleInertiaRequests extends Middleware
         $result = array_fill_keys($locations, []);
 
         PublicPage::query()->published()->orderBy('sort_order')->orderBy('title')
-            ->get(['title','slug','navigation_label','navigation_locations'])
+            ->get(['title', 'slug', 'page_type', 'navigation_label', 'navigation_locations'])
             ->each(function (PublicPage $page) use (&$result): void {
                 foreach ($page->navigation_locations ?? [] as $location) {
                     if (array_key_exists($location, $result)) {
-                        $result[$location][] = ['label'=>$page->navigationLabel(), 'href'=>'/'.$page->slug];
+                        $result[$location][] = ['label'=>$page->navigationLabel(), 'href'=>$page->publicUrl()];
                     }
                 }
             });

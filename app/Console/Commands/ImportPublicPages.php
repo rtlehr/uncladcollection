@@ -1,0 +1,4 @@
+<?php
+namespace App\Console\Commands;
+use App\Services\PublicPages\PublicPageTransferService; use Illuminate\Console\Command; use Illuminate\Support\Facades\File;
+class ImportPublicPages extends Command{protected $signature='public-pages:import {--path=database/seeders/data/public-pages.json} {--replace} {--dry-run}';protected $description='Import Public Pages from JSON.';public function handle(PublicPageTransferService $t):int{$path=base_path($this->option('path'));if(!File::exists($path)){$this->error('File not found: '.$path);return self::FAILURE;}$s=$t->importJson(File::get($path),$this->option('replace')?'replace':'merge',(bool)$this->option('dry-run'));$this->table(['Created','Updated','Unchanged','Deleted'],[[$s['created'],$s['updated'],$s['unchanged'],$s['deleted']]]);return self::SUCCESS;}}

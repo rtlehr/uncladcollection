@@ -4,27 +4,45 @@ import { Menu, X } from '@lucide/vue';
 import {
     computed,
     onBeforeUnmount,
-    watch,
     ref,
+    watch,
 } from 'vue';
 
-import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
 import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
+import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
 import { dashboard, login, register } from '@/routes';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
 
 const pageHelp = computed(() => page.props.page_help as any);
-const site = computed(() => (page.props.site ?? {}) as Record<string, any>);
+
+const site = computed(
+    () => (page.props.site ?? {}) as Record<string, any>,
+);
+
 const isAuthenticated = computed(() =>
     Boolean((page.props.auth as any)?.user),
 );
-const siteName = computed(() =>
-    site.value.name || 'Unclad Collection',
+
+const siteName = computed(
+    () => site.value.name || 'Unclad Collection',
 );
-const publicNavigation = computed(() => (page.props.public_page_navigation ?? {}) as Record<string, Array<{ label: string; href: string }>>);
-const headerPages = computed(() => publicNavigation.value.header ?? []);
+
+const publicNavigation = computed(
+    () =>
+        (page.props.public_page_navigation ?? {}) as Record<
+            string,
+            Array<{
+                label: string;
+                href: string;
+            }>
+        >,
+);
+
+const headerPages = computed(
+    () => publicNavigation.value.header ?? [],
+);
 
 function closeMenu(): void {
     mobileMenuOpen.value = false;
@@ -53,8 +71,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <header class="public-glass sticky top-0 z-50 border-b border-stone-200/80 dark:border-stone-800 dark:bg-stone-950/95">
-        <div class="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:h-18 sm:px-8 lg:px-12">
+    <header
+        class="public-glass sticky top-0 z-50 border-b border-stone-200/80 dark:border-stone-800 dark:bg-stone-950/95"
+    >
+        <div
+            class="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-3 px-4 sm:h-18 sm:px-8 lg:px-12"
+        >
             <Link
                 href="/"
                 class="flex min-w-0 items-center gap-3"
@@ -80,12 +102,26 @@ onBeforeUnmount(() => {
                 class="hidden items-center gap-8 text-sm font-medium lg:flex"
                 aria-label="Primary navigation"
             >
-                <Link href="/images" class="transition hover:text-[var(--brand-accent)]">
+                <Link
+                    href="/images"
+                    class="transition hover:text-[var(--brand-accent)]"
+                >
                     Marketplace
                 </Link>
 
-                <Link href="/blog" class="transition hover:text-[var(--brand-accent)]">
+                <Link
+                    href="/blog"
+                    class="transition hover:text-[var(--brand-accent)]"
+                >
                     Stories
+                </Link>
+
+                <Link
+                    v-if="isAuthenticated"
+                    href="/favorites"
+                    class="transition hover:text-[var(--brand-accent)]"
+                >
+                    Favorites
                 </Link>
 
                 <Link
@@ -96,21 +132,13 @@ onBeforeUnmount(() => {
                 >
                     {{ item.label }}
                 </Link>
-                <Link href="/support" class="transition hover:text-[var(--brand-accent)]">
-                    Support
-                </Link>
-
-
-                <Link
-                    v-if="isAuthenticated"
-                    href="/favorites"
-                    class="transition hover:text-[var(--brand-accent)]"
-                >
-                    Favorites
-                </Link>
             </nav>
 
-            <PageHelpPanel v-if="pageHelp" :help="pageHelp" public-style />
+            <PageHelpPanel
+                v-if="pageHelp"
+                :help="pageHelp"
+                public-style
+            />
 
             <div class="hidden items-center gap-3 lg:flex">
                 <PublicCartMenu />
@@ -124,7 +152,10 @@ onBeforeUnmount(() => {
                 </Link>
 
                 <template v-else>
-                    <Link :href="login()" class="px-3 py-2 text-sm font-medium">
+                    <Link
+                        :href="login()"
+                        class="px-3 py-2 text-sm font-medium"
+                    >
                         Log in
                     </Link>
 
@@ -148,8 +179,15 @@ onBeforeUnmount(() => {
                     aria-label="Toggle navigation"
                     @click="mobileMenuOpen = !mobileMenuOpen"
                 >
-                    <X v-if="mobileMenuOpen" class="h-5 w-5" />
-                    <Menu v-else class="h-5 w-5" />
+                    <X
+                        v-if="mobileMenuOpen"
+                        class="h-5 w-5"
+                    />
+
+                    <Menu
+                        v-else
+                        class="h-5 w-5"
+                    />
                 </button>
             </div>
         </div>
@@ -159,7 +197,10 @@ onBeforeUnmount(() => {
             id="public-mobile-navigation"
             class="public-mobile-menu fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-stone-200 bg-stone-50 px-4 py-4 shadow-xl sm:top-18 sm:px-8 lg:hidden dark:border-stone-800 dark:bg-stone-950"
         >
-            <nav class="grid gap-1" aria-label="Mobile navigation">
+            <nav
+                class="grid gap-1"
+                aria-label="Mobile navigation"
+            >
                 <Link
                     href="/images"
                     class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
@@ -177,6 +218,15 @@ onBeforeUnmount(() => {
                 </Link>
 
                 <Link
+                    v-if="isAuthenticated"
+                    href="/favorites"
+                    class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
+                    @click="closeMenu"
+                >
+                    Favorites
+                </Link>
+
+                <Link
                     v-for="item in headerPages"
                     :key="item.href"
                     :href="item.href"
@@ -184,15 +234,6 @@ onBeforeUnmount(() => {
                     @click="closeMenu"
                 >
                     {{ item.label }}
-                </Link>
-
-
-                <Link
-                    href="/support"
-                    class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
-                    @click="closeMenu"
-                >
-                    Support
                 </Link>
 
                 <Link
@@ -203,16 +244,9 @@ onBeforeUnmount(() => {
                     Shopping Cart
                 </Link>
 
-                <Link
-                    v-if="isAuthenticated"
-                    href="/favorites"
-                    class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
-                    @click="closeMenu"
-                >
-                    Favorites
-                </Link>
-
-                <div class="my-2 h-px bg-stone-200 dark:bg-stone-800" />
+                <div
+                    class="my-2 h-px bg-stone-200 dark:bg-stone-800"
+                />
 
                 <Link
                     v-if="isAuthenticated"
