@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Tag;
 use App\Services\AssetPresentationService;
+use App\Services\SearchIntelligence\SearchTermResolver;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection as SupportCollection;
@@ -42,7 +43,9 @@ class PublicAssetCatalogService
                     ->select(['id', 'asset_id', 'user_id']),
             ]));
 
-        $search = $this->normalizeSearch($filters['search']);
+        $resolvedSearch = app(SearchTermResolver::class)->resolve($filters['search']);
+        $search = $resolvedSearch['canonical'];
+        $searchTerms = $resolvedSearch['terms'];
         $relevanceExpression = null;
 
         if ($search !== '') {
@@ -61,10 +64,13 @@ class PublicAssetCatalogService
                 config('discovery.search.featured_boost', 6),
             ];
 
-            $query->where(function (Builder $query) use ($like): void {
-                $query->where('search_documents.search_text', 'like', $like)
-                    ->orWhere('assets.title', 'like', $like)
-                    ->orWhere('assets.description', 'like', $like);
+            $query->where(function (Builder $query) use ($searchTerms): void {
+                foreach ($searchTerms as $term) {
+                    $likeTerm = "%{$term}%";
+                    $query->orWhere('search_documents.search_text', 'like', $likeTerm)
+                        ->orWhere('assets.title', 'like', $likeTerm)
+                        ->orWhere('assets.description', 'like', $likeTerm);
+                }
             })->selectRaw("{$relevanceExpression} as relevance_score", $bindings);
         }
 

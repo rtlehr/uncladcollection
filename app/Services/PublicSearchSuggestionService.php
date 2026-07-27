@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Collection;
 use App\Models\Tag;
 use App\Models\UserRecentSearch;
+use App\Services\SearchIntelligence\SearchTermResolver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -31,14 +32,22 @@ class PublicSearchSuggestionService
             return [];
         }
 
+        $resolved = app(SearchTermResolver::class)->resolve($normalized);
         $version = app(DiscoveryCacheService::class)->version();
         $key = "discovery:suggestions:v{$version}:".sha1($normalized);
 
-        return Cache::remember($key, now()->addMinutes((int) config('discovery.suggestions.cache_minutes', 10)), function () use ($normalized): array {
+        return Cache::remember($key, now()->addMinutes((int) config('discovery.suggestions.cache_minutes', 10)), function () use ($normalized, $resolved): array {
             $like = "%{$normalized}%";
             $prefix = "{$normalized}%";
+            $correction = $resolved['canonical'] !== $normalized ? [[
+                'type' => 'correction',
+                'label' => $resolved['canonical'],
+                'value' => $resolved['canonical'],
+                'href' => '/images?search='.rawurlencode($resolved['canonical']).'&sort=relevance',
+                'meta' => 'Suggested correction',
+            ]] : [];
 
-            return collect([
+            return collect($correction)->concat([
                 [
                     'type' => 'term',
                     'label' => $normalized,

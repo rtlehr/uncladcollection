@@ -1,5 +1,5 @@
 export interface PublicSearchSuggestion {
-    type: 'asset' | 'category' | 'tag' | 'collection' | 'creator' | 'photographer' | 'author' | 'term' | 'recent' | 'popular';
+    type: 'asset' | 'category' | 'tag' | 'collection' | 'creator' | 'photographer' | 'author' | 'term' | 'recent' | 'popular' | 'correction';
     label: string;
     value: string;
     href?: string | null;

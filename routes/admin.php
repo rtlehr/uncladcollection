@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\MarketplaceOperationsReportController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SearchDiscoveryReportController;
+use App\Http\Controllers\Admin\SearchTermIntelligenceController;
 use App\Http\Controllers\Admin\DownloadLicenseUtilizationReportController;
 use App\Http\Controllers\Admin\DiscoveryCollectionPlacementController;
 use App\Http\Controllers\Admin\HomepageDiscoveryController;
@@ -96,6 +97,16 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::patch('/discovery/homepage/{section}', [HomepageDiscoveryController::class, 'update'])
             ->middleware('permission:manage_site_settings')
             ->name('discovery.homepage.update');
+
+
+        Route::get('/discovery/search-intelligence', [SearchTermIntelligenceController::class, 'index'])
+            ->middleware('permission:view_reports')->name('discovery.search-intelligence.index');
+        Route::post('/discovery/search-intelligence/rebuild', [SearchTermIntelligenceController::class, 'rebuild'])
+            ->middleware('permission:view_reports')->name('discovery.search-intelligence.rebuild');
+        Route::post('/discovery/search-intelligence/{searchTerm}/analyze', [SearchTermIntelligenceController::class, 'analyze'])
+            ->middleware('permission:manage_site_settings')->name('discovery.search-intelligence.analyze');
+        Route::patch('/discovery/search-intelligence/{searchTerm}', [SearchTermIntelligenceController::class, 'update'])
+            ->middleware('permission:manage_site_settings')->name('discovery.search-intelligence.update');
 
         Route::get('/analytics/discovery', [DiscoveryPerformanceReportController::class, 'index'])
             ->middleware('permission:view_reports')
