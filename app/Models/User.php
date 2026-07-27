@@ -212,4 +212,14 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(RecentlyViewedAsset::class);
     }
+
+    public function assetFavorites(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AssetFavorite::class);
+    }
+
+    public function assetAffinities(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserAssetAffinity::class);
+    }
 }

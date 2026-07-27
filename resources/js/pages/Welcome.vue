@@ -48,6 +48,7 @@ const props = defineProps<{
     featuredCollections: HomeCollection[];
     discoveryCollectionPlacements: Record<string, HomeDiscoveryCollectionPlacement[]>;
     featuredImages: HomeImage[];
+    recommendedAssets: RelatedPublicAsset[];
     trendingAssets: RelatedPublicAsset[];
     latestArticles: HomeArticle[];
     statistics: HomeStatistics;
@@ -370,6 +371,26 @@ function collectionHref(collection: HomeCollection): string {
             </div>
         </section>
 
+
+        <section
+            v-if="recommendedAssets.length"
+            class="border-y border-stone-200 bg-stone-50 py-20 dark:border-stone-800 dark:bg-stone-950 lg:py-28"
+        >
+            <div class="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
+                <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                    <PublicSectionHeading
+                        eyebrow="Selected for you"
+                        title="Recommended for you"
+                        description="A personalized mix based on the collections, subjects, formats, and assets you explore and save."
+                    />
+                    <Link href="/images?discovery_source=recommended_for_you" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-accent)]">
+                        Explore the marketplace
+                        <ArrowRight class="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                </div>
+                <DiscoveryAssetGrid class="mt-10" :assets="recommendedAssets.slice(0, 6)" />
+            </div>
+        </section>
 
         <section
             v-if="trendingAssets.length"

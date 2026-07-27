@@ -33,6 +33,16 @@ return [
         'cache_minutes' => 15,
         'homepage_limit' => 8,
     ],
+    'recommendations' => [
+        'homepage_limit' => 8,
+        'candidate_limit' => 180,
+        'cache_minutes' => 30,
+        'profile_refresh_hours' => 24,
+        'history_days' => 180,
+        'affinity_half_life_days' => 45,
+        'max_per_collection' => 2,
+        'max_per_asset_type' => 4,
+    ],
     'related' => [
         'limit' => 6,
         'candidate_limit' => 120,

@@ -287,3 +287,5 @@ Artisan::command('page-help:import {path? : JSON path relative to the project ro
 
 
 Schedule::command('assets:rebuild-trending')->hourly()->withoutOverlapping();
+
+Schedule::command('discovery:rebuild-user-affinities')->dailyAt('02:30')->withoutOverlapping();

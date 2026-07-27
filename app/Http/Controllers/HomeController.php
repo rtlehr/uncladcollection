@@ -7,6 +7,7 @@ use App\Models\Collection;
 use App\Models\Image;
 use App\Models\MarketingCampaign;
 use App\Services\TrendingAssetService;
+use App\Services\PersonalizedRecommendationService;
 use App\Services\DiscoveryCollectionPlacementService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -95,6 +96,12 @@ class HomeController extends Controller
                 ->homepage(auth()->check()),
 
             'featuredImages' => $featuredImages,
+
+            'recommendedAssets' => auth()->check()
+                ? app(PersonalizedRecommendationService::class)
+                    ->forUser(auth()->user(), (int) config('discovery.recommendations.homepage_limit', 8))
+                    ->all()
+                : [],
 
             'trendingAssets' => app(TrendingAssetService::class)
                 ->assets('week', (int) config('discovery.trending.homepage_limit', 8))
