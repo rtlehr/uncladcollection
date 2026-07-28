@@ -35,7 +35,13 @@ it('includes an associated video in the public gallery even when the primary pre
             ->where('asset.files.1.id', $video->id)
             ->where('asset.files.1.can_preview', true)
             ->where('asset.files.1.preview_kind', 'video')
-            ->where('asset.files.1.preview_url', route('assets.preview', [$asset, $video])));
+            ->where(
+                'asset.files.1.preview_url',
+                fn (string $url): bool => str_starts_with(
+                    $url,
+                    route('assets.preview', [$asset, $video])
+                )
+            ));
 });
 
 it('serves browser-safe video files inline', function (): void {

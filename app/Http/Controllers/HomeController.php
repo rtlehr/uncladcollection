@@ -15,6 +15,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Asset;
+use App\Models\AssetFile;
 
 class HomeController extends Controller
 {
@@ -44,6 +46,12 @@ class HomeController extends Controller
         );
 
         $heroImage = $this->getHeroImage($heroImageId);
+
+        $heroAssetId = $this->integerSetting(
+            Arr::get($homepageSettings, 'hero_asset_id'),
+        );
+
+        $heroMedia = $this->getHeroMedia($heroAssetId);
 
         $heroCampaign = MarketingCampaign::query()
             ->current()
@@ -87,6 +95,8 @@ class HomeController extends Controller
 
         return Inertia::render('Welcome', [
             'siteSettings' => $settings,
+
+            'heroMedia' => $heroMedia,
 
             'heroImage' => $heroImage
                 ? $this->formatHeroImage($heroImage)
@@ -455,4 +465,46 @@ class HomeController extends Controller
             ->values()
             ->all();
     }
+
+    private function getHeroMedia(?int $heroAssetId): ?array
+    {
+        if (! $heroAssetId) {
+            return null;
+        }
+
+        $asset = Asset::query()
+            ->whereKey($heroAssetId)
+            ->where('status', 'published')
+            ->where('is_active', true)
+            ->first();
+
+        if (! $asset) {
+            return null;
+        }
+
+        $file = AssetFile::query()
+            ->where('asset_id', $asset->id)
+            ->where('is_active', true)
+            ->whereIn('media_type', ['video', 'image'])
+            ->orderByRaw("CASE WHEN media_type = 'video' THEN 0 ELSE 1 END")
+            ->orderBy('sort_order')
+            ->first();
+
+        if (! $file) {
+            return null;
+        }
+
+        return [
+            'asset_id' => $asset->id,
+            'asset_title' => $asset->title,
+            'asset_slug' => $asset->slug,
+            'media_type' => $file->media_type instanceof \BackedEnum
+                ? $file->media_type->value
+                : (string) $file->media_type,
+            'url' => route('assets.preview', [$asset, $file]),
+            'mime_type' => $file->mime_type,
+            'poster_url' => null,
+        ];
+    }
+
 }

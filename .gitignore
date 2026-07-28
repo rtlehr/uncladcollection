@@ -11,7 +11,7 @@
 /resources/js/wayfinder
 /vendor
 .env
-.env-testing
+.env.testing
 .env-development
 .DS_Store
 .phpactor.jsongit 
