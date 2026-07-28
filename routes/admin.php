@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
 use App\Http\Controllers\Admin\CustomerConversionReportController;
+use App\Http\Controllers\Admin\CustomerRetentionReportController;
+use App\Http\Controllers\Admin\CustomerExperienceOperationsController;
 use App\Http\Controllers\Admin\CommentModerationController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\Admin\LicenseTypeController;
@@ -115,6 +117,17 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::get('/analytics', AnalyticsDashboardController::class)
             ->middleware('permission:view_reports')
             ->name('analytics.index');
+
+        Route::get('/analytics/retention', CustomerRetentionReportController::class)
+            ->middleware('permission:view_reports')
+            ->name('analytics.retention');
+
+        Route::get('/customer-experience', [CustomerExperienceOperationsController::class, 'index'])
+            ->middleware('permission:manage_orders')
+            ->name('customer-experience.index');
+        Route::post('/customer-experience/maintain', [CustomerExperienceOperationsController::class, 'maintain'])
+            ->middleware('permission:manage_orders')
+            ->name('customer-experience.maintain');
 
         Route::get('/analytics/financial', [FinancialReportController::class, 'index'])
             ->middleware('permission:view_reports')

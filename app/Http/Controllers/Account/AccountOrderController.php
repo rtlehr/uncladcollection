@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -22,9 +24,10 @@ class AccountOrderController extends Controller
         return Inertia::render('Account/Orders/Index', ['orders' => $orders]);
     }
 
-    public function show(Request $request, Order $order): Response
+    public function show(Request $request, Order $order, AnalyticsTracker $analytics): Response
     {
         abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+        $analytics->record(AnalyticsEventName::AccountOrderViewed, $order, $request->user(), source: 'account');
 
         $order->load([
             'items.asset.primaryPreviewFile',

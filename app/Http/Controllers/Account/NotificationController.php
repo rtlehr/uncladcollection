@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,10 +35,14 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function read(Request $request, DatabaseNotification $notification): RedirectResponse
+    public function read(Request $request, DatabaseNotification $notification, AnalyticsTracker $analytics): RedirectResponse
     {
         abort_unless((int) $notification->notifiable_id === (int) $request->user()->id && $notification->notifiable_type === $request->user()::class, 404);
+        $wasUnread = $notification->read_at === null;
         $notification->markAsRead();
+        if ($wasUnread) {
+            $analytics->record(AnalyticsEventName::CustomerNotificationOpened, user: $request->user(), dimensions: ['category' => $notification->data['category'] ?? 'account'], source: 'notification_center', deduplicationKey: (string) $notification->id);
+        }
         $url = $notification->data['action_url'] ?? null;
         return $url ? redirect()->to($url) : back();
     }

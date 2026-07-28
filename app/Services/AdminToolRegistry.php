@@ -72,6 +72,7 @@ class AdminToolRegistry
                 'id' => 'customers', 'title' => 'Customers & Support', 'description' => 'Accounts, access, and customer assistance.', 'icon' => 'Users',
                 'tools' => [
                     $this->tool('users', 'Users', 'Manage customer and staff accounts.', '/admin/users', 'Users', 'manage_users', ['account','member','customer']),
+                    $this->tool('customer-experience-operations', 'Customer Experience Operations', 'Review retention-system health and safely run maintenance.', '/admin/customer-experience', 'HeartPulse', 'manage_orders', ['notifications','licenses','downloads','maintenance','retention']),
                     $this->tool('roles', 'Roles', 'Configure role-based access.', '/admin/roles', 'ShieldCheck', 'manage_roles', ['security','access']),
                     $this->tool('permissions', 'Permissions', 'Manage individual system permissions.', '/admin/permissions', 'KeyRound', 'manage_permissions', ['security','access']),
                     $this->tool('support-dashboard', 'Support Dashboard', 'Review support workload and status.', '/admin/support/dashboard', 'LifeBuoy', 'view_support_tickets', ['ticket','help desk']),
@@ -87,6 +88,7 @@ class AdminToolRegistry
                     $this->tool('financial-report', 'Financial Report', 'Review revenue, orders, and financial performance.', '/admin/analytics/financial', 'CircleDollarSign', 'view_reports', ['revenue','money','sales']),
                     $this->tool('asset-performance', 'Asset Performance', 'Compare views, purchases, and downloads by asset.', '/admin/analytics/assets', 'Activity', 'view_reports', ['image analytics','media performance']),
                     $this->tool('customer-conversion', 'Customer Conversion', 'Analyze customer journeys and conversion.', '/admin/analytics/customers', 'UserRoundCheck', 'view_reports', ['funnel','customers']),
+                    $this->tool('customer-retention', 'Customer Retention', 'Measure repeat purchases, wish-list conversion, notifications, and re-downloads.', '/admin/analytics/retention', 'RefreshCcw', 'view_reports', ['retention','repeat purchase','wish list conversion','notification engagement']),
                     $this->tool('search-discovery', 'Search Discovery', 'Review searches, filters, and no-result terms.', '/admin/analytics/search', 'Search', 'view_reports', ['query','autocomplete','search analytics']),
                     $this->tool('search-intelligence', 'Search Term Intelligence', 'Group misspellings, approve aliases, and identify content opportunities.', '/admin/discovery/search-intelligence', 'Sparkles', 'view_reports', ['search terms','misspellings','synonyms','Qwen','content gaps']),
                     $this->tool('discovery-performance', 'Discovery Performance', 'Compare conversion by discovery source.', '/admin/analytics/discovery', 'Compass', 'view_reports', ['recommendations','trending','homepage','conversion','attribution']),

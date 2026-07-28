@@ -291,3 +291,13 @@ Schedule::command('assets:rebuild-trending')->hourly()->withoutOverlapping();
 Schedule::command('discovery:rebuild-user-affinities')->dailyAt('02:30')->withoutOverlapping();
 
 Schedule::command('discovery:rebuild-search-intelligence')->dailyAt('02:40')->withoutOverlapping();
+
+
+Artisan::command('customer-experience:maintain {--dry-run}', function (\App\Services\CustomerExperienceMaintenanceService $maintenance): int {
+    $result = $maintenance->maintain((bool) $this->option('dry-run'));
+    $verb = $result['dry_run'] ? 'would remove' : 'removed';
+    $this->info("Customer-experience maintenance {$verb} {$result['watch_events']} notification watch events and {$result['download_packages']} temporary download packages.");
+    return 0;
+})->purpose('Prune stale customer notification watch events and temporary download packages');
+
+Schedule::command('customer-experience:maintain')->dailyAt('02:30')->withoutOverlapping();

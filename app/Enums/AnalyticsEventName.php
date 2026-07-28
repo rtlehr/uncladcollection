@@ -25,4 +25,7 @@ enum AnalyticsEventName: string
     case WishListSharedViewed = 'wish_list_shared_viewed';
     case CustomerNotificationGenerated = 'customer_notification_generated';
     case CustomerNotificationOpened = 'customer_notification_opened';
+    case AccountDashboardViewed = 'account_dashboard_viewed';
+    case AccountOrderViewed = 'account_order_viewed';
+    case LicenseDocumentDownloaded = 'license_document_downloaded';
 }

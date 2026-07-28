@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Analytics\AnalyticsTracker;
+use App\Enums\AnalyticsEventName;
 use App\Http\Controllers\Controller;
 use App\Models\License;
 use App\Services\Licenses\LicenseDocumentService;
@@ -10,15 +12,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LicenseDocumentController extends Controller
 {
-    public function certificate(Request $request, License $license, LicenseDocumentService $documents): Response
+    public function certificate(Request $request, License $license, LicenseDocumentService $documents, AnalyticsTracker $analytics): Response
     {
         $this->authorizeOwner($request, $license);
+        $analytics->record(AnalyticsEventName::LicenseDocumentDownloaded, $license, $request->user(), ['document' => 'certificate'], source: 'account');
         return $this->download($documents->certificate($license), 'license-certificate-'.$license->license_key.'.pdf');
     }
 
-    public function proofOfPurchase(Request $request, License $license, LicenseDocumentService $documents): Response
+    public function proofOfPurchase(Request $request, License $license, LicenseDocumentService $documents, AnalyticsTracker $analytics): Response
     {
         $this->authorizeOwner($request, $license);
+        $analytics->record(AnalyticsEventName::LicenseDocumentDownloaded, $license, $request->user(), ['document' => 'proof_of_purchase'], source: 'account');
         return $this->download($documents->proofOfPurchase($license), 'proof-of-purchase-'.$license->license_key.'.pdf');
     }
 
