@@ -9,6 +9,7 @@ import DetailSection from '@/Components/Shared/DetailSection.vue';
 import SidebarCard from '@/Components/Shared/SidebarCard.vue';
 import PurchaseSummary from '@/Components/Purchases/PurchaseSummary.vue';
 import { Button } from '@/components/ui/button';
+import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 
 import type { PurchaseDetailRecord, PurchasedIncludedFile } from '@/types/purchase';
 
@@ -38,11 +39,14 @@ function fileSubtitle(file: PurchasedIncludedFile): string {
 <template>
     <Head :title="licenseRecord.product.title" />
 
-    <div class="space-y-8 p-6">
+    <AccountPageLayout>
+        <template #title>License Details</template>
+        <template #description>Review your purchase, license terms, and included files.</template>
+        <div class="space-y-8">
         <AssetHero
             :title="licenseRecord.product.title"
             :collection-name="licenseRecord.product.collection?.name"
-            back-href="/purchases"
+            back-href="/account/library"
             back-label="Back to My Library"
         >
             <template #actions>
@@ -205,5 +209,6 @@ function fileSubtitle(file: PurchasedIncludedFile): string {
                 {{ licenseRecord.license_terms }}
             </div>
         </DetailSection>
-    </div>
+        </div>
+    </AccountPageLayout>
 </template>

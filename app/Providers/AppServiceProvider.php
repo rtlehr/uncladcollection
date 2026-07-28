@@ -20,11 +20,18 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use App\Http\Responses\LoginResponse;
+use App\Http\Responses\RegisterResponse;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+
         $this->app->bind(AssetVirusScanner::class, function ($app): AssetVirusScanner {
             $scanner = config('asset-media.virus_scanner', NullAssetVirusScanner::class);
 

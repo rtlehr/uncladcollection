@@ -75,7 +75,7 @@ class PurchaseBrowseController extends Controller
 
         abort_unless($license, 403);
 
-        return redirect()->route('purchases.licenses.show', $license);
+        return redirect()->route('account.licenses.show', $license);
     }
 
     public function showLicense(Request $request, License $license): Response
@@ -124,7 +124,7 @@ class PurchaseBrowseController extends Controller
             'starts_at' => $license->starts_at?->format('Y-m-d'),
             'expires_at' => $license->expires_at?->format('Y-m-d'),
             'can_download' => ! $isAsset && $license->canDownload(),
-            'detail_url' => route('purchases.licenses.show', $license),
+            'detail_url' => route('account.licenses.show', $license),
             'download_url' => ! $isAsset && $license->image
                 ? route('images.download', $license->image)
                 : null,

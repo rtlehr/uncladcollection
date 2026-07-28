@@ -18,11 +18,13 @@ const props = withDefaults(defineProps<{
 
 const page = usePage();
 const favoriteProcessing = ref(false);
-const favoriteState = ref(props.asset.is_favorited);
-const favoriteCount = ref(props.asset.favorites_count);
+const favoriteState = ref(Boolean(props.asset.is_favorited));
+const favoriteCount = ref(Number(props.asset.favorites_count ?? 0));
 
 const isAuthenticated = computed(() => Boolean((page.props.auth as any)?.user));
-const hasVideo = computed(() => props.asset.formats.some((format) => ['MP4', 'MOV', 'WEBM', 'OGG'].includes(format.toUpperCase())));
+const hasVideo = computed(() => (props.asset.formats ?? []).some((format) => ['MP4', 'MOV', 'WEBM', 'OGG'].includes(format.toUpperCase())));
+const formattedViewsCount = computed(() => Number(props.asset.views_count ?? 0).toLocaleString());
+const formattedFavoriteCount = computed(() => Number(favoriteCount.value ?? 0).toLocaleString());
 
 function toggleFavorite(): void {
     if (!props.asset.is_favoritable || !props.asset.favorite_url || !props.asset.unfavorite_url) return;
@@ -132,10 +134,10 @@ function toggleFavorite(): void {
             <div class="mt-auto pt-5">
                 <div class="flex items-end justify-between gap-4 border-t border-stone-100 pt-4 dark:border-stone-800">
                     <div class="flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400">
-                        <span>{{ asset.views_count.toLocaleString() }} views</span>
+                        <span>{{ formattedViewsCount }} views</span>
                         <span class="inline-flex items-center gap-1.5">
                             <Heart class="h-3.5 w-3.5" aria-hidden="true" />
-                            {{ favoriteCount.toLocaleString() }}
+                            {{ formattedFavoriteCount }}
                             <span class="sr-only">favorites</span>
                         </span>
                     </div>

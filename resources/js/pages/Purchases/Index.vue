@@ -6,6 +6,7 @@ import EmptyState from '@/Components/Shared/EmptyState.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import Pagination from '@/Components/Shared/Pagination.vue';
 import { Button } from '@/components/ui/button';
+import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 
 import type { PaginatedPurchases } from '@/types/purchase';
 
@@ -17,7 +18,10 @@ defineProps<{
 <template>
     <Head title="My Library" />
 
-    <div class="space-y-6 p-6">
+    <AccountPageLayout>
+        <template #title>My Library</template>
+        <template #description>Review your licensed assets, purchase details, and available downloads.</template>
+        <div class="space-y-6">
         <PageHeader
             title="My Library"
             description="Review your licensed assets, purchase details, and available downloads."
@@ -52,5 +56,6 @@ defineProps<{
             :links="licenses.links"
             item-label="licensed assets"
         />
-    </div>
+        </div>
+    </AccountPageLayout>
 </template>

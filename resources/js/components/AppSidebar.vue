@@ -17,19 +17,14 @@ const { can } = useAuth();
 const authUser = (usePage().props as any).auth?.user;
 
 const mainNavItems: NavItem[] = [
-    { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    { title: 'Marketplace', href: '/images', icon: ImageIcon },
-    { title: 'Stories', href: '/blog', icon: FileText },
-    { title: 'Favorites', href: '/favorites', icon: Heart },
-    { title: 'My Library', href: '/purchases', icon: BadgeDollarSign },
-    { title: 'Support', href: '/support/tickets', icon: LifeBuoy },
+    { title: 'Admin Command Center', href: '/admin', icon: LayoutGrid },
+    { title: 'Public Website', href: '/', icon: ImageIcon },
 ];
 if (authUser?.has_advertiser_portal) mainNavItems.push({ title: 'Advertiser Portal', href: '/advertiser', icon: Building2 });
 
 const adminDashboardItems: NavItem[] = [];
 if (can('view_admin')) {
     adminDashboardItems.push(
-        { title: 'Admin Command Center', href: '/admin', icon: LayoutGrid },
         { title: 'Assets Dashboard', href: '/admin/assets-dashboard', icon: Boxes },
         { title: 'Blog Dashboard', href: '/admin/blog-dashboard', icon: FileText },
         { title: 'Advertising Dashboard', href: '/admin/advertising-dashboard', icon: Megaphone },
@@ -52,7 +47,7 @@ const footerNavItems: NavItem[] = [
     <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader><SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" as-child><Link :href="dashboard()" aria-label="Go to dashboard"><AppLogo /></Link></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarHeader>
         <SidebarContent>
-            <NavMain label="Main" :items="mainNavItems" />
+            <NavMain label="Administration" :items="mainNavItems" />
             <NavMain v-if="adminDashboardItems.length" label="Admin Dashboards" :items="adminDashboardItems" />
         </SidebarContent>
         <SidebarFooter><NavFooter :items="footerNavItems" /><NavUser /></SidebarFooter>

@@ -14,11 +14,11 @@ Route::get('/ads/placements/{placement}', [PublicAdController::class, 'show'])->
 Route::post('/ads/creatives/{creative}/impression', [PublicAdController::class, 'impression'])->name('ads.creatives.impression');
 Route::post('/ads/creatives/{creative}/click', [PublicAdController::class, 'click'])->name('ads.creatives.click');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')
-        ->name('dashboard');
+Route::middleware(['auth', 'verified', 'permission:view_admin'])->group(function () {
+    Route::redirect('dashboard', '/admin')->name('dashboard');
 });
 
+require __DIR__.'/account.php';
 require __DIR__.'/settings.php';
 require __DIR__.'/support.php';
 require __DIR__.'/admin.php';

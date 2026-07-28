@@ -3,6 +3,7 @@
 return [
     'registry' => [
         'public.home' => ['name' => 'Public Home', 'area' => 'Public', 'route' => 'home'],
+        'public.account' => ['name' => 'Customer Account', 'area' => 'Public', 'route' => 'account.index'],
         'public.assets.index' => ['name' => 'Browse Assets', 'area' => 'Public', 'route' => 'images.index'],
         'public.assets.show' => ['name' => 'Asset Details', 'area' => 'Public', 'route' => 'assets.show'],
         'public.blog.index' => ['name' => 'Stories', 'area' => 'Public', 'route' => 'blog.index'],

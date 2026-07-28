@@ -10,7 +10,7 @@ import {
 
 import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
-import { dashboard, login, register } from '@/routes';
+import { login, register } from '@/routes';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -21,9 +21,9 @@ const site = computed(
     () => (page.props.site ?? {}) as Record<string, any>,
 );
 
-const isAuthenticated = computed(() =>
-    Boolean((page.props.auth as any)?.user),
-);
+const authUser = computed(() => (page.props.auth as any)?.user);
+const isAuthenticated = computed(() => Boolean(authUser.value));
+const canAccessAdmin = computed(() => authUser.value?.permissions?.includes('view_admin') ?? false);
 
 const siteName = computed(
     () => site.value.name || 'Unclad Collection',
@@ -149,11 +149,19 @@ onBeforeUnmount(() => {
                 <PublicCartMenu />
 
                 <Link
+                    v-if="canAccessAdmin"
+                    href="/admin"
+                    class="px-3 py-2 text-sm font-medium"
+                >
+                    Administration
+                </Link>
+
+                <Link
                     v-if="isAuthenticated"
-                    :href="dashboard()"
+                    href="/account"
                     class="inline-flex h-10 items-center rounded-full border border-stone-300 px-5 text-sm font-medium dark:border-stone-700"
                 >
-                    Dashboard
+                    My Account
                 </Link>
 
                 <template v-else>
@@ -254,12 +262,21 @@ onBeforeUnmount(() => {
                 />
 
                 <Link
+                    v-if="canAccessAdmin"
+                    href="/admin"
+                    class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
+                    @click="closeMenu"
+                >
+                    Administration
+                </Link>
+
+                <Link
                     v-if="isAuthenticated"
-                    :href="dashboard()"
+                    href="/account"
                     class="flex min-h-12 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 py-3 text-center font-medium text-white"
                     @click="closeMenu"
                 >
-                    Dashboard
+                    My Account
                 </Link>
 
                 <template v-else>
