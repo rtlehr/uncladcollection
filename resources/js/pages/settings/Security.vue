@@ -15,6 +15,7 @@ import { edit } from '@/routes/security';
 
 type Props = {
     passwordRules: string;
+    securityEvents: Array<{ id: number; type: string; description: string; ip_address: string | null; occurred_at: string | null }>;
 } & ManagePasskeysProps &
     ManageTwoFactorProps;
 
@@ -152,5 +153,22 @@ defineOptions({
             :canManagePasskeys="canManagePasskeys"
             :passkeys="passkeys"
         />
+
+        <SettingsSection
+            title="Recent security activity"
+            description="Review recent successful sign-ins and important account-security changes."
+        >
+            <div class="divide-y rounded-xl border">
+                <div v-for="event in securityEvents" :key="event.id" class="p-4">
+                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="font-medium">{{ event.description }}</p>
+                        <p class="text-sm text-muted-foreground">{{ event.occurred_at }}</p>
+                    </div>
+                    <p v-if="event.ip_address" class="mt-1 text-xs text-muted-foreground">IP address: {{ event.ip_address }}</p>
+                </div>
+                <p v-if="securityEvents.length === 0" class="p-4 text-sm text-muted-foreground">No recent security activity has been recorded yet.</p>
+            </div>
+        </SettingsSection>
+
     </div>
 </template>

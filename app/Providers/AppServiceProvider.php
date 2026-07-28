@@ -26,6 +26,9 @@ use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\RegisterResponse;
+use App\Listeners\RecordSuccessfulLogin;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -52,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PageHelp::class, PageHelpPolicy::class);
         Gate::policy(PublicPage::class, PublicPagePolicy::class);
         Order::observe(OrderObserver::class);
+        Event::listen(Login::class, RecordSuccessfulLogin::class);
 
         Gate::before(function (User $user, string $ability) {
             return $user->hasPermission($ability) ? true : null;

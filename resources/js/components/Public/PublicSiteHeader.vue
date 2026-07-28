@@ -117,14 +117,6 @@ onBeforeUnmount(() => {
                     Stories
                 </Link>
 
-                <Link
-                    v-if="isAuthenticated"
-                    href="/account/wish-lists"
-                    class="transition hover:text-[var(--brand-accent)]"
-                >
-                    Wish Lists
-                </Link>
-
                 <div
                     v-if="headerPages.length"
                     class="ml-2 flex items-center gap-8"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, Heart, LibraryBig, LockKeyhole, LifeBuoy, UserRound } from '@lucide/vue';
+import { Bell, Heart, LibraryBig, LockKeyhole, LifeBuoy, PackageSearch, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
@@ -10,9 +10,11 @@ const currentUrl = computed(() => page.url.split('?')[0]);
 const items = [
     { label: 'Overview', href: '/account', icon: UserRound },
     { label: 'My Library', href: '/account/library', icon: LibraryBig },
+    { label: 'My Orders', href: '/account/orders', icon: PackageSearch },
     { label: 'Wish Lists', href: '/account/wish-lists', icon: Heart },
     { label: 'Profile', href: '/settings/profile', icon: UserRound },
     { label: 'Security', href: '/settings/security', icon: LockKeyhole },
+    { label: 'Privacy', href: '/account/privacy', icon: ShieldCheck },
     { label: 'Notifications', href: '/account/notifications', icon: Bell },
     { label: 'My Tickets', href: '/support/tickets', icon: LifeBuoy },
 ];

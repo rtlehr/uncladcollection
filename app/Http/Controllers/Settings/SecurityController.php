@@ -38,6 +38,13 @@ class SecurityController extends Controller
                     ->all()
                 : [],
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            'securityEvents' => $request->user()->securityEvents()->latest('occurred_at')->limit(10)->get()->map(fn ($event): array => [
+                'id' => $event->id,
+                'type' => $event->event_type,
+                'description' => $event->description,
+                'ip_address' => $event->ip_address,
+                'occurred_at' => $event->occurred_at?->diffForHumans(),
+            ])->values()->all(),
         ];
 
         if (Features::canManageTwoFactorAuthentication()) {
@@ -57,6 +64,14 @@ class SecurityController extends Controller
     {
         $request->user()->update([
             'password' => $request->password,
+        ]);
+
+        $request->user()->securityEvents()->create([
+            'event_type' => 'password_changed',
+            'description' => 'Account password changed.',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'occurred_at' => now(),
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);

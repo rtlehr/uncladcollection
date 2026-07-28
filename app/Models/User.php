@@ -179,6 +179,21 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(Download::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function securityEvents(): HasMany
+    {
+        return $this->hasMany(AccountSecurityEvent::class);
+    }
+
+    public function privacyPreference(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserPrivacyPreference::class);
+    }
+
     public function notificationPreferences(): HasMany
     {
         return $this->hasMany(NotificationPreference::class);

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Account\AccountDashboardController;
 use App\Http\Controllers\Account\WishListController;
+use App\Http\Controllers\Account\AccountOrderController;
+use App\Http\Controllers\Account\PrivacyController;
 use App\Http\Controllers\Account\LicenseDocumentController;
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\NotificationPreferenceController;
@@ -16,6 +18,10 @@ Route::middleware(['auth', 'verified'])
     ->group(function (): void {
         Route::get('/', AccountDashboardController::class)->name('index');
         Route::get('/library', [PurchaseBrowseController::class, 'index'])->name('library.index');
+        Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [AccountOrderController::class, 'show'])->name('orders.show');
+        Route::get('/privacy', [PrivacyController::class, 'edit'])->name('privacy.edit');
+        Route::put('/privacy', [PrivacyController::class, 'update'])->name('privacy.update');
         Route::get('/licenses/{license}', [PurchaseBrowseController::class, 'showLicense'])->name('licenses.show');
         Route::get('/licenses/{license}/documents/certificate', [LicenseDocumentController::class, 'certificate'])->name('licenses.documents.certificate');
         Route::get('/licenses/{license}/documents/proof-of-purchase', [LicenseDocumentController::class, 'proofOfPurchase'])->name('licenses.documents.proof');
