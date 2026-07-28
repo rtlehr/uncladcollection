@@ -8,8 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    expect(config('database.default'))->toBe('mysql');
-    expect(config('database.connections.mysql.database'))->toBe('uncladcollection_testing');
+    assertDedicatedTestDatabase();
 });
 
 it('stores configurable product groups, values, and fixed price rules', function (): void {

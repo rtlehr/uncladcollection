@@ -20,8 +20,7 @@ use Illuminate\Support\Str;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    expect(DB::connection()->getDriverName())->toBe('mysql');
-    expect(DB::connection()->getDatabaseName())->toBe('uncladcollection_testing');
+    assertDedicatedTestDatabase();
 });
 
 it('shows a guest recently viewed asset on the next asset detail page', function (): void {

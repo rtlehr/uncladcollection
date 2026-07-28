@@ -16,8 +16,7 @@ use Illuminate\Support\Str;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    expect(DB::connection()->getDriverName())->toBe('mysql');
-    expect(DB::connection()->getDatabaseName())->toBe('uncladcollection_testing');
+    assertDedicatedTestDatabase();
 });
 
 it('renders the public images route from published assets without duplicating linked legacy images', function (): void {

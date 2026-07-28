@@ -14,3 +14,13 @@ function something()
 {
     // ..
 }
+
+function assertDedicatedTestDatabase(): void
+{
+    $databaseName = DB::connection()->getDatabaseName();
+
+    expect(app()->environment())->toBe('testing')
+        ->and(DB::connection()->getDriverName())->toBe('mysql')
+        ->and($databaseName)->not->toBeEmpty()
+        ->and(strtolower($databaseName))->toContain('test');
+}

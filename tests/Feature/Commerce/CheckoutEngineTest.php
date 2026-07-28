@@ -19,8 +19,7 @@ uses(RefreshDatabase::class);
 
 function checkoutEngineFixture(): array
 {
-    expect(config('database.default'))->toBe('mysql')
-        ->and(config('database.connections.mysql.database'))->toBe('uncladcollection_testing');
+    assertDedicatedTestDatabase();
 
     $user = User::query()->create([
         'name' => 'Checkout Tester',

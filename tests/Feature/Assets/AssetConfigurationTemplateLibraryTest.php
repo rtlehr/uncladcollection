@@ -8,8 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    expect(config('database.default'))->toBe('mysql');
-    expect(config('database.connections.mysql.database'))->toBe('uncladcollection_testing');
+    assertDedicatedTestDatabase();
 });
 
 it('copies a library template into an independent asset configuration payload', function (): void {
