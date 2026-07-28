@@ -34,6 +34,11 @@ function configurationLabel(): string | null {
         <DetailSection title="License Details">
             <div class="space-y-4">
                 <DetailRow
+                    label="Status"
+                    :value="license.status.label"
+                />
+
+                <DetailRow
                     label="License"
                     :value="license.license_name"
                 />

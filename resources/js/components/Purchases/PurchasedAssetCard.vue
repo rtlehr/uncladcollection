@@ -48,6 +48,7 @@ function configurationLabel(): string | null {
         <div class="space-y-4 p-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2">
+                    <span class="rounded-full border px-2.5 py-1 text-[11px] font-semibold" :class="license.status.tone === 'danger' ? 'border-red-300 text-red-700' : license.status.tone === 'warning' ? 'border-amber-300 text-amber-700' : 'border-emerald-300 text-emerald-700'">{{ license.status.label }}</span>
                     <span class="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                         {{ license.product.asset_type_label }}
                     </span>
@@ -117,12 +118,12 @@ function configurationLabel(): string | null {
                 </Button>
 
                 <Button
-                    v-else-if="license.kind === 'asset'"
+                    v-else-if="license.status.key === 'active' && license.kind === 'asset'"
                     disabled
                     variant="secondary"
                     class="flex-1"
                 >
-                    Downloads Soon
+                    Open Details
                 </Button>
 
                 <Button
@@ -131,7 +132,7 @@ function configurationLabel(): string | null {
                     variant="secondary"
                     class="flex-1"
                 >
-                    Limit Reached
+                    Unavailable
                 </Button>
 
                 <Button variant="outline" as-child>

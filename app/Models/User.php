@@ -179,6 +179,11 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(Download::class);
     }
 
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
+    }
+
     public function publicPages(): HasMany
     {
         return $this->hasMany(PublicPage::class, 'created_by_user_id');
@@ -216,6 +221,11 @@ class User extends Authenticatable implements PasskeyUser
     public function assetFavorites(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(AssetFavorite::class);
+    }
+
+    public function wishLists(): HasMany
+    {
+        return $this->hasMany(WishList::class)->orderBy('sort_order')->orderBy('name');
     }
 
     public function assetAffinities(): \Illuminate\Database\Eloquent\Relations\HasMany

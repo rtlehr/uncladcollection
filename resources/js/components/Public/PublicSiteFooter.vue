@@ -58,7 +58,7 @@ const socialLinks = computed(() => [
                     <Link href="/images" class="hover:text-[var(--brand-accent)]">Marketplace</Link>
                     <Link href="/blog" class="hover:text-[var(--brand-accent)]">Stories</Link>
                     <Link v-for="item in resourcePages" :key="item.href" :href="item.href" class="hover:text-[var(--brand-accent)]">{{ item.label }}</Link>
-                    <Link v-if="isAuthenticated" href="/favorites" class="hover:text-[var(--brand-accent)]">Favorites</Link>
+                    <Link v-if="isAuthenticated" href="/account/wish-lists" class="hover:text-[var(--brand-accent)]">Wish Lists</Link>
                 </nav>
             </div>
 

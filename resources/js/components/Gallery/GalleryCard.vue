@@ -7,6 +7,7 @@ import AssetFormatBadges from '@/components/Assets/Public/AssetFormatBadges.vue'
 import MarketplaceMediaTypeBadge from '@/components/Marketplace/MarketplaceMediaTypeBadge.vue';
 import MarketplacePrice from '@/components/Marketplace/MarketplacePrice.vue';
 import PresentationMedia from '@/components/Marketplace/PresentationMedia.vue';
+import WishListPickerButton from '@/components/WishLists/WishListPickerButton.vue';
 import type { GalleryAsset } from '@/types/gallery';
 
 const props = withDefaults(defineProps<{
@@ -89,10 +90,10 @@ function toggleFavorite(): void {
                 </div>
             </Link>
 
+            <div v-if="asset.is_favoritable" class="absolute right-3 top-3 z-20 flex flex-col gap-2">
             <button
-                v-if="asset.is_favoritable"
                 type="button"
-                class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur transition hover:scale-105 hover:bg-black/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-50"
                 :aria-label="favoriteState ? `Remove ${asset.title} from favorites` : `Add ${asset.title} to favorites`"
                 :aria-pressed="favoriteState"
                 :disabled="favoriteProcessing"
@@ -100,6 +101,8 @@ function toggleFavorite(): void {
             >
                 <Heart :class="['h-5 w-5', favoriteState ? 'fill-current' : '']" aria-hidden="true" />
             </button>
+            <WishListPickerButton v-if="isAuthenticated" :asset-id="asset.id" :asset-title="asset.title" />
+            </div>
 
             <div class="absolute left-3 top-3 flex flex-wrap items-center gap-2 pr-14">
                 <MarketplaceMediaTypeBadge :type="asset.asset_type" :label="asset.asset_type_label" />

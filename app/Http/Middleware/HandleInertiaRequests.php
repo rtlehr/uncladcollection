@@ -64,6 +64,19 @@ class HandleInertiaRequests extends Middleware
 
             'cart' => fn () => $this->cartPayload($user?->id),
 
+            'wish_lists' => fn () => $this->wishListPayload($user?->id),
+
+            'notifications_summary' => fn () => $user ? [
+                'unread_count' => Schema::hasTable('notifications') ? $user->unreadNotifications()->count() : 0,
+                'recent' => Schema::hasTable('notifications') ? $user->notifications()->latest()->limit(5)->get()->map(fn ($notification) => [
+                    'id' => $notification->id,
+                    'title' => $notification->data['title'] ?? 'Account update',
+                    'message' => $notification->data['message'] ?? '',
+                    'read_at' => $notification->read_at?->toIso8601String(),
+                    'created_at' => $notification->created_at?->diffForHumans(),
+                ])->all() : [],
+            ] : ['unread_count' => 0, 'recent' => []],
+
             'page_help' => fn () => app(PageHelpContext::class)->forRequest($request),
 
             'public_page_navigation' => fn () => $this->publicPageNavigation(),
@@ -220,6 +233,26 @@ class HandleInertiaRequests extends Middleware
             });
 
         return $result;
+    }
+
+
+    private function wishListPayload(?int $userId): array
+    {
+        if (! $userId || ! Schema::hasTable('wish_lists')) {
+            return [];
+        }
+
+        return \App\Models\WishList::query()
+            ->where('user_id', $userId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_default'])
+            ->map(fn (\App\Models\WishList $list) => [
+                'id' => $list->id,
+                'name' => $list->name,
+                'is_default' => $list->is_default,
+            ])
+            ->all();
     }
 
     private function cartPayload(?int $userId): array

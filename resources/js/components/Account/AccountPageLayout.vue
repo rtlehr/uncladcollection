@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, Heart, LibraryBig, LockKeyhole, UserRound } from '@lucide/vue';
+import { Bell, Heart, LibraryBig, LockKeyhole, LifeBuoy, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
@@ -10,9 +10,11 @@ const currentUrl = computed(() => page.url.split('?')[0]);
 const items = [
     { label: 'Overview', href: '/account', icon: UserRound },
     { label: 'My Library', href: '/account/library', icon: LibraryBig },
-    { label: 'Favorites', href: '/favorites', icon: Heart },
+    { label: 'Wish Lists', href: '/account/wish-lists', icon: Heart },
     { label: 'Profile', href: '/settings/profile', icon: UserRound },
     { label: 'Security', href: '/settings/security', icon: LockKeyhole },
+    { label: 'Notifications', href: '/account/notifications', icon: Bell },
+    { label: 'My Tickets', href: '/support/tickets', icon: LifeBuoy },
 ];
 
 function active(href: string): boolean {
@@ -37,7 +39,7 @@ function active(href: string): boolean {
                     <Link v-for="item in items" :key="item.href" :href="item.href"
                         class="inline-flex min-h-11 shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition"
                         :class="active(item.href) ? 'bg-[var(--brand-primary)] text-white' : 'border border-stone-200 bg-white hover:bg-stone-100 dark:border-stone-800 dark:bg-stone-900 dark:hover:bg-stone-800'">
-                        <component :is="item.icon" class="h-4 w-4" />{{ item.label }}
+                        <component :is="item.icon" class="h-4 w-4" aria-hidden="true" />{{ item.label }}
                     </Link>
                 </nav>
             </aside>

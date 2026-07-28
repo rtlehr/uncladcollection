@@ -10,6 +10,7 @@ import {
 
 import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
+import NotificationBell from '@/components/Notifications/NotificationBell.vue';
 import { login, register } from '@/routes';
 
 const page = usePage();
@@ -118,10 +119,10 @@ onBeforeUnmount(() => {
 
                 <Link
                     v-if="isAuthenticated"
-                    href="/favorites"
+                    href="/account/wish-lists"
                     class="transition hover:text-[var(--brand-accent)]"
                 >
-                    Favorites
+                    Wish Lists
                 </Link>
 
                 <div
@@ -138,12 +139,6 @@ onBeforeUnmount(() => {
                     </Link>
                 </div>
             </nav>
-
-            <PageHelpPanel
-                v-if="pageHelp"
-                :help="pageHelp"
-                public-style
-            />
 
             <div class="hidden items-center gap-3 lg:flex">
                 <PublicCartMenu />
@@ -179,6 +174,14 @@ onBeforeUnmount(() => {
                         Join the community
                     </Link>
                 </template>
+
+                <NotificationBell v-if="isAuthenticated" />
+
+                <PageHelpPanel
+                    v-if="pageHelp"
+                    :help="pageHelp"
+                    public-style
+                />
             </div>
 
             <div class="flex shrink-0 items-center gap-2 lg:hidden">
@@ -202,6 +205,14 @@ onBeforeUnmount(() => {
                         class="h-5 w-5"
                     />
                 </button>
+
+                <NotificationBell v-if="isAuthenticated" />
+                
+                <PageHelpPanel
+                    v-if="pageHelp"
+                    :help="pageHelp"
+                    public-style
+                />
             </div>
         </div>
 
@@ -232,11 +243,11 @@ onBeforeUnmount(() => {
 
                 <Link
                     v-if="isAuthenticated"
-                    href="/favorites"
+                    href="/account/wish-lists"
                     class="flex min-h-12 items-center rounded-xl px-4 py-3 font-medium hover:bg-stone-100 dark:hover:bg-stone-900"
                     @click="closeMenu"
                 >
-                    Favorites
+                    Wish Lists
                 </Link>
 
                 <Link

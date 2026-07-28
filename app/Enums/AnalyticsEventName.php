@@ -19,4 +19,10 @@ enum AnalyticsEventName: string
     case CollectionViewed = 'collection_viewed';
     case AdvertisingImpression = 'advertising_impression';
     case AdvertisingClicked = 'advertising_clicked';
+    case WishListCreated = 'wish_list_created';
+    case WishListItemAdded = 'wish_list_item_added';
+    case WishListItemRemoved = 'wish_list_item_removed';
+    case WishListSharedViewed = 'wish_list_shared_viewed';
+    case CustomerNotificationGenerated = 'customer_notification_generated';
+    case CustomerNotificationOpened = 'customer_notification_opened';
 }

@@ -144,6 +144,11 @@ class Asset extends Model
         return $this->hasMany(AssetFavorite::class);
     }
 
+    public function wishListItems(): HasMany
+    {
+        return $this->hasMany(WishListItem::class);
+    }
+
     public function scopeDiscoverable(Builder $query): Builder
     {
         return app(\App\Services\AssetDiscoveryEligibilityService::class)->applyDiscoverable($query);

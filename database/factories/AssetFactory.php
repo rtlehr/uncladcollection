@@ -6,6 +6,7 @@ use App\Enums\AssetFulfillmentType;
 use App\Enums\AssetStatus;
 use App\Enums\AssetType;
 use App\Models\Asset;
+use App\Models\AssetFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -57,6 +58,16 @@ class AssetFactory extends Factory
             'is_active' => true,
             'published_at' => now(),
         ]);
+    }
+
+    public function discoverable(): static
+    {
+        return $this->published()->afterCreating(function (Asset $asset): void {
+            AssetFile::factory()
+                ->preview()
+                ->for($asset)
+                ->create();
+        });
     }
 
     public function video(): static

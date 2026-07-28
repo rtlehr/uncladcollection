@@ -20,7 +20,7 @@ defineProps<{
 const cards = [
     { key: 'licenses', label: 'Licensed assets', icon: LibraryBig, href: '/account/library' },
     { key: 'active_licenses', label: 'Active licenses', icon: KeyRound, href: '/account/library' },
-    { key: 'favorites', label: 'Saved favorites', icon: Heart, href: '/favorites' },
+    { key: 'favorites', label: 'Saved assets', icon: Heart, href: '/account/wish-lists' },
     { key: 'downloads_used', label: 'Downloads used', icon: Download, href: '/account/library' },
 ] as const;
 </script>

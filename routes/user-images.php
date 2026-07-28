@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account\WishListController;
 use App\Http\Controllers\AssetBrowseController;
 use App\Http\Controllers\AssetCardController;
 use App\Http\Controllers\AssetFavoriteController;
@@ -35,7 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/purchases/licenses/{license}', fn (\App\Models\License $license) => redirect()->route('account.licenses.show', $license))
         ->name('purchases.licenses.show');
     Route::get('/purchases/{image:slug}', [PurchaseBrowseController::class, 'show'])->name('purchases.show');
-    Route::get('/favorites', [ImageBrowseController::class, 'favorites'])->name('images.favorites');
+    Route::get('/favorites', [WishListController::class, 'legacyRedirect'])->name('images.favorites');
     Route::post('/assets/{asset}/favorite', [AssetFavoriteController::class, 'store'])
         ->middleware('throttle:60,1')->name('assets.favorite');
     Route::delete('/assets/{asset}/favorite', [AssetFavoriteController::class, 'destroy'])

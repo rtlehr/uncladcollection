@@ -8,6 +8,8 @@ use App\Models\AnalyticsEvent;
 use App\Models\PageHelp;
 use App\Models\PublicPage;
 use App\Models\User;
+use App\Models\Order;
+use App\Observers\OrderObserver;
 use App\Policies\PageHelpPolicy;
 use App\Policies\PublicPagePolicy;
 use App\Services\NullAssetVirusScanner;
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(PageHelp::class, PageHelpPolicy::class);
         Gate::policy(PublicPage::class, PublicPagePolicy::class);
+        Order::observe(OrderObserver::class);
 
         Gate::before(function (User $user, string $ability) {
             return $user->hasPermission($ability) ? true : null;

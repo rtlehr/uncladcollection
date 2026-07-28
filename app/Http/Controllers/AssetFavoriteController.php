@@ -3,43 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asset;
-use App\Models\AssetFavorite;
 use App\Services\AssetDiscoveryEligibilityService;
+use App\Services\WishListService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class AssetFavoriteController extends Controller
 {
-    public function store(Asset $asset, AssetDiscoveryEligibilityService $eligibility): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        Asset $asset,
+        AssetDiscoveryEligibilityService $eligibility,
+        WishListService $service,
+    ): RedirectResponse {
         abort_unless($eligibility->isDiscoverable($asset), 404);
+        $service->add($request->user(), $service->defaultList($request->user()), $asset);
 
-        DB::transaction(function () use ($asset): void {
-            AssetFavorite::firstOrCreate(['user_id' => Auth::id(), 'asset_id' => $asset->id]);
-            $this->synchronizeCounts($asset);
-        });
-
-        return back()->with('success', 'Asset added to favorites.');
+        return back()->with('success', 'Asset added to Favorites.');
     }
 
-    public function destroy(Asset $asset): RedirectResponse
+    public function destroy(Request $request, Asset $asset, WishListService $service): RedirectResponse
     {
-        DB::transaction(function () use ($asset): void {
-            AssetFavorite::query()->where('user_id', Auth::id())->where('asset_id', $asset->id)->delete();
-            $this->synchronizeCounts($asset);
-        });
+        $service->remove($request->user(), $service->defaultList($request->user()), $asset);
 
-        return back()->with('success', 'Asset removed from favorites.');
-    }
-
-    private function synchronizeCounts(Asset $asset): void
-    {
-        $count = $asset->favorites()->count();
-        $asset->updateQuietly(['favorites_count' => $count]);
-
-        if ($asset->legacyImage) {
-            $asset->legacyImage->updateQuietly(['favorites_count' => $count]);
-        }
+        return back()->with('success', 'Asset removed from Favorites.');
     }
 }

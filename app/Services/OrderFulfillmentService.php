@@ -7,9 +7,11 @@ use App\Models\Order;
 use App\Models\OrderFulfillmentEvent;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Services\Notifications\CustomerNotificationService;
 
 class OrderFulfillmentService
 {
+    public function __construct(private readonly CustomerNotificationService $notifications) {}
     public function update(Order $order, array $data, ?User $actor = null): Order
     {
         return DB::transaction(function () use ($order, $data, $actor): Order {
@@ -45,7 +47,15 @@ class OrderFulfillmentService
                 'created_at' => now(),
             ]);
 
-            return $order->refresh();
+            $updated = $order->refresh()->loadMissing('user');
+            DB::afterCommit(function () use ($updated, $status): void {
+                if (! $updated->user) return;
+                $label = str($status->value)->replace('_', ' ')->title()->toString();
+                $message = "Order {$updated->order_number} is now {$label}.";
+                if ($updated->tracking_number) $message .= " Tracking: {$updated->tracking_number}.";
+                $this->notifications->send($updated->user, 'fulfillment', "Order {$label}", $message, route('account.library.index'), 'View order', ['order_id' => $updated->id, 'status' => $status->value]);
+            });
+            return $updated;
         });
     }
 }

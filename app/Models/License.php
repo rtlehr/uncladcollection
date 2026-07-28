@@ -15,9 +15,9 @@ class License extends Model
 
     protected $fillable = [
         'user_id', 'image_id', 'asset_id', 'order_id', 'order_item_id',
-        'license_type_id', 'asset_offering_id', 'license_key', 'status',
+        'license_type_id', 'asset_offering_id', 'license_key', 'status', 'status_reason', 'status_changed_at',
         'fulfillment_type', 'commerce_version', 'starts_at', 'expires_at',
-        'download_limit', 'downloads_used', 'license_name', 'license_terms',
+        'download_limit', 'downloads_used', 'license_name', 'license_terms', 'terms_version',
         'included_asset_files_snapshot', 'configuration_snapshot', 'pricing_snapshot',
         'metadata',
     ];
@@ -25,12 +25,14 @@ class License extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'expires_at' => 'datetime',
+        'status_changed_at' => 'datetime',
         'metadata' => 'array',
         'included_asset_files_snapshot' => 'array',
         'configuration_snapshot' => 'array',
         'pricing_snapshot' => 'array',
         'download_limit' => 'integer',
         'downloads_used' => 'integer',
+        'terms_version' => 'integer',
     ];
 
     protected static function booted(): void
@@ -50,6 +52,7 @@ class License extends Model
     public function licenseType(): BelongsTo { return $this->belongsTo(LicenseType::class); }
     public function assetOffering(): BelongsTo { return $this->belongsTo(AssetOffering::class); }
     public function downloads(): HasMany { return $this->hasMany(Download::class); }
+    public function statusHistories(): HasMany { return $this->hasMany(LicenseStatusHistory::class)->latest(); }
 
     public function isActive(): bool
     {

@@ -378,6 +378,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_licenses')
             ->name('licenses.show');
 
+        Route::patch('/licenses/{license}/lifecycle', [AdminLicenseController::class, 'updateLifecycle'])
+            ->middleware('permission:manage_licenses')
+            ->name('licenses.lifecycle.update');
+
         Route::get('/downloads', [AdminDownloadController::class, 'index'])
             ->middleware('permission:manage_downloads')
             ->name('downloads.index');
