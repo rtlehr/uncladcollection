@@ -72,6 +72,7 @@ class AdminToolRegistry
                 'id' => 'customers', 'title' => 'Customers & Support', 'description' => 'Accounts, access, and customer assistance.', 'icon' => 'Users',
                 'tools' => [
                     $this->tool('users', 'Users', 'Manage customer and staff accounts.', '/admin/users', 'Users', 'manage_users', ['account','member','customer']),
+                    $this->tool('impersonate-users', 'Impersonate User', 'Open a searchable customer list and view the site as a customer.', '/admin/users/impersonation', 'UserRoundCheck', 'impersonate_users', ['impersonate','login as','view as user','customer account','support']),
                     $this->tool('customer-experience-operations', 'Customer Experience Operations', 'Review retention-system health and safely run maintenance.', '/admin/customer-experience', 'HeartPulse', 'manage_orders', ['notifications','licenses','downloads','maintenance','retention']),
                     $this->tool('roles', 'Roles', 'Configure role-based access.', '/admin/roles', 'ShieldCheck', 'manage_roles', ['security','access']),
                     $this->tool('permissions', 'Permissions', 'Manage individual system permissions.', '/admin/permissions', 'KeyRound', 'manage_permissions', ['security','access']),

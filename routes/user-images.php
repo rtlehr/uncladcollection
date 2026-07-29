@@ -29,7 +29,7 @@ Route::get('/assets/{asset}/marketplace-preview', [AssetBrowseController::class,
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/images/{image}/download', [DownloadController::class, 'download'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'block.impersonation'])
         ->name('images.download');
 
     Route::get('/purchases', fn () => redirect()->route('account.library.index'))->name('purchases.index');

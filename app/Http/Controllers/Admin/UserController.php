@@ -211,6 +211,16 @@ class UserController extends Controller
                 'updated_at' => $user->updated_at?->format('Y-m-d H:i'),
             ],
 
+            'impersonation' => [
+                'can_start' => request()->user()?->hasPermission('impersonate_users') === true
+                    && ! request()->session()->has(\App\Services\UserImpersonationService::ORIGINAL_USER_ID)
+                    && ! request()->user()?->is($user)
+                    && ! $user->is_disabled
+                    && ! collect(['view_admin', 'manage_users', 'impersonate_users'])
+                        ->contains(fn (string $permission): bool => $user->hasPermission($permission)),
+                'is_active' => request()->session()->has(\App\Services\UserImpersonationService::ORIGINAL_USER_ID),
+            ],
+
             'activities' => AdminActivity::query()
                 ->with('user:id,name,email')
                 ->where('subject_type', User::class)

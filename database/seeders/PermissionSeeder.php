@@ -155,6 +155,13 @@ class PermissionSeeder extends Seeder
             ['group_name' => 'Page Help', 'name' => 'manage_page_help', 'label' => 'Manage Page Help', 'description' => 'Create, edit, and delete Page Help content.'],
             ['group_name' => 'Page Help', 'name' => 'publish_page_help', 'label' => 'Publish Page Help', 'description' => 'Publish and unpublish Page Help content.'],
 
+            [
+                'group_name' => 'Administration',
+                'name' => 'impersonate_users',
+                'label' => 'Impersonate Users',
+                'description' => 'Temporarily view the public customer experience as a non-administrative user.',
+            ],
+
             // Reports
             [
                 'group_name' => 'Reports',

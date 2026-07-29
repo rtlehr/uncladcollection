@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     KeyRound,
     ShieldCheck,
     UserRoundCheck,
+    UserRoundCog,
 } from '@lucide/vue';
 
 import ActivityLog from '@/components/admin/ActivityLog.vue';
@@ -23,10 +24,19 @@ import type {
     AdminUserRecord,
 } from '@/types/adminUser';
 
-defineProps<{
+const { userRecord, activities, impersonation } = defineProps<{
     userRecord: AdminUserRecord;
     activities: AdminActivityRecord[];
+    impersonation: { can_start: boolean; is_active: boolean };
 }>();
+
+function startImpersonation(): void {
+    if (!confirm(`View the public site as ${userRecord.name}? Sensitive actions will be disabled and the session will be audited.`)) {
+        return;
+    }
+
+    router.post(`/admin/users/${userRecord.id}/impersonate`);
+}
 </script>
 
 <template>
@@ -42,6 +52,16 @@ defineProps<{
                     <Link href="/admin/users">
                         Back
                     </Link>
+                </Button>
+
+                <Button
+                    v-if="impersonation.can_start"
+                    variant="outline"
+                    type="button"
+                    @click="startImpersonation"
+                >
+                    <UserRoundCog class="mr-2 h-4 w-4" />
+                    Impersonate User
                 </Button>
 
                 <Button as-child>

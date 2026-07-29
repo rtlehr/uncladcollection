@@ -5,6 +5,7 @@ use App\Http\Controllers\MarketingCampaignTrackingController;
 use App\Http\Controllers\PublicAdController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\SharedWishListController;
+use App\Http\Controllers\Admin\UserImpersonationController;
 use App\Http\Controllers\PublicPageContactController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,10 @@ require __DIR__.'/seo.php';
 
 require __DIR__.'/advertiser.php';
 require __DIR__.'/admin-support.php';
+
+Route::post('/impersonation/stop', [UserImpersonationController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('impersonation.stop');
 
 Route::get('/shared/wish-lists/{token}', SharedWishListController::class)->name('shared-wish-lists.show');
 

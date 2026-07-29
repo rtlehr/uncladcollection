@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/checkout/{image}', [CheckoutController::class, 'start'])
-        ->middleware('throttle:10,1')
+        ->middleware(['throttle:10,1', 'block.impersonation'])
         ->name('checkout.start');
 
     Route::get('/checkout/success', [CheckoutController::class, 'success'])
@@ -20,21 +20,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('cart.index');
 
     Route::post('/cart/items', [CartController::class, 'store'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'block.impersonation'])
         ->name('cart.items.store');
 
     Route::patch('/cart/items/{cartItem}', [CartController::class, 'update'])
-        ->middleware('throttle:30,1')
+        ->middleware(['throttle:30,1', 'block.impersonation'])
         ->name('cart.items.update');
 
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])
+        ->middleware('block.impersonation')
         ->name('cart.items.destroy');
 
     Route::delete('/cart', [CartController::class, 'clear'])
+        ->middleware('block.impersonation')
         ->name('cart.clear');
 
     Route::post('/cart/checkout', [CartController::class, 'checkout'])
-        ->middleware('throttle:10,1')
+        ->middleware(['throttle:10,1', 'block.impersonation'])
         ->name('cart.checkout');
 });
 

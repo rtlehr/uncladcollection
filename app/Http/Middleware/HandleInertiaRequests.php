@@ -7,6 +7,7 @@ use App\Models\PublicPage;
 use Illuminate\Support\Facades\Schema;
 use App\Services\PageHelp\PageHelpContext;
 use App\Services\AdminToolRegistry;
+use App\Services\UserImpersonationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -82,6 +83,8 @@ class HandleInertiaRequests extends Middleware
             'public_page_navigation' => fn () => $this->publicPageNavigation(),
 
             'admin_tools' => fn () => app(AdminToolRegistry::class)->forUser($user),
+
+            'impersonation' => fn () => app(UserImpersonationService::class)->payload($request),
         ];
     }
 

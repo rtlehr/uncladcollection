@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FlashMessage from '@/components/FlashMessage.vue';
 import GlobalNavigationIndicator from '@/components/GlobalNavigationIndicator.vue';
+import ImpersonationBanner from '@/components/Impersonation/ImpersonationBanner.vue';
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -9,6 +10,7 @@ const { breadcrumbs = [] } = defineProps<{ breadcrumbs?: BreadcrumbItem[] }>();
 
 <template>
     <AppSidebarLayout :breadcrumbs="breadcrumbs">
+        <ImpersonationBanner />
         <GlobalNavigationIndicator />
 
         <a

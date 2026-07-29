@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\TrendingAssetController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserImpersonationController;
 use App\Http\Controllers\Admin\SponsorshipPackageController;
 use App\Http\Controllers\Admin\SponsorshipLeadController;
 use App\Http\Controllers\Admin\SponsorshipProposalController;
@@ -266,6 +267,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_users')
             ->name('users.index');
 
+        Route::get('/users/impersonation', [UserImpersonationController::class, 'index'])
+            ->middleware('permission:impersonate_users')
+            ->name('users.impersonation.index');
+
         Route::get('/users/{user}', [UserController::class, 'show'])
             ->middleware('permission:manage_users')
             ->name('users.show');
@@ -277,6 +282,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::put('/users/{user}', [UserController::class, 'update'])
             ->middleware('permission:manage_users')
             ->name('users.update');
+
+        Route::post('/users/{user}/impersonate', [UserImpersonationController::class, 'store'])
+            ->middleware('permission:impersonate_users')
+            ->name('users.impersonate');
 
         Route::resource('categories', CategoryController::class)
             ->middleware('permission:manage_categories');

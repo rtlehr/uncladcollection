@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'enabled' => \App\Http\Middleware\EnsureUserIsEnabled::class,
             'advertiser.portal' => \App\Http\Middleware\EnsureAdvertiserPortalAccess::class,
+            'block.impersonation' => \App\Http\Middleware\BlockDuringImpersonation::class,
         ]);
 
         $middleware->appendToGroup('web', [

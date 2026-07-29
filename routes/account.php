@@ -21,14 +21,14 @@ Route::middleware(['auth', 'verified'])
         Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AccountOrderController::class, 'show'])->name('orders.show');
         Route::get('/privacy', [PrivacyController::class, 'edit'])->name('privacy.edit');
-        Route::put('/privacy', [PrivacyController::class, 'update'])->name('privacy.update');
+        Route::put('/privacy', [PrivacyController::class, 'update'])->middleware('block.impersonation')->name('privacy.update');
         Route::get('/licenses/{license}', [PurchaseBrowseController::class, 'showLicense'])->name('licenses.show');
         Route::get('/licenses/{license}/documents/certificate', [LicenseDocumentController::class, 'certificate'])->name('licenses.documents.certificate');
         Route::get('/licenses/{license}/documents/proof-of-purchase', [LicenseDocumentController::class, 'proofOfPurchase'])->name('licenses.documents.proof');
         Route::get('/licenses/{license}/files/{assetFile}/download', [AccountDownloadController::class, 'file'])
-            ->middleware('throttle:30,1')->name('licenses.files.download');
+            ->middleware(['throttle:30,1', 'block.impersonation'])->name('licenses.files.download');
         Route::get('/licenses/{license}/download-all', [AccountDownloadController::class, 'package'])
-            ->middleware('throttle:10,1')->name('licenses.download-all');
+            ->middleware(['throttle:10,1', 'block.impersonation'])->name('licenses.download-all');
 
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::patch('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
