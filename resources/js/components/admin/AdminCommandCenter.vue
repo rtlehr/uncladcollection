@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import {
     Activity, BadgeDollarSign, Ban, BarChart3, Boxes, Building2, CalendarRange,
     CircleDollarSign, CircleHelp, Download, FilePlus2, FileSignature, FileText,
-    FolderGit2, Gauge, Handshake, Inbox, KeyRound, LifeBuoy, Megaphone,
+    FolderGit2, Gauge, Handshake, Inbox, KeyRound, LifeBuoy, Mail, Megaphone,
     MessageSquare, Newspaper, PanelsTopLeft, Search, Settings, Shapes,
     ShieldCheck, ShoppingCart, SlidersHorizontal, Tags, TrendingUp, Upload,
     UserRoundCheck, Users,
@@ -37,7 +37,7 @@ const storageKey = 'unclad-admin-recent-tools';
 const icons: Record<string, any> = {
     Activity, BadgeDollarSign, Ban, BarChart3, Boxes, Building2, CalendarRange,
     CircleDollarSign, CircleHelp, Download, FilePlus2, FileSignature, FileText,
-    FolderGit2, Gauge, Handshake, Inbox, KeyRound, LifeBuoy, Megaphone,
+    FolderGit2, Gauge, Handshake, Inbox, KeyRound, LifeBuoy, Mail, Megaphone,
     MessageSquare, Newspaper, PanelsTopLeft, Search, Settings, Shapes,
     ShieldCheck, ShoppingCart, SlidersHorizontal, Tags, TrendingUp, Upload,
     UserRoundCheck, Users,

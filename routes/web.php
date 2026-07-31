@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Communications\UnsubscribeController;
 use App\Http\Controllers\MarketingCampaignTrackingController;
 use App\Http\Controllers\PublicAdController;
 use App\Http\Controllers\PublicPageController;
@@ -10,6 +11,11 @@ use App\Http\Controllers\PublicPageContactController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('/communications/unsubscribe/confirmed', [UnsubscribeController::class, 'confirmed'])->name('communications.unsubscribe.confirmed');
+Route::get('/communications/unsubscribe/{user}/{category}', [UnsubscribeController::class, 'show'])->middleware('signed')->name('communications.unsubscribe.show');
+Route::post('/communications/unsubscribe/{user}/{category}', [UnsubscribeController::class, 'store'])->middleware(['signed', 'throttle:10,1'])->name('communications.unsubscribe.store');
+
 Route::post('/marketing-campaigns/{marketingCampaign}/impression', [MarketingCampaignTrackingController::class, 'impression'])->name('marketing-campaigns.impression');
 Route::post('/marketing-campaigns/{marketingCampaign}/click', [MarketingCampaignTrackingController::class, 'click'])->name('marketing-campaigns.click');
 Route::get('/ads/placements/{placement}', [PublicAdController::class, 'show'])->name('ads.placements.show');

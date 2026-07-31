@@ -97,7 +97,12 @@ class DownloadRecorder
         if ($remaining > 1) return;
         DB::afterCommit(function () use ($license, $user, $remaining): void {
             $message = $remaining === 0 ? 'The download allowance for this license has been used.' : 'One download remains for this license.';
-            $this->notifications->send($user, 'downloads', $remaining === 0 ? 'Download limit reached' : 'Download limit nearly reached', $message, route('account.licenses.show', $license), 'View license', ['license_id' => $license->id, 'remaining' => $remaining]);
+            $this->notifications->send($user, 'downloads', $remaining === 0 ? 'Download limit reached' : 'Download limit nearly reached', $message, route('account.licenses.show', $license), 'View license', ['license_id' => $license->id, 'remaining' => $remaining], 'download.limit_warning', [
+                'license_key' => $license->license_key,
+                'downloads_remaining' => $remaining,
+                'download_message' => $message,
+                'license_url' => route('account.licenses.show', $license),
+            ]);
         });
     }
 }

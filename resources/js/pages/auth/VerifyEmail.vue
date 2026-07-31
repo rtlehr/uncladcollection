@@ -16,11 +16,17 @@ defineOptions({
 
 defineProps<{
     status?: string;
+    email?: string;
 }>();
 </script>
 
 <template>
     <Head title="Email verification" />
+
+    <p class="mb-4 text-center text-sm text-muted-foreground">
+        We sent a confirmation link<span v-if="email"> to <strong>{{ email }}</strong></span>.
+        Confirm your email before accessing purchases, downloads, licenses, wish lists, and checkout.
+    </p>
 
     <div
         v-if="status === 'verification-link-sent'"

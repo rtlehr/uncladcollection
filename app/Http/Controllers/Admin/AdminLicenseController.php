@@ -108,7 +108,13 @@ class AdminLicenseController extends Controller
                 if (! $license->user) return;
                 $label = ucfirst($license->status);
                 $message = $data['customer_message'] ?: ($data['reason'] ?: "Your license {$license->license_key} is now {$label}.");
-                $this->notifications->send($license->user, 'licenses', "License {$label}", $message, route('account.licenses.show', $license), 'View license', ['license_id' => $license->id, 'status' => $license->status]);
+                $this->notifications->send($license->user, 'licenses', "License {$label}", $message, route('account.licenses.show', $license), 'View license', ['license_id' => $license->id, 'status' => $license->status], 'license.status_updated', [
+                    'license_key' => $license->license_key,
+                    'license_name' => $license->license_name,
+                    'license_status' => $label,
+                    'license_message' => $message,
+                    'license_url' => route('account.licenses.show', $license),
+                ]);
             });
         });
 

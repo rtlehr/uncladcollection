@@ -14,7 +14,7 @@ class CustomerNotificationService
 {
     public function __construct(private readonly NotificationCategoryRegistry $categories) {}
 
-    public function send(User $user, string $category, string $title, string $message, ?string $actionUrl = null, ?string $actionLabel = null, array $context = []): void
+    public function send(User $user, string $category, string $title, string $message, ?string $actionUrl = null, ?string $actionLabel = null, array $context = [], ?string $emailTemplateKey = null, array $emailTemplateData = []): void
     {
         if (! Schema::hasTable('notifications')) return;
 
@@ -31,7 +31,7 @@ class CustomerNotificationService
         if (($definition['transactional'] || $preference?->email_enabled) && ($preference?->email_frequency ?? 'immediate') === 'immediate') $channels[] = 'mail';
         if ($channels === []) return;
 
-        $user->notify(new CustomerAccountNotification($category, $title, $message, $actionUrl, $actionLabel, $context, array_values(array_unique($channels))));
+        $user->notify(new CustomerAccountNotification($category, $title, $message, $actionUrl, $actionLabel, $context, array_values(array_unique($channels)), $emailTemplateKey, $emailTemplateData));
     }
 
     public function sendOnce(
@@ -46,6 +46,8 @@ class CustomerNotificationService
         array $context = [],
         ?Asset $asset = null,
         ?WishList $wishList = null,
+        ?string $emailTemplateKey = null,
+        array $emailTemplateData = [],
     ): bool {
         if (! Schema::hasTable('notification_watch_events')) return false;
 
@@ -56,7 +58,7 @@ class CustomerNotificationService
 
         if (! $created->wasRecentlyCreated) return false;
 
-        $this->send($user, $category, $title, $message, $actionUrl, $actionLabel, $context);
+        $this->send($user, $category, $title, $message, $actionUrl, $actionLabel, $context, $emailTemplateKey, $emailTemplateData);
         return true;
     }
 }

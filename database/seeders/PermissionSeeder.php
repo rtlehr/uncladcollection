@@ -42,6 +42,12 @@ class PermissionSeeder extends Seeder
                 'label' => 'Manage Site Settings',
                 'description' => 'Manage site configuration.',
             ],
+            [
+                'group_name' => 'Communications',
+                'name' => 'manage_communications',
+                'label' => 'Manage Communications',
+                'description' => 'Manage customer email templates, delivery settings, and communication activity.',
+            ],
 
             // Content
             [

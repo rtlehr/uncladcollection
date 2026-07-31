@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Models\NotificationPreference;
+use App\Services\Communications\CommunicationPreferenceService;
 use App\Services\Notifications\NotificationCategoryRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,16 +24,19 @@ class NotificationPreferenceController extends Controller
         return Inertia::render('Account/Notifications/Preferences', ['categories' => $categories]);
     }
 
-    public function update(Request $request, NotificationCategoryRegistry $registry): RedirectResponse
+    public function update(Request $request, NotificationCategoryRegistry $registry, CommunicationPreferenceService $preferences): RedirectResponse
     {
         $data = $request->validate(['preferences' => ['required', 'array'], 'preferences.*.category' => ['required', 'string'], 'preferences.*.in_app_enabled' => ['required', 'boolean'], 'preferences.*.email_enabled' => ['required', 'boolean'], 'preferences.*.email_frequency' => ['required', 'in:immediate,off']]);
         $allowed = array_keys($registry->all());
         foreach ($data['preferences'] as $item) {
             if (! in_array($item['category'], $allowed, true)) continue;
-            $definition = $registry->get($item['category']);
-            NotificationPreference::query()->updateOrCreate(
-                ['user_id' => $request->user()->id, 'category' => $item['category']],
-                ['in_app_enabled' => $item['in_app_enabled'], 'email_enabled' => $definition['transactional'] ? true : $item['email_enabled'], 'email_frequency' => $definition['transactional'] ? 'immediate' : $item['email_frequency']]
+            $preferences->update(
+                $request->user(),
+                $item['category'],
+                (bool) $item['in_app_enabled'],
+                (bool) $item['email_enabled'],
+                'account',
+                $request,
             );
         }
         return back()->with('success', 'Notification preferences updated.');

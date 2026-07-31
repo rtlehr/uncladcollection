@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Contracts\AssetVirusScanner;
 use App\Analytics\AnalyticsReportCache;
 use App\Models\AnalyticsEvent;
+use App\Models\CommunicationSetting;
+use Illuminate\Support\Facades\Schema;
 use App\Models\PageHelp;
 use App\Models\PublicPage;
 use App\Models\User;
@@ -29,6 +31,11 @@ use App\Http\Responses\RegisterResponse;
 use App\Listeners\RecordSuccessfulLogin;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
+use App\Listeners\SendMembershipWelcomeNotification;
+use App\Listeners\UpdateEmailDeliveryLog;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Notifications\Events\NotificationFailed;
+use Illuminate\Notifications\Events\NotificationSent;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureSupportRateLimits();
+        $this->configureCommunicationSettings();
 
         AnalyticsEvent::created(fn () => app(AnalyticsReportCache::class)->flush());
         AnalyticsEvent::deleted(fn () => app(AnalyticsReportCache::class)->flush());
@@ -56,12 +64,43 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PublicPage::class, PublicPagePolicy::class);
         Order::observe(OrderObserver::class);
         Event::listen(Login::class, RecordSuccessfulLogin::class);
+        Event::listen(Verified::class, SendMembershipWelcomeNotification::class);
+        Event::listen(NotificationSent::class, UpdateEmailDeliveryLog::class);
+        Event::listen(NotificationFailed::class, UpdateEmailDeliveryLog::class);
 
         Gate::before(function (User $user, string $ability) {
             return $user->hasPermission($ability) ? true : null;
         });
     }
 
+
+
+    protected function configureCommunicationSettings(): void
+    {
+        if (! Schema::hasTable('communication_settings')) {
+            return;
+        }
+
+        $settings = CommunicationSetting::query()->first();
+
+        if (! $settings) {
+            return;
+        }
+
+        if ($settings->sender_email) {
+            config([
+                'mail.from.address' => $settings->sender_email,
+                'mail.from.name' => $settings->sender_name ?: config('mail.from.name'),
+            ]);
+        }
+
+        if ($settings->reply_to_email) {
+            config([
+                'mail.reply_to.address' => $settings->reply_to_email,
+                'mail.reply_to.name' => $settings->reply_to_name,
+            ]);
+        }
+    }
 
     protected function configureSupportRateLimits(): void
     {

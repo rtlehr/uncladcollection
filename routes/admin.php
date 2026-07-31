@@ -54,6 +54,9 @@ use App\Http\Controllers\Admin\PageHelpController;
 use App\Http\Controllers\Admin\PageHelpTransferController;
 use App\Http\Controllers\Admin\PublicPageController;
 use App\Http\Controllers\Admin\PublicPageTransferController;
+use App\Http\Controllers\Admin\EmailTemplateController;
+use App\Http\Controllers\Admin\EmailDeliveryLogController;
+use App\Http\Controllers\Admin\CommunicationSettingController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -203,6 +206,37 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:view_reports')->name('analytics.operations.export');
         Route::get('/analytics/operations/{order}', [MarketplaceOperationsReportController::class, 'show'])
             ->middleware('permission:view_reports')->name('analytics.operations.show');
+
+
+
+        Route::get('/communications/email-templates', [EmailTemplateController::class, 'index'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.email-templates.index');
+        Route::get('/communications/email-templates/{emailTemplate}/edit', [EmailTemplateController::class, 'edit'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.email-templates.edit');
+        Route::put('/communications/email-templates/{emailTemplate}', [EmailTemplateController::class, 'update'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.email-templates.update');
+        Route::post('/communications/email-templates/{emailTemplate}/restore', [EmailTemplateController::class, 'restore'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.email-templates.restore');
+        Route::post('/communications/email-templates/{emailTemplate}/test', [EmailTemplateController::class, 'sendTest'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.email-templates.test');
+
+        Route::get('/communications/delivery-activity', [EmailDeliveryLogController::class, 'index'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.delivery-activity.index');
+        Route::post('/communications/delivery-activity/{emailDeliveryLog}/retry', [EmailDeliveryLogController::class, 'retry'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.delivery-activity.retry');
+        Route::get('/communications/settings', [CommunicationSettingController::class, 'edit'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.settings.edit');
+        Route::put('/communications/settings', [CommunicationSettingController::class, 'update'])
+            ->middleware('permission:manage_communications')
+            ->name('communications.settings.update');
 
         Route::get('/site-settings', [SiteSettingController::class, 'index'])
             ->middleware('permission:manage_site_settings')

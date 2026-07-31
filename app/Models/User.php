@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\VerifyMembershipEmail;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -35,7 +36,7 @@ use App\Models\BlogPost;
 ])]
 
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -199,6 +200,11 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(NotificationPreference::class);
     }
 
+    public function communicationPreferenceChanges(): HasMany
+    {
+        return $this->hasMany(CommunicationPreferenceChange::class);
+    }
+
     public function publicPages(): HasMany
     {
         return $this->hasMany(PublicPage::class, 'created_by_user_id');
@@ -247,4 +253,14 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(UserAssetAffinity::class);
     }
+
+    /**
+     * Send the membership verification notification through the editable
+     * communications template system.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyMembershipEmail);
+    }
+
 }

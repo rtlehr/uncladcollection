@@ -53,7 +53,12 @@ class OrderFulfillmentService
                 $label = str($status->value)->replace('_', ' ')->title()->toString();
                 $message = "Order {$updated->order_number} is now {$label}.";
                 if ($updated->tracking_number) $message .= " Tracking: {$updated->tracking_number}.";
-                $this->notifications->send($updated->user, 'fulfillment', "Order {$label}", $message, route('account.library.index'), 'View order', ['order_id' => $updated->id, 'status' => $status->value]);
+                $this->notifications->send($updated->user, 'fulfillment', "Order {$label}", $message, route('account.library.index'), 'View order', ['order_id' => $updated->id, 'status' => $status->value], 'order.fulfillment_updated', [
+                    'order_number' => $updated->order_number,
+                    'fulfillment_status' => $label,
+                    'tracking_number' => $updated->tracking_number ?: 'Not available',
+                    'order_url' => route('account.library.index'),
+                ]);
             });
             return $updated;
         });

@@ -101,6 +101,9 @@ class AdminToolRegistry
             [
                 'id' => 'system', 'title' => 'System & Configuration', 'description' => 'Site branding, settings, templates, and administration.', 'icon' => 'Settings',
                 'tools' => [
+                    $this->tool('email-templates', 'Email Templates', 'Manage transactional and customer email content.', '/admin/communications/email-templates', 'Mail', 'manage_communications', ['communications','email','notification','verification','receipt']),
+                    $this->tool('email-delivery-activity', 'Email Delivery Activity', 'Review sent, queued, and failed customer emails.', '/admin/communications/delivery-activity', 'Activity', 'manage_communications', ['communications','email','delivery','failure','retry']),
+                    $this->tool('communication-settings', 'Communication Settings', 'Manage sender, reply-to, and test-recipient defaults.', '/admin/communications/settings', 'Settings2', 'manage_communications', ['communications','email','sender','reply-to']),
                     $this->tool('site-settings', 'Site Settings', 'Manage branding, contact, SEO, and site behavior.', '/admin/site-settings', 'Settings', 'manage_site_settings', ['branding','logo','SEO','configuration']),
                     $this->tool('configuration-templates', 'Configuration Templates', 'Manage reusable configuration presets.', '/admin/configuration-templates', 'SlidersHorizontal', 'manage_site_settings', ['template','preset']),
                     $this->tool('administration-dashboard', 'Administration Dashboard', 'Open system administration summaries.', '/admin/administration-dashboard', 'ShieldCheck', 'view_admin', ['system','admin']),

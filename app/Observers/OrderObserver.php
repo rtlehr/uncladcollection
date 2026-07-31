@@ -26,6 +26,22 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
         };
 
         if (! $details) return;
-        $this->notifications->send($order->user, 'orders', $details[0], $details[1], route('account.library.index'), 'View My Library', ['order_id' => $order->id, 'status' => $order->status]);
+        $this->notifications->send(
+            $order->user,
+            'orders',
+            $details[0],
+            $details[1],
+            route('account.library.index'),
+            'View My Library',
+            ['order_id' => $order->id, 'status' => $order->status],
+            $order->status === Order::STATUS_PAID ? 'order.confirmed' : 'order.status_updated',
+            [
+                'order_number' => $order->order_number,
+                'order_total' => $order->total_formatted,
+                'order_status' => str($order->status)->replace('_', ' ')->title()->toString(),
+                'order_message' => $details[1],
+                'order_url' => route('account.library.index'),
+            ],
+        );
     }
 }
