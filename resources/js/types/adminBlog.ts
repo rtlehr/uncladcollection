@@ -92,7 +92,7 @@ export interface AdminBlogPostDetail {
     comments_require_approval?: boolean;
 
     category_ids?: number[];
-    tag_ids?: number[];
+    tag_names?: string[];
 
     author: AdminBlogPerson | null;
     categories: AdminBlogOption[];

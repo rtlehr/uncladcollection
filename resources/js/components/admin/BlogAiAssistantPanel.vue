@@ -14,8 +14,8 @@ interface BlogAiResult {
     readability: { score?: number; level?: string; strengths?: string[]; improvements?: string[] };
     clarity: { score?: number; strengths?: string[]; improvements?: string[] };
     publishing_review: { ready?: boolean; missing_items?: string[]; warnings?: string[]; recommended_actions?: string[] };
-    header_image: { concept?: string; prompt?: string; alt_text?: string; caption?: string };
-    inline_images: Array<{ placement?: string; purpose?: string; prompt?: string; alt_text?: string; caption?: string }>;
+    header_image: { concept?: string; prompt?: string; alt_text?: string; caption?: string; prompt_generated?: boolean };
+    inline_images: Array<{ placement?: string; purpose?: string; prompt?: string; alt_text?: string; caption?: string; prompt_generated?: boolean }>;
     internal_link_ideas: Array<{ anchor_text?: string; target_topic?: string; reason?: string }>;
 }
 
@@ -34,7 +34,7 @@ const emit = defineEmits<{
     (event: 'apply-seo-title', value: string): void;
     (event: 'apply-seo-description', value: string): void;
     (event: 'analysis-updated', result: BlogAiResult, settings: Record<string, any>, analyzedAt: string): void;
-    (event: 'apply-tags', tags: Array<{ id: number; name: string }>): void;
+    (event: 'apply-tags', tags: string[]): void;
 }>();
 
 const loading = ref(false);
@@ -49,10 +49,13 @@ const environmentDetailLevel = ref(props.initialSettings?.environment_detail_lev
 const describeEveryVisiblePerson = ref(props.initialSettings?.describe_every_visible_person ?? true);
 const analyzedAt = ref(props.initialAnalyzedAt ?? '');
 const analysisSaved = ref(Boolean(props.blogPostId && props.initialResult));
-const applyingTags = ref(false);
 const selectedGeneratedTags = ref<string[]>([...(props.initialResult?.generated_tags ?? [])]);
 const locallyExcludedTags = ref<string[]>([]);
 const excludingTags = ref<string[]>([]);
+const applyingTags = ref(false);
+const promptLoadingKey = ref('');
+const promptError = ref('');
+const generatingAllPrompts = ref(false);
 
 watch(contentContext, (context) => {
     if (context === 'adult_naturism') {
@@ -81,6 +84,10 @@ const suggestedGeneratedTags = computed<string[]>(() => {
     return tags.filter((tag) => !locallyExcludedTags.value.includes(tag));
 });
 
+const uncheckedGeneratedTags = computed<string[]>(() =>
+    suggestedGeneratedTags.value.filter((tag) => !selectedGeneratedTags.value.includes(tag)),
+);
+
 watch(
     () => result.value?.generated_tags,
     (tags) => {
@@ -91,32 +98,9 @@ watch(
 );
 
 function toggleGeneratedTag(tag: string): void {
-    if (selectedGeneratedTags.value.includes(tag)) {
-        removeGeneratedTag(tag);
-        return;
-    }
-
-    selectedGeneratedTags.value = [...selectedGeneratedTags.value, tag];
-}
-
-function removeGeneratedTag(tag: string): void {
-    if (!result.value) return;
-
-    const normalized = tag.toLocaleLowerCase();
-
-    result.value.generated_tags = result.value.generated_tags.filter(
-        (item) => item.toLocaleLowerCase() !== normalized,
-    );
-    selectedGeneratedTags.value = selectedGeneratedTags.value.filter(
-        (item) => item.toLocaleLowerCase() !== normalized,
-    );
-
-    emit(
-        'analysis-updated',
-        result.value,
-        currentSettings(),
-        analyzedAt.value || new Date().toISOString(),
-    );
+    selectedGeneratedTags.value = selectedGeneratedTags.value.includes(tag)
+        ? selectedGeneratedTags.value.filter((item) => item !== tag)
+        : [...selectedGeneratedTags.value, tag];
 }
 
 function updateLocalGeneratedTags(tagsToRemove: string[]): void {
@@ -150,7 +134,7 @@ function excludeGeneratedTag(tag: string): void {
 
     router.post('/admin/ai-keyword-exclusions', {
         keyword: tag,
-        notes: 'Added directly from a Blog AI generated tag suggestion.',
+        notes: 'Added directly from a Blog AI generated keyword suggestion.',
     }, {
         preserveScroll: true,
         preserveState: true,
@@ -162,6 +146,30 @@ function excludeGeneratedTag(tag: string): void {
         },
         onFinish: () => {
             excludingTags.value = excludingTags.value.filter((item) => item !== tag);
+        },
+    });
+}
+
+function excludeUncheckedGeneratedTags(): void {
+    const tags = [...uncheckedGeneratedTags.value];
+    if (!tags.length) return;
+
+    updateLocalGeneratedTags(tags);
+    excludingTags.value = Array.from(new Set([...excludingTags.value, ...tags]));
+
+    router.post('/admin/ai-keyword-exclusions/bulk', {
+        keywords: tags.join('\n'),
+    }, {
+        preserveScroll: true,
+        preserveState: true,
+        onError: () => {
+            locallyExcludedTags.value = locallyExcludedTags.value.filter((item) => !tags.includes(item));
+            if (result.value) {
+                result.value.generated_tags = Array.from(new Set([...result.value.generated_tags, ...tags]));
+            }
+        },
+        onFinish: () => {
+            excludingTags.value = excludingTags.value.filter((item) => !tags.includes(item));
         },
     });
 }
@@ -215,13 +223,127 @@ async function applyGeneratedTags(): Promise<void> {
             },
             body: JSON.stringify({ names }),
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message ?? 'The generated tags could not be applied.');
-        emit('apply-tags', payload.tags ?? []);
+
+        const responseText = await response.text();
+        let payload: any = {};
+
+        try {
+            payload = responseText ? JSON.parse(responseText) : {};
+        } catch {
+            payload = {};
+        }
+
+        if (!response.ok) {
+            throw new Error(payload.message ?? 'The generated keywords could not be applied.');
+        }
+
+        const canonicalNames = Array.isArray(payload.tags)
+            ? payload.tags
+                .map((tag: any) => typeof tag?.name === 'string' ? tag.name.trim() : '')
+                .filter((name: string) => name !== '')
+            : [];
+
+        emit('apply-tags', canonicalNames);
     } catch (exception) {
-        error.value = exception instanceof Error ? exception.message : 'The generated tags could not be applied.';
+        error.value = exception instanceof Error
+            ? exception.message
+            : 'The generated keywords could not be applied.';
     } finally {
         applyingTags.value = false;
+    }
+}
+
+async function generateDetailedPrompt(imageType: 'header' | 'inline', inlineIndex: number | null = null): Promise<boolean> {
+    if (!result.value) return false;
+
+    const image = imageType === 'header'
+        ? result.value.header_image
+        : result.value.inline_images?.[inlineIndex ?? 0];
+
+    if (!image) return false;
+
+    const key = imageType === 'header' ? 'header' : `inline-${inlineIndex ?? 0}`;
+    promptLoadingKey.value = key;
+    promptError.value = '';
+
+    try {
+        const concept = imageType === 'header'
+            ? (result.value.header_image?.concept || 'Header image for the article')
+            : [image.purpose, image.placement].filter(Boolean).join('. ');
+
+        const response = await fetch('/admin/blog-posts/ai-image-prompt', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+            },
+            body: JSON.stringify({
+                blog_post_id: props.blogPostId ?? null,
+                title: props.title,
+                content: props.content,
+                image_type: imageType,
+                inline_index: inlineIndex,
+                concept,
+                placement: imageType === 'inline' ? image.placement ?? '' : 'Blog article header',
+                purpose: imageType === 'inline' ? image.purpose ?? '' : 'Represent the article’s central emotional story',
+                current_prompt: image.prompt ?? '',
+                ...currentSettings(),
+            }),
+        });
+
+        const responseText = await response.text();
+        let payload: any = {};
+
+        try {
+            payload = responseText ? JSON.parse(responseText) : {};
+        } catch {
+            payload = {};
+        }
+
+        if (!response.ok) {
+            throw new Error(payload.message ?? 'The detailed image prompt could not be generated.');
+        }
+
+        if (typeof payload.prompt !== 'string' || payload.prompt.trim() === '') {
+            throw new Error('The detailed image prompt generator returned no prompt.');
+        }
+
+        image.prompt = payload.prompt.trim();
+        image.prompt_generated = true;
+        analyzedAt.value = payload.analyzed_at ?? new Date().toISOString();
+        analysisSaved.value = Boolean(payload.saved);
+        emit('analysis-updated', result.value, currentSettings(), analyzedAt.value);
+
+        return true;
+    } catch (exception) {
+        promptError.value = exception instanceof Error
+            ? exception.message
+            : 'The detailed image prompt could not be generated.';
+
+        return false;
+    } finally {
+        promptLoadingKey.value = '';
+    }
+}
+
+async function generateAllDetailedPrompts(): Promise<void> {
+    if (!result.value || generatingAllPrompts.value) return;
+
+    generatingAllPrompts.value = true;
+    promptError.value = '';
+
+    try {
+        const headerSucceeded = await generateDetailedPrompt('header');
+        if (!headerSucceeded) return;
+
+        for (let index = 0; index < (result.value.inline_images?.length ?? 0); index += 1) {
+            const succeeded = await generateDetailedPrompt('inline', index);
+            if (!succeeded) return;
+        }
+    } finally {
+        generatingAllPrompts.value = false;
     }
 }
 
@@ -445,7 +567,7 @@ async function copy(value: string | undefined, key: string): Promise<void> {
             <div v-if="suggestedGeneratedTags.length" class="rounded-xl border p-5">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h3 class="font-semibold">Generated tags</h3>
+                        <h3 class="font-semibold">Generated keywords</h3>
                         <p class="mt-1 text-sm text-muted-foreground">
                             Suggested from the article using the same shared ignore list, normalization, and deduplication rules as asset keywords.
                         </p>
@@ -454,11 +576,12 @@ async function copy(value: string | undefined, key: string): Promise<void> {
                         type="button"
                         size="sm"
                         variant="outline"
-                        :disabled="applyingTags || selectedGeneratedTags.length === 0"
+                        :disabled="selectedGeneratedTags.length === 0 || applyingTags"
                         @click="applyGeneratedTags"
                     >
                         <LoaderCircle v-if="applyingTags" class="mr-2 h-4 w-4 animate-spin" />
-                        {{ applyingTags ? 'Applying...' : `Apply selected tags (${selectedGeneratedTags.length})` }}
+                        <Check v-else class="mr-2 h-4 w-4" />
+                        {{ applyingTags ? 'Applying keywords...' : `Apply selected keywords (${selectedGeneratedTags.length})` }}
                     </Button>
                 </div>
 
@@ -490,10 +613,20 @@ async function copy(value: string | undefined, key: string): Promise<void> {
                     </div>
                 </div>
 
-                <div class="mt-4 border-t pt-3">
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
                     <p class="text-xs text-muted-foreground">
-                        Unchecking a tag removes it from this analysis. Use the exclusion icon to remove it and add it to the same ignored-keyword list used by Assets.
+                        Use the exclusion icon to remove a tag now and add it to the same ignored-keyword list used by Assets.
                     </p>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        :disabled="uncheckedGeneratedTags.length === 0 || excludingTags.length > 0"
+                        @click="excludeUncheckedGeneratedTags"
+                    >
+                        <Ban class="mr-2 h-4 w-4" />
+                        Exclude unchecked tags ({{ uncheckedGeneratedTags.length }})
+                    </Button>
                 </div>
             </div>
 
@@ -543,16 +676,58 @@ async function copy(value: string | undefined, key: string): Promise<void> {
                 </div>
             </div>
 
-            <div class="rounded-xl border p-5">
-                <div class="flex items-center justify-between gap-3">
+            <div class="rounded-xl border bg-muted/20 p-5">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h3 class="font-semibold">Header image concept</h3>
+                        <div class="flex items-center gap-2 font-semibold">
+                            <WandSparkles class="h-5 w-5" />
+                            Detailed image-prompt writer
+                        </div>
+                        <p class="mt-1 max-w-3xl text-sm text-muted-foreground">
+                            Each prompt is generated separately through a two-stage scene plan and expansion process. You can change the image options above before generating or regenerating any prompt.
+                        </p>
+                    </div>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        :disabled="generatingAllPrompts || promptLoadingKey !== ''"
+                        @click="generateAllDetailedPrompts"
+                    >
+                        <LoaderCircle v-if="generatingAllPrompts" class="mr-2 h-4 w-4 animate-spin" />
+                        <Sparkles v-else class="mr-2 h-4 w-4" />
+                        {{ generatingAllPrompts ? 'Generating prompts...' : 'Generate all detailed prompts' }}
+                    </Button>
+                </div>
+                <p v-if="promptError" class="mt-3 text-sm text-destructive">{{ promptError }}</p>
+            </div>
+
+            <div class="rounded-xl border p-5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="font-semibold">Header image concept</h3>
+                            <span v-if="result.header_image?.prompt_generated" class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                Detailed prompt generated
+                            </span>
+                        </div>
                         <p class="text-sm text-muted-foreground">{{ result.header_image?.concept }}</p>
                     </div>
-                    <Button type="button" size="sm" variant="outline" @click="copy(result.header_image?.prompt, 'header')">
-                        <Check v-if="copiedKey === 'header'" class="mr-2 h-4 w-4" /><Copy v-else class="mr-2 h-4 w-4" />
-                        {{ copiedKey === 'header' ? 'Copied' : 'Copy prompt' }}
-                    </Button>
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            type="button"
+                            size="sm"
+                            :disabled="promptLoadingKey !== ''"
+                            @click="generateDetailedPrompt('header')"
+                        >
+                            <LoaderCircle v-if="promptLoadingKey === 'header'" class="mr-2 h-4 w-4 animate-spin" />
+                            <Sparkles v-else class="mr-2 h-4 w-4" />
+                            {{ result.header_image?.prompt_generated ? 'Regenerate detailed prompt' : 'Generate detailed prompt' }}
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" @click="copy(result.header_image?.prompt, 'header')">
+                            <Check v-if="copiedKey === 'header'" class="mr-2 h-4 w-4" /><Copy v-else class="mr-2 h-4 w-4" />
+                            {{ copiedKey === 'header' ? 'Copied' : 'Copy prompt' }}
+                        </Button>
+                    </div>
                 </div>
                 <div class="mt-4 whitespace-pre-wrap rounded-lg bg-muted/30 p-4 text-sm leading-6">{{ result.header_image?.prompt }}</div>
                 <div class="mt-3 grid gap-3 text-sm md:grid-cols-2">
@@ -565,15 +740,32 @@ async function copy(value: string | undefined, key: string): Promise<void> {
                 <h3 class="font-semibold">Inline image plan</h3>
                 <div class="mt-4 space-y-4">
                     <div v-for="(image, index) in result.inline_images" :key="`${image.placement}-${index}`" class="rounded-lg bg-muted/30 p-4">
-                        <div class="flex items-start justify-between gap-3">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div>
-                                <p class="font-medium">{{ image.placement }}</p>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-medium">{{ image.placement }}</p>
+                                    <span v-if="image.prompt_generated" class="rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground">
+                                        Detailed prompt generated
+                                    </span>
+                                </div>
                                 <p class="mt-1 text-sm text-muted-foreground">{{ image.purpose }}</p>
                             </div>
-                            <Button type="button" size="sm" variant="outline" @click="copy(image.prompt, `inline-${index}`)">
-                                <Check v-if="copiedKey === `inline-${index}`" class="mr-2 h-4 w-4" /><Copy v-else class="mr-2 h-4 w-4" />
-                                Copy
-                            </Button>
+                            <div class="flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    :disabled="promptLoadingKey !== ''"
+                                    @click="generateDetailedPrompt('inline', index)"
+                                >
+                                    <LoaderCircle v-if="promptLoadingKey === `inline-${index}`" class="mr-2 h-4 w-4 animate-spin" />
+                                    <Sparkles v-else class="mr-2 h-4 w-4" />
+                                    {{ image.prompt_generated ? 'Regenerate detailed prompt' : 'Generate detailed prompt' }}
+                                </Button>
+                                <Button type="button" size="sm" variant="outline" @click="copy(image.prompt, `inline-${index}`)">
+                                    <Check v-if="copiedKey === `inline-${index}`" class="mr-2 h-4 w-4" /><Copy v-else class="mr-2 h-4 w-4" />
+                                    Copy
+                                </Button>
+                            </div>
                         </div>
                         <p class="mt-3 whitespace-pre-wrap text-sm leading-6">{{ image.prompt }}</p>
                         <p class="mt-2 text-xs text-muted-foreground">Alt: {{ image.alt_text }}</p>

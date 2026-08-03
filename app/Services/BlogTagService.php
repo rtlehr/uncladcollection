@@ -4,15 +4,20 @@ namespace App\Services;
 
 use App\Models\BlogPost;
 use App\Models\Tag;
+use App\Services\Ai\Support\AiKeywordExclusionFilter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class BlogTagService
 {
+    public function __construct(private AiKeywordExclusionFilter $exclusionFilter) {}
+
     /** @return Collection<int, Tag> */
     public function resolveNames(array $names): Collection
     {
-        $normalized = collect($names)
+        $filtered = $this->exclusionFilter->filter($names);
+
+        $normalized = collect($filtered)
             ->map(fn ($name) => trim((string) $name))
             ->filter(fn (string $name) => $name !== '' && Str::slug($name) !== '')
             ->unique(fn (string $name) => Str::lower($name))

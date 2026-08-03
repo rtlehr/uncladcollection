@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 
 import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
@@ -12,6 +12,7 @@ import {
     BLOG_ICON_PRESET,
 } from '@/config/imageEditorPresets';
 import OptionChecklist from '@/Components/Admin/OptionChecklist.vue';
+import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
@@ -32,8 +33,6 @@ const props = defineProps<{
     tags: AdminBlogOption[];
     statuses: string[];
 }>();
-
-const availableTags = ref<AdminBlogOption[]>([...props.tags]);
 
 const form = useForm({
     title: props.blogPost.title ?? '',
@@ -57,7 +56,7 @@ const form = useForm({
     comments_visible: props.blogPost.comments_visible ?? true,
     comments_require_approval: props.blogPost.comments_require_approval ?? false,
     category_ids: props.blogPost.category_ids ?? [],
-    tag_ids: props.blogPost.tag_ids ?? [],
+    tag_names: props.blogPost.tag_names ?? props.blogPost.tags?.map((tag) => tag.name) ?? [],
     ai_analysis_json: props.blogPost.ai_analysis ? JSON.stringify(props.blogPost.ai_analysis) : null as string | null,
     ai_analysis_settings_json: props.blogPost.ai_analysis_settings ? JSON.stringify(props.blogPost.ai_analysis_settings) : null as string | null,
 });
@@ -70,7 +69,7 @@ function useGeneratedSlug() {
     form.slug = generatedSlug.value;
 }
 
-function toggleSelection(field: 'category_ids' | 'tag_ids', id: number, checked: boolean) {
+function toggleSelection(field: 'category_ids', id: number, checked: boolean) {
     form[field] = checked
         ? [...form[field], id]
         : form[field].filter((selectedId) => selectedId !== id);
@@ -102,16 +101,18 @@ function storeAiAnalysis(result: Record<string, any>, settings: Record<string, a
     form.ai_analysis_settings_json = JSON.stringify(settings);
 }
 
-function applyGeneratedTags(tags: AdminBlogOption[]): void {
+function applyGeneratedTags(tags: string[]): void {
+    const merged = [...form.tag_names];
+
     for (const tag of tags) {
-        if (!availableTags.value.some((option) => option.id === tag.id)) {
-            availableTags.value.push(tag);
-        }
-        if (!form.tag_ids.includes(tag.id)) {
-            form.tag_ids.push(tag.id);
+        const value = tag.trim();
+        if (!value) continue;
+        if (!merged.some((item) => item.toLocaleLowerCase() === value.toLocaleLowerCase())) {
+            merged.push(value);
         }
     }
-    availableTags.value.sort((a, b) => a.name.localeCompare(b.name));
+
+    form.tag_names = merged;
 }
 
 const adminSections = [
@@ -119,7 +120,7 @@ const adminSections = [
     { id: 'blog-ai', title: 'AI Assistant', description: 'Review content, SEO, and image concepts.', errorKeys: [] },
     { id: 'blog-images', title: 'Images', description: 'Header and icon presentation.', errorKeys: ['header_image', 'icon_image'] },
     { id: 'blog-publishing', title: 'Publishing', description: 'Schedule, visibility, and comments.', errorKeys: ['status', 'published_at', 'expires_at', 'is_active'] },
-    { id: 'blog-taxonomy', title: 'Categories & Tags', description: 'Organize and connect the article.', errorKeys: ['category_ids', 'tag_ids'] },
+    { id: 'blog-taxonomy', title: 'Categories & Keywords', description: 'Organize and connect the article.', errorKeys: ['category_ids', 'tag_names'] },
     { id: 'blog-seo', title: 'SEO', description: 'Search title and description.', errorKeys: ['seo_title', 'seo_description'] },
 ];
 
@@ -359,16 +360,17 @@ function cancel() {
                     </FormSection>
 
                     <FormSection
-                        title="Tags"
-                        description="Select blog tags."
+                        title="Keywords"
+                        description="Search existing Blog keywords or create new ones."
                     >
-                        <OptionChecklist
-                            :options="availableTags"
-                            :selected-ids="form.tag_ids"
-                            empty-message="No blog tags are available."
-                            :disabled="form.processing"
-                            @toggle="(id, checked) => toggleSelection('tag_ids', id, checked)"
-                        />
+                        <FormField label="Keywords" for-id="blog-keywords" :error="form.errors.tag_names">
+                            <CreatableTagInput
+                                :key="`blog-keywords-${form.tag_names.join('|')}`"
+                                v-model="form.tag_names"
+                                :options="tags"
+                                :disabled="form.processing"
+                            />
+                        </FormField>
                     </FormSection>
                 </div>
 

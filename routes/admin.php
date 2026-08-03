@@ -470,6 +470,10 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->middleware('permission:manage_blog_posts')
             ->name('blog-posts.ai-assist');
 
+        Route::post('/blog-posts/ai-image-prompt', [BlogAiAssistantController::class, 'generateImagePrompt'])
+            ->middleware('permission:manage_blog_posts')
+            ->name('blog-posts.ai-image-prompt');
+
         Route::post('/blog-posts/ai-tags/resolve', [BlogAiAssistantController::class, 'resolveTags'])
             ->middleware('permission:manage_blog_posts')
             ->name('blog-posts.ai-tags.resolve');

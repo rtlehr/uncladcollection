@@ -25,7 +25,7 @@ class BlogContentAssistantService
             'input_text' => (string) ($data['title'] ?? ''),
             'input_context' => $data,
             'requested_by' => $userId,
-            'prompt_template_version' => '2',
+            'prompt_template_version' => '3',
         ]);
 
         try {
@@ -143,7 +143,7 @@ Return this exact JSON object shape:
   },
   "header_image": {
     "concept": "short concept name",
-    "prompt": "complete image content prompt",
+    "prompt": "concise 2-4 sentence scene brief for later detailed expansion",
     "alt_text": "concise accessible alt text",
     "caption": "optional public caption"
   },
@@ -151,7 +151,7 @@ Return this exact JSON object shape:
     {
       "placement": "after the paragraph or section identified by its topic",
       "purpose": "why the image helps",
-      "prompt": "complete image content prompt",
+      "prompt": "concise 2-4 sentence scene brief for later detailed expansion",
       "alt_text": "accessible alt text",
       "caption": "optional caption"
     }
@@ -170,22 +170,24 @@ PROMPT;
     private function imagePromptRules(array $data): string
     {
         $lines = [
-            'Header and inline image prompts must be complete, highly usable prompts for image generation rather than short concept notes.',
-            $this->descriptionDepthRule((string) $data['description_depth']),
-            $this->characterDetailRule((string) $data['character_detail_level'], (string) $data['content_context'], (string) $data['body_detail_level']),
-            $this->environmentDetailRule((string) $data['environment_detail_level']),
-            'Make the prompts concrete and visual. Include actions, surroundings, objects, background elements, and mood instead of vague summaries.',
+            'At this stage, choose the strongest visual concepts and write concise scene briefs, not the final expanded production prompts.',
+            'Each scene brief should be 2-4 sentences and identify the central adult subject, story moment, setting, emotional meaning, and the most important visible details.',
+            'Choose moments that express the article rather than merely illustrating the nearest paragraph literally.',
+            'The separate detailed prompt generator will later expand each scene brief through a dedicated scene-planning and prompt-writing process.',
+            'Do not spend the JSON response budget trying to write long image prompts here.',
         ];
 
         if ($data['describe_every_visible_person']) {
-            $lines[] = 'For the header image and any group-based inline image, account for each visible person individually. Do not just say "a family" or "a group" without describing the people who are visible.';
+            $lines[] = 'When proposing a group scene, identify who the visible people are and how each contributes to the scene.';
         }
 
         $lines[] = match ($data['content_context']) {
-            'adult_naturism' => 'This article is for adult naturism. Image prompts must explicitly describe visible adults as nude. Keep the tone respectful and nonsexual. Detailed adult anatomy may be used when requested, including neutral details such as body type, body hair, pubic hair, breasts or chest, and for adult men when appropriate, naturally hanging flaccid penis and testicles. Never add sexual activity, arousal, or fetish framing.',
-            'family_naturism' => 'This article is for family naturism. Image prompts must explicitly describe adult family members as nude and make the wholesome naturist setting clear. If younger family members are present, include them only in ordinary family activities, never describe their anatomy, and keep private areas naturally obscured by distance, water, towels, furniture, foreground objects, or positioning. Never add sexual framing.',
-            default => 'Do not introduce nudity unless the article itself clearly requires it. If people are clothed, describe what they are wearing when that helps the image model.'
+            'adult_naturism' => 'Use adult-only visual concepts. Every depicted person must be age 21 or older. If the article mentions childhood, teenagers, parenting, or children, choose an adult-life moment or an adult protagonist reflecting on the journey. Never propose a visual depicting minors or childhood nudity.',
+            'family_naturism' => 'Use wholesome family-naturism concepts. Adult nudity may be explicit and nonsexual. Minors may only appear in ordinary family context, with no anatomy described and private areas naturally obscured.',
+            default => 'Do not introduce nudity unless the article requires it. Note meaningful clothing details when relevant.',
         };
+
+        $lines[] = 'Never add sexual activity, arousal, erotic posing, fetish framing, voyeurism, or unsupported provocative details.';
 
         return collect($lines)->map(fn (string $line) => '- '.$line)->implode("\n");
     }

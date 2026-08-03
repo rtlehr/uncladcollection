@@ -8,8 +8,8 @@ use App\Models\Category;
 use App\Models\Asset;
 use App\Models\Tag;
 use App\Services\AdminActivityService;
-use App\Services\Ai\Support\AiKeywordExclusionFilter;
 use App\Services\BlogImageService;
+use App\Services\BlogTagService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +23,7 @@ class AdminBlogPostController extends Controller
     public function __construct(
         protected AdminActivityService $adminActivityService,
         protected BlogImageService $blogImageService,
-        protected AiKeywordExclusionFilter $keywordExclusionFilter,
+        protected BlogTagService $blogTagService
     ) {
     }
 
@@ -114,8 +114,8 @@ class AdminBlogPostController extends Controller
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
 
-            'tag_ids' => ['array'],
-            'tag_ids.*' => ['integer', 'exists:tags,id'],
+            'tag_names' => ['nullable', 'array', 'max:50'],
+            'tag_names.*' => ['required', 'string', 'max:100'],
         ]);
 
         $headerImagePath = $request->hasFile('header_image')
@@ -186,7 +186,7 @@ class AdminBlogPostController extends Controller
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
-        $blogPost->tags()->sync($validated['tag_ids'] ?? []);
+        $this->blogTagService->syncNames($blogPost, $validated['tag_names'] ?? []);
 
         $this->adminActivityService->created(
             subject: $blogPost,
@@ -221,20 +221,11 @@ class AdminBlogPostController extends Controller
     {
         $blogPost->load(['categories:id,name', 'tags:id,name']);
 
-        $blogPostData = $blogPost->toArray();
-        if (is_array($blogPostData['ai_analysis'] ?? null)) {
-            $blogPostData['ai_analysis']['generated_tags'] = $this->keywordExclusionFilter->filter(
-                is_array($blogPostData['ai_analysis']['generated_tags'] ?? null)
-                    ? $blogPostData['ai_analysis']['generated_tags']
-                    : [],
-            );
-        }
-
         return Inertia::render('Admin/BlogPosts/Edit', [
             'blogPost' => [
-                ...$blogPostData,
+                ...$blogPost->toArray(),
                 'category_ids' => $blogPost->categories->pluck('id')->values(),
-                'tag_ids' => $blogPost->tags->pluck('id')->values(),
+                'tag_names' => $blogPost->tags->pluck('name')->values(),
             ],
 
             'categories' => Category::query()
@@ -289,8 +280,8 @@ class AdminBlogPostController extends Controller
             'category_ids' => ['array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
 
-            'tag_ids' => ['array'],
-            'tag_ids.*' => ['integer', 'exists:tags,id'],
+            'tag_names' => ['nullable', 'array', 'max:50'],
+            'tag_names.*' => ['required', 'string', 'max:100'],
         ]);
 
         $oldValues = $blogPost->getAttributes();
@@ -386,7 +377,7 @@ class AdminBlogPostController extends Controller
         ]);
 
         $blogPost->categories()->sync($validated['category_ids'] ?? []);
-        $blogPost->tags()->sync($validated['tag_ids'] ?? []);
+        $this->blogTagService->syncNames($blogPost, $validated['tag_names'] ?? []);
 
         $newCategoryIds = $blogPost->categories()->pluck('categories.id')->values()->all();
         $newTagIds = $blogPost->tags()->pluck('tags.id')->values()->all();

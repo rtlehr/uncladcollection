@@ -59,15 +59,23 @@ test('email is not verified with invalid user id', function () {
 
     Event::fake();
 
+    $invalidUserId = User::query()->max('id') + 1000;
+
     $verificationUrl = URL::temporarySignedRoute(
         'verification.verify',
         now()->addMinutes(60),
-        ['id' => 123, 'hash' => sha1($user->email)],
+        [
+            'id' => $invalidUserId,
+            'hash' => sha1($user->email),
+        ],
     );
 
-    $this->actingAs($user)->get($verificationUrl);
+    $this->actingAs($user)
+        ->get($verificationUrl)
+        ->assertForbidden();
 
     Event::assertNotDispatched(Verified::class);
+
     expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
 });
 
