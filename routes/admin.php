@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\AdminBlogPostController;
+use App\Http\Controllers\Admin\BlogAiAssistantController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AreaDashboardController;
 use App\Http\Controllers\Admin\AnalyticsDashboardController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetAiSuggestionController;
 use App\Http\Controllers\Admin\AiKeywordExclusionController;
+use App\Http\Controllers\Admin\AiPromptExampleController;
+use App\Http\Controllers\Admin\AiImagePromptController;
 use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
@@ -333,6 +336,15 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
 
+        Route::get('/ai-content/image-prompts', [AiImagePromptController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.index');
+        Route::post('/ai-content/image-prompts', [AiImagePromptController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.store');
+        Route::get('/ai-content/history', [AiImagePromptController::class, 'history'])->middleware('permission:manage_ai_content')->name('ai-content.history');
+        Route::get('/ai-content/prompt-library', [AiPromptExampleController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.index');
+        Route::post('/ai-content/prompt-library', [AiPromptExampleController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.store');
+        Route::put('/ai-content/prompt-library/{aiPromptExample}', [AiPromptExampleController::class, 'update'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.update');
+        Route::delete('/ai-content/prompt-library/{aiPromptExample}', [AiPromptExampleController::class, 'destroy'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.destroy');
+        Route::post('/ai-content/prompt-library/import', [AiPromptExampleController::class, 'import'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.import');
+
         Route::get('/ai-keyword-exclusions', [AiKeywordExclusionController::class, 'index'])
             ->middleware('permission:manage_images')
             ->name('ai-keyword-exclusions.index');
@@ -453,6 +465,14 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
             ->parameters(['public-pages' => 'publicPage'])
             ->except(['show'])
             ->middleware('permission:manage_public_pages');
+
+        Route::post('/blog-posts/ai-assist', [BlogAiAssistantController::class, 'analyze'])
+            ->middleware('permission:manage_blog_posts')
+            ->name('blog-posts.ai-assist');
+
+        Route::post('/blog-posts/ai-tags/resolve', [BlogAiAssistantController::class, 'resolveTags'])
+            ->middleware('permission:manage_blog_posts')
+            ->name('blog-posts.ai-tags.resolve');
 
         Route::get('/blog-posts/image-library', [AdminBlogPostController::class, 'imageLibrary'])
             ->middleware('permission:manage_blog_posts')

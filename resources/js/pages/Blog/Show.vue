@@ -42,6 +42,12 @@ import { readingTime as calculateReadingTime } from '@/lib/readingTime';
 
 const props = defineProps<{
     blogPost: BlogPost;
+    publicKeywords: Array<{
+        id: number | null;
+        name: string;
+        slug: string | null;
+        is_assigned: boolean;
+    }>;
     relatedPosts: BlogPost[];
     authorPosts: BlogPost[];
     previousPost: BlogNavigationPost | null;
@@ -576,22 +582,37 @@ watch(
                         <PublicAuthorCard :author="blogPost.author" />
 
                         <div
-                            v-if="blogPost.tags.length"
+                            v-if="publicKeywords.length"
                             class="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900"
                         >
-                            <h2 class="font-semibold">
-                                Topics
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-accent)]">
+                                Article keywords
+                            </p>
+
+                            <h2 class="mt-2 font-semibold">
+                                Topics in this article
                             </h2>
 
                             <div class="mt-4 flex flex-wrap gap-2">
-                                <Link
-                                    v-for="tag in blogPost.tags"
-                                    :key="tag.id"
-                                    :href="`/blog?tag_id=${tag.id}`"
-                                    class="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
+                                <template
+                                    v-for="keyword in publicKeywords"
+                                    :key="`${keyword.id ?? 'generated'}-${keyword.name}`"
                                 >
-                                    #{{ tag.name }}
-                                </Link>
+                                    <Link
+                                        v-if="keyword.id"
+                                        :href="`/blog?tag_id=${keyword.id}`"
+                                        class="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium transition hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] dark:border-stone-700"
+                                    >
+                                        #{{ keyword.name }}
+                                    </Link>
+
+                                    <span
+                                        v-else
+                                        class="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:text-stone-300"
+                                    >
+                                        #{{ keyword.name }}
+                                    </span>
+                                </template>
                             </div>
                         </div>
                     </aside>

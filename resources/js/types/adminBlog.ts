@@ -79,6 +79,9 @@ export interface AdminBlogPostDetail {
 
     seo_title: string | null;
     seo_description: string | null;
+    ai_analysis?: Record<string, any> | null;
+    ai_analysis_settings?: Record<string, any> | null;
+    ai_analyzed_at?: string | null;
 
     is_featured: boolean;
     is_active: boolean;

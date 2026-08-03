@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
                 'support_success' => fn () => $request->session()->get('support_success'),
+                'generated_prompt' => fn () => $request->session()->get('generated_prompt'),
             ],
 
             'site' => fn () => $this->sitePayload(),

@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 
 import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
+import BlogAiAssistantPanel from '@/components/admin/BlogAiAssistantPanel.vue';
 import BlogEditedImageField from '@/components/admin/BlogEditedImageField.vue';
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import {
@@ -25,11 +26,13 @@ import type {
     AdminBlogPostDetail,
 } from '@/types/adminBlog';
 
-defineProps<{
+const props = defineProps<{
     categories: AdminBlogOption[];
     tags: AdminBlogOption[];
     statuses: string[];
 }>();
+
+const availableTags = ref<AdminBlogOption[]>([...props.tags]);
 
 const form = useForm({
     title: '',
@@ -54,6 +57,8 @@ const form = useForm({
     comments_require_approval: false,
     category_ids: [] as number[],
     tag_ids: [] as number[],
+    ai_analysis_json: null as string | null,
+    ai_analysis_settings_json: null as string | null,
 });
 
 const generatedSlug = computed(() =>
@@ -90,8 +95,27 @@ function applyIconImage(payload: {
     form.icon_image_edit_data = JSON.stringify(payload.edit);
 }
 
+
+function storeAiAnalysis(result: Record<string, any>, settings: Record<string, any>): void {
+    form.ai_analysis_json = JSON.stringify(result);
+    form.ai_analysis_settings_json = JSON.stringify(settings);
+}
+
+function applyGeneratedTags(tags: AdminBlogOption[]): void {
+    for (const tag of tags) {
+        if (!availableTags.value.some((option) => option.id === tag.id)) {
+            availableTags.value.push(tag);
+        }
+        if (!form.tag_ids.includes(tag.id)) {
+            form.tag_ids.push(tag.id);
+        }
+    }
+    availableTags.value.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 const adminSections = [
     { id: 'blog-content', title: 'Content', description: 'Title, excerpt, and article body.', errorKeys: ['title', 'slug', 'excerpt', 'content'] },
+    { id: 'blog-ai', title: 'AI Assistant', description: 'Review content, SEO, and image concepts.', errorKeys: [] },
     { id: 'blog-images', title: 'Images', description: 'Header and icon presentation.', errorKeys: ['header_image', 'icon_image'] },
     { id: 'blog-publishing', title: 'Publishing', description: 'Schedule, visibility, and comments.', errorKeys: ['status', 'published_at', 'expires_at', 'is_active'] },
     { id: 'blog-taxonomy', title: 'Categories & Tags', description: 'Organize and connect the article.', errorKeys: ['category_ids', 'tag_ids'] },
@@ -157,6 +181,29 @@ function cancel() {
                             <RichTextEditor v-model="form.content" />
                         </FormField>
                     </div>
+                </FormSection>
+
+                <FormSection
+                    v-show="activeSection === 'blog-ai'"
+                    id="blog-ai"
+                    class="scroll-mt-24"
+                    title="Blog AI Assistant"
+                    description="Review the current draft and generate practical publishing recommendations."
+                >
+                    <BlogAiAssistantPanel
+                        :title="form.title"
+                        :excerpt="form.excerpt"
+                        :content="form.content"
+                        :blog-post-id="null"
+                        :initial-result="null"
+                        :initial-settings="null"
+                        :initial-analyzed-at="null"
+                        @apply-excerpt="form.excerpt = $event"
+                        @apply-seo-title="form.seo_title = $event"
+                        @apply-seo-description="form.seo_description = $event"
+                        @analysis-updated="storeAiAnalysis"
+                        @apply-tags="applyGeneratedTags"
+                    />
                 </FormSection>
 
                 <FormSection
@@ -314,7 +361,7 @@ function cancel() {
                         description="Select blog tags."
                     >
                         <OptionChecklist
-                            :options="tags"
+                            :options="availableTags"
                             :selected-ids="form.tag_ids"
                             empty-message="No blog tags are available."
                             :disabled="form.processing"

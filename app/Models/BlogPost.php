@@ -34,6 +34,9 @@ class BlogPost extends Model
         'published_at',
         'seo_title',
         'seo_description',
+        'ai_analysis',
+        'ai_analysis_settings',
+        'ai_analyzed_at',
         'is_featured',
         'is_active',
         'views_count',
@@ -53,6 +56,9 @@ class BlogPost extends Model
         'comments_visible' => 'boolean',
         'comments_require_approval' => 'boolean',
         'image_edit_data' => 'array',
+        'ai_analysis' => 'array',
+        'ai_analysis_settings' => 'array',
+        'ai_analyzed_at' => 'datetime',
     ];
 
     protected $appends = [

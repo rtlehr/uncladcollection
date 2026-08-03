@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             TagSeeder::class,
             AiKeywordExclusionSeeder::class,
+            AiContentStudioSeeder::class,
             CollectionSeeder::class,
             LicenseTypeSeeder::class,
             AssetConfigurationTemplateSeeder::class,

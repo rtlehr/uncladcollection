@@ -259,8 +259,33 @@ class BlogController extends Controller
                 ->withQueryString();
         }
 
+        $publicKeywords = $blogPost->tags
+            ->map(fn (Tag $tag) => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+                'is_assigned' => true,
+            ])
+            ->values();
+
+        if ($publicKeywords->isEmpty()) {
+            $generatedTags = data_get($blogPost->ai_analysis, 'generated_tags', []);
+
+            $publicKeywords = collect(is_array($generatedTags) ? $generatedTags : [])
+                ->filter(fn (mixed $tag): bool => is_string($tag) && trim($tag) !== '')
+                ->map(fn (string $tag) => [
+                    'id' => null,
+                    'name' => trim($tag),
+                    'slug' => null,
+                    'is_assigned' => false,
+                ])
+                ->unique(fn (array $tag) => mb_strtolower($tag['name']))
+                ->values();
+        }
+
         return Inertia::render('Blog/Show', [
             'blogPost' => $blogPost,
+            'publicKeywords' => $publicKeywords,
             'relatedPosts' => $relatedPosts,
             'authorPosts' => $authorPosts,
             'previousPost' => $previousPost,

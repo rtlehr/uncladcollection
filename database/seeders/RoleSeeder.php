@@ -67,6 +67,7 @@ class RoleSeeder extends Seeder
                         'manage_categories',
                         'manage_tags',
                         'manage_blog_posts',
+                        'manage_ai_content',
                         'manage_public_pages',
                         'publish_public_pages',
                     ])->pluck('id')->toArray()

@@ -1,0 +1,1671 @@
+{
+  "version": 2,
+  "name": "Unclad Collection Prompt Library",
+  "prompts": [
+    {
+      "title": "Living Room",
+      "content": "An average suburban living room interior. A young woman sits relaxed on a plush modern couch, completely nude in an innocent natural pose with legs crossed demurely, engrossed in reading an open hardcover novel, peaceful focused expression. In the background an older man and older woman stand casually dressed in vibrant everyday clothing engaged in friendly conversation near a window. Room features modern furniture, coffee table, decorative elements, warm interior setting",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 0
+    },
+    {
+      "title": "Volleyball",
+      "content": "Eight diverse nude adults of mixed ages and genders competing in an intense beach volleyball match at a tropical nudist resort, casual non-sexual athletic context, dynamic action poses\u2014players diving, jumping, spiking, setting, receiving\u2014ranging from athletic twenty-somethings to fit sixty-somethings, various body types, energetic recreational atmosphere, beach volleyball net, sandy court, ocean and sky backdrop, liberated summer fun vibe",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "resort"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1
+    },
+    {
+      "title": "Poolside",
+      "content": "A man and a woman relaxing together at the edge of a sparkling resort pool, both completely nude in a casual comfortable non-sexual context, seated on poolside lounge chairs or sitting with feet dipped in the water, enjoying a sunny day. In the background, additional naked resort guests of various ages and body types walk along the pool deck, swim in the water, or lounge nearby\u2014creating a lively clothing-optional resort atmosphere. Pool area features turquoise water, tiled deck, tropical landscaping, umbrellas, resort amenities, vacation vibe, social naturist environment, body-positive energy, summer leisure",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "resort",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 2
+    },
+    {
+      "title": "Group Pose",
+      "content": "The young woman stands center frame completely nude in a confident natural pose, warmly linking arms with the older man and older woman on either side of her. All three figures stand close together in a friendly group formation, smiling genuinely at the camera or laughing among themselves, radiating warmth, connection, and familial comfort. The older man wears casual vibrant clothing, the older woman in colorful everyday attire, both fully dressed, flanking the nude young woman protectively and affectionately. Casual indoor or outdoor setting, wholesome atmosphere of acceptance and body positivity, multi-generational bonding, genuine joy on all faces",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 3
+    },
+    {
+      "title": "Garden Morning",
+      "content": "A sunny backyard garden patio with blooming flower beds and a wooden deck. The young woman sits completely nude on a weathered wooden bench at a small round patio table, casually sipping from a ceramic coffee mug, one leg tucked beneath her, relaxed and content. The older man stands beside her holding a watering can, mid-motion as if tending to nearby potted plants, looking down at her with an amused smile. The older woman approaches from the garden path carrying a basket of fresh cut flowers, laughing warmly at something just said. Morning sunlight filters through tree leaves creating dappled shadows. Garden tools, bird feeder, steam rising from coffee cup. Casual domestic comfortable atmosphere\u2014three friends enjoying a lazy weekend morning together outdoors",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden",
+        "friends",
+        "outdoors"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 4
+    },
+    {
+      "title": "Outdoor Nude Yoga Class",
+      "content": "A serene outdoor yoga session taking place on a lush green lawn surrounded by nature. A diverse group of adult men and women of various ages\u2014from fit twenty-somethings to limber sixty-somethings\u2014practice yoga together completely nude in a non-sexual wellness context. The participants are spread across yoga mats in various poses\u2014some in downward dog, others in warrior stance, some seated in meditation\u2014displaying different body types and fitness levels. At the front of the group stands a confident female instructor, also nude, demonstrating a pose with perfect form and calm focused expression. The setting is peaceful and private\u2014a secluded garden lawn with soft morning sunlight filtering through nearby trees, dew still on the grass, birds visible in the background. The atmosphere radiates mindfulness, body acceptance, and connection with nature. Gentle shadows stretch across the lawn, yoga mats in earth tones, optional props like blocks or straps nearby. Wholesome wellness retreat vibe, spiritual tranquility, physical health, non-sexual nudity presented as natural and freeing, multi-generational community, respectful focused energy, outdoor fitness, harmony with nature",
+      "category": "Home & Garden",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden",
+        "community",
+        "wellness",
+        "group",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 7
+    },
+    {
+      "title": "Female Friends at Nude Beach",
+      "content": "A group of adult women friends enjoying a sunny day together at a nude beach, all completely nude in a casual comfortable non-sexual social context. The women vary in age and body type\u2014from young women in their twenties to mature women in their fifties\u2014laughing and chatting as they relax on beach towels or walk along the shoreline. Some sit cross-legged sharing snacks and drinks, others stand ankle-deep in the surf pointing at something in the distance, a few apply sunscreen to each other's backs. Their body language is relaxed and unselfconscious\u2014genuine friendship and comfort with one another evident in their easy smiles and animated conversations. The beach stretches wide with golden sand, gentle waves rolling in, seagulls overhead, distant cliffs or dunes providing privacy. Beach bags, coolers, and sun hats scattered nearby. The atmosphere radiates female camaraderie, body positivity, liberated vacation energy, supportive friendship, and carefree summer fun\u2014women enjoying each other's company without clothing as a natural unremarkable aspect of their beach day",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "friends",
+        "group",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 8
+    },
+    {
+      "title": "Nude Couple in Rural Setting",
+      "content": "A middle-aged couple standing together completely nude on a dirt path in front of a tall green cornfield, both figures fully naked and unashamed, posing confidently for the camera with relaxed happy smiles. The woman stands slightly in front, her arm around the man's waist, wearing only sandals and jewelry\u2014a chunky beaded necklace and bracelets\u2014her mature body with natural curves and tanned skin openly displayed with soft curves and tanned skin. The man stands beside her, also fully nude, wearing only athletic shoes with blue accents, his average build and natural body hair visible, one arm resting casually behind her. Both appear comfortable and content in their nudity, the rural farm setting providing a private natural backdrop. Overcast daylight, casual amateur photography feel, authentic nudist lifestyle moment, mature couple embracing body acceptance, simple outdoor setting with agricultural landscape, genuine expressions, total nudity with minimal accessories, earthy and unpretentious atmosphere",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 9
+    },
+    {
+      "title": "Three Mature Women Portrait",
+      "content": "Three confident mature women posing together completely nude in a cozy domestic living room setting, all three figures openly displaying their naked bodies with relaxed confidence. The central woman sits in an ornate wooden armchair, her fuller mature figure and soft curves visible, wearing glasses and a pearl necklace, smiling warmly at the camera. To her left stands a woman with short brown hair and a beaded necklace, her curvy body with rounded hips and natural proportions posed with hands gently clasped. To the right stands a blonde woman with a slimmer athletic build, one hand resting on the seated woman's chair, wearing a delicate gold bracelet. All three women are middle-aged with natural mature bodies\u2014various breast shapes, soft stomachs, and authentic feminine curves. Behind them hangs a framed painting on the wall, floral curtains frame the scene, and cream carpet covers the floor. The atmosphere is warm and friendly\u2014a celebration of mature female friendship and body acceptance, amateur portrait photography feel, indoor natural lighting, comfortable domestic environment, genuine smiles, total nudity presented as natural and unremarkable among friends",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "friends",
+        "portrait",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 10
+    },
+    {
+      "title": "Nude Beach Card Game",
+      "content": "Six young adults relaxing completely nude at a resort pool, captured in an unposed candid moment of genuine conversation and laughter. A mature woman with silver-streaked auburn hair sits at the pool's edge with her legs submerged in the water, leaning back on her hands, her soft natural curves and relaxed posture showing complete comfort. Beside her stands a man in his forties with a slight belly and hairy chest, gesturing animatedly with a drink in his hand, mid-sentence in telling a story. In the water, a younger woman with short dark hair floats on her back, her  the surface, eyes closed with a peaceful smile, completely relaxed. Next to her in the water, a man with salt-and-pepper hair and a lean swimmer's build holds onto the pool edge, listening intently to the conversation, water beading on his shoulders. None of them acknowledge the camera\u2014completely absorbed in their social moment. The pool area features turquoise water catching the sunlight, white lounge chairs with colorful towels draped over them, potted tropical plants, and a poolside bar visible in the background. Bright afternoon sun creates sharp shadows and sparkling reflections on the wet skin. Amateur candid snapshot capturing a slice of naturist life, total nudity presented as utterly unremarkable, authentic social atmosphere, genuine unguarded expressions, vacation leisure vibe, body-positive acceptance across ages and body types",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "resort",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 11
+    },
+    {
+      "title": "Mature Couple Embracing in Garden",
+      "content": "A loving mature couple standing together completely nude in a private backyard garden, both figures openly displaying their naked bodies with comfortable intimacy. The man stands slightly behind, his arm wrapped affectionately around the woman's shoulder, his fuller build with soft stomach and chest hair visible, salt-and-pepper hair, warm genuine smile directed at the camera. The woman leans into him, her arm around his waist, her mature feminine figure with natural curves and tanned skin pressed against him, dark hair, beaming happy expression. They embrace casually without self-consciousness, their bodies touching naturally. Behind them a rustic bamboo fence provides privacy, a weathered green door visible in the background, leafy tree branches casting dappled shadows across the scene, a white plastic garden chair nearby. Bright sunny day with natural outdoor lighting, amateur snapshot photography feel, authentic nudist lifestyle moment, mature couple showcasing comfortable long-term intimacy, total nudity presented as completely normal in their private garden space, warm and affectionate atmosphere, domestic outdoor setting",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden",
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 12
+    },
+    {
+      "title": "Group Posing in Front of House",
+      "content": "A group of five adults posing together completely nude in a residential backyard, all figures openly displaying their naked bodies with relaxed confidence. Four women and one man of various ages from young adult to middle-aged stand and kneel on a grassy lawn in front of a white single-story house with a covered porch. From left to right: a woman with short blonde hair wearing orange sandals, a woman with long light brown hair holding a bouquet of yellow flowers, a woman with short dark hair wearing a simple necklace, and a man with short hair standing on the right. In front, a woman kneels on the grass with long brown hair, smiling warmly at the camera. All five display natural bodies of various shapes and sizes\u2014different breast sizes, body types, and skin tones. Behind them the house features white siding, a dark wooden fence with address numbers, lush green tropical plants and bushes. Bright sunny day with dappled shadows from overhead trees, casual amateur group photo feel, friendly social gathering atmosphere, total nudity presented as completely normal and comfortable among friends, naturist lifestyle moment, vacation or residential setting, genuine smiles and relaxed body language",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "friends",
+        "group",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 13
+    },
+    {
+      "title": "Woman in Wicker Chair",
+      "content": "A young woman sitting completely nude in a woven wicker armchair on an enclosed porch or sunroom, her naked body openly displayed facing the camera. She sits with one leg crossed over the other, one arm resting on the armrest, the other hand gesturing casually, her curvy figure with smooth porcelain skin and flowing auburn hair openly displayed. She gazes directly at the camera with a calm neutral expression. Behind her a large window lets in bright natural daylight, illuminating her skin. To the side a small wooden table holds various items\u2014framed photos, a dark cup, papers. A wicker chair with a floral cushion sits nearby. Natural indoor lighting from a nearby window, candid domestic moment, total nudity presented as comfortable and unremarkable in this personal space, relaxed posed composition",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 14
+    },
+    {
+      "title": "Wet Woman on Beach",
+      "content": "A young woman standing completely nude on a sandy beach, her wet body emerging from the turquoise water, fresh from swimming in the ocean. She poses gracefully with both arms raised, hands clasped behind her head, lifting her long dark wet hair away from her face. Her slim athletic figure with defined waist and tanned golden-brown skin is fully displayed, water beading on her shoulders and running down her curves. Her head tilts slightly downward, eyes looking down in a contemplative serene expression. Behind her the turquoise ocean stretches to the horizon with gentle waves breaking, white foam visible, deep blue clear sky above. Bright midday sunlight creates highlights on her wet skin, professional photography composition with shallow depth of field blurring the background waves. The scene captures a moment of natural beauty and tranquility\u2014total nudity presented as elegant and unselfconscious, the water glistening on her body emphasizing the fresh ocean setting, artistic beach portrait aesthetic",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "portrait",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 15
+    },
+    {
+      "title": "Woman at Convenience Store",
+      "content": "A nude woman with dark curly hair standing completely naked at the checkout counter of a convenience store or gas station mini-mart, her bare back and  visible as she faces the cashier, holding a small brown wallet in her hands as if preparing to pay. She stands barefoot on the tiled floor in a relaxed natural stance, her slim figure with feminine curves openly displayed without any clothing. Behind the counter a female cashier with blonde hair wearing a white polo shirt smiles warmly, completely unfazed by the nudity, continuing her work at the register. The store interior features typical convenience store shelving stocked with candy, snacks, magazines, and newspapers displayed on the counter. Large plastic bottles with red caps line the floor beneath the counter. Through the glass storefront windows, green trees and parked cars are visible outside. Bright fluorescent interior lighting, casual everyday commercial setting, total nudity presented as completely unremarkable and accepted, the contrast between naked customer and clothed employee creating an atmosphere of normalized casual public nudity, amateur snapshot photography feel",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 16
+    },
+    {
+      "title": "Nude Volleyball Game",
+      "content": "A group of six adults playing an energetic game of volleyball on a sand court, all players completely nude and unselfconsciously engaged in the sport. In the foreground, a man and woman both jump with arms raised attempting to block the ball at the net, their naked backs and bodies fully visible as they reach upward. On the other side of the blue branded volleyball net, another man leaps to spike the ball, his body extended in athletic motion. Additional players position themselves on the sand court\u2014one woman crouched ready to receive, another standing alert, a man in the background prepared to move. The players display various body types and ages, all openly nude with natural proportions, body hair, and skin tones. The sandy court is surrounded by lush green grass and leafy trees, with purple Adirondack chairs and distant figures visible in the background. Bright daylight, amateur sports photography capturing dynamic action, total nudity presented as completely normal for this recreational activity, athletic energy and friendly competition, naturist resort or nude beach volleyball atmosphere",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "resort",
+        "sports",
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 17
+    },
+    {
+      "title": "Woman Pouring Coffee in Kitchen",
+      "content": "A mature woman in her forties standing completely nude in a home kitchen, her full natural figure with soft curves and mature body openly displayed as she pours coffee from a stainless steel carafe into a decorative mug. She stands at a tiled kitchen counter, one hand holding the carafe above the mug as dark coffee streams down, her other hand steadying the cup, her gaze focused downward on the task. She has shoulder-length wavy brown hair and fair skin with natural texture. The kitchen features light wooden cabinets with brass knobs, a white tile countertop, a coffee canister and various kitchen items visible. A wicker chair with a floral cushion sits nearby. Natural indoor lighting from a nearby window, candid domestic moment, total nudity presented as completely normal and unremarkable during this everyday morning routine, amateur snapshot photography feel, comfortable home environment, authentic naturist lifestyle moment",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "home",
+        "kitchen",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 18
+    },
+    {
+      "title": "Couple Riding Bicycles Nude",
+      "content": "A young couple riding bicycles together completely nude along a dirt path through open countryside, both figures fully naked and unselfconscious as they pedal through the rural landscape. The woman rides in the foreground on a black bicycle, her slim athletic body with long flowing brown hair streaming behind her in the wind, her profile visible as she gazes forward with a serene expression, a blue and white patterned cloth draped over her bike seat beneath her. Behind her a man follows on a similar bicycle, his toned build and short dark hair visible, both hands on the handlebars as he rides. Their naked bodies are fully exposed\u2014skin catching the sunlight, muscles working as they pedal. The flat terrain stretches to the horizon with golden-brown grasslands and distant low hills under a pale blue sky. Motion blur on the background conveys their forward movement, dynamic action photography, sense of freedom and liberation, total nudity presented as natural and exhilarating for this outdoor activity, naturist recreation aesthetic, athletic casual energy, wide open spaces emphasizing the sense of liberation",
+      "category": "Fitness & Sports",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 19
+    },
+    {
+      "title": "Three Women at Pool Edge",
+      "content": "Three young women posing together completely nude at the edge of a resort swimming pool, all three figures openly displaying their naked wet bodies with relaxed smiles. They sit close together with their legs dipped in the turquoise water, arms around each other in friendly intimacy. The woman on the left has long blonde hair and tanned skin, her hand resting on her knee. The woman in the center has short light brown hair, her sun-kissed skin glistening with water droplets, sitting slightly forward. The woman on the right has dark wet hair pulled back, wearing a pearl necklace and a silver watch, her hand placed on her thigh. All three display natural young feminine bodies with tanned skin tones, wet from swimming, their bare skin glistening in the sunlight. Behind them a stone wall covered in green vines and purple flowers, blue lounge chairs, pool floats, and other resort guests visible in the background. Bright tropical daylight, amateur vacation photo feel, cheerful friendly atmosphere, total nudity presented as completely normal and comfortable at this clothing-optional resort pool, summer holiday vibe, wet skin, casual social gathering",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "resort",
+        "holiday",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 20
+    },
+    {
+      "title": "Woman on Cruise Ship Deck",
+      "content": "A blonde woman sitting completely nude cross-legged on a blue and white striped lounge chair on the deck of a cruise ship or ferry, her naked body openly displayed and tanned golden-brown from the sun. She sits in a relaxed lotus position facing the camera, hands resting on the lounge chair behind her for support, wearing dark sunglasses and a delicate silver necklace with a small pendant, a silver watch on her left wrist. Her hair is pulled back, and she smiles confidently at the camera. Behind her the ship's white railings line the deck, with the deep blue ocean stretching to the horizon under a bright sky with scattered clouds. Other clothed passengers lounge in the background on similar striped chairs, some towels and clothing draped nearby. Bright sunny day with clear visibility, amateur vacation snapshot feel, casual cruise atmosphere, total nudity presented as comfortable and accepted on this clothing-optional deck, maritime travel setting, relaxed holiday vibe, open ocean backdrop",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "holiday",
+        "travel"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 21
+    },
+    {
+      "title": "Three Women on Stone Steps",
+      "content": "Three women posing together completely nude on weathered stone steps outdoors, all three figures openly displaying their naked bodies while wearing wide-brimmed sun hats. The woman on the left stands with one leg crossed, a large orange flower decorating her floppy hat, carrying a blue tote bag over her shoulder with visible text, wearing strappy sandals. The woman in the center stands slightly elevated on the steps, her arms around her companions, wearing an oversized wide-brimmed hat that casts shade over her face, her fuller mature figure with soft curves and tanned skin. The woman on the right holds a folded blue towel over her arm, wearing a white sun hat and sunglasses, her tall athletic build with defined waist and tanned complexion. All three display natural feminine bodies of various ages and shapes, smiling warmly at the camera. Behind them moss-covered stone walls frame the stairs, green leafy trees provide shade, and a white building with windows is visible in the background. Total nudity presented as comfortable and casual, resort or naturist park setting",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "resort",
+        "outdoors",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 22
+    },
+    {
+      "title": "Three Generations Studio Portrait",
+      "content": "Three women of different ages posing together completely nude against a plain seamless backdrop in a studio setting, all three figures openly displaying their naked bodies with confident smiles. A young woman stands in the center, her slim athletic build with smooth skin and long light hair parted in the middle, her hands clasped casually in front. To her left stands a mature woman with short styled blonde hair, her fuller figure with soft curves, her hands resting affectionately on the young woman's shoulders. To the right stands a woman with long wavy dark hair, her toned mature figure with defined waist, one hand resting at her side. All three display natural feminine bodies representing different life stages\u2014youthful firmness, mature fullness, and fit middle age\u2014standing close together in a supportive familial formation. The plain background emphasizes the subjects without distraction, professional portrait photography setup, warm genuine expressions, total nudity presented as natural and celebratory across generations, body-positive atmosphere, studio lighting creating soft shadows, three generations of women embracing their natural forms together",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "portrait",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 23
+    },
+    {
+      "title": "Woman Exiting Pool",
+      "content": "A woman climbing out of a swimming pool completely nude, her wet body emerging from the turquoise water as she grips the curved metal pool ladder rails with both hands. She stands waist-deep in the water, her curvy figure with natural body and rounded hips openly displayed, water droplets beading on her tanned skin and running down her curves. Her dark hair is wet and slicked back from her face, which is turned in profile looking off to the side with a neutral contemplative expression. She wears a thin red bracelet on her right wrist. The bright turquoise pool water sparkles around her with ripples and reflections, a wooden deck edge visible in the foreground. Total nudity presented as natural and unremarkable at this clothing-optional pool, refreshing aquatic atmosphere, the moment of transition from water to air emphasizing the wet skin and natural form",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 24
+    },
+    {
+      "title": "Festival Couple",
+      "content": "A young couple standing together completely nude at an outdoor festival or public event in a park, both figures fully naked and unashamed, posing confidently for the camera with relaxed happy smiles. The woman stands slightly in front, her arm around the man's waist, wearing only sandals and jewelry\u2014a chunky beaded necklace and bracelets\u2014her mature body with natural curves and tanned skin openly displayed with soft curves and tanned skin. The man stands beside her, also fully nude, wearing only athletic shoes with blue accents, his average build and natural body hair visible, one arm resting casually behind her. Both appear comfortable and content in their nudity, the rural farm setting providing a private natural backdrop. Overcast daylight, casual amateur photography feel, authentic nudist lifestyle moment, mature couple embracing body acceptance, simple outdoor setting with agricultural landscape, genuine expressions, total nudity with minimal accessories, earthy and unpretentious atmosphere",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 25
+    },
+    {
+      "title": "Candid Poolside",
+      "content": "Four adults relaxing completely nude at a resort pool. A mature woman with silver-streaked auburn hair sits at the pool's edge with her legs submerged in the water, leaning back on her hands. Beside her stands a man in his forties with a slight belly and hairy chest, gesturing with a drink in his hand. In the water, a younger woman with short dark hair floats on her back, her  the surface, eyes closed. Next to her in the water, a man with salt-and-pepper hair and a lean swimmer's build holds onto the pool edge. The pool area features turquoise water, white lounge chairs with colorful towels, potted tropical plants, and a poolside bar visible in the background. Total nudity presented as utterly unremarkable, authentic social atmosphere, genuine unguarded expressions, vacation leisure vibe, body-positive acceptance across ages and body types",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "resort"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 26
+    },
+    {
+      "title": "Camping Morning",
+      "content": "Five adults completely nude at a forest campsite in the morning. A woman with long blonde hair kneels by a campfire ring arranging kindling, her back to the scene. A man with a beard and glasses sits on a folding camp chair holding a steaming mug, his legs stretched out toward the fire. Another woman with short curly dark hair stands at a picnic table preparing food on a camp stove, slicing bread. A younger man with a muscular build carries a stack of firewood from the tree line, walking toward the group. An older woman with gray hair sits cross-legged on a large rock near the fire, warming her hands. Three tents visible in the background among pine trees, camping gear and coolers scattered around the site. Total nudity presented as normal camping attire, various body types and ages, outdoor recreational setting",
+      "category": "Camping & Outdoors",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "camping",
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 27
+    },
+    {
+      "title": "Beach Discovery",
+      "content": "Three women walking together completely nude along a rocky shoreline at the water's edge. The woman on the left has dark curly hair and a fuller figure with soft curves, wearing a delicate necklace, looking down at the water with a gentle smile. The woman in the center has light brown hair pulled back, a slimmer athletic build, her gaze directed downward at the same spot. The woman on the right has dark hair styled in a bun with a blue accessory, her arm extended pointing at something in the shallow water, a small object held in her other hand. All three wade through gentle waves lapping at the pebble beach, water splashing around their ankles and lower legs. Behind them other beachgoers visible further down the shoreline, rocky hills rising in the background. Total nudity, natural feminine bodies of various shapes and sizes, casual beach exploration, friends sharing a moment of discovery",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "friends",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 28
+    },
+    {
+      "title": "Lakeside Selfie",
+      "content": "A middle-aged couple taking a selfie together outdoors at a scenic lakeside location during sunset. The woman stands on the left with shoulder-length blonde hair, wearing glasses with purple-tinted lenses and a rust-colored shirt with white stripes and autumn pumpkin graphics. The man stands on the right with short gray hair, wearing black-framed glasses and a blue t-shirt with a small white logo on the chest. Both smile warmly at the camera, their faces close together in a casual intimate pose. Behind them a calm lake stretches toward rolling hills and mountains in the distance, the shoreline dotted with bare trees and one evergreen. The sky displays soft sunset colors with scattered clouds catching golden light. Green grass and a gravel path visible in the immediate foreground",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "outdoors",
+        "couple"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 29
+    },
+    {
+      "title": "Evening Campfire Gathering",
+      "content": "Seven adults completely nude gathered around a crackling campfire at a nudist resort on a pleasant evening. A middle-aged woman with silver-blonde hair sits on a log bench cross-legged, roasting a marshmallow on a stick, her soft mature figure relaxed and content. Beside her a man in his fifties with a beard strums an acoustic guitar, his lean build and gray chest hair visible, eyes closed as he plays. A younger couple sits together on a blanket on the ground\u2014the woman with long dark hair leans back against her partner's chest, both gazing at the flames, her hand resting on his thigh. An older woman with short white hair and glasses sits in a folding camp chair to the side, holding a mug and laughing at something just said, her wrinkled skin and natural body showing her age comfortably. A man with a shaved head and athletic build stands near the fire pit, poking the embers with a stick, his muscular back and  to the group. Another woman with curly auburn hair sits on the ground with her knees drawn up, sketching in a notebook by firelight. The campfire illuminates their naked bodies with warm orange glow, flames dancing, sparks rising into the darkening sky. Behind them canvas tents and RVs are visible among pine trees, string lights hanging between branches, other resort guests walking in the distance. Cool evening air, crickets chirping, total nudity presented as completely natural and comfortable, genuine contentment and friendship, outdoor social gathering, body acceptance across generations",
+      "category": "Camping & Outdoors",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "resort",
+        "friends",
+        "group",
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 30
+    },
+    {
+      "title": "Mature Couple on Beach",
+      "content": "A mature couple relaxing completely nude on a sandy beach under a colorful umbrella. A woman with short blonde hair and a broad joyful smile lies reclined on an orange beach towel in the foreground, her mature body with soft curves and visible tan lines openly displayed, her head turned laughing toward the camera, a simple necklace around her neck. Behind her sits a man with dark hair, sunglasses, and a mustache, his upper body visible with a slight belly, his hand resting near her shoulder in a casual intimate gesture. Both figures are fully nude and comfortable. Above them a large beach umbrella with yellow, orange, and blue panels featuring palm tree patterns provides shade. Behind the umbrella a white fabric windscreen displays a repeating pattern of Winnie the Pooh characters in colorful outfits. Bright blue cloudless sky, golden sand, sunny day with strong shadows, amateur vacation snapshot feel, candid joyful moment, total nudity presented as natural and unremarkable at this clothing-optional beach, body-positive mature couple enjoying leisure time together",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "couple",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 34
+    },
+    {
+      "title": "Nude Presenter at Whiteboard",
+      "content": "A young woman standing completely nude to the right of a large blank white presentation board, her body positioned in an active presenting stance as if explaining information written on the board. She stands with one hand raised gesturing toward the empty white surface, her other hand at her side or holding a marker, her posture confident and engaged. She faces directly toward the camera, making eye contact with the viewer, her expression pleasant and welcoming with a warm genuine smile as if presenting specifically to the person viewing the image. The setting is a plain room with neutral walls, simple desk or chair visible in the background, overhead lighting, minimal decorations. Total nudity presented as normal for this instructional setting, professional atmosphere, educational context, engaging direct-to-camera presentation",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 35
+    },
+    {
+      "title": "Whiteboard Pose A",
+      "content": "A young woman standing completely nude to the right of a large blank white presentation board, her body positioned in an active presenting stance. She stands with one arm extended, hand open and gesturing toward the empty white surface, her other hand at her side or resting on her hip. She faces directly toward the camera, making eye contact with the viewer, her expression pleasant and welcoming with a warm genuine smile as if presenting specifically to the person viewing the image. The setting is a plain room with neutral walls, simple desk or chair visible in the background, overhead lighting, minimal decorations. Total nudity presented as normal for this instructional setting, professional atmosphere, educational context, engaging direct-to-camera presentation",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 36
+    },
+    {
+      "title": "Whiteboard Pose B",
+      "content": "A young woman standing completely nude in front of a large blank white presentation board, her body turned sideways to the audience as she writes on the surface with a marker in her right hand. She has paused mid-writing, her head turned to look directly into the camera with a pleasant friendly expression and warm smile, making eye contact with the viewer while her arm remains extended toward the board. Her left hand rests at her side or braces against the board frame. The setting is a plain room with neutral walls, simple furniture visible in the background, overhead lighting, minimal decorations. Total nudity presented as normal for this instructional setting, professional atmosphere, educational context, engaging direct-to-camera moment",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 37
+    },
+    {
+      "title": "Whiteboard Pose C",
+      "content": "A young woman standing completely nude leaning casually against the right edge of a large blank white presentation board, her body relaxed and conversational. She stands with one hip cocked, one arm crossed loosely over her stomach, the other hand raised with index finger extended as if making a point. She looks directly into the camera with a pleasant approachable expression and genuine warm smile, engaging the viewer with friendly eye contact as if explaining something specifically to them. The setting is a plain room with neutral walls, simple desk or chair visible in the background, overhead lighting, minimal decorations. Total nudity presented as normal for this instructional setting, professional yet relaxed atmosphere, educational context, welcoming direct-to-camera engagement",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 38
+    },
+    {
+      "title": "Three Friends on Beach",
+      "content": "Three young women standing together completely nude on a rocky shoreline at the water's edge. The woman on the left has dark curly hair and a fuller figure with soft curves, wearing a delicate necklace, looking down at the water with a gentle smile. The woman in the center has light brown hair pulled back, a slimmer athletic build, her gaze directed downward at the same spot. The woman on the right has dark hair styled in a bun with a blue accessory, her arm extended pointing at something in the shallow water, a small object held in her other hand. All three wade through gentle waves lapping at the pebble beach, water splashing around their ankles and lower legs. Behind them other beachgoers visible further down the shoreline, rocky hills rising in the background. Total nudity, natural feminine bodies of various shapes and sizes, casual beach exploration, friends sharing a moment of discovery",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "friends",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 40
+    },
+    {
+      "title": "Three Friends in River",
+      "content": "Three adults standing completely nude waist-deep in a calm river or lake, all viewed from behind as they face away from the camera toward the distant shore. A woman with dark hair tied back in a bun stands on the left, her slim figure with rounded  and smooth back visible above the waterline, her head turned slightly to look at the man beside her. In the center stands a man with short dark hair, his broader masculine back and  fully displayed, his arms relaxed at his sides, water reaching mid-thigh. On the right stands a woman with long flowing blonde hair cascading down her back, her curvier feminine figure with fuller  and soft back visible, her arms extended slightly to her sides with hands touching the water's surface. All three figures show natural bodies with different shapes and skin tones, their nude forms reflected in the calm greenish water around them. Behind them the riverbank stretches with tall green grass, leafy trees, and soft pale sky, the scene bathed in gentle natural daylight with a soft film photography aesthetic. Peaceful contemplative atmosphere, total nudity presented as natural and unremarkable, friends enjoying a secluded swim, muted colors, analog film grain quality, serene outdoor setting",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "friends"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 41
+    },
+    {
+      "title": "Two Friends at Beach",
+      "content": "Two women standing together completely nude on a sandy beach, both figures openly displaying their naked bodies with joyful confidence. The woman on the left has long dark hair cascading past her shoulders, wearing a wide-brimmed woven straw sun hat and turquoise flip-flop sandals, her slim athletic figure with tanned skin, natural body with dark and trimmed dark She has her right arm raised in a friendly wave, her left arm wrapped around her companion's shoulder, a broad genuine smile on her face. The woman on the right has shorter wavy blonde or light brown hair, wearing a large white floppy sun hat and gray strappy sandals, her curvier figure with fuller breasts and stomach, visible tan lines, and trimmed light brown She holds a bright yellow plastic cup in her right hand, her left arm around her friend's waist, beaming a warm smile at the camera. Behind them other nude beachgoers walk along the shoreline, bright blue sky with scattered clouds, sunny day with strong shadows on the sand, amateur vacation snapshot feel, total nudity presented as completely normal and comfortable at this crowded clothing-optional beach, friendly social atmosphere, genuine expressions of happiness and camaraderie",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 42
+    },
+    {
+      "title": "Woman Reclining on Beach",
+      "content": "A young woman lying completely nude on her side on a beach towel, her body openly displayed in a relaxed reclining pose. She rests on her left elbow, her head propped on her hand, her right arm draped across her hip with her hand resting on her upper thigh. She has long dark brown hair with blue-tinted sunglasses pushed up on top of her head, a warm genuine smile directed at the camera, her face showing joy and comfort. Her figure features natural body with dark a soft stomach, visible trimmed dark and tanned skin with subtle tan lines. She wears a simple bracelet on her right wrist and a ring on her finger. The beach towel beneath her is light gray or white, with a folded blue and turquoise striped towel and a black bag visible in the foreground. Behind her stretches a wide beach with coarse pebbly sand, the shoreline extending to the horizon under bright daylight. Amateur vacation snapshot feel, candid relaxed atmosphere, total nudity presented as completely natural and unremarkable, confident comfortable expression, sunny beach day",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 43
+    },
+    {
+      "title": "Three Friends at Resort Sign",
+      "content": "Three adults standing together completely nude outdoors at a naturist resort, posing beside a wooden signpost. A man on the left stands with his hand on his hip, his fuller build with a prominent belly and chest hair, tanned skin, short dark hair, wearing blue sandals, his adult male In the center stands a woman with long straight blonde hair falling past her shoulders, medium build with soft curves and tanned skin, wearing white strappy sandals and a simple necklace, her arm around the man's waist. On the right stands a younger woman with medium-length brown hair and a colorful flower tucked behind her ear, her slimmer athletic figure with fairer skin, wearing blue sandals, her arm resting on the wooden signpost. All three smile warmly at the camera with relaxed confident expressions. The wooden sign reads 'THE SEQUOIAS INC' with painted graphics showing trees and human figures. Behind them a rustic wooden structure with hanging potted plants and a red lantern, lush green trees and foliage surrounding the scene. The ground is covered with grass and scattered white flowers in the foreground. Vintage film photography aesthetic with slightly faded colors and soft focus, amateur snapshot feel, total nudity presented as completely normal at this naturist resort, friendly group atmosphere, welcoming smiles",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "resort",
+        "outdoors",
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 44
+    },
+    {
+      "title": "Two Friends at Resort",
+      "content": "Two women standing close together at a resort poolside or patio area in the evening. The woman on the left stands completely nude with her left hand on her hip, wearing glasses with dark frames, her athletic build with defined waist and natural body openly displayed, trimmed a confident smile directed at the camera, her right arm around her companion's shoulder. The woman on the right stands pressed against her, topless with her breasts visible, wearing a zebra-print bikini bottom with red trim, a small tattoo visible on her left hip, her arm around the nude woman's waist, smiling warmly at the camera. Both have wet or damp hair suggesting they have been swimming. Behind them a covered patio area with wooden beams, palm fronds visible against a dusky blue evening sky, outdoor lighting illuminating the scene, patio furniture in the background. Amateur vacation snapshot feel, casual intimate friendship, mixed nudity with one fully nude and one partially clothed, relaxed resort atmosphere, evening setting with artificial lighting, genuine smiles and comfortable body language",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "resort",
+        "friends",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 45
+    },
+    {
+      "title": "Women Walking in Urban Setting",
+      "content": "Three women walking together on a paved pathway in an urban public setting, two completely nude and one partially clothed. The woman on the left walks with long dark brown hair, a warm smile, carrying a bundle of purple and white clothing in her left hand and white flat shoes in her right hand, her athletic curvy figure with natural body and visible tan lines openly displayed, trimmed dark walking barefoot on the stone tiles. The woman in the center walks with short blonde hair, a neutral expression, carrying a folded blue garment over her left shoulder and black flat shoes in her right hand, her slim athletic build with defined waist, belly button piercing, and tanned skin, natural body with visible trimmed blonde Behind them a third woman with long dark hair walks topless, her breasts visible, wearing dark bottoms and carrying a black bag, looking toward the camera. In the background clothed people walk along the path, a man in a blue shirt visible from behind, blue canopy tents, trees, and urban buildings. Public daytime setting with casual pedestrian atmosphere, total nudity presented as unremarkable and accepted in this environment, confident relaxed body language, clothed and unclothed people mixing freely, amateur street photography feel",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 46
+    },
+    {
+      "title": "Four Women on Pontoon Boat",
+      "content": "Four young women sitting completely nude on a pontoon boat on a calm lake, all four figures openly displaying their naked bodies with relaxed confidence. The woman on the far left reclines with her left arm draped over the boat's side rail, her right arm resting on her stomach, her slim athletic build with light skin, natural body, and trimmed auburn hair falling past her shoulders, smiling warmly at the camera. Next to her sits a woman with her legs crossed, reddish-brown hair pulled back, medium build with soft curves and tanned skin, natural body, her hands resting on her knee, a pleasant expression. The third woman sits with long blonde hair, sunglasses on her head, her slim figure with fair skin and visible tan lines, natural body, her hands clasped in her lap, looking toward the camera with a gentle smile. The woman on the far right sits turned slightly toward her companions, dark brown hair, her curvier figure with fuller breasts and stomach, trimmed dark engaged in conversation with the blonde woman beside her. All four display natural feminine bodies of various shapes and sizes. The boat features beige cushioned seating and metal railings, the calm blue lake stretching behind them with green trees lining the distant shore under a bright blue sky with scattered clouds. Sunny day with natural lighting, amateur vacation snapshot feel, total nudity presented as completely normal for this recreational boating activity, friendly social atmosphere, genuine relaxed expressions",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 47
+    },
+    {
+      "title": "Large Group on Beach",
+      "content": "Eleven adults posing together completely nude on a dark volcanic or pebbly beach, all figures openly displaying their naked bodies with joyful confidence in a large group formation. The group includes men and women of various ages from young adults to mature seniors, displaying diverse body types, skin tones, and physiques. In the back row: a mature woman with gray hair, a tall man with gray hair and slim build, a younger man with dark hair making a peace sign, a woman with sunglasses and dark hair with her arm around the man beside her, an older man with glasses and a prominent belly with a small tattoo on his lower abdomen, a younger man with spiky hair leaning on the older man's shoulder, and a woman with reddish-blonde hair smiling broadly. In the front row: a woman with curly hair kneeling, a man with dark hair kneeling beside her with his arm around her shoulder, a woman with short dark hair and sunglasses kneeling in the center with her hand on the ground, and a man with short hair crouching on the right with his hand on his knee. All display natural bodies with various breast sizes, stomach shapes, body hair, and Behind them the dark pebbly beach stretches to the water's edge with gentle waves, green hills and trees rising in the background under a clear blue sky. Bright sunny day with strong shadows, amateur group photo feel, total nudity presented as completely normal and comfortable among this mixed-age group of friends, celebratory atmosphere, genuine smiles and relaxed body language, naturist gathering or beach event",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "friends",
+        "group",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 48
+    },
+    {
+      "title": "Christmas Portrait",
+      "content": "A young woman standing completely nude in a living room in front of a decorated Christmas tree, wearing only a red and white Santa hat with white fur trim and pom-pom on her head. She has medium-length blonde hair falling past her shoulders, a bright genuine smile directed at the camera, her slim athletic figure with perky natural body and visible tan lines openly displayed, a small silver navel piercing in her belly button, trimmed dark blonde In her right hand she holds a red Christmas ornament, in her left hand she holds a piece of white and red Christmas-themed fabric or accessory. Behind her stands a fully decorated Christmas tree with multicolored lights and ornaments, presents stacked beneath, a fireplace with stockings hung, snow visible through the window, a wreath on the door. Warm indoor lighting from the tree lights and room lighting, amateur holiday snapshot feel, festive cheerful atmosphere, total nudity presented as playful and seasonal, confident comfortable expression, Christmas celebration setting",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "holiday",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 49
+    },
+    {
+      "title": "Nude Hiking Group",
+      "content": "Five adults working together completely nude in a sunny community garden, tending to raised vegetable beds and flower plots. A woman in her sixties with gray hair tied in a bandana kneels in the soil planting seedlings, her mature figure with natural body, soft wrinkled stomach, and silver-gray dirt on her knees and hands, a warm smile as she looks up from her work. Beside her a younger man with a muscular build and sun-bronzed skin uses a hoe to turn soil in the next bed over, his back glistening with sweat, his adult male her rounded belly and fuller breasts with darkened her feminine anatomy visible with natural dark radiating contentment. A middle-aged man with glasses and a slight belly harvests cucumbers from a vine, his her slim athletic build with natural body and shaved smooth skin, her feminine anatomy visible as she walks. The garden features wooden raised beds overflowing with vegetables, a white picket fence, a tool shed in the background, bees buzzing around flowers, bright midday sun with strong shadows. Amateur documentary photography feel, total nudity presented as practical and natural for this outdoor work, genuine expressions of satisfaction and purpose, community cooperation atmosphere, earthy and wholesome setting",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden",
+        "community",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 50
+    },
+    {
+      "title": "Mother's Day Pool Portrait",
+      "content": "Three women posing together completely nude at the edge of a swimming pool, a grandmother and her two adult daughters sharing a celebratory moment. The grandmother sits in the center, slightly elevated on the pool edge, her older mature figure with fuller softer curves, natural body, prominent stomach, deep tan lines, and sun-worn skin openly displayed, her silver-streaked light brown hair styled short, a warm proud smile with laugh lines around her eyes directed at the camera, her hands resting on her ample thighs, clearly in her sixties or seventies. To her left sits her daughter with long blonde hair, a slim athletic build with natural body, fairer skin with subtle tan lines, her arm around her mother's waist, beaming a bright smile. To her right sits her other daughter with dark brown hair pulled back, a curvier figure with soft stomach and defined waist, tanned skin matching her mother, wearing a silver watch on her left wrist and a simple necklace, her hand resting on her mother's thigh, smiling warmly at the camera. All three display natural feminine bodies with visible tan lines and trimmed their naked forms pressed close together in affectionate intimacy across three generations. Behind the three women the words 'Happy Mothers Day' appear very large in a fun elegant script font, tilted at a dynamic angle across the background, the text oversized and decorative with the women's bodies partially overlapping the letters, creating a layered composition where the figures stand in front of the massive celebratory text. The pool area features turquoise water, stone walls with green vines and purple flowers, blue lounge chairs, and other resort guests visible in the background. Bright sunny day with natural lighting, amateur vacation snapshot feel, total nudity presented as natural and comfortable in this multi-generational family celebration setting, genuine smiles and loving body language, Mother's Day tribute honoring the matriarch",
+      "category": "Beach & Water",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "pool",
+        "resort",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 51
+    },
+    {
+      "title": "Woman at Doorway",
+      "content": "A Black woman standing completely nude in an outdoor doorway of a brick building, her dark skin glowing with a rich brown complexion, her full curvy figure with natural body, soft stomach, wide hips, and thick thighs openly displayed. She stands with a confident wide stance, her left hand on her hip, her right hand holding a large colorful handbag with gold chain straps and a patchwork design of orange, green, and brown sections. She has a broad genuine smile directed at the camera, her head shaved or closely cropped, wearing large turquoise teardrop earrings and a matching turquoise ring on her right hand, her fingernails painted bright pink. Behind her a dark metal security door with decorative scrollwork and a brick wall with a small window with white blinds. Amateur snapshot photography feel, urban residential setting, nighttime or evening lighting, total nudity presented as confident and unapologetic, accessorized with jewelry and handbag despite being nude, bold self-assured expression",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 52
+    },
+    {
+      "title": "Woman in Wicker Chair",
+      "content": "A young woman sitting completely nude in a woven wicker armchair with teal cushions, her body openly displayed facing the camera. She sits with one leg crossed over the other, one arm resting on the armrest, the other hand gesturing casually, her curvy figure with smooth porcelain skin and flowing auburn hair openly displayed. She gazes directly at the camera with a calm neutral expression. Behind her a large window lets in bright natural daylight, illuminating her skin. To the side a small wooden table holds various items\u2014framed photos, a dark cup, papers. A wicker chair with a floral cushion sits nearby. Natural indoor lighting from a nearby window, candid domestic moment, total nudity presented as comfortable and unremarkable in this personal space, relaxed posed composition",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 53
+    },
+    {
+      "title": "Game Night Gathering",
+      "content": "Six adults gathered completely nude around a low coffee table in a cozy living room, engaged in an intense board game. A woman in her thirties with curly red hair sits cross-legged on the floor, leaning forward to move a game piece, her medium build with freckled fair skin, natural body with pink and trimmed auburn her expression focused and competitive. Beside her a man in his forties with a beard and glasses reclines against the couch, his fuller dad-bod with hairy chest and soft stomach openly displayed, his adult male her slim athletic build with defined abs, natural body, and waxed smooth skin, her feminine anatomy visible as she sits with legs slightly parted on the chair, trimmed blonde Across from her an older man with white hair and a beard holds a dinner roll, his mature body with sagging skin and soft stomach displayed, his her curvy Mediterranean build with dark her feminine anatomy visible with dark trimmed At the far end a young man with red hair and freckles pours wine for the guests, his slim pale build with light body hair, his vegetables, bread, and wine bottles, candles flickering in the center, string lights hanging overhead, warm evening air, crickets chirping in the background garden. Amateur dinner party photography feel, total nudity presented as completely normal and elegant for this social dining occasion, genuine conversation and laughter, comfortable body language, sophisticated yet relaxed atmosphere",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 54
+    },
+    {
+      "title": "Dinner Party Gathering",
+      "content": "Seven adults seated completely nude around a long wooden dining table on a candlelit patio, enjoying an evening meal together. A woman in her forties with dark curly hair sits at the head of the table, her full figure with generous breasts and soft stomach openly displayed, a glass of red wine in her hand, laughing heartily at a story being told, her trimmed dark To her right a man with a shaved head and goatee leans forward gesturing with his fork, his lean muscular build with defined shoulders and chest on display, his adult male her slim athletic figure with natural body and visible tan lines, her feminine anatomy visible as she sits with legs slightly parted on the chair, trimmed blonde Across from her an older man with white hair and a beard holds a dinner roll, his mature body with sagging skin and soft stomach displayed, his her curvy Mediterranean build with dark her feminine anatomy visible with dark trimmed At the far end a young man with red hair and freckles pours wine for the guests, his slim pale build with light body hair, his her elegant aging figure with smaller breasts and soft skin, her feminine anatomy visible with gray-white The table overflows with dishes of roasted chicken, vegetables, bread, and wine bottles, candles flickering in the center, string lights hanging overhead, warm evening air, crickets chirping in the background garden. Amateur dinner party photography feel, total nudity presented as completely normal and elegant for this social dining occasion, genuine conversation and laughter, comfortable body language, sophisticated yet relaxed atmosphere",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 56
+    },
+    {
+      "title": "New Year's Celebration",
+      "content": "A group of six adults celebrating completely nude at a New Year's Eve party in a modern living room with floor-to-ceiling windows showing a city skyline at night. A woman in her thirties with sparkling glitter on her chest stands in the center holding a champagne flute, her athletic build with medium breasts and trimmed dark a silver party hat tilted on her head, blowing a party horn. To her left a man with a beard and glasses raises his glass for a toast, his average build with hairy chest and soft stomach visible, his adult male her slim figure with natural body and waxed smooth skin, her feminine anatomy visible as she laughs with her head thrown back. Behind the couch a mature couple embraces A young man with tattoos on his arms sits cross-legged on the floor opening a champagne bottle, his lean build with defined abs, his streamers hanging from the ceiling, a clock on the wall showing nearly midnight, city lights twinkling through the windows. Behind the group the words 'Happy NewYear!!' appear very large in a festive bold glittery font, tilted at a dynamic angle across the background, the text oversized and celebratory with the figures' bodies partially overlapping the letters, creating a layered composition where the nude partygoers stand in front of the massive text. Amateur party photography feel, total nudity presented as completely normal for this celebratory occasion, genuine expressions of joy and anticipation, confetti in the air, sparkling wine glasses, festive atmosphere",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group",
+        "couple"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 57
+    },
+    {
+      "title": "Nudist Roommate Living Room",
+      "content": "Four adults relaxing in a cozy shared living room apartment, illustrating a home nudist lifestyle with roommates of varying comfort levels. The host sits completely nude in a comfortable armchair, a man in his thirties with a relaxed confident posture, his adult male also completely nude, a woman in her twenties with long brown hair, her feminine anatomy fully visible Next to her sits another female roommate, newer to the arrangement, wearing only an oversized t-shirt that barely covers her hips, her bare legs visible as she hesitantly sips coffee, glancing at her nude roommates with a mixture of curiosity and growing comfort, her expression showing she's adjusting to the environment. A fourth roommate, partially visible in the background doorway, wears casual clothing suggesting they're heading out, respecting the space while maintaining their own boundaries. The apartment features comfortable mismatched furniture, bookshelves, houseplants, soft afternoon light through sheer curtains, a lived-in homey atmosphere. Total nudity presented as completely normal and unpressured in this shared living space, genuine expressions of relaxation and acceptance, non-sexual domestic atmosphere, body-positive home environment where roommates coexist comfortably at their own pace, judgment-free zone",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "home",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 58
+    },
+    {
+      "title": "Three Generations Portrait",
+      "content": "Three generations of women from the same family posing together completely nude in a warm domestic setting, all displaying strong family resemblance in their features while showing the natural progression of age. The grandmother stands on the left, a woman in her late sixties with silver-gray hair styled elegantly, her aging figure with natural body, soft wrinkled stomach, wide hips, and gray-white her face showing laugh lines and wisdom, warm hazel eyes matching her daughter and granddaughter, a gentle proud smile. In the center stands the mother, a woman in her early forties with shoulder-length auburn hair just beginning to show streaks of gray, her mature figure with fuller soft breasts, slight belly, and trimmed auburn the same high cheekbones and almond-shaped eyes as her mother and daughter, her arm around both women beside her, beaming with maternal pride. On the right stands the granddaughter, a young woman in her early twenties with long flowing auburn hair, her slim athletic build with natural body, flat stomach, and trimmed matching auburn the same facial structure and hazel eyes as the older women, her youthful skin glowing, her arm linked with her grandmother's. All three share the same nose shape, full lips, and warm smile, their naked bodies pressed close together in a supportive embrace across three generations of feminine lineage. The setting features a simple bedroom or living room with soft natural window light, a wooden dresser visible in the background, framed family photos on the wall. Total nudity presented as natural and celebratory across generations, genuine affection and connection, body acceptance showing beauty at every age, strong genetic resemblance evident in their faces and builds",
+      "category": "Home & Garden",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 59
+    },
+    {
+      "title": "Photography Workshop",
+      "content": "Six adults participating in a nude photography workshop in a studio space with white walls. A woman in her fifties with short silver hair stands behind a professional camera on a tripod, fully clothed in black as the instructor, directing the scene with her eye to the viewfinder. In front of her, five nude models pose in various positions for the photography students. A mature man in his sixties with a white beard and soft belly stands with his hands on his hips, his her fuller breasts with darkened her feminine anatomy with natural dark radiating maternal confidence. A young woman in her twenties kneels on a posing block, her slim athletic build with natural body and shaved smooth skin, her feminine anatomy visible, her back arched artistically as she looks over her shoulder at the camera. A middle-aged woman with curly red hair sits cross-legged, her soft stomach and freckled fair skin on display, natural body with pink trimmed auburn smiling warmly. A young man with dark skin and a lean muscular build stands with one arm raised, his Total nudity presented as artistic and professional, educational atmosphere, body acceptance across ages and body types, creative artistic setting",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 60
+    },
+    {
+      "title": "Massage Session",
+      "content": "Two women in a serene massage room, both completely nude in a therapeutic wellness context. The woman receiving the massage lies face down on a padded massage table covered with a folded white sheet beneath her, her slim athletic build with defined back muscles, rounded , and toned legs openly displayed, her long dark hair cascading over the side of the table, her face relaxed with eyes closed in peaceful contentment, visible tan lines on her back and legs. The massage therapist stands beside the table, also completely nude, a woman in her thirties with shoulder-length auburn hair, her feminine anatomy fully visible She leans over applying pressure to the receiver's lower back with both hands, her focused expression showing professional concentration, her body positioned to deliver the massage with proper form. The room features warm neutral tones, bamboo flooring, candles on a wooden shelf, essential oil diffusers releasing gentle steam, soft towels stacked neatly on a bamboo rack, peaceful artwork on the walls, a small fountain trickling in the corner. Total nudity presented as natural and unremarkable in this professional wellness setting, therapeutic atmosphere, intimate but non-sexual bodywork, genuine relaxation and care, spa environment",
+      "category": "Wellness",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "wellness",
+        "women",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 61
+    },
+    {
+      "title": "Family Gathering",
+      "content": "Three family members gathered together in a comfortable living room setting, relaxed and happy together. The young woman sits completely nude on a plush armchair, her body openly displayed with confident ease, one leg tucked beneath her, her posture relaxed and unselfconscious. The older man stands behind the chair, fully dressed in casual clothing, his hand resting affectionately on the young woman's shoulder, a warm genuine smile directed at the camera. The older woman stands beside him, also fully dressed in comfortable everyday attire, her arm linked with her partner's, beaming a proud maternal smile. The room features soft furnishings, a coffee table with tea cups, bookshelves in the background, afternoon light filtering through curtains. Total nudity presented as completely normal and accepted within this loving family unit, genuine expressions of happiness and comfort, domestic warmth, multi-generational acceptance",
+      "category": "Home & Garden",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 62
+    },
+    {
+      "title": "Family Kitchen",
+      "content": "The same three family members together in a bright kitchen setting, engaged in casual morning activity. The young woman stands completely nude at the kitchen counter preparing breakfast, her body openly displayed as she cracks eggs into a bowl, her posture relaxed and natural, humming contentedly. The older man sits at the kitchen table behind her, fully dressed in casual weekend clothing, reading a newspaper with a cup of coffee, occasionally glancing up with an amused smile. The older woman stands beside the young woman at the counter, also fully dressed in comfortable home attire, buttering toast and chatting warmly, her hand resting casually on the young woman's shoulder. Sunlight streams through the kitchen window, dishes stacked in the rack, fruit bowl on the counter, refrigerator magnets visible. Total nudity presented as completely normal morning routine within this accepting family, genuine domestic comfort, multi-generational ease with each other, casual everyday atmosphere",
+      "category": "Home & Garden",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "home",
+        "kitchen"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 63
+    },
+    {
+      "title": "Diverse Male Group",
+      "content": "Five men of different ages, races, and body types gathered together completely nude in a relaxed outdoor setting, all displaying their natural male anatomy with confidence and comfort. A young man in his early twenties with East Asian features stands on the left, his slim lean build with smooth light skin, short black hair, his his muscular athletic build with defined chest and broad shoulders, dark brown skin with natural texture, short cropped hair and a goatee, his his average build with soft stomach and chest hair, fair skin with age spots and wrinkles, his his toned athletic build with olive skin and dark body hair on his chest and legs, wavy dark hair, his his slender frame with loose skin and visible veins, medium brown skin, his warm afternoon light, amateur group photography feel, total nudity presented as completely normal and comfortable among men of all backgrounds, body-positive acceptance across ages and ethnicities, genuine camaraderie and mutual respect",
+      "category": "Naturist Lifestyle",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 64
+    },
+    {
+      "title": "Stargazing Gathering",
+      "content": "Five adults gathered completely nude on a darkened hillside at night for an amateur astronomy stargazing event, all figures openly displayed against the backdrop of the Milky Way. A woman in her forties with short curly dark hair sits on a folding camp chair, her fuller figure with soft stomach and medium breasts openly visible, her head tilted back looking through a large telescope eyepiece, her legs parted naturally, trimmed dark a red flashlight resting on her lap to preserve night vision. Beside her stands a man in his thirties with a beard, his lean build with defined chest and arms, his her slim athletic build with natural body and shaved smooth skin, her feminine anatomy visible as she gazes up at the stars with binoculars, her body relaxed and sprawled comfortably. An older man in his sixties with white hair sits cross-legged on a cushion, his softer build with sagging skin and gray chest hair, his her rounded belly and fuller breasts with darkened her feminine anatomy with natural dark looking through a smaller telescope on a tripod. The hillside features dry grass and scattered blankets, telescopes and astronomy equipment set up, the vast star-filled sky dominating the background with the Milky Way visible as a bright band, distant city lights twinkling below. Total nudity presented as natural and practical for this nighttime outdoor activity, quiet contemplative atmosphere, shared wonder of the cosmos, body acceptance under the stars",
+      "category": "Camping & Outdoors",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 65
+    },
+    {
+      "title": "Unity Line Back View",
+      "content": "Eight adults of diverse ages, races, body types, and genders standing completely nude in a line facing away from the camera, their bare backs and  openly displayed, all linked arm-in-arm in a show of unity and solidarity. On the far left stands a young Asian woman in her twenties, her slim petite build with small rounded  and smooth light skin. Next to her a middle-aged Black man with broad shoulders and a muscular back, his dark skin gleaming, his  firm and well-defined. Beside him an older Caucasian woman in her sixties with silver hair, her soft wrinkled back and sagging  showing her age proudly. In the center stands a heavyset Latino man in his forties with a wide back and large soft , his olive skin warm and welcoming. Next to him a pregnant African woman with her hand resting on her belly, her rounded dark  and strong back visible. Beside her a young Caucasian man with a lean athletic build, his pale skin and toned  showing defined muscles. Next an older South Asian woman with gray-streaked black hair, her slender back and small soft , her skin a rich brown tone. On the far right a young Middle Eastern woman with long dark curly hair, her curvy figure with full rounded  and smooth tan skin. All eight stand close together, hips touching, arms wrapped around each other's waists and shoulders, heads held high looking toward the horizon. Behind the group the words 'We are one' appear very large in a bold inclusive font, tilted at a dynamic angle across the background, the text oversized and powerful with the figures' bodies partially overlapping the letters, creating a layered composition. The setting features a simple gradient sky at golden hour, warm light illuminating their backs, a hilltop or open field suggesting freedom and possibility. Total nudity presented as equality\u2014all bodies equally bare, equally worthy, equally human\u2014diverse forms united in acceptance, body-positive solidarity across all differences",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 66
+    },
+    {
+      "title": "Unity Line Front View",
+      "content": "Eight adults of diverse ages, races, body types, and genders standing completely nude in a line, their bare bodies openly displayed, all linked arm-in-arm. On the far left stands a young Asian woman in her twenties, her slim petite build with natural body and smooth light skin, trimmed dark turned slightly toward the man next to her with a bright genuine smile, her head tilted up laughing at something he said. Next to her a middle-aged Black man with broad shoulders and a muscular chest, his dark skin, his her soft wrinkled skin, natural body, and rounded stomach, gray-white beaming a dignified smile at the camera, her hand resting affectionately on the man's arm. In the center stands a heavyset Latino man in his forties with a wide chest and soft belly, his olive skin, his her fuller breasts with darkened her feminine anatomy with natural dark looking at the laughing man with an amused smile, her other hand making a gesture of playful exasperation. Beside her a young Caucasian man with a lean athletic build, his pale skin and defined chest and abs, his her slender build with small soft breasts, her skin a rich brown tone, trimmed gray-black turned toward the young man with a peaceful serene smile, her hand patting his shoulder warmly. On the far right a young Middle Eastern woman with long dark curly hair, her curvy figure with natural body and soft stomach, trimmed dark her arm around the older woman's waist, looking back at the group with a warm welcoming smile, pulling everyone together. All eight stand close together, hips touching, some facing the camera, some turned toward each other, interacting with genuine affection and joy. Behind the group the words 'We are one' appear very large in a bold inclusive font, tilted at a dynamic angle across the background, the text oversized with the figures' bodies partially overlapping the letters. The setting features a simple gradient sky at golden hour, a hilltop or open field. Total nudity presented as equality\u2014all bodies equally bare",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 67
+    },
+    {
+      "title": "Gym Workout",
+      "content": "Six adults exercising completely nude in a gym setting with various workout equipment. A young woman in her twenties performs squats with a barbell, her slim athletic build with defined leg muscles, natural body, and shaved smooth skin, her feminine anatomy visible, sweat on her forehead, focused expression. Beside her a man in his thirties does bench press, his muscular chest and arms straining, his her fuller figure with bouncing breasts and soft stomach, trimmed auburn her legs moving steadily, hand on the heart rate monitor. An older man in his sixties stretches on a yoga mat, his softer build with gray chest hair, his his lean muscular back and arms flexing, his mirrors, exercise balls, and mats visible around the space. Total nudity presented as practical for this workout environment, various fitness levels and body types engaging in physical activity",
+      "category": "Wellness",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 68
+    },
+    {
+      "title": "Family at Nude Beach",
+      "content": "Six adult family members of varying ages enjoying a day together completely nude at a sandy beach. A grandmother in her sixties sits on a large beach towel under a striped umbrella, her silver hair tied back, her aging figure with natural body and soft wrinkled stomach, gray-white applying sunscreen to her legs while watching the others. Her son, a man in his forties, stands at the water's edge throwing a frisbee with his nephew, his average build with hairy chest and soft belly, his a young man in his twenties with a lean muscular build, his a woman in her thirties, sits cross-legged on the sand building a sandcastle with her niece, her curvy figure with medium breasts and soft stomach, trimmed auburn her hands shaping wet sand. The niece, a young woman in her twenties with a slim athletic build and natural body, shaved smooth skin, her feminine anatomy visible, decorating the sandcastle with seashells, smiling at her aunt. A family friend or partner, a middle-aged man with a beard and glasses, lies on a towel nearby reading a book, his softer build with pale skin, his coolers, sunscreen bottles, and sandals scattered around their area, the ocean waves gently rolling in the background, other beachgoers visible in the distance. Total nudity presented as completely normal for this multi-generational family outing, casual recreational activities, comfortable familial interaction",
+      "category": "Beach & Water",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "beach"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 71
+    },
+    {
+      "title": "Family at Pool",
+      "content": "Six adult family members of varying ages relaxing completely nude at a resort swimming pool. A grandmother in her sixties floats on her back in the shallow end, her silver hair spread in the water, her aging figure with natural body and soft stomach, gray-white arms extended for balance, eyes closed peacefully. Her son, a man in his forties, sits on the pool edge with his legs dangling in the water, his average build with hairy chest and soft belly, his a young woman in her twenties, stands in the water waist-deep, her slim athletic build with natural body and trimmed blonde her feminine anatomy visible, laughing and shielding her face from the splash with her hands. The grandmother's daughter, a woman in her thirties, reclines on a poolside lounge chair, her curvy figure with medium breasts and soft stomach, trimmed auburn reading a book with sunglasses on. Her partner, a middle-aged man with a beard, treads water nearby, his softer build with pale skin, his a young man in his twenties with a lean muscular build, dives from the pool edge into the water, his lounge chairs and umbrellas around the deck, towels folded on chairs, drinks on side tables. Total nudity presented as completely normal for this multi-generational family pool day, casual recreational activities, comfortable familial interaction",
+      "category": "Beach & Water",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "pool",
+        "resort"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 72
+    },
+    {
+      "title": "Halloween Witch",
+      "content": "An attractive young woman standing completely nude in a Halloween setting, wearing only a tall black pointed witch hat with orange ribbon on her head and long black opera gloves on her hands. Her slim athletic build with perky natural body and pink flat stomach with a small navel piercing, and trimmed dark She holds a carved jack-o'-lantern pumpkin in her gloved hands, the orange pumpkin featuring a toothy grin and triangular eyes illuminated from within. Behind her a dark wooden door decorated with a spider web decoration and plastic spiders, orange and black streamers hanging on either side, a cauldron prop filled with dry ice smoke on the floor beside her. Fall leaves scattered on the ground, a full moon visible through bare tree branches in the background, a black cat figurine sitting on a fence post. Her expression playful and mischievous, one gloved hand raised near her face with fingers curled in a mock-spooky gesture. Total nudity presented as part of the costume, Halloween festive atmosphere, playful seasonal celebration",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 73
+    },
+    {
+      "title": "Thanksgiving",
+      "content": "An attractive young woman standing completely nude in a Thanksgiving setting, wearing only a brown and orange feathered headdress on her head and brown leather moccasins on her feet. Her curvy build with natural body and wide hips, soft stomach, and trimmed auburn She holds a roasted turkey on a platter in her hands, the golden brown bird garnished with herbs. Behind her a wooden dining table set with pumpkins, gourds, cornucopia overflowing with vegetables, autumn leaves scattered across the tablecloth. A fireplace with a crackling fire in the background, a 'Give Thanks' banner hanging on the wall, windows showing fall foliage outside. She stands with one hand raised in a welcoming gesture, her expression warm and hospitable",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 74
+    },
+    {
+      "title": "Christmas",
+      "content": "An attractive young woman standing completely nude in a Christmas setting, wearing only a red Santa hat with white fur trim and pom-pom on her head and red velvet gloves on her hands. Her slim athletic build with natural body and toned stomach, shaved smooth skin are fully visible. She holds a wrapped present with gold ribbon in her gloved hands, the green and red paper gleaming. Behind her a decorated Christmas tree with multicolored lights and ornaments, presents stacked beneath, a fireplace with stockings hung, snow visible through the window, a wreath on the door. She stands with arms open wide in a giving gesture, her expression joyful and generous",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 75
+    },
+    {
+      "title": "New Year's",
+      "content": "An attractive young woman standing completely nude in a New Year's Eve setting, wearing only a silver glittering party hat with streamers on her head and a black masquerade mask over her eyes. Her athletic build with defined abs, medium breasts, and trimmed dark She holds a champagne flute in one hand and a noisemaker in the other, confetti scattered in her hair and on her shoulders. Behind her a clock showing midnight, a banner reading 'Happy New Year,' balloons and streamers, a city skyline with fireworks visible through large windows. She stands with one arm raised in celebration, her expression excited and festive",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 76
+    },
+    {
+      "title": "Valentine's Day",
+      "content": "An attractive young woman standing completely nude in a Valentine's Day setting, wearing only red heart-shaped sunglasses on her face and red high-heeled shoes on her feet. Her curvy build with natural body and soft stomach, trimmed blonde She holds a large bouquet of red roses and a heart-shaped box of chocolates in her hands. Behind her a bed with red silk sheets and rose petals scattered across it, heart-shaped balloons floating nearby, a fireplace with candles lit, a 'Be Mine' banner on the wall. She stands with one hand on her hip blowing a kiss, her expression flirtatious and playful",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 77
+    },
+    {
+      "title": "Easter",
+      "content": "An attractive young woman standing completely nude in an Easter setting, wearing only white bunny ears on her head and white fluffy bunny tail attached at her lower back. Her slim petite build with natural body and flat stomach, trimmed light brown She holds a wicker basket filled with decorated Easter eggs and chocolate bunnies in her hands. Behind her a garden with blooming tulips and daffodils, a white picket fence, a decorated Easter egg tree, a 'Happy Easter' sign, a live rabbit in a hutch. She stands with one hand raised in a playful wave, her expression sweet and cheerful",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 78
+    },
+    {
+      "title": "Fourth of July",
+      "content": "An attractive young woman standing completely nude in a Fourth of July setting, wearing only a red, white, and blue star-spangled top hat on her head and holding a small American flag in her hand. Her athletic build with toned muscles, medium breasts, and trimmed dark She holds a sparkler in her other hand, the sparks trailing light. Behind her a backyard barbecue with patriotic bunting, a grill with burgers cooking, a picnic table with watermelon, fireworks exploding in the night sky above, a 'Happy Independence Day' banner. She stands with one arm raised high holding the flag, her expression proud and patriotic",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 79
+    },
+    {
+      "title": "St. Patrick's Day",
+      "content": "An attractive young woman standing completely nude in a St. Patrick's Day setting, wearing only a tall green leprechaun hat with a gold buckle on her head and green knee-high socks with shamrocks on them. Her curvy build with natural body and soft stomach, trimmed red She holds a mug of green beer in one hand and a pot of gold coins in the other. Behind her an Irish pub setting with dark wood paneling, shamrock decorations, a rainbow banner, a 'Happy St. Patrick's Day' sign, a four-leaf clover on the floor. She stands with one hand raised in a toast gesture, her expression merry and celebratory",
+      "category": "Seasonal",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 80
+    },
+    {
+      "title": "Pickleball Game",
+      "content": "Four adults playing pickleball on an outdoor court, two couples competing in an action shot, all completely nude except for footwear and headwear. A woman in her thirties lunges forward to hit the ball, her athletic build with defined leg muscles, medium breasts bouncing with the motion, trimmed dark wearing white tennis shoes with ankle socks and a white visor, her paddle extended, eyes focused on the yellow ball. Her male partner, a man in his forties with a slight belly, stands near the net ready to receive, his the opposing female player, a young woman in her twenties, leaps to spike the ball overhead, her slim build with natural body and shaved smooth skin, her feminine anatomy visible, wearing pink tennis shoes with white socks and a wide-brimmed sun hat, her paddle high above her head, one arm reaching. Her male partner, a middle-aged man with gray hair and a lean build, dives to his left to return the shot, his green astroturf surface, white boundary lines, a chain-link fence in the background, trees and blue sky visible beyond. Total nudity presented as practical for this athletic activity, competitive sports action, casual recreational setting",
+      "category": "Fitness & Sports",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "sports",
+        "couple"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 81
+    },
+    {
+      "title": "Pickleball Action",
+      "content": "Four adults on an outdoor pickleball court, all completely nude except for footwear and headwear, captured in a moment of active play. A woman in her thirties in the foreground swings her paddle to hit the yellow ball mid-air, her athletic build with defined leg muscles in a wide stance, medium breasts, trimmed dark wearing white tennis shoes with ankle socks and a white visor, her body twisted with the follow-through of her forehand shot, eyes tracking the ball. Behind her to the left stands her male partner, a man in his forties with a slight belly, in a ready position with knees bent and paddle held in front of his body, his a young woman in her twenties, stands in a defensive ready stance with her paddle raised and knees flexed, her slim build with natural body and shaved smooth skin, her feminine anatomy visible, wearing pink tennis shoes with white socks and a wide-brimmed sun hat, body coiled to react, eyes fixed on the incoming ball. Beside her stands her male partner, a middle-aged man with gray hair and a lean build, also in ready position with his paddle held two-handed in front of him, his chain-link fence surrounding the court, tall light poles, trees and blue sky with scattered clouds visible beyond. Total nudity presented as practical for this athletic activity, competitive sports action, casual recreational setting",
+      "category": "Fitness & Sports",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "sports",
+        "men"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 82
+    },
+    {
+      "title": "Pickleball Court Action",
+      "content": "Four adults playing pickleball on an outdoor court, two couples competing, all completely nude except for footwear and headwear. In the foreground with his back to the camera, a man in his thirties swings his paddle to hit the yellow ball mid-air, his athletic build with defined back muscles and broad shoulders, his a woman in her twenties in a ready stance with knees bent and paddle held in front, her slim build with natural body and shaved smooth skin, her feminine anatomy visible, wearing pink tennis shoes with white socks and a visor, weight balanced on the balls of his feet, watching the ball. Across the net the opposing male player, a middle-aged man with gray hair, stands in a defensive ready stance with his paddle raised and knees flexed, his a woman in her forties with a curvy build, also in ready position with her paddle held two-handed, her medium breasts and soft stomach visible, trimmed auburn wearing blue tennis shoes and a wide-brimmed sun hat, legs apart and balanced, prepared to move. The pickleball net divides the green court with white boundary lines, a chain-link fence surrounding the court, tall light poles, trees and blue sky with scattered clouds visible beyond",
+      "category": "Fitness & Sports",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 83
+    },
+    {
+      "title": "Family Naturist Campground Activities",
+      "content": "A multigenerational naturist family enjoying a peaceful campground afternoon, with adults preparing lunch while children play a lawn game nearby. The scene focuses on family interaction, outdoor activity, and community life; minors are positioned naturally and modestly with towels, furniture, foreground objects, or distance preventing any view of private areas.",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "camping",
+        "outdoors",
+        "multigenerational"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1000
+    },
+    {
+      "title": "Family Naturist Beach Day",
+      "content": "A family spending a relaxed day at a clothing-optional beach, building sandcastles, collecting shells, sharing snacks, and walking near the shoreline. The composition emphasizes ordinary family recreation and a nonsexual naturist environment; children remain appropriately covered or positioned so private areas are not visible.",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "beach",
+        "outdoors",
+        "multigenerational"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1001
+    },
+    {
+      "title": "Naturist Household Morning",
+      "content": "A warm family household morning in which adults prepare breakfast and children work on crafts at the kitchen table. The atmosphere is calm, accepting, and entirely nonsexual, focused on everyday routines and family connection; framing and household objects ensure minors' private areas are not shown.",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "family",
+        "home",
+        "kitchen",
+        "multigenerational"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1002
+    },
+    {
+      "title": "Camping Couple with Anatomy",
+      "content": "A tall athletic man and shorter woman standing together completely nude at a wooded campsite, both figures openly displaying their naked bodies with relaxed intimacy. The man stands six feet tall with a lean muscular build, defined chest and abdominal muscles, tanned golden-brown skin with visible body hair on his chest and legs, dark wavy hair falling to his shoulders, smiling broadly at the camera. His genitalia fully visible\u2014average-sized flaccid penis hanging naturally between his thighs, testicles suspended below, realistic skin texture and coloration matching his tanned body, anatomically correct male anatomy with proper proportions and detail. The woman stands pressed against his right side, significantly shorter, her arm wrapped around his waist, her hand resting on his lower abdomen, slim athletic figure with perky breasts and flat stomach, tanned skin, light brown hair pulled back, peaceful smile with eyes closed or looking content. Both completely nude without any clothing or accessories. Behind them tall trees with dense green foliage provide shade and privacy, a rustic campsite shelter with canvas roof visible, camping chairs, a yellow ball, various camping equipment scattered around, another person partially visible in the background near the shelter. Sandy ground with patches of grass and rocks, bright sunny day with dappled shadows from the leaves, amateur vacation snapshot feel, total nudity including realistic male genitalia presented as completely natural and normal at this clothing-optional campsite, comfortable couple showcasing body acceptance and intimacy in nature",
+      "category": "Lifestyle & Community",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple",
+        "men",
+        "women"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1003
+    },
+    {
+      "title": "Community Garden Workday",
+      "content": "Five adults working together completely nude in a sunny community garden, tending to raised vegetable beds and flower plots. A woman in her sixties with gray hair tied in a bandana kneels in the soil planting seedlings, her mature figure with sagging breasts, soft wrinkled stomach, and silver-gray pubic hair fully visible, dirt on her knees and hands, a warm smile as she looks up from her work. Beside her a younger man with a muscular build and sun-bronzed skin uses a hoe to turn soil in the next bed over, his back glistening with sweat, his adult male genitalia visible\u2014flaccid penis swaying slightly with his motion, testicles hanging low in the heat, trimmed dark pubic hair, proper anatomical proportions. A pregnant woman in her thirties with long brown hair carefully waters tomato plants with a green watering can, her rounded belly and fuller breasts with darkened nipples openly displayed, her feminine anatomy visible with natural dark pubic hair, radiating contentment. A middle-aged man with glasses and a slight belly harvests cucumbers from a vine, his genitalia visible\u2014flaccid penis and testicles with graying pubic hair, tanned skin with farmer's tan lines on his arms. A young woman with short pink hair and tattoos on her arms carries a basket of fresh vegetables between the rows, her slim athletic build with small breasts and shaved smooth skin, her feminine anatomy visible as she walks. The garden features wooden raised beds overflowing with vegetables, a white picket fence, a tool shed in the background, bees buzzing around flowers, bright midday sun with strong shadows. Amateur documentary photography feel, total nudity presented as practical and natural for this outdoor work, genuine expressions of satisfaction and purpose, community cooperation atmosphere, earthy and wholesome setting",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "garden",
+        "group",
+        "men",
+        "women"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1004
+    },
+    {
+      "title": "Family Christmas Cabin Naturism",
+      "content": "A multigenerational nudist family decorating a Christmas tree together inside a warm rustic cabin, with the adult family members all completely nude in a wholesome nonsexual household naturist setting. The adults are individually described with natural realistic body detail while the younger family members participate in the scene with their private areas naturally obscured by distance, gifts, furniture, tree branches, or seated positions. Cozy wood interior, holiday ornaments, wrapped presents, winter view through the windows, affectionate family interaction.",
+      "category": "Seasonal & Holidays",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "blog_header",
+        "blog_inline",
+        "general_image"
+      ],
+      "subject_tags": [
+        "family",
+        "holiday",
+        "cabin",
+        "group"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1005
+    },
+    {
+      "title": "Naturist Family Lakeside Afternoon",
+      "content": "A family enjoying a peaceful afternoon at a naturist lakeside campground, with the adult family members all nude and clearly participating in the nonsexual nudist setting while children play nearby in ordinary family activities. The adults are described individually with realistic natural bodies, and the younger family members are included contextually with private areas naturally obscured by towels, chairs, water, or distance. Picnic table, shoreline, pine trees, summer atmosphere, wholesome body-positive family life.",
+      "category": "Family Naturism",
+      "content_context": "family_naturism",
+      "intended_uses": [
+        "blog_header",
+        "blog_inline",
+        "general_image"
+      ],
+      "subject_tags": [
+        "family",
+        "lake",
+        "camping",
+        "outdoors"
+      ],
+      "is_family_friendly": true,
+      "is_enabled": true,
+      "source_index": 1006
+    },
+    {
+      "title": "Nude Beach Card Game Anatomy Detail",
+      "content": "Six young adults relaxing completely nude at a resort pool, captured in an unposed candid moment of genuine conversation and laughter. A mature woman with silver-streaked auburn hair sits at the pool's edge with her legs submerged in the water, leaning back on her hands, her soft natural curves and relaxed posture showing complete comfort. Beside her stands a man in his forties with a slight belly and hairy chest, gesturing animatedly with a drink in his hand, mid-sentence in telling a story. In the water, a younger woman with short dark hair floats on her back, her breasts breaking the surface, eyes closed with a peaceful smile, completely relaxed. Next to her in the water, a man with salt-and-pepper hair and a lean swimmer's build holds onto the pool edge, listening intently to the conversation, water beading on his shoulders. None of them acknowledge the camera\u2014completely absorbed in their social moment. The pool area features turquoise water catching the sunlight, white lounge chairs with colorful towels draped over them, potted tropical plants, and a poolside bar visible in the background. Bright afternoon sun creates sharp shadows and sparkling reflections on the wet skin. Amateur candid snapshot capturing a slice of naturist life, total nudity presented as utterly unremarkable, authentic social atmosphere, genuine unguarded expressions, vacation leisure vibe, body-positive acceptance across ages and body types",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1007
+    },
+    {
+      "title": "Mature Couple Garden Anatomy Detail",
+      "content": "A loving mature couple standing together completely nude in a private backyard garden, both figures openly displaying their naked bodies with comfortable intimacy. The man stands slightly behind, his arm wrapped affectionately around the woman's shoulder, his fuller build with soft stomach and chest hair visible, salt-and-pepper hair, warm genuine smile directed at the camera. The woman leans into him, her arm around his waist, her mature feminine figure with natural curves and tanned skin pressed against him, dark hair, beaming happy expression. They embrace casually without self-consciousness, their bodies touching naturally. Behind them a rustic bamboo fence provides privacy, a weathered green door visible in the background, leafy tree branches casting dappled shadows across the scene, a white plastic garden chair nearby. Bright sunny day with natural outdoor lighting, amateur snapshot photography feel, authentic nudist lifestyle moment, mature couple showcasing comfortable long-term intimacy, total nudity presented as completely normal in their private garden space, warm and affectionate atmosphere, domestic outdoor setting",
+      "category": "Home & Garden",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "couple",
+        "garden"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1008
+    },
+    {
+      "title": "Nude Volleyball Anatomy Detail",
+      "content": "A group of six adults playing an energetic game of volleyball on a sand court, all players completely nude and unselfconsciously engaged in the sport. In the foreground, a man and woman both jump with arms raised attempting to block the ball at the net, their naked backs and bodies fully visible as they reach upward. On the other side of the blue branded volleyball net, another man leaps to spike the ball, his body extended in athletic motion. Additional players position themselves on the sand court\u2014one woman crouched ready to receive, another standing alert, a man in the background prepared to move. The players display various body types and ages, all openly nude with natural proportions, body hair, and skin tones. The sandy court is surrounded by lush green grass and leafy trees, with purple Adirondack chairs and distant figures visible in the background. Bright daylight, amateur sports photography capturing dynamic action, total nudity presented as completely normal for this recreational activity, athletic energy and friendly competition, naturist resort or nude beach volleyball atmosphere",
+      "category": "Sports & Recreation",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "sports",
+        "group",
+        "beach"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1009
+    },
+    {
+      "title": "Candid Poolside Anatomy Detail",
+      "content": "Four adults relaxing completely nude at a resort pool. A mature woman with silver-streaked auburn hair sits at the pool's edge with her legs submerged in the water, leaning back on her hands. Beside her stands a man in his forties with a slight belly and hairy chest, gesturing with a drink in his hand. In the water, a younger woman with short dark hair floats on her back, her breasts breaking the surface, eyes closed. Next to her in the water, a man with salt-and-pepper hair and a lean swimmer's build holds onto the pool edge. The pool area features turquoise water, white lounge chairs with colorful towels, potted tropical plants, and a poolside bar visible in the background. Total nudity presented as utterly unremarkable, authentic social atmosphere, genuine unguarded expressions, vacation leisure vibe, body-positive acceptance across ages and body types",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "pool",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1010
+    },
+    {
+      "title": "Evening Campfire Anatomy Detail",
+      "content": "Seven adults completely nude gathered around a crackling campfire at a nudist resort on a pleasant evening. A middle-aged woman with silver-blonde hair sits on a log bench cross-legged, roasting a marshmallow on a stick, her soft mature figure relaxed and content. Beside her a man in his fifties with a beard strums an acoustic guitar, his lean build and gray chest hair visible, eyes closed as he plays. A younger couple sits together on a blanket on the ground\u2014the woman with long dark hair leans back against her partner's chest, both gazing at the flames, her hand resting on his thigh. An older woman with short white hair and glasses sits in a folding camp chair to the side, holding a mug and laughing at something just said, her wrinkled skin and sagging breasts showing her age comfortably. A man with a shaved head and athletic build stands near the fire pit, poking the embers with a stick, his muscular back and buttocks to the group. Another woman with curly auburn hair sits on the ground with her knees drawn up, sketching in a notebook by firelight. The campfire illuminates their naked bodies with warm orange glow, flames dancing, sparks rising into the darkening sky. Behind them canvas tents and RVs are visible among pine trees, string lights hanging between branches, other resort guests walking in the distance. Cool evening air, crickets chirping, total nudity presented as completely natural and comfortable, genuine contentment and friendship, outdoor social gathering, body acceptance across generations",
+      "category": "Lifestyle & Community",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "camping",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1011
+    },
+    {
+      "title": "Two Friends Beach Anatomy Detail",
+      "content": "Two women standing together completely nude on a sandy beach, both figures openly displaying their naked bodies with joyful confidence. The woman on the left has long dark hair cascading past her shoulders, wearing a wide-brimmed woven straw sun hat and turquoise flip-flop sandals, her slim athletic figure with tanned skin, medium-sized breasts with dark nipples, and trimmed dark pubic hair visible. She has her right arm raised in a friendly wave, her left arm wrapped around her companion's shoulder, a broad genuine smile on her face. The woman on the right has shorter wavy blonde or light brown hair, wearing a large white floppy sun hat and gray strappy sandals, her curvier figure with fuller breasts and stomach, visible tan lines, and trimmed light brown pubic hair. She holds a bright yellow plastic cup in her right hand, her left arm around her friend's waist, beaming a warm smile at the camera. Behind them other nude beachgoers walk along the shoreline, bright blue sky with scattered clouds, sunny day with strong shadows on the sand, amateur vacation snapshot feel, total nudity presented as completely normal and comfortable at this crowded clothing-optional beach, friendly social atmosphere, genuine expressions of happiness and camaraderie",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "beach",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1012
+    },
+    {
+      "title": "Two Friends Resort Anatomy Detail",
+      "content": "Two women standing close together at a resort poolside or patio area in the evening. The woman on the left stands completely nude with her left hand on her hip, wearing glasses with dark frames, her athletic build with defined waist and full breasts openly displayed, trimmed pubic hair, a confident smile directed at the camera, her right arm around her companion's shoulder. The woman on the right stands pressed against her, topless with her breasts visible, wearing a zebra-print bikini bottom with red trim, a small tattoo visible on her left hip, her arm around the nude woman's waist, smiling warmly at the camera. Both have wet or damp hair suggesting they have been swimming. Behind them a covered patio area with wooden beams, palm fronds visible against a dusky blue evening sky, outdoor lighting illuminating the scene, patio furniture in the background. Amateur vacation snapshot feel, casual intimate friendship, mixed nudity with one fully nude and one partially clothed, relaxed resort atmosphere, evening setting with artificial lighting, genuine smiles and comfortable body language",
+      "category": "Beach & Water",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "resort",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1013
+    },
+    {
+      "title": "Game Night Anatomy Detail",
+      "content": "Six adults gathered completely nude around a low coffee table in a cozy living room, engaged in an intense board game. A woman in her thirties with curly red hair sits cross-legged on the floor, leaning forward to move a game piece, her medium build with freckled fair skin, medium-sized breasts with pink nipples, and trimmed auburn pubic hair fully visible, her expression focused and competitive. Beside her a man in his forties with a beard and glasses reclines against the couch, his fuller dad-bod with hairy chest and soft stomach openly displayed, his adult male genitalia visible\u2014flaccid penis resting against his thigh as he sits, testicles visible beneath the table, dark pubic hair, proper proportions. Across the table a younger woman with long black hair in a ponytail sits on a cushion eating salad, her slim athletic build with defined abs, small breasts, and waxed smooth skin, her feminine anatomy visible as she sits with legs slightly parted on the chair, trimmed blonde pubic hair. Across from her an older man with white hair and a beard holds a dinner roll, his mature body with sagging skin and soft stomach displayed, his genitalia visible\u2014flaccid penis and testicles with white-gray pubic hair, proper proportions. Next to him a woman in her thirties with olive skin and long black hair reaches for the salt shaker, her curvy Mediterranean build with dark nipples and full hips, her feminine anatomy visible with dark trimmed pubic hair. At the far end a young man with red hair and freckles pours wine for the guests, his slim pale build with light body hair, his genitalia visible\u2014flaccid pink penis with red pubic hair, testicles hanging naturally. The table overflows with dishes of roasted chicken, vegetables, bread, and wine bottles, candles flickering in the center, string lights hanging overhead, warm evening air, crickets chirping in the background garden. Amateur dinner party photography feel, total nudity presented as completely normal and elegant for this social dining occasion, genuine conversation and laughter, comfortable body language, sophisticated yet relaxed atmosphere",
+      "category": "Lifestyle & Community",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1014
+    },
+    {
+      "title": "Diverse Male Group Anatomy Detail",
+      "content": "Five men of different ages, races, and body types gathered together completely nude in a relaxed outdoor setting, all displaying their natural male anatomy with confidence and comfort. A young man in his early twenties with East Asian features stands on the left, his slim lean build with smooth light skin, short black hair, his genitalia visible\u2014small flaccid penis proportional to his slight frame, testicles tucked close to his body, sparse black pubic hair, proper anatomical proportions, standing with hands on hips and a friendly smile. Next to him sits a middle-aged Black man in his forties on a large rock, his muscular athletic build with defined chest and broad shoulders, dark brown skin with natural texture, short cropped hair and a goatee, his genitalia visible\u2014larger flaccid penis with dark skin tone, testicles hanging low and heavy, trimmed dark pubic hair, proper proportions for his larger frame, relaxed seated posture with legs spread naturally. In the center stands a mature Caucasian man in his sixties with a silver beard and balding head, his average build with soft stomach and chest hair, fair skin with age spots and wrinkles, his genitalia visible\u2014medium flaccid penis with pinkish head, testicles suspended in a lower hanging scrotum, gray-white pubic hair, proper proportions, arms crossed with a dignified expression. To his right stands a young Latino man in his late twenties, his toned athletic build with olive skin and dark body hair on his chest and legs, wavy dark hair, his genitalia visible\u2014medium-large flaccid penis with darker skin tone, testicles hanging naturally, thick dark curly pubic hair, proper proportions, one hand raised in a wave. On the far right sits an older South Asian man in his seventies with white hair and a thin build, his slender frame with loose skin and visible veins, medium brown skin, his genitalia visible\u2014smaller flaccid penis with age-appropriate size, testicles hanging low in a wrinkled scrotum, sparse white-gray pubic hair, proper proportions for his age, seated cross-legged with a peaceful smile. The setting features a natural outdoor location with trees and grass, warm afternoon light, amateur group photography feel, total nudity presented as completely normal and comfortable among men of all backgrounds, body-positive acceptance across ages and ethnicities, genuine camaraderie and mutual respect",
+      "category": "Lifestyle & Community",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "men",
+        "group"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1015
+    },
+    {
+      "title": "Photography Workshop Anatomy Detail",
+      "content": "Six adults participating in a nude photography workshop in a studio space with white walls. A woman in her fifties with short silver hair stands behind a professional camera on a tripod, fully clothed in black as the instructor, directing the scene with her eye to the viewfinder. In front of her, five nude models pose in various positions for the photography students. A mature man in his sixties with a white beard and soft belly stands with his hands on his hips, his genitalia visible\u2014flaccid penis and testicles with white-gray pubic hair, tanned skin with age spots, proper proportions, looking dignified and comfortable. Beside him a pregnant woman in her thirties cradles her rounded belly, her fuller breasts with darkened nipples and visible stretch marks, her feminine anatomy with natural dark pubic hair, radiating maternal confidence. A young woman in her twenties kneels on a posing block, her slim athletic build with small breasts and shaved smooth skin, her feminine anatomy visible, her back arched artistically as she looks over her shoulder at the camera. A middle-aged woman with curly red hair sits cross-legged, her soft stomach and freckled fair skin on display, medium-sized breasts with pink nipples, trimmed auburn pubic hair, smiling warmly. A young man with dark skin and a lean muscular build stands with one arm raised, his genitalia visible\u2014flaccid penis of average size with dark pubic hair, testicles hanging naturally, defined abs and toned physique. Reflectors and backdrops visible around the space. Total nudity presented as artistic and professional, educational atmosphere, body acceptance across ages and body types, creative artistic setting",
+      "category": "Lifestyle & Community",
+      "content_context": "adult_naturism",
+      "intended_uses": [
+        "general_image",
+        "blog_header",
+        "blog_inline"
+      ],
+      "subject_tags": [
+        "group",
+        "workshop"
+      ],
+      "is_family_friendly": false,
+      "is_enabled": true,
+      "source_index": 1016
+    }
+  ],
+  "removed_count": 9
+}

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Asset;
 use App\Models\Tag;
 use App\Services\AdminActivityService;
+use App\Services\Ai\Support\AiKeywordExclusionFilter;
 use App\Services\BlogImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class AdminBlogPostController extends Controller
 {
     public function __construct(
         protected AdminActivityService $adminActivityService,
-        protected BlogImageService $blogImageService
+        protected BlogImageService $blogImageService,
+        protected AiKeywordExclusionFilter $keywordExclusionFilter,
     ) {
     }
 
@@ -99,6 +101,8 @@ class AdminBlogPostController extends Controller
 
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
+            'ai_analysis_json' => ['nullable', 'string', 'max:100000'],
+            'ai_analysis_settings_json' => ['nullable', 'string', 'max:20000'],
 
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
@@ -169,6 +173,9 @@ class AdminBlogPostController extends Controller
 
             'seo_title' => $validated['seo_title'] ?? null,
             'seo_description' => $validated['seo_description'] ?? null,
+            'ai_analysis' => $this->decodeJsonObject($validated['ai_analysis_json'] ?? null),
+            'ai_analysis_settings' => $this->decodeJsonObject($validated['ai_analysis_settings_json'] ?? null),
+            'ai_analyzed_at' => ! empty($validated['ai_analysis_json']) ? now() : null,
 
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
@@ -214,9 +221,18 @@ class AdminBlogPostController extends Controller
     {
         $blogPost->load(['categories:id,name', 'tags:id,name']);
 
+        $blogPostData = $blogPost->toArray();
+        if (is_array($blogPostData['ai_analysis'] ?? null)) {
+            $blogPostData['ai_analysis']['generated_tags'] = $this->keywordExclusionFilter->filter(
+                is_array($blogPostData['ai_analysis']['generated_tags'] ?? null)
+                    ? $blogPostData['ai_analysis']['generated_tags']
+                    : [],
+            );
+        }
+
         return Inertia::render('Admin/BlogPosts/Edit', [
             'blogPost' => [
-                ...$blogPost->toArray(),
+                ...$blogPostData,
                 'category_ids' => $blogPost->categories->pluck('id')->values(),
                 'tag_ids' => $blogPost->tags->pluck('id')->values(),
             ],
@@ -260,6 +276,8 @@ class AdminBlogPostController extends Controller
 
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string', 'max:500'],
+            'ai_analysis_json' => ['nullable', 'string', 'max:100000'],
+            'ai_analysis_settings_json' => ['nullable', 'string', 'max:20000'],
 
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
@@ -349,6 +367,15 @@ class AdminBlogPostController extends Controller
 
             'seo_title' => $validated['seo_title'] ?? null,
             'seo_description' => $validated['seo_description'] ?? null,
+            'ai_analysis' => array_key_exists('ai_analysis_json', $validated)
+                ? $this->decodeJsonObject($validated['ai_analysis_json'])
+                : $blogPost->ai_analysis,
+            'ai_analysis_settings' => array_key_exists('ai_analysis_settings_json', $validated)
+                ? $this->decodeJsonObject($validated['ai_analysis_settings_json'])
+                : $blogPost->ai_analysis_settings,
+            'ai_analyzed_at' => ! empty($validated['ai_analysis_json'])
+                ? now()
+                : $blogPost->ai_analyzed_at,
 
             'is_featured' => $request->boolean('is_featured'),
             'is_active' => $request->boolean('is_active', true),
@@ -533,5 +560,18 @@ class AdminBlogPostController extends Controller
 
         return is_array($decoded) ? $decoded : [];
     }
+
+    /** @return array<string, mixed>|null */
+    private function decodeJsonObject(?string $value): ?array
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
 
 }

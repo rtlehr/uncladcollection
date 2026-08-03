@@ -102,6 +102,8 @@ class PermissionSeeder extends Seeder
             ['group_name' => 'Content', 'name' => 'manage_public_pages', 'label' => 'Manage Public Pages', 'description' => 'Create, edit, and remove public informational pages.'],
             ['group_name' => 'Content', 'name' => 'publish_public_pages', 'label' => 'Publish Public Pages', 'description' => 'Publish and unpublish public informational pages.'],
 
+            ['group_name' => 'AI Content Studio', 'name' => 'manage_ai_content', 'label' => 'Manage AI Content Studio', 'description' => 'Generate image prompts and manage the AI prompt library and generation history.'],
+
             // Blog
             [
                 'group_name' => 'Blog',
