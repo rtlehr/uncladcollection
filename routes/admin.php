@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Admin\AiProviderController;
 use App\Http\Controllers\Admin\AdminBlogPostController;
 use App\Http\Controllers\Admin\BlogAiAssistantController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Admin\AssetAiSuggestionController;
 use App\Http\Controllers\Admin\AiKeywordExclusionController;
 use App\Http\Controllers\Admin\AiPromptExampleController;
 use App\Http\Controllers\Admin\AiImagePromptController;
+use App\Http\Controllers\Admin\AiSavedPromptController;
 use App\Http\Controllers\Admin\AssetConfigurationTemplateController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CollectionController;
@@ -336,8 +338,23 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::resource('images', ImageController::class)
             ->middleware('permission:manage_images');
 
-        Route::get('/ai-content/image-prompts', [AiImagePromptController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.index');
-        Route::post('/ai-content/image-prompts', [AiImagePromptController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.store');
+        Route::get('/ai-providers', [AiProviderController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-providers.index');
+        Route::post('/ai-providers', [AiProviderController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-providers.store');
+        Route::put('/ai-providers/assignments', [AiProviderController::class, 'saveAssignments'])->middleware('permission:manage_ai_content')->name('ai-providers.assignments');
+        Route::put('/ai-providers/{aiProvider}', [AiProviderController::class, 'update'])->middleware('permission:manage_ai_content')->name('ai-providers.update');
+        Route::delete('/ai-providers/{aiProvider}', [AiProviderController::class, 'destroy'])->middleware('permission:manage_ai_content')->name('ai-providers.destroy');
+        Route::post('/ai-providers/{aiProvider}/test', [AiProviderController::class, 'test'])->middleware('permission:manage_ai_content')->name('ai-providers.test');
+        Route::get('/ai-providers/{aiProvider}/models', [AiProviderController::class, 'models'])->middleware('permission:manage_ai_content')->name('ai-providers.models');
+
+        Route::get('/ai-content/image-prompts', [AiSavedPromptController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.index');
+        Route::get('/ai-content/image-prompts/create', [AiSavedPromptController::class, 'create'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.create');
+        Route::post('/ai-content/image-prompts/generate', [AiSavedPromptController::class, 'generate'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.generate');
+        Route::post('/ai-content/image-prompts', [AiSavedPromptController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.store');
+        Route::get('/ai-content/image-prompts/{aiSavedPrompt}/edit', [AiSavedPromptController::class, 'edit'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.edit');
+        Route::put('/ai-content/image-prompts/{aiSavedPrompt}', [AiSavedPromptController::class, 'update'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.update');
+        Route::delete('/ai-content/image-prompts/{aiSavedPrompt}', [AiSavedPromptController::class, 'destroy'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.destroy');
+        Route::post('/ai-content/image-prompts/{aiSavedPrompt}/refine', [AiSavedPromptController::class, 'refine'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.refine');
+        Route::post('/ai-content/image-prompts/{aiSavedPrompt}/versions/{version}/restore', [AiSavedPromptController::class, 'restore'])->middleware('permission:manage_ai_content')->name('ai-content.image-prompts.versions.restore');
         Route::get('/ai-content/history', [AiImagePromptController::class, 'history'])->middleware('permission:manage_ai_content')->name('ai-content.history');
         Route::get('/ai-content/prompt-library', [AiPromptExampleController::class, 'index'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.index');
         Route::post('/ai-content/prompt-library', [AiPromptExampleController::class, 'store'])->middleware('permission:manage_ai_content')->name('ai-content.prompt-library.store');

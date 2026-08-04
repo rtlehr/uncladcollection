@@ -3,6 +3,7 @@
 namespace App\Services\Ai\ContentStudio;
 
 use App\Models\AiContentPolicy;
+use App\Services\Ai\AiTextGateway;
 use App\Models\AiGeneration;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -12,7 +13,9 @@ use Throwable;
 
 class ImagePromptGenerator
 {
-    public function __construct(private PromptExampleSelector $selector) {}
+    private array $lastAiMeta = [];
+
+    public function __construct(private PromptExampleSelector $selector, private AiTextGateway $aiGateway) {}
 
     public function generate(array $data, ?int $userId = null): AiGeneration
     {
@@ -46,7 +49,7 @@ class ImagePromptGenerator
         ]);
 
         try {
-            $model = (string) config('ai-assets.providers.ollama.model', 'qwen3-vl:8b');
+            $model = '';
             $system = $this->systemPrompt($data, $examples->all(), $policies->pluck('instructions')->all());
             $output = $this->sanitizePrompt($this->requestPrompt($system, $model, $data));
 
@@ -70,8 +73,8 @@ class ImagePromptGenerator
             $finalIssues = $this->detectIssues($output, $data);
 
             $generation->update([
-                'provider' => 'ollama',
-                'model' => $model,
+                'provider' => $this->lastAiMeta['provider'] ?? 'unknown',
+                'model' => $this->lastAiMeta['model'] ?? $model,
                 'status' => 'completed',
                 'output_text' => $output,
                 'output_data' => [
@@ -147,61 +150,17 @@ class ImagePromptGenerator
      */
     private function requestPrompt(string $prompt, string $model, array $data): string
     {
-        $baseUrl = rtrim((string) config('ai-assets.providers.ollama.base_url'), '/');
-        $token = trim((string) config('ai-assets.providers.ollama.token'));
-
-        if ($baseUrl === '' || $token === '') {
-            throw new RuntimeException('Ollama is not configured.');
-        }
-
-        $numPredict = match ($data['description_depth']) {
-            'compact' => 900,
-            'standard' => 1400,
-            'detailed' => 2200,
-            default => 3000,
-        };
-
-        $payload = [
-            'model' => $model,
-            'stream' => true,
-            'think' => false,
-            'keep_alive' => (string) config('ai-assets.providers.ollama.keep_alive', '10m'),
-            'messages' => [[
-                'role' => 'user',
-                'content' => $prompt,
-            ]],
-            'options' => [
-                'temperature' => 0.35,
-                'num_predict' => $numPredict,
-            ],
-        ];
-
-        $attempts = max(1, (int) config('ai-assets.providers.ollama.retry_times', 1) + 1);
-        $sleepMilliseconds = max(0, (int) config('ai-assets.providers.ollama.retry_sleep_milliseconds', 750));
-        $lastException = null;
-
-        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-            try {
-                return $this->sendStreamingRequest($baseUrl, $token, $payload);
-            } catch (ConnectionException $exception) {
-                $lastException = $exception;
-            } catch (RuntimeException $exception) {
-                if (! $this->isRetryableTransportFailure($exception)) {
-                    throw $exception;
-                }
-
-                $lastException = $exception;
-            }
-
-            if ($attempt < $attempts && $sleepMilliseconds > 0) {
-                usleep($sleepMilliseconds * 1000);
-            }
-        }
-
-        throw new RuntimeException(
-            'Ollama prompt request failed after retrying: '.($lastException?->getMessage() ?? 'unknown transport error'),
-            previous: $lastException,
-        );
+        $result = $this->aiGateway->generate('image_prompt', $prompt, [
+            'temperature' => 0.35,
+            'max_tokens' => match ($data['description_depth']) {
+                'compact' => 900,
+                'standard' => 1400,
+                'detailed' => 2200,
+                default => 3000,
+            },
+        ]);
+        $this->lastAiMeta = $result;
+        return $result['content'];
     }
 
     /** @param array<string, mixed> $payload */
@@ -211,8 +170,8 @@ class ImagePromptGenerator
             ->acceptJson()
             ->asJson()
             ->withOptions(['stream' => true])
-            ->connectTimeout((int) config('ai-assets.providers.ollama.connect_timeout_seconds', 15))
-            ->timeout((int) config('ai-assets.providers.ollama.timeout_seconds', 300))
+            ->connectTimeout(max(30, (int) config('ai-assets.providers.ollama.connect_timeout_seconds', 15)))
+            ->timeout(max(600, (int) config('ai-assets.providers.ollama.timeout_seconds', 300)))
             ->post($baseUrl.'/api/chat', $payload);
 
         try {
@@ -306,6 +265,38 @@ class ImagePromptGenerator
         }
     }
 
+    /** @param array<string, mixed> $payload */
+    private function sendNonStreamingRequest(string $baseUrl, string $token, array $payload): string
+    {
+        $payload['stream'] = false;
+        $payload['think'] = false;
+        $payload['messages'][0]['content'] .= "\n\n/no_think\nReturn only the finished image prompt. Do not include reasoning or a <think> block.";
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->asJson()
+            ->connectTimeout(max(30, (int) config('ai-assets.providers.ollama.connect_timeout_seconds', 15)))
+            ->timeout(max(600, (int) config('ai-assets.providers.ollama.timeout_seconds', 300)))
+            ->post($baseUrl.'/api/chat', $payload);
+
+        try {
+            $response->throw();
+        } catch (RequestException $exception) {
+            $message = data_get($response->json(), 'error', $exception->getMessage());
+            throw new RuntimeException('Ollama request failed: '.trim((string) $message), previous: $exception);
+        }
+
+        $content = trim((string) data_get($response->json(), 'message.content', data_get($response->json(), 'response', '')));
+        $content = preg_replace('/<think>.*?<\/think>/is', '', $content) ?? $content;
+        $content = trim($content);
+
+        if ($content === '') {
+            throw new RuntimeException('Ollama returned an empty non-streaming response.');
+        }
+
+        return $content;
+    }
+
     private function isRetryableTransportFailure(RuntimeException $exception): bool
     {
         $message = strtolower($exception->getMessage());
@@ -314,7 +305,10 @@ class ImagePromptGenerator
             || str_contains($message, 'unexpected eof')
             || str_contains($message, 'connection reset')
             || str_contains($message, 'streaming connection ended unexpectedly')
-            || str_contains($message, 'empty streaming response');
+            || str_contains($message, 'empty streaming response')
+            || str_contains($message, 'empty non-streaming response')
+            || str_contains($message, 'connection refused')
+            || str_contains($message, 'failed to connect');
     }
 
     private function systemPrompt(array $data, array $examples, array $policies): string

@@ -4,6 +4,7 @@ namespace App\Services\Ai\ContentStudio;
 
 use App\Models\AiGeneration;
 use App\Services\Ai\Support\AiKeywordExclusionFilter;
+use App\Services\Ai\AiTextGateway;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -12,7 +13,9 @@ use Throwable;
 
 class BlogContentAssistantService
 {
-    public function __construct(private AiKeywordExclusionFilter $keywordExclusionFilter) {}
+    private array $lastAiMeta = [];
+
+    public function __construct(private AiKeywordExclusionFilter $keywordExclusionFilter, private AiTextGateway $aiGateway) {}
 
     /** @return array<string, mixed> */
     public function analyze(array $data, ?int $userId = null): array
@@ -29,7 +32,7 @@ class BlogContentAssistantService
         ]);
 
         try {
-            $model = (string) config('ai-assets.providers.ollama.model', 'qwen3-vl:8b');
+            $model = '';
             $raw = $this->request($this->prompt($data), $model, $data);
 
             try {
@@ -40,8 +43,8 @@ class BlogContentAssistantService
             }
 
             $generation->update([
-                'provider' => 'ollama',
-                'model' => $model,
+                'provider' => $this->lastAiMeta['provider'] ?? 'unknown',
+                'model' => $this->lastAiMeta['model'] ?? $model,
                 'status' => 'completed',
                 'output_text' => json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'output_data' => $result,
@@ -243,53 +246,20 @@ PROMPT;
 
     private function request(string $prompt, string $model, array $data): string
     {
-        $baseUrl = rtrim((string) config('ai-assets.providers.ollama.base_url'), '/');
-        $token = trim((string) config('ai-assets.providers.ollama.token'));
-
-        if ($baseUrl === '' || $token === '') {
-            throw new RuntimeException('Ollama is not configured.');
-        }
-
-        $numPredict = match ((string) ($data['description_depth'] ?? 'standard')) {
-            'compact' => 2600,
-            'standard' => 3600,
-            'detailed' => 4600,
-            default => 5600,
-        };
-
-        $payload = [
-            'model' => $model,
-            'stream' => true,
-            'think' => false,
-            'keep_alive' => (string) config('ai-assets.providers.ollama.keep_alive', '10m'),
-            'messages' => [['role' => 'user', 'content' => $prompt]],
-            'format' => 'json',
-            'options' => ['temperature' => 0.15, 'num_predict' => $numPredict],
-        ];
-
-        $attempts = max(1, (int) config('ai-assets.providers.ollama.retry_times', 1) + 1);
-        $lastException = null;
-
-        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-            try {
-                return $this->stream($baseUrl, $token, $payload);
-            } catch (ConnectionException|RuntimeException $exception) {
-                $lastException = $exception;
-
-                if ($exception instanceof RuntimeException && ! $this->retryable($exception)) {
-                    throw $exception;
-                }
-            }
-
-            if ($attempt < $attempts) {
-                usleep(max(0, (int) config('ai-assets.providers.ollama.retry_sleep_milliseconds', 750)) * 1000);
-            }
-        }
-
-        throw new RuntimeException('Ollama blog assistant request failed after retrying: '.($lastException?->getMessage() ?? 'unknown transport error'), previous: $lastException);
+        $result = $this->aiGateway->generate('blog_analysis', $prompt, [
+            'json' => true,
+            'temperature' => 0.15,
+            'max_tokens' => match ((string) ($data['description_depth'] ?? 'standard')) {
+                'compact' => 2600,
+                'standard' => 3600,
+                'detailed' => 4600,
+                default => 5600,
+            },
+        ]);
+        $this->lastAiMeta = $result;
+        return $result['content'];
     }
 
-    /** @param array<string, mixed> $payload */
     private function stream(string $baseUrl, string $token, array $payload): string
     {
         $response = Http::withToken($token)

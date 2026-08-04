@@ -51,7 +51,8 @@ class AdminToolRegistry
             [
                 'id' => 'content', 'title' => 'Content', 'description' => 'Stories, public pages, comments, and page guidance.', 'icon' => 'FileText',
                 'tools' => [
-                    $this->tool('ai-image-prompts', 'AI Image Prompt Generator', 'Turn a short idea into a structured image prompt.', '/admin/ai-content/image-prompts', 'Sparkles', 'manage_ai_content', ['AI','prompt','ComfyUI','header image']),
+                    $this->tool('ai-providers', 'AI Providers', 'Configure Ollama, Venice, OpenAI, and feature assignments.', '/admin/ai-providers', 'BrainCircuit', 'manage_ai_content', ['AI','provider','Venice','OpenAI','Ollama','model']),
+                    $this->tool('ai-image-prompts', 'Saved AI Image Prompts', 'Search, create, refine, version, and reuse image prompts.', '/admin/ai-content/image-prompts', 'Sparkles', 'manage_ai_content', ['AI','prompt','ComfyUI','header image']),
                     $this->tool('ai-prompt-library', 'AI Prompt Library', 'Manage sample prompts used by the generator.', '/admin/ai-content/prompt-library', 'LibraryBig', 'manage_ai_content', ['AI','prompt examples','JSON','styles']),
                     $this->tool('ai-generation-history', 'AI Generation History', 'Review previous AI content generations.', '/admin/ai-content/history', 'History', 'manage_ai_content', ['AI','history','audit']),
                     $this->tool('blog-posts', 'Blog Posts', 'Create and manage stories and articles.', '/admin/blog-posts', 'Newspaper', 'manage_blog_posts', ['article','story','content']),

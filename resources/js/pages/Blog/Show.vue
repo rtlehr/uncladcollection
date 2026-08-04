@@ -671,3 +671,127 @@ watch(
         </section>
     </PublicPageLayout>
 </template>
+
+<style scoped>
+.blog-content {
+    color: inherit;
+    font-size: 1.0625rem;
+    line-height: 1.85;
+}
+
+.blog-content :deep(p) {
+    margin: 0 0 1.5rem;
+    line-height: 1.85;
+}
+
+.blog-content :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.blog-content :deep(h2) {
+    margin-top: 3.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.blog-content :deep(h3) {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+.blog-content :deep(h4) {
+    margin-top: 2rem;
+    margin-bottom: 0.875rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.blog-content :deep(ul),
+.blog-content :deep(ol) {
+    margin: 0 0 1.5rem;
+    padding-left: 1.75rem;
+}
+
+.blog-content :deep(ul) {
+    list-style: disc;
+}
+
+.blog-content :deep(ol) {
+    list-style: decimal;
+}
+
+.blog-content :deep(li) {
+    margin: 0.45rem 0;
+    padding-left: 0.25rem;
+}
+
+.blog-content :deep(blockquote) {
+    margin: 2rem 0;
+    border-left: 4px solid var(--brand-accent);
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    font-style: italic;
+}
+
+.blog-content :deep(blockquote p) {
+    margin-bottom: 0.75rem;
+}
+
+.blog-content :deep(a) {
+    color: var(--brand-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+.blog-content :deep(hr) {
+    margin: 3rem 0;
+    border: 0;
+    border-top: 1px solid rgb(214 211 209);
+}
+
+.blog-content :deep(img),
+.blog-content :deep(figure) {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.blog-content :deep(figcaption) {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.blog-content :deep(p:empty) {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .blog-content {
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+
+    .blog-content :deep(p) {
+        margin-bottom: 1.25rem;
+        line-height: 1.75;
+    }
+
+    .blog-content :deep(h2) {
+        margin-top: 2.75rem;
+        font-size: 1.625rem;
+    }
+
+    .blog-content :deep(h3) {
+        margin-top: 2.25rem;
+        font-size: 1.375rem;
+    }
+}
+</style>

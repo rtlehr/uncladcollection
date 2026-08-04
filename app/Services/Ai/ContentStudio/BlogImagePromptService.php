@@ -3,6 +3,7 @@
 namespace App\Services\Ai\ContentStudio;
 
 use App\Models\AiGeneration;
+use App\Services\Ai\AiTextGateway;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +12,9 @@ use Throwable;
 
 class BlogImagePromptService
 {
+    private array $lastAiMeta = [];
+
+    public function __construct(private AiTextGateway $aiGateway) {}
     /** @return array{prompt:string,scene_plan:array<string,mixed>} */
     public function generate(array $data, ?int $userId = null): array
     {
@@ -26,7 +30,7 @@ class BlogImagePromptService
         ]);
 
         try {
-            $model = (string) config('ai-assets.providers.ollama.model', 'qwen3-vl:8b');
+            $model = '';
             $scenePlanRaw = $this->request(
                 $this->scenePlanPrompt($data),
                 $model,
@@ -46,8 +50,8 @@ class BlogImagePromptService
             }
 
             $generation->update([
-                'provider' => 'ollama',
-                'model' => $model,
+                'provider' => $this->lastAiMeta['provider'] ?? 'unknown',
+                'model' => $this->lastAiMeta['model'] ?? $model,
                 'status' => 'completed',
                 'output_text' => $prompt,
                 'output_data' => [
@@ -406,59 +410,13 @@ PROMPT;
 
     private function request(string $prompt, string $model, bool $jsonMode, int $numPredict): string
     {
-        $baseUrl = rtrim((string) config('ai-assets.providers.ollama.base_url'), '/');
-        $token = trim((string) config('ai-assets.providers.ollama.token'));
-
-        if ($baseUrl === '' || $token === '') {
-            throw new RuntimeException('Ollama is not configured.');
-        }
-
-        $payload = [
-            'model' => $model,
-            'stream' => $jsonMode,
-            'think' => false,
-            'keep_alive' => (string) config('ai-assets.providers.ollama.keep_alive', '10m'),
-            'messages' => [['role' => 'user', 'content' => $prompt]],
-            'options' => [
-                'temperature' => $jsonMode ? 0.15 : 0.35,
-                'num_predict' => $numPredict,
-            ],
-        ];
-
-        if ($jsonMode) {
-            $payload['format'] = 'json';
-        }
-
-        $attempts = max(3, (int) config('ai-assets.providers.ollama.retry_times', 1) + 1);
-        $sleepMilliseconds = max(1000, (int) config('ai-assets.providers.ollama.retry_sleep_milliseconds', 750));
-        $lastException = null;
-
-        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-            try {
-                // The short structured scene plan works well as a stream. Long
-                // prose prompts are requested non-streaming from the start so
-                // the reverse proxy is not holding an SSL stream open while
-                // Qwen produces hidden reasoning and the final answer.
-                return $jsonMode
-                    ? $this->stream($baseUrl, $token, $payload, true)
-                    : $this->nonStreaming($baseUrl, $token, $payload);
-            } catch (ConnectionException|RuntimeException $exception) {
-                $lastException = $exception;
-
-                if ($exception instanceof RuntimeException && ! $this->retryable($exception)) {
-                    throw $exception;
-                }
-            }
-
-            if ($attempt < $attempts) {
-                usleep($sleepMilliseconds * $attempt * 1000);
-            }
-        }
-
-        throw new RuntimeException(
-            'Ollama detailed image prompt request failed after retrying: '.($lastException?->getMessage() ?? 'unknown transport error'),
-            previous: $lastException,
-        );
+        $result = $this->aiGateway->generate('blog_image_prompt', $prompt, [
+            'json' => $jsonMode,
+            'temperature' => $jsonMode ? 0.15 : 0.35,
+            'max_tokens' => $numPredict,
+        ]);
+        $this->lastAiMeta = $result;
+        return $result['content'];
     }
 
     /** @param array<string, mixed> $payload */
