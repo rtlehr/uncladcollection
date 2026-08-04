@@ -5,6 +5,7 @@ namespace App\Services\Ai\ContentStudio;
 use App\Models\AiPromptExample;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use Illuminate\Support\Str;
 
 class PromptExampleImporter
 {
@@ -106,6 +107,7 @@ class PromptExampleImporter
                 $usedSourceIndexes[$sourceIndex] = true;
 
                 AiPromptExample::create([
+                    'uuid' => (string) Str::uuid(),
                     'title' => $title,
                     'content' => $content,
                     'category' => $item['category'] ?? null,
