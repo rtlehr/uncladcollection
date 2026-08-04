@@ -73,7 +73,10 @@ return new class extends Migration {
                     ->on('users')
                     ->nullOnDelete();
 
-                $table->unique(['ai_saved_prompt_id', 'version_number']);
+                $table->unique(
+                    ['ai_saved_prompt_id', 'version_number'],
+                    'ai_saved_prompt_version_unique'
+                );
             });
         }
     }
