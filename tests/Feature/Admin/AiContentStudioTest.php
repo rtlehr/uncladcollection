@@ -58,7 +58,7 @@ it('imports structured prompt examples and skips duplicates', function () {
 });
 
 it('allows authorized administrators to open the prompt generator', function () {
-    $this->actingAs(aiContentAdmin())->get('/admin/ai-content/image-prompts')->assertOk()->assertInertia(fn($page)=>$page->component('Admin/AiContent/PromptGenerator/Index'));
+    $this->actingAs(aiContentAdmin())->get('/admin/ai-content/image-prompts')->assertOk()->assertInertia(fn($page)=>$page->component('Admin/AiContent/SavedPrompts/Index'));
 });
 
 it('stores family naturism policy without excluding family contexts', function () {
