@@ -69,7 +69,7 @@ class BlogContentAssistantService
             'family_naturism' => 'natural_detail',
             default => 'contextual',
         });
-        $data['description_depth'] = (string) ($data['description_depth'] ?? 'expanded');
+        $data['description_depth'] = (string) ($data['description_depth'] ?? 'standard');
         $data['character_detail_level'] = (string) ($data['character_detail_level'] ?? match ($data['content_context'] ?? 'general') {
             'adult_naturism' => 'very_detailed',
             'family_naturism' => 'detailed',
@@ -250,10 +250,11 @@ PROMPT;
             'json' => true,
             'temperature' => 0.15,
             'max_tokens' => match ((string) ($data['description_depth'] ?? 'standard')) {
-                'compact' => 2600,
-                'standard' => 3600,
-                'detailed' => 4600,
-                default => 5600,
+                'compact' => 1400,
+                'standard' => 2200,
+                'expanded' => 3000,
+                'detailed' => 3600,
+                default => 2200,
             },
         ]);
         $this->lastAiMeta = $result;
