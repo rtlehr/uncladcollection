@@ -285,10 +285,7 @@ function cancel() {
 
                     <div class="mt-6 grid gap-4 md:grid-cols-2">
                         <label class="flex items-start gap-3 rounded-md border p-4">
-                            <Checkbox
-                                :checked="form.is_featured"
-                                @update:checked="form.is_featured = Boolean($event)"
-                            />
+                            <Checkbox v-model="form.is_featured" />
                             <div>
                                 <div class="font-medium">Featured Post</div>
                                 <p class="text-xs text-muted-foreground">
@@ -298,10 +295,7 @@ function cancel() {
                         </label>
 
                         <label class="flex items-start gap-3 rounded-md border p-4">
-                            <Checkbox
-                                :checked="form.is_active"
-                                @update:checked="form.is_active = Boolean($event)"
-                            />
+                            <Checkbox v-model="form.is_active" />
                             <div>
                                 <div class="font-medium">Active</div>
                                 <p class="text-xs text-muted-foreground">
@@ -319,26 +313,17 @@ function cancel() {
 
                         <div class="mt-4 space-y-3">
                             <label class="flex items-center gap-3 text-sm">
-                                <Checkbox
-                                    :checked="form.comments_enabled"
-                                    @update:checked="form.comments_enabled = Boolean($event)"
-                                />
+                                <Checkbox v-model="form.comments_enabled" />
                                 Allow members to post comments
                             </label>
 
                             <label class="flex items-center gap-3 text-sm">
-                                <Checkbox
-                                    :checked="form.comments_visible"
-                                    @update:checked="form.comments_visible = Boolean($event)"
-                                />
+                                <Checkbox v-model="form.comments_visible" />
                                 Show comments on the public article page
                             </label>
 
                             <label class="flex items-center gap-3 text-sm">
-                                <Checkbox
-                                    :checked="form.comments_require_approval"
-                                    @update:checked="form.comments_require_approval = Boolean($event)"
-                                />
+                                <Checkbox v-model="form.comments_require_approval" />
                                 Require approval before comments appear
                             </label>
                         </div>
