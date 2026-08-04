@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { Activity, Boxes, FileText, LayoutDashboard, Megaphone, Settings, ShieldCheck } from '@lucide/vue';
 import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import AdvertisingClientSetupGuide from '@/components/Advertising/AdvertisingClientSetupGuide.vue';
 import DashboardLinkCard from '@/components/Dashboard/DashboardLinkCard.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
@@ -30,11 +31,21 @@ const icon = () => ({ assets: Boxes, blog: FileText, advertising: Megaphone, mar
         </section>
 
         <div class="grid gap-6 2xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-            <ShowSection title="Workspace" description="Open the tools and reports used most often in this area.">
-                <div class="grid gap-4 md:grid-cols-2">
-                    <DashboardLinkCard v-for="link in links" :key="`${link.title}-${link.href}`" v-bind="link" />
-                </div>
-            </ShowSection>
+            <div class="space-y-6">
+                <ShowSection title="Workspace" description="Open the tools and reports used most often in this area.">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <DashboardLinkCard v-for="link in links" :key="`${link.title}-${link.href}`" v-bind="link" />
+                    </div>
+                </ShowSection>
+
+                <ShowSection
+                    v-if="area === 'advertising'"
+                    title="Advertising client workflow"
+                    description="A guided process for creating an advertiser and taking the engagement through delivery and reporting."
+                >
+                    <AdvertisingClientSetupGuide />
+                </ShowSection>
+            </div>
 
             <ShowSection title="Recent activity" description="The newest records in this workspace.">
                 <div v-if="activity.length" class="divide-y rounded-lg border">
