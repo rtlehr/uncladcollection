@@ -14,7 +14,17 @@ class DesignUploadController extends Controller
     public function store(Request $request, DesignProject $design): JsonResponse
     {
         abort_unless((int) $design->user_id === (int) $request->user()->id, 403);
-        abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+
+        // Asset-based designs must retain their original active license.
+        // Blank designs intentionally have no primary license and may still
+        // accept customer uploads and generated transparent PNG replacements.
+        if ($design->license_id !== null) {
+            abort_unless(
+                $design->license?->isActive(),
+                403,
+                'The license for this design is no longer active.',
+            );
+        }
 
         $maxBytes = max(1024, (int) config('design-studio.max_upload_bytes', 10 * 1024 * 1024));
         $maxKilobytes = (int) ceil($maxBytes / 1024);

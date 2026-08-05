@@ -198,6 +198,10 @@ class DesignExportController extends Controller
 
     private function assertActiveLicense(DesignProject $design): void
     {
+        if ($design->license_id === null) {
+            return;
+        }
+
         abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
     }
 

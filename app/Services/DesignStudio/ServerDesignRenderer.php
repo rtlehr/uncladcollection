@@ -15,15 +15,11 @@ class ServerDesignRenderer
         abort_unless(extension_loaded('gd'), 500, 'The GD image extension is required for server rendering.');
 
         $project = $export->project;
-        if (! $project || ! $project->license?->isActive()) {
-            throw new RuntimeException('The design license is no longer active.');
+        if (! $project) {
+            throw new RuntimeException('The design project could not be loaded.');
         }
-
-        $sourceFile = $this->sourceFile($project->asset?->activeFiles ?? collect());
-        $sourceBytes = Storage::disk($sourceFile->disk)->get($sourceFile->path);
-        $source = @imagecreatefromstring($sourceBytes);
-        if (! $source) {
-            throw new RuntimeException('The licensed source image could not be decoded.');
+        if ($project->license_id !== null && ! $project->license?->isActive()) {
+            throw new RuntimeException('The design license is no longer active.');
         }
 
         $renderWidth = (int) $export->width;
@@ -39,12 +35,21 @@ class ServerDesignRenderer
         $white = imagecolorallocate($canvas, 255, 255, 255);
         imagefill($canvas, 0, 0, $white);
 
-        if ($export->fit_mode === 'contain') {
-            $this->drawContained($canvas, $source, 0, 0, $renderWidth, $renderHeight);
-        } else {
-            $this->drawCovered($canvas, $source, 0, 0, $renderWidth, $renderHeight);
+        if ($project->license_id !== null) {
+            $sourceFile = $this->sourceFile($project->asset?->activeFiles ?? collect());
+            $sourceBytes = Storage::disk($sourceFile->disk)->get($sourceFile->path);
+            $source = @imagecreatefromstring($sourceBytes);
+            if (! $source) {
+                throw new RuntimeException('The licensed source image could not be decoded.');
+            }
+
+            if ($export->fit_mode === 'contain') {
+                $this->drawContained($canvas, $source, 0, 0, $renderWidth, $renderHeight);
+            } else {
+                $this->drawCovered($canvas, $source, 0, 0, $renderWidth, $renderHeight);
+            }
+            imagedestroy($source);
         }
-        imagedestroy($source);
 
         if (! Storage::disk('local')->exists($overlayPath)) {
             throw new RuntimeException('The pixel-perfect Fabric overlay is missing.');

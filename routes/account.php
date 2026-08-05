@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('/', AccountDashboardController::class)->name('index');
         Route::get('/library', [PurchaseBrowseController::class, 'index'])->name('library.index');
         Route::get('/designs', [DesignProjectController::class, 'index'])->name('designs.index');
+        Route::post('/designs', [DesignProjectController::class, 'storeBlank'])->middleware('block.impersonation')->name('designs.store-blank');
         Route::post('/licenses/{license}/designs', [DesignProjectController::class, 'store'])->middleware('block.impersonation')->name('designs.store');
         Route::get('/designs/{design}/edit', [DesignProjectController::class, 'edit'])->name('designs.edit');
         Route::put('/designs/{design}', [DesignProjectController::class, 'update'])->middleware('block.impersonation')->name('designs.update');

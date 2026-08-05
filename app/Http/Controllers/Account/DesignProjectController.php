@@ -49,6 +49,46 @@ class DesignProjectController extends Controller
         return Inertia::render('Account/Designs/Index', ['projects' => $projects]);
     }
 
+    public function storeBlank(Request $request): RedirectResponse
+    {
+        $maxWidth = (int) config('design-studio.max_server_width', 12000);
+        $maxHeight = (int) config('design-studio.max_server_height', 12000);
+        $maxPixels = (int) config('design-studio.max_server_pixels', 80000000);
+
+        $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:120'],
+            'canvas_width' => ['required', 'integer', 'min:320', 'max:'.$maxWidth],
+            'canvas_height' => ['required', 'integer', 'min:320', 'max:'.$maxHeight],
+        ]);
+
+        abort_if(
+            ((int) $data['canvas_width'] * (int) $data['canvas_height']) > $maxPixels,
+            422,
+            'The selected canvas size exceeds the Design Studio pixel limit.',
+        );
+
+        $project = DesignProject::create([
+            'user_id' => $request->user()->id,
+            'license_id' => null,
+            'asset_id' => null,
+            'title' => filled($data['title'] ?? null) ? trim((string) $data['title']) : 'Untitled Design',
+            'canvas_width' => (int) $data['canvas_width'],
+            'canvas_height' => (int) $data['canvas_height'],
+            'design_json' => [
+                'version' => 2,
+                'fabric' => [
+                    'version' => '7.0.0',
+                    'objects' => [],
+                    'background' => '#ffffff',
+                ],
+                'canvas_background_fit' => 'cover',
+            ],
+            'last_opened_at' => now(),
+        ]);
+
+        return redirect()->route('account.designs.edit', $project);
+    }
+
     public function store(Request $request, License $license): RedirectResponse
     {
         abort_unless(

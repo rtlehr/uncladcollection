@@ -35,6 +35,10 @@ class DatabaseSeeder extends Seeder
             AiKeywordExclusionSeeder::class,
             AiProviderSeeder::class,
             AiContentStudioSeeder::class,
+
+            AdvertisingPipelineDemoSeeder::class,
+            AdPlacementSeeder::class,
+
         ]);
 
         if (app()->environment(['local', 'testing'])) {
