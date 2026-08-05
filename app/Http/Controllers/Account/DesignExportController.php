@@ -18,16 +18,22 @@ class DesignExportController extends Controller
     public function store(Request $request, DesignProject $design): JsonResponse
     {
         $this->authorizeProject($request, $design);
-        abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+        $this->assertActiveLicense($design);
+
+        $maxWidth = (int) config('design-studio.max_browser_width', 12000);
+        $maxHeight = (int) config('design-studio.max_browser_height', 12000);
+        $maxPixels = (int) config('design-studio.max_browser_pixels', 40000000);
 
         $validated = $request->validate([
             'file' => ['required', 'file', 'max:51200', 'mimetypes:image/jpeg,image/png,image/webp'],
-            'width' => ['required', 'integer', 'min:320', 'max:12000'],
-            'height' => ['required', 'integer', 'min:320', 'max:12000'],
+            'width' => ['required', 'integer', 'min:320', 'max:'.$maxWidth],
+            'height' => ['required', 'integer', 'min:320', 'max:'.$maxHeight],
             'format' => ['required', Rule::in(['jpg', 'jpeg', 'png', 'webp'])],
             'fit_mode' => ['required', Rule::in(['contain', 'cover'])],
             'preset_name' => ['nullable', 'string', 'max:80'],
         ]);
+
+        abort_if(((int) $validated['width'] * (int) $validated['height']) > $maxPixels, 422, 'The requested browser export exceeds the allowed pixel limit.');
 
         $file = $request->file('file');
         $size = @getimagesize($file->getRealPath());
@@ -46,6 +52,7 @@ class DesignExportController extends Controller
             'format' => $format,
             'fit_mode' => $validated['fit_mode'],
             'status' => 'completed',
+            'render_engine' => 'browser-fabric',
             'disk' => 'local',
             'path' => $path,
             'original_filename' => $filename,
@@ -55,14 +62,21 @@ class DesignExportController extends Controller
             'completed_at' => now(),
         ]);
 
-        return response()->json($this->present($design, $export), 201);
+        return response()->json(self::present($design, $export), 201);
     }
-
 
     public function render(Request $request, DesignProject $design): JsonResponse
     {
         $this->authorizeProject($request, $design);
-        abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+        $this->assertActiveLicense($design);
+
+        $maxQueued = max(1, (int) config('design-studio.max_queued_renders_per_user', 5));
+        $activeQueued = DesignExport::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->count();
+
+        abort_if($activeQueued >= $maxQueued, 429, 'You already have the maximum number of queued server renders in progress. Please wait for one to finish or fail before queueing another.');
 
         $validated = $request->validate([
             'width' => ['required', 'integer', 'min:320', 'max:'.config('design-studio.max_server_width', 12000)],
@@ -78,7 +92,7 @@ class DesignExportController extends Controller
 
         $designJson = json_decode($validated['design_json'], true);
         abort_unless(is_array($designJson) && isset($designJson['fabric']['objects']) && is_array($designJson['fabric']['objects']), 422, 'The design data is invalid.');
-        abort_if(count($designJson['fabric']['objects']) > 200, 422, 'The design contains too many elements.');
+        abort_if(count($designJson['fabric']['objects']) > (int) config('design-studio.max_layer_count', 200), 422, 'The design contains too many elements.');
         $design->forceFill(['design_json' => $designJson])->save();
 
         $overlay = $request->file('overlay');
@@ -90,6 +104,7 @@ class DesignExportController extends Controller
             'overlay-'.now()->format('Ymd-His-u').'.png',
             'local'
         );
+
         $format = $validated['format'] === 'jpeg' ? 'jpg' : $validated['format'];
         $export = $design->exports()->create([
             'user_id' => $request->user()->id,
@@ -152,6 +167,7 @@ class DesignExportController extends Controller
             'status' => $export->status,
             'render_engine' => $export->render_engine,
             'error_message' => $export->error_message,
+            'retryable' => $export->status === 'failed' && ($export->render_engine === 'server-gd'),
             'created_at' => $export->completed_at?->diffForHumans() ?? $export->created_at?->diffForHumans(),
             'status_url' => route('account.designs.exports.status', [$design, $export]),
             'download_url' => $export->status === 'completed' ? route('account.designs.exports.download', [$design, $export]) : null,
@@ -171,10 +187,20 @@ class DesignExportController extends Controller
         abort_unless((int) $export->design_project_id === (int) $design->id && (int) $export->user_id === (int) $request->user()->id, 403);
     }
 
+    private function assertActiveLicense(DesignProject $design): void
+    {
+        abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+    }
+
     private static function formatBytes(int $bytes): string
     {
-        if ($bytes >= 1048576) return number_format($bytes / 1048576, 1).' MB';
-        if ($bytes >= 1024) return number_format($bytes / 1024, 0).' KB';
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 1).' MB';
+        }
+        if ($bytes >= 1024) {
+            return number_format($bytes / 1024, 0).' KB';
+        }
+
         return $bytes.' B';
     }
 }

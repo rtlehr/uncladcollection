@@ -84,7 +84,6 @@ class DesignProjectController extends Controller
             'license',
             'uploads',
             'exports' => fn ($query) => $query
-                ->where('status', 'completed')
                 ->latest('completed_at')
                 ->limit(12),
         ]);
@@ -113,6 +112,16 @@ class DesignProjectController extends Controller
                     ->map(fn ($export) => DesignExportController::present($design, $export))
                     ->values(),
             ],
+            'limits' => [
+                'max_layer_count' => (int) config('design-studio.max_layer_count', 200),
+                'max_browser_width' => (int) config('design-studio.max_browser_width', 12000),
+                'max_browser_height' => (int) config('design-studio.max_browser_height', 12000),
+                'max_browser_pixels' => (int) config('design-studio.max_browser_pixels', 40000000),
+                'max_server_width' => (int) config('design-studio.max_server_width', 12000),
+                'max_server_height' => (int) config('design-studio.max_server_height', 12000),
+                'max_server_pixels' => (int) config('design-studio.max_server_pixels', 80000000),
+                'recommended_min_width' => (int) config('design-studio.recommended_min_width', 1024),
+            ],
             'export_presets' => [
                 ['name' => 'Social Square', 'width' => 1080, 'height' => 1080],
                 ['name' => 'Social Portrait', 'width' => 1080, 'height' => 1350],
@@ -125,6 +134,7 @@ class DesignProjectController extends Controller
     public function update(Request $request, DesignProject $design): RedirectResponse
     {
         $this->owned($request, $design);
+        $maxLayers = (int) config('design-studio.max_layer_count', 200);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:120'],
             'canvas_width' => ['required', 'integer', 'min:320', 'max:12000'],
@@ -132,8 +142,8 @@ class DesignProjectController extends Controller
             'design_json' => ['required', 'array'],
             'design_json.version' => ['required', 'integer'],
             'design_json.fabric' => ['required_if:design_json.version,2', 'array'],
-            'design_json.fabric.objects' => ['required_if:design_json.version,2', 'array', 'max:200'],
-            'design_json.objects' => ['required_if:design_json.version,1', 'array', 'max:200'],
+            'design_json.fabric.objects' => ['required_if:design_json.version,2', 'array', 'max:'.$maxLayers],
+            'design_json.objects' => ['required_if:design_json.version,1', 'array', 'max:'.$maxLayers],
         ]);
 
         $design->update($data);

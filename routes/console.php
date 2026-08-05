@@ -301,3 +301,64 @@ Artisan::command('customer-experience:maintain {--dry-run}', function (\App\Serv
 })->purpose('Prune stale customer notification watch events and temporary download packages');
 
 Schedule::command('customer-experience:maintain')->dailyAt('02:30')->withoutOverlapping();
+
+Artisan::command('design-studio:cleanup {--dry-run}', function (): int {
+    $retentionDays = max(1, (int) config('design-studio.completed_export_retention_days', 90));
+    $staleMinutes = max(5, (int) config('design-studio.stale_render_minutes', 60));
+    $completedCutoff = now()->subDays($retentionDays);
+    $staleCutoff = now()->subMinutes($staleMinutes);
+
+    $completed = \App\Models\DesignExport::query()
+        ->where('status', 'completed')
+        ->whereNotNull('completed_at')
+        ->where('completed_at', '<', $completedCutoff);
+
+    $stale = \App\Models\DesignExport::query()
+        ->whereIn('status', ['pending', 'processing'])
+        ->where(function ($query) use ($staleCutoff): void {
+            $query->whereNotNull('started_at')->where('started_at', '<', $staleCutoff)
+                ->orWhere(function ($nested) use ($staleCutoff): void {
+                    $nested->whereNull('started_at')->whereNotNull('queued_at')->where('queued_at', '<', $staleCutoff);
+                })
+                ->orWhere(function ($nested) use ($staleCutoff): void {
+                    $nested->whereNull('started_at')->whereNull('queued_at')->where('created_at', '<', $staleCutoff);
+                });
+        });
+
+    $completedCount = (clone $completed)->count();
+    $staleCount = (clone $stale)->count();
+
+    if ($this->option('dry-run')) {
+        $this->info("{$completedCount} completed exports would be removed.");
+        $this->info("{$staleCount} stale queued exports would be marked failed.");
+        return 0;
+    }
+
+    $removed = 0;
+    (clone $completed)->orderBy('id')->chunkById(100, function ($rows) use (&$removed): void {
+        foreach ($rows as $export) {
+            if ($export->disk && $export->path) {
+                \Illuminate\Support\Facades\Storage::disk($export->disk)->delete($export->path);
+            }
+            $export->delete();
+            $removed++;
+        }
+    });
+
+    $markedFailed = 0;
+    (clone $stale)->orderBy('id')->chunkById(100, function ($rows) use (&$markedFailed): void {
+        foreach ($rows as $export) {
+            $export->forceFill([
+                'status' => 'failed',
+                'error_message' => $export->error_message ?: 'This render was automatically marked failed after exceeding the processing time limit.',
+            ])->save();
+            $markedFailed++;
+        }
+    });
+
+    $this->info("Removed {$removed} expired exports and marked {$markedFailed} stale renders as failed.");
+
+    return 0;
+})->purpose('Prune expired design exports and mark stale design renders as failed');
+
+Schedule::command('design-studio:cleanup')->dailyAt('03:10')->withoutOverlapping();

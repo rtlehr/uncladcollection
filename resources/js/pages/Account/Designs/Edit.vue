@@ -12,7 +12,9 @@ import {
     ImagePlus,
     Layers3,
     Lock,
+    Pipette,
     Redo2,
+    RotateCcw,
     Save,
     Square,
     Trash2,
@@ -20,13 +22,52 @@ import {
     Undo2,
     Unlock,
 } from '@lucide/vue';
-import { Canvas, FabricImage, IText, Rect, type FabricObject } from 'fabric';
+import { Canvas, FabricImage, FabricObject, IText, Rect } from 'fabric';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 
+// Fabric 7 only guarantees custom properties survive serialization when they
+// are registered globally. These values are needed for stable layer rows,
+// saved layer names, uploaded-image references, and nondestructive edits.
+FabricObject.customProperties = [
+    'layerId',
+    'name',
+    'uploadUuid',
+    'originalUploadUuid',
+    'originalSrc',
+    'backgroundRemoval',
+    'lockedByUser',
+];
+
 type ExportPreset = { name: string; width: number; height: number };
-type ExportRecord = { uuid: string; width: number; height: number; format: string; fit_mode: string; preset_name: string | null; size: string | null; status: string; render_engine: string | null; error_message: string | null; created_at: string; status_url: string; download_url: string | null; delete_url: string };
+type ExportRecord = {
+    uuid: string;
+    width: number;
+    height: number;
+    format: string;
+    fit_mode: string;
+    preset_name: string | null;
+    size: string | null;
+    status: string;
+    render_engine: string | null;
+    error_message: string | null;
+    retryable?: boolean;
+    created_at: string;
+    status_url: string;
+    download_url: string | null;
+    delete_url: string;
+};
 type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[] };
+type Limits = {
+    max_layer_count: number;
+    max_browser_width: number;
+    max_browser_height: number;
+    max_browser_pixels: number;
+    max_server_width: number;
+    max_server_height: number;
+    max_server_pixels: number;
+    recommended_min_width: number;
+};
 interface Project {
     uuid: string;
     title: string;
@@ -43,16 +84,20 @@ interface Project {
     uploads: { uuid: string; name: string; url: string }[];
 }
 
-const props = defineProps<{ project: Project; export_presets: ExportPreset[] }>();
+const props = defineProps<{ project: Project; export_presets: ExportPreset[]; limits: Limits }>();
+
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const workspaceElement = ref<HTMLElement | null>(null);
+const backgroundPreviewCanvas = ref<HTMLCanvasElement | null>(null);
+
 const title = ref(props.project.title);
 const saving = ref(false);
-const savedMessage = ref('');
+const uploading = ref(false);
+const exporting = ref(false);
 const selected = ref<FabricObject | null>(null);
 const zoom = ref(1);
-const exporting = ref(false);
+const savedMessage = ref('');
 const exportStatus = ref('');
 const recentExports = ref<ExportRecord[]>([...props.project.exports]);
 const exportFormat = ref<'jpeg' | 'png' | 'webp'>('jpeg');
@@ -64,10 +109,27 @@ const historyIndex = ref(-1);
 const layerVersion = ref(0);
 const dirty = ref(false);
 const snapEnabled = ref(true);
+const backgroundColor = ref('#ffffff');
+const backgroundTolerance = ref(28);
+const backgroundFeather = ref(18);
+const backgroundBusy = ref(false);
+const backgroundStatus = ref('');
 const verticalGuides = ref<number[]>([]);
 const horizontalGuides = ref<number[]>([]);
+const isSmallScreen = ref(window.innerWidth < props.limits.recommended_min_width);
+
+const selectedIsImage = computed(() => selected.value instanceof FabricImage);
 const canUndo = computed(() => historyIndex.value > 0);
 const canRedo = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
+const hasBlockingOperation = computed(() => saving.value || uploading.value || exporting.value || backgroundBusy.value);
+const processingNotice = computed(() => {
+    if (exporting.value) return 'An export is currently being prepared or rendered.';
+    if (uploading.value) return 'An image upload is still in progress.';
+    if (backgroundBusy.value) return 'Background removal is still running.';
+    if (saving.value) return 'Your design is still being saved.';
+    return '';
+});
+
 let canvas: Canvas | null = null;
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 let restoringHistory = false;
@@ -83,20 +145,30 @@ const stageDimensions = computed(() => ({
     width: Math.max(1, Math.round(props.project.canvas_width * fitFactor.value * zoom.value)),
     height: Math.max(1, Math.round(props.project.canvas_height * fitFactor.value * zoom.value)),
 }));
+const layerObjects = computed(() => {
+    layerVersion.value;
+    return canvas ? [...canvas.getObjects()].reverse() : [];
+});
 
 function measureWorkspace(): void {
     const element = workspaceElement.value;
     if (!element) return;
     viewportWidth.value = Math.max(320, element.clientWidth - 48);
     viewportHeight.value = Math.max(320, element.clientHeight - 88);
+    isSmallScreen.value = window.innerWidth < props.limits.recommended_min_width;
 }
 
 function fabricJson(): Record<string, unknown> {
-    return canvas?.toJSON(['name', 'uploadUuid', 'lockedByUser']) as Record<string, unknown> ?? { objects: [] };
+    return canvas?.toJSON(['layerId', 'name', 'uploadUuid', 'originalUploadUuid', 'originalSrc', 'backgroundRemoval', 'lockedByUser']) as Record<string, unknown> ?? { objects: [] };
 }
 
 function snapshot(): string {
     return JSON.stringify(fabricJson());
+}
+
+function scheduleAutosave(): void {
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => save(true), 1200);
 }
 
 function pushHistory(): void {
@@ -119,15 +191,60 @@ async function restoreHistory(index: number): Promise<void> {
     canvas.requestRenderAll();
     historyIndex.value = index;
     selected.value = null;
+    layerVersion.value++;
     restoringHistory = false;
 }
 
 function undo(): void { void restoreHistory(historyIndex.value - 1); }
 function redo(): void { void restoreHistory(historyIndex.value + 1); }
 
-function scheduleAutosave(): void {
-    if (autosaveTimer) clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(() => save(true), 1200);
+function selectObject(object: FabricObject | null): void {
+    selected.value = object;
+    backgroundStatus.value = '';
+    void nextTick(() => drawBackgroundPreview());
+}
+
+function createLayerId(): string {
+    return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `layer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function ensureLayerMetadata(object: FabricObject, index = 0): void {
+    if (!object.get('layerId')) {
+        object.set('layerId' as never, createLayerId() as never);
+    }
+    if (!object.get('name')) {
+        object.set('name' as never, defaultLayerName(object, index) as never);
+    }
+}
+
+function layerKey(object: FabricObject): string {
+    ensureLayerMetadata(object);
+    return String(object.get('layerId'));
+}
+
+function defaultLayerName(object: FabricObject | null, index = 0): string {
+    if (!object) return 'Layer';
+    if (object.type === 'i-text') return `Text ${index + 1}`;
+    if (object.type === 'rect') return `Shape ${index + 1}`;
+    return `Image ${index + 1}`;
+}
+
+function objectLabel(object: FabricObject, index: number): string {
+    return String(object.get('name') || defaultLayerName(object, index));
+}
+
+function renameLayer(object: FabricObject, value: string): void {
+    if (!canvas) return;
+    ensureLayerMetadata(object);
+    const trimmed = value.trim();
+    object.set('name' as never, (trimmed || defaultLayerName(object)) as never);
+    canvas.setActiveObject(object);
+    selectObject(object);
+    layerVersion.value++;
+    canvas.requestRenderAll();
+    pushHistory();
 }
 
 function save(silent = false): void {
@@ -145,12 +262,11 @@ function save(silent = false): void {
             dirty.value = false;
             void uploadPreview();
             savedMessage.value = silent ? 'Autosaved' : 'Saved';
-            window.setTimeout(() => savedMessage.value = '', 1800);
+            window.setTimeout(() => { savedMessage.value = ''; }, 1800);
         },
-        onFinish: () => saving.value = false,
+        onFinish: () => { saving.value = false; },
     });
 }
-
 
 async function uploadPreview(): Promise<void> {
     if (!canvas) return;
@@ -170,12 +286,8 @@ async function uploadPreview(): Promise<void> {
     }).catch(() => null);
 }
 
-function selectObject(object: FabricObject | null): void {
-    selected.value = object;
-}
-
 function addText(): void {
-    if (!canvas) return;
+    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
     const text = new IText('Double-click to edit', {
         left: props.project.canvas_width * 0.1,
         top: props.project.canvas_height * 0.1,
@@ -188,6 +300,7 @@ function addText(): void {
         shadow: 'rgba(0,0,0,.35) 0 2px 6px',
         name: 'Text',
     });
+    ensureLayerMetadata(text);
     canvas.add(text);
     canvas.setActiveObject(text);
     canvas.requestRenderAll();
@@ -195,9 +308,8 @@ function addText(): void {
     pushHistory();
 }
 
-
 function addShape(): void {
-    if (!canvas) return;
+    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
     const shape = new Rect({
         left: props.project.canvas_width * 0.15,
         top: props.project.canvas_height * 0.15,
@@ -210,6 +322,7 @@ function addShape(): void {
         strokeWidth: 0,
         name: 'Rectangle',
     });
+    ensureLayerMetadata(shape);
     canvas.add(shape);
     canvas.setActiveObject(shape);
     canvas.requestRenderAll();
@@ -217,40 +330,270 @@ function addShape(): void {
     pushHistory();
 }
 
-async function upload(event: Event): Promise<void> {
+function imageSource(image: FabricImage, preferOriginal = false): string {
+    if (preferOriginal) {
+        const original = image.get('originalSrc');
+        if (typeof original === 'string' && original) return original;
+    }
+    return image.getSrc();
+}
 
+async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.src = src;
+    if (typeof image.decode === 'function') {
+        await image.decode();
+    } else {
+        await new Promise<void>((resolve, reject) => {
+            image.onload = () => resolve();
+            image.onerror = () => reject(new Error('The selected image could not be loaded.'));
+        });
+    }
+    return image;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+    const normalized = hex.replace('#', '').padEnd(6, '0').slice(0, 6);
+    return [
+        Number.parseInt(normalized.slice(0, 2), 16),
+        Number.parseInt(normalized.slice(2, 4), 16),
+        Number.parseInt(normalized.slice(4, 6), 16),
+    ];
+}
+
+function rgbToHex(red: number, green: number, blue: number): string {
+    return `#${[red, green, blue].map(value => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0')).join('')}`;
+}
+
+async function drawBackgroundPreview(): Promise<void> {
+    const preview = backgroundPreviewCanvas.value;
+    const object = selected.value;
+    if (!preview || !(object instanceof FabricImage)) return;
+    try {
+        const source = await loadHtmlImage(imageSource(object, true));
+        const maxWidth = 260;
+        const maxHeight = 170;
+        const scale = Math.min(maxWidth / source.naturalWidth, maxHeight / source.naturalHeight, 1);
+        preview.width = Math.max(1, Math.round(source.naturalWidth * scale));
+        preview.height = Math.max(1, Math.round(source.naturalHeight * scale));
+        const context = preview.getContext('2d', { willReadFrequently: true });
+        if (!context) return;
+        context.clearRect(0, 0, preview.width, preview.height);
+        context.drawImage(source, 0, 0, preview.width, preview.height);
+    } catch {
+        backgroundStatus.value = 'Preview unavailable';
+    }
+}
+
+function pickBackgroundColor(event: MouseEvent): void {
+    const preview = backgroundPreviewCanvas.value;
+    if (!preview) return;
+    const rect = preview.getBoundingClientRect();
+    const x = Math.max(0, Math.min(preview.width - 1, Math.floor((event.clientX - rect.left) * preview.width / rect.width)));
+    const y = Math.max(0, Math.min(preview.height - 1, Math.floor((event.clientY - rect.top) * preview.height / rect.height)));
+    const pixel = preview.getContext('2d', { willReadFrequently: true })?.getImageData(x, y, 1, 1).data;
+    if (!pixel) return;
+    backgroundColor.value = rgbToHex(pixel[0], pixel[1], pixel[2]);
+    backgroundStatus.value = 'Background color selected';
+}
+
+async function createTransparentBackgroundBlob(image: FabricImage): Promise<Blob> {
+    const source = await loadHtmlImage(imageSource(image, true));
+    const maxPixels = 24_000_000;
+    const sourcePixels = source.naturalWidth * source.naturalHeight;
+    const scale = sourcePixels > maxPixels ? Math.sqrt(maxPixels / sourcePixels) : 1;
+    const width = Math.max(1, Math.round(source.naturalWidth * scale));
+    const height = Math.max(1, Math.round(source.naturalHeight * scale));
+    const output = document.createElement('canvas');
+    output.width = width;
+    output.height = height;
+    const context = output.getContext('2d', { willReadFrequently: true });
+    if (!context) throw new Error('Image processing is unavailable in this browser.');
+    context.drawImage(source, 0, 0, width, height);
+    const pixels = context.getImageData(0, 0, width, height);
+    const [targetRed, targetGreen, targetBlue] = hexToRgb(backgroundColor.value);
+    const tolerance = Number(backgroundTolerance.value);
+    const feather = Math.max(0, Number(backgroundFeather.value));
+    const featherEnd = tolerance + feather;
+
+    for (let offset = 0; offset < pixels.data.length; offset += 4) {
+        const red = pixels.data[offset];
+        const green = pixels.data[offset + 1];
+        const blue = pixels.data[offset + 2];
+        const distance = Math.sqrt(((red - targetRed) ** 2) + ((green - targetGreen) ** 2) + ((blue - targetBlue) ** 2));
+        if (distance <= tolerance) {
+            pixels.data[offset + 3] = 0;
+        } else if (feather > 0 && distance < featherEnd) {
+            pixels.data[offset + 3] = Math.round(pixels.data[offset + 3] * ((distance - tolerance) / feather));
+        }
+    }
+    context.putImageData(pixels, 0, 0);
+    const blob = await new Promise<Blob | null>(resolve => output.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('The transparent PNG could not be created.');
+    return blob;
+}
+
+async function setImageSourcePreservingLayout(image: FabricImage, src: string): Promise<void> {
+    const layout = {
+        left: image.left,
+        top: image.top,
+        scaleX: image.scaleX,
+        scaleY: image.scaleY,
+        angle: image.angle,
+        originX: image.originX,
+        originY: image.originY,
+        flipX: image.flipX,
+        flipY: image.flipY,
+        opacity: image.opacity,
+    };
+    await image.setSrc(src, { crossOrigin: 'anonymous' });
+    image.set(layout);
+    image.setCoords();
+    canvas?.requestRenderAll();
+}
+
+async function previewBackgroundRemoval(): Promise<void> {
+    const image = selected.value;
+    const preview = backgroundPreviewCanvas.value;
+    if (!(image instanceof FabricImage) || !preview || backgroundBusy.value) return;
+    backgroundBusy.value = true;
+    backgroundStatus.value = 'Preparing preview…';
+    try {
+        const blob = await createTransparentBackgroundBlob(image);
+        const url = URL.createObjectURL(blob);
+        try {
+            const processed = await loadHtmlImage(url);
+            const maxWidth = 260;
+            const maxHeight = 170;
+            const scale = Math.min(maxWidth / processed.naturalWidth, maxHeight / processed.naturalHeight, 1);
+            preview.width = Math.max(1, Math.round(processed.naturalWidth * scale));
+            preview.height = Math.max(1, Math.round(processed.naturalHeight * scale));
+            const context = preview.getContext('2d', { willReadFrequently: true });
+            context?.clearRect(0, 0, preview.width, preview.height);
+            context?.drawImage(processed, 0, 0, preview.width, preview.height);
+        } finally {
+            URL.revokeObjectURL(url);
+        }
+        backgroundStatus.value = 'Preview shown — apply it to save';
+    } catch (error) {
+        backgroundStatus.value = '';
+        alert(error instanceof Error ? error.message : 'The background could not be removed.');
+    } finally {
+        backgroundBusy.value = false;
+    }
+}
+
+async function applyBackgroundRemoval(): Promise<void> {
+    const image = selected.value;
+    if (!(image instanceof FabricImage) || backgroundBusy.value) return;
+    backgroundBusy.value = true;
+    backgroundStatus.value = 'Removing background…';
+    try {
+        const originalSrc = image.get('originalSrc') || imageSource(image);
+        const originalUploadUuid = image.get('originalUploadUuid') || image.get('uploadUuid');
+        const blob = await createTransparentBackgroundBlob(image);
+        const fileName = `${String(image.get('name') || 'image').replace(/\.[^.]+$/, '')}-transparent.png`;
+        const form = new FormData();
+        form.append('image', new File([blob], fileName, { type: 'image/png' }));
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const response = await fetch(props.project.upload_url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
+            body: form,
+        });
+        if (!response.ok) throw new Error('The transparent image could not be saved.');
+        const uploaded = await response.json() as { url: string; uuid: string; name: string };
+        image.set({
+            originalSrc,
+            originalUploadUuid,
+            uploadUuid: uploaded.uuid,
+            backgroundRemoval: {
+                color: backgroundColor.value,
+                tolerance: backgroundTolerance.value,
+                feather: backgroundFeather.value,
+            },
+        });
+        await setImageSourcePreservingLayout(image, uploaded.url);
+        backgroundStatus.value = 'Background removed';
+        pushHistory();
+        void drawBackgroundPreview();
+    } catch (error) {
+        backgroundStatus.value = '';
+        alert(error instanceof Error ? error.message : 'The background could not be removed.');
+    } finally {
+        backgroundBusy.value = false;
+    }
+}
+
+async function restoreOriginalImage(): Promise<void> {
+    const image = selected.value;
+    if (!(image instanceof FabricImage) || backgroundBusy.value) return;
+    const originalSrc = image.get('originalSrc');
+    if (typeof originalSrc !== 'string' || !originalSrc) return;
+    backgroundBusy.value = true;
+    try {
+        await setImageSourcePreservingLayout(image, originalSrc);
+        image.set({
+            uploadUuid: image.get('originalUploadUuid') || image.get('uploadUuid'),
+            originalSrc: undefined,
+            originalUploadUuid: undefined,
+            backgroundRemoval: undefined,
+        });
+        backgroundStatus.value = 'Original image restored';
+        pushHistory();
+        void drawBackgroundPreview();
+    } finally {
+        backgroundBusy.value = false;
+    }
+}
+
+async function upload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file || !canvas) return;
-    const form = new FormData();
-    form.append('image', file);
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-    const response = await fetch(props.project.upload_url, {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
-        body: form,
-    });
-    if (!response.ok) {
-        alert('The image could not be uploaded.');
+    if (canvas.getObjects().length >= props.limits.max_layer_count) {
+        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+        input.value = '';
         return;
     }
-    const data = await response.json() as { url: string; uuid: string; name: string };
-    const image = await FabricImage.fromURL(data.url, { crossOrigin: 'anonymous' });
-    const maxWidth = props.project.canvas_width * 0.45;
-    const maxHeight = props.project.canvas_height * 0.45;
-    image.scale(Math.min(maxWidth / (image.width || 1), maxHeight / (image.height || 1), 1));
-    image.set({
-        left: props.project.canvas_width * 0.15,
-        top: props.project.canvas_height * 0.15,
-        name: data.name,
-        uploadUuid: data.uuid,
-    });
-    canvas.add(image);
-    canvas.setActiveObject(image);
-    canvas.requestRenderAll();
-    selectObject(image);
-    pushHistory();
-    input.value = '';
+
+    uploading.value = true;
+    try {
+        const form = new FormData();
+        form.append('image', file);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const response = await fetch(props.project.upload_url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
+            body: form,
+        });
+        if (!response.ok) {
+            const payload = await response.json().catch(() => null) as { message?: string } | null;
+            throw new Error(payload?.message ?? 'The image could not be uploaded.');
+        }
+        const data = await response.json() as { url: string; uuid: string; name: string };
+        const image = await FabricImage.fromURL(data.url, { crossOrigin: 'anonymous' });
+        const maxWidth = props.project.canvas_width * 0.45;
+        const maxHeight = props.project.canvas_height * 0.45;
+        image.scale(Math.min(maxWidth / (image.width || 1), maxHeight / (image.height || 1), 1));
+        image.set({
+            left: props.project.canvas_width * 0.15,
+            top: props.project.canvas_height * 0.15,
+            name: data.name,
+            uploadUuid: data.uuid,
+        });
+        canvas.add(image);
+        canvas.setActiveObject(image);
+        canvas.requestRenderAll();
+        selectObject(image);
+        pushHistory();
+    } catch (error) {
+        alert(error instanceof Error ? error.message : 'The image could not be uploaded.');
+    } finally {
+        uploading.value = false;
+        input.value = '';
+    }
 }
 
 function removeSelected(): void {
@@ -261,14 +604,20 @@ function removeSelected(): void {
     canvas.discardActiveObject();
     objects.forEach(object => canvas?.remove(object));
     selected.value = null;
+    layerVersion.value++;
     canvas.requestRenderAll();
     pushHistory();
 }
 
 function duplicateSelected(): void {
-    if (!canvas || !selected.value) return;
+    if (!canvas || !selected.value || canvas.getObjects().length >= props.limits.max_layer_count) return;
     selected.value.clone().then((copy: FabricObject) => {
-        copy.set({ left: (selected.value?.left ?? 0) + 30, top: (selected.value?.top ?? 0) + 30 });
+        copy.set({
+            left: (selected.value?.left ?? 0) + 30,
+            top: (selected.value?.top ?? 0) + 30,
+            layerId: createLayerId(),
+            name: `${String(selected.value?.get('name') || objectLabel(selected.value!, 0))} copy`,
+        });
         canvas?.add(copy);
         canvas?.setActiveObject(copy);
         canvas?.requestRenderAll();
@@ -277,12 +626,41 @@ function duplicateSelected(): void {
     });
 }
 
-function moveLayer(direction: 'up' | 'down'): void {
-    if (!canvas || !selected.value) return;
-    if (direction === 'up') canvas.bringObjectForward(selected.value);
-    else canvas.sendObjectBackwards(selected.value);
+function finishLayerMove(object: FabricObject, moved: boolean): void {
+    if (!canvas || !moved) return;
+    canvas.setActiveObject(object);
+    selectObject(object);
+    layerVersion.value++;
     canvas.requestRenderAll();
     pushHistory();
+}
+
+function moveLayer(direction: 'forward' | 'backward'): void {
+    if (!canvas || !selected.value) return;
+    const object = selected.value;
+    const moved = direction === 'forward'
+        ? canvas.bringObjectForward(object)
+        : canvas.sendObjectBackwards(object);
+    finishLayerMove(object, moved);
+}
+
+function moveLayerToEdge(direction: 'front' | 'back'): void {
+    if (!canvas || !selected.value) return;
+    const object = selected.value;
+    const moved = direction === 'front'
+        ? canvas.bringObjectToFront(object)
+        : canvas.sendObjectToBack(object);
+    finishLayerMove(object, moved);
+}
+
+function moveSpecificLayer(object: FabricObject, direction: 'forward' | 'backward'): void {
+    if (!canvas) return;
+    canvas.setActiveObject(object);
+    selectObject(object);
+    const moved = direction === 'forward'
+        ? canvas.bringObjectForward(object)
+        : canvas.sendObjectBackwards(object);
+    finishLayerMove(object, moved);
 }
 
 function toggleLock(): void {
@@ -309,18 +687,11 @@ function updateSelected(property: string, value: unknown): void {
     pushHistory();
 }
 
-function objectLabel(object: FabricObject, index: number): string {
-    return String(object.get('name') || (object.type === 'i-text' ? `Text ${index + 1}` : object.type === 'rect' ? `Shape ${index + 1}` : `Image ${index + 1}`));
-}
-
-const layerObjects = computed(() => { layerVersion.value; return canvas ? [...canvas.getObjects()].reverse() : []; });
-
 function activateLayer(object: FabricObject): void {
     canvas?.setActiveObject(object);
     canvas?.requestRenderAll();
     selectObject(object);
 }
-
 
 function clearGuides(): void {
     verticalGuides.value = [];
@@ -397,21 +768,56 @@ function renderGuides(): void {
     context.restore();
 }
 
+function normalizeFormat(value: string): 'jpeg' | 'png' | 'webp' {
+    const lowered = value.toLowerCase();
+    if (lowered === 'jpg') return 'jpeg';
+    if (lowered === 'png') return 'png';
+    if (lowered === 'webp') return 'webp';
+    return 'jpeg';
+}
+
+function validateRequestedSize(width: number, height: number, mode: 'browser' | 'server'): boolean {
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width < 320 || height < 320) {
+        alert('Please enter a valid width and height of at least 320 pixels.');
+        return false;
+    }
+
+    const maxWidth = mode === 'browser' ? props.limits.max_browser_width : props.limits.max_server_width;
+    const maxHeight = mode === 'browser' ? props.limits.max_browser_height : props.limits.max_server_height;
+    const maxPixels = mode === 'browser' ? props.limits.max_browser_pixels : props.limits.max_server_pixels;
+
+    if (width > maxWidth || height > maxHeight) {
+        alert(`The requested ${mode} export exceeds the maximum allowed size of ${maxWidth}×${maxHeight}.`);
+        return false;
+    }
+    if ((width * height) > maxPixels) {
+        alert(`The requested ${mode} export exceeds the maximum allowed pixel count.`);
+        return false;
+    }
+    return true;
+}
+
 function leaveDesign(event: MouseEvent): void {
-    if (dirty.value && !confirm('You have unsaved changes. Leave the editor anyway?')) {
+    const messages: string[] = [];
+    if (dirty.value) messages.push('You have unsaved changes.');
+    if (hasBlockingOperation.value && processingNotice.value) messages.push(processingNotice.value);
+    if (!messages.length) return;
+
+    if (!confirm(`${messages.join(' ')} Leave the editor anyway?`)) {
         event.preventDefault();
     }
 }
 
 function beforeUnload(event: BeforeUnloadEvent): void {
-    if (!dirty.value) return;
+    if (!dirty.value && !hasBlockingOperation.value) return;
     event.preventDefault();
     event.returnValue = '';
 }
 
 async function exportDesign(width: number, height: number, name: string): Promise<void> {
-
     if (!canvas || exporting.value) return;
+    if (!validateRequestedSize(width, height, 'browser')) return;
+
     exporting.value = true;
     try {
         canvas.discardActiveObject();
@@ -436,6 +842,7 @@ async function exportDesign(width: number, height: number, name: string): Promis
         const mime = exportFormat.value === 'jpeg' ? 'image/jpeg' : `image/${exportFormat.value}`;
         const blob = await new Promise<Blob | null>(resolve => output.toBlob(resolve, mime, 0.92));
         if (!blob) throw new Error('The browser could not create the download.');
+
         exportStatus.value = 'Saving export…';
         const form = new FormData();
         form.append('file', blob, `${name}.${exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value}`);
@@ -457,22 +864,28 @@ async function exportDesign(width: number, height: number, name: string): Promis
         const record = await response.json() as ExportRecord;
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         exportStatus.value = 'Export saved';
-        const anchor = document.createElement('a');
-        anchor.href = record.download_url;
-        anchor.click();
+        if (record.download_url) {
+            const anchor = document.createElement('a');
+            anchor.href = record.download_url;
+            anchor.click();
+        }
     } catch (error) {
+        exportStatus.value = 'Export failed';
         alert(error instanceof Error ? error.message : 'The design could not be exported.');
     } finally {
         exporting.value = false;
-        window.setTimeout(() => exportStatus.value = '', 2200);
+        window.setTimeout(() => { exportStatus.value = ''; }, 2200);
     }
 }
 
-async function queueServerExport(width: number, height: number, name: string): Promise<void> {
+async function queueServerExport(width: number, height: number, name: string, format: 'jpeg' | 'png' | 'webp' = exportFormat.value, fitMode: 'contain' | 'cover' = exportFit.value): Promise<void> {
     if (!canvas || exporting.value) return;
+    if (!validateRequestedSize(width, height, 'server')) return;
+
     exporting.value = true;
     exportStatus.value = 'Preparing full-resolution overlay…';
     const background = canvas.backgroundImage;
+
     try {
         canvas.discardActiveObject();
         canvas.backgroundImage = undefined;
@@ -485,7 +898,7 @@ async function queueServerExport(width: number, height: number, name: string): P
         overlay.height = height;
         const context = overlay.getContext('2d');
         if (!context) throw new Error('Canvas rendering is unavailable.');
-        const scale = exportFit.value === 'cover'
+        const scale = fitMode === 'cover'
             ? Math.max(width / source.width, height / source.height)
             : Math.min(width / source.width, height / source.height);
         const drawWidth = source.width * scale;
@@ -503,8 +916,8 @@ async function queueServerExport(width: number, height: number, name: string): P
         form.append('overlay', overlayBlob, 'overlay.png');
         form.append('width', String(width));
         form.append('height', String(height));
-        form.append('format', exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value);
-        form.append('fit_mode', exportFit.value);
+        form.append('format', format === 'jpeg' ? 'jpg' : format);
+        form.append('fit_mode', fitMode);
         form.append('preset_name', name);
         form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson() }));
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
@@ -519,43 +932,52 @@ async function queueServerExport(width: number, height: number, name: string): P
         }
         const record = await response.json() as ExportRecord;
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
-        void pollServerExport(record);
+        await pollServerExport(record);
     } catch (error) {
         canvas.backgroundImage = background;
         canvas.requestRenderAll();
+        exportStatus.value = 'Server render failed';
         alert(error instanceof Error ? error.message : 'The server render could not be queued.');
         exporting.value = false;
-        exportStatus.value = '';
     }
 }
 
 async function pollServerExport(record: ExportRecord): Promise<void> {
-    for (let attempt = 0; attempt < 120; attempt++) {
-        await new Promise(resolve => window.setTimeout(resolve, 2500));
-        const response = await fetch(record.status_url, { headers: { Accept: 'application/json' } });
-        if (!response.ok) continue;
-        const current = await response.json() as ExportRecord;
-        recentExports.value = recentExports.value.map(item => item.uuid === current.uuid ? current : item);
-        if (current.status === 'completed') {
-            exportStatus.value = 'Full-resolution export ready';
-            if (current.download_url) window.location.href = current.download_url;
-            window.setTimeout(() => exportStatus.value = '', 3000);
-            return;
+    try {
+        for (let attempt = 0; attempt < 120; attempt++) {
+            await new Promise(resolve => window.setTimeout(resolve, 2500));
+            const response = await fetch(record.status_url, { headers: { Accept: 'application/json' } });
+            if (!response.ok) continue;
+            const current = await response.json() as ExportRecord;
+            recentExports.value = recentExports.value.map(item => item.uuid === current.uuid ? current : item);
+            if (current.status === 'completed') {
+                exportStatus.value = 'Full-resolution export ready';
+                if (current.download_url) window.location.href = current.download_url;
+                window.setTimeout(() => { exportStatus.value = ''; }, 3000);
+                return;
+            }
+            if (current.status === 'failed') {
+                exportStatus.value = 'Server render failed';
+                return;
+            }
         }
-        if (current.status === 'failed') {
-            exportStatus.value = 'Server render failed';
-            alert(current.error_message ?? 'The server could not render this design.');
-            return;
-        }
+        exportStatus.value = 'Render is still processing. It will remain in Recent exports.';
+    } finally {
+        exporting.value = false;
     }
-    exportStatus.value = 'Render is still processing. It will remain in Recent exports.';
+}
+
+async function retryServerExport(record: ExportRecord): Promise<void> {
+    exportFormat.value = normalizeFormat(record.format);
+    exportFit.value = (record.fit_mode === 'cover' ? 'cover' : 'contain');
+    await queueServerExport(record.width, record.height, record.preset_name || 'Retry render', normalizeFormat(record.format), exportFit.value);
 }
 
 function deleteExport(record: ExportRecord): void {
     if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) return;
     router.delete(record.delete_url, {
         preserveScroll: true,
-        onSuccess: () => recentExports.value = recentExports.value.filter(item => item.uuid !== record.uuid),
+        onSuccess: () => { recentExports.value = recentExports.value.filter(item => item.uuid !== record.uuid); },
     });
 }
 
@@ -566,9 +988,11 @@ function keyboard(event: KeyboardEvent): void {
         event.preventDefault();
         event.shiftKey ? redo() : undo();
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
-        event.preventDefault(); save();
+        event.preventDefault();
+        save();
     } else if (event.key === 'Delete' || event.key === 'Backspace') {
-        event.preventDefault(); removeSelected();
+        event.preventDefault();
+        removeSelected();
     }
 }
 
@@ -583,6 +1007,7 @@ onMounted(async () => {
         selectionBorderColor: '#38bdf8',
     });
     canvas.backgroundColor = '#1c1917';
+
     const saved = props.project.design_json?.fabric;
     if (saved) {
         await canvas.loadFromJSON(saved);
@@ -590,9 +1015,12 @@ onMounted(async () => {
         for (const legacy of props.project.design_json.objects as Array<Record<string, unknown>>) {
             if (legacy.type === 'text') {
                 canvas.add(new IText(String(legacy.text ?? ''), {
-                    left: Number(legacy.x ?? 0), top: Number(legacy.y ?? 0),
-                    fontSize: Number(legacy.fontSize ?? 48), fill: String(legacy.color ?? '#ffffff'),
-                    angle: Number(legacy.rotation ?? 0), name: 'Text',
+                    left: Number(legacy.x ?? 0),
+                    top: Number(legacy.y ?? 0),
+                    fontSize: Number(legacy.fontSize ?? 48),
+                    fill: String(legacy.color ?? '#ffffff'),
+                    angle: Number(legacy.rotation ?? 0),
+                    name: 'Text',
                 }));
             } else if (legacy.type === 'image' && legacy.src) {
                 const image = await FabricImage.fromURL(String(legacy.src), { crossOrigin: 'anonymous' });
@@ -602,30 +1030,18 @@ onMounted(async () => {
             }
         }
     }
-    if (props.project.source_url) {
-        const background = await FabricImage.fromURL(props.project.source_url, {
-            crossOrigin: 'anonymous',
-        });
 
-        // Fabric can occasionally retain dimensions from image metadata that do
-        // not match the browser-decoded bitmap. Use the decoded element size so
-        // the source image always fills the design canvas correctly.
+    canvas.getObjects().forEach((object, index) => ensureLayerMetadata(object, index));
+
+    if (props.project.source_url) {
+        const background = await FabricImage.fromURL(props.project.source_url, { crossOrigin: 'anonymous' });
         const element = background.getElement() as HTMLImageElement;
         if (typeof element.decode === 'function') {
-            try {
-                await element.decode();
-            } catch {
-                // The image is already usable when decode() is unsupported or
-                // rejects after the browser has completed loading it.
-            }
+            try { await element.decode(); } catch { /* noop */ }
         }
-
         const sourceWidth = Math.max(1, element.naturalWidth || element.width || background.width || 1);
         const sourceHeight = Math.max(1, element.naturalHeight || element.height || background.height || 1);
-        const scale = Math.max(
-            props.project.canvas_width / sourceWidth,
-            props.project.canvas_height / sourceHeight,
-        );
+        const scale = Math.max(props.project.canvas_width / sourceWidth, props.project.canvas_height / sourceHeight);
         const renderedWidth = sourceWidth * scale;
         const renderedHeight = sourceHeight * scale;
 
@@ -645,27 +1061,30 @@ onMounted(async () => {
         background.setCoords();
         canvas.backgroundImage = background;
     }
+
     layerVersion.value++;
     canvas.requestRenderAll();
     const initial = snapshot();
     history.value = [initial];
     historyIndex.value = 0;
+
     canvas.on('selection:created', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:updated', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:cleared', () => selectObject(null));
-    canvas.on('object:moving', event => {
-        if (event.target) snapObject(event.target);
+    canvas.on('object:moving', event => { if (event.target) snapObject(event.target); });
+    canvas.on('object:modified', () => { clearGuides(); pushHistory(); });
+    canvas.on('object:added', event => {
+        if (event.target) ensureLayerMetadata(event.target, canvas?.getObjects().length ?? 0);
+        layerVersion.value++;
     });
-    canvas.on('object:modified', () => {
-        clearGuides();
-        pushHistory();
-    });
+    canvas.on('object:removed', () => { layerVersion.value++; });
     canvas.on('mouse:up', clearGuides);
     canvas.on('after:render', renderGuides);
     canvas.on('text:changed', () => {
         dirty.value = true;
         scheduleAutosave();
     });
+
     window.addEventListener('keydown', keyboard);
     window.addEventListener('beforeunload', beforeUnload);
     window.addEventListener('resize', measureWorkspace);
@@ -681,7 +1100,11 @@ onBeforeUnmount(() => {
     canvas?.dispose();
 });
 
-watch(title, () => { dirty.value = true; scheduleAutosave(); });
+watch(title, () => {
+    dirty.value = true;
+    scheduleAutosave();
+});
+
 watch(stageDimensions, dimensions => {
     if (!canvas) return;
     canvas.setDimensions(dimensions, { cssOnly: true });
@@ -692,38 +1115,71 @@ watch(stageDimensions, dimensions => {
     <Head :title="title" />
     <div class="flex h-screen flex-col overflow-hidden bg-stone-950 text-white">
         <header class="shrink-0 flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3">
-            <Button variant="ghost" as-child><Link href="/account/designs" @click="leaveDesign"><ArrowLeft class="mr-2 h-4 w-4" />My Designs</Link></Button>
-            <input v-model="title" class="min-w-56 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-semibold" />
-            <span class="min-w-20 text-right text-xs text-stone-400">{{ savedMessage || (dirty ? 'Unsaved changes' : `${project.canvas_width} × ${project.canvas_height}`) }}</span>
-            <Button variant="ghost" size="icon" :disabled="!canUndo" title="Undo" @click="undo"><Undo2 class="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" :disabled="!canRedo" title="Redo" @click="redo"><Redo2 class="h-4 w-4" /></Button>
-            <Button :disabled="saving" @click="save(false)"><Save class="mr-2 h-4 w-4" />{{ saving ? 'Saving…' : 'Save' }}</Button>
+            <Button variant="ghost" as-child>
+                <Link href="/account/designs" @click="leaveDesign"><ArrowLeft class="mr-2 h-4 w-4" />My Designs</Link>
+            </Button>
+            <div class="min-w-0 flex-1">
+                <input v-model="title" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white outline-none" />
+                <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-400">
+                    <span>{{ props.project.canvas_width }}×{{ props.project.canvas_height }}</span>
+                    <span v-if="dirty" class="text-amber-300">Unsaved changes</span>
+                    <span v-if="savedMessage" class="text-emerald-300">{{ savedMessage }}</span>
+                    <span v-if="processingNotice" class="text-sky-300">{{ processingNotice }}</span>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <Button variant="secondary" :disabled="!canUndo" @click="undo"><Undo2 class="mr-2 h-4 w-4" />Undo</Button>
+                <Button variant="secondary" :disabled="!canRedo" @click="redo"><Redo2 class="mr-2 h-4 w-4" />Redo</Button>
+                <Button :disabled="saving || hasBlockingOperation" @click="save()"><Save class="mr-2 h-4 w-4" />{{ saving ? 'Saving…' : 'Save' }}</Button>
+            </div>
         </header>
 
-        <div class="grid min-h-0 flex-1 lg:grid-cols-[250px_minmax(0,1fr)_310px]">
+        <div v-if="isSmallScreen" class="border-b border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            The Design Studio works best on a desktop or tablet. It will still work here, but the layout is optimized for wider screens.
+        </div>
+
+        <div class="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)_320px]">
             <aside class="min-h-0 overflow-y-auto border-r border-white/10 p-4">
-                <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Add</h2>
+                <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Tools</h2>
                 <div class="mt-4 grid gap-2">
                     <Button variant="secondary" class="justify-start" @click="addText"><Type class="mr-2 h-4 w-4" />Add text</Button>
-                    <Button variant="secondary" class="justify-start" @click="addShape"><Square class="mr-2 h-4 w-4" />Add shape</Button>
-                    <Button variant="secondary" class="justify-start" @click="fileInput?.click()"><ImagePlus class="mr-2 h-4 w-4" />Upload image</Button>
+                    <Button variant="secondary" class="justify-start" @click="addShape"><Square class="mr-2 h-4 w-4" />Add rectangle</Button>
+                    <Button variant="secondary" class="justify-start" :disabled="uploading" @click="fileInput?.click()"><ImagePlus class="mr-2 h-4 w-4" />{{ uploading ? 'Uploading…' : 'Upload image' }}</Button>
                     <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" @change="upload" />
                 </div>
 
-                <label class="mt-5 flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-stone-300">
-                    <span>Alignment snapping</span>
-                    <input v-model="snapEnabled" type="checkbox" class="h-4 w-4" />
-                </label>
-
-                <div class="mt-7 flex items-center justify-between">
-                    <h2 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-stone-400"><Layers3 class="h-4 w-4" />Layers</h2>
+                <div class="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                    <label class="flex items-center justify-between text-sm">
+                        <span>Snapping guides</span>
+                        <input v-model="snapEnabled" type="checkbox" />
+                    </label>
+                    <p class="mt-2 text-xs text-stone-400">Objects snap to the canvas edges and center while you move them.</p>
                 </div>
-                <div class="mt-3 space-y-1">
-                    <button v-for="(object, index) in layerObjects" :key="index" class="flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-white/5" :class="selected === object ? 'bg-sky-500/15 text-sky-200' : 'text-stone-300'" @click="activateLayer(object)">
-                        <span class="truncate">{{ objectLabel(object, index) }}</span>
-                        <Lock v-if="object.lockMovementX" class="h-3.5 w-3.5" />
-                    </button>
-                    <p v-if="layerObjects.length === 0" class="py-3 text-xs text-stone-500">Add text or an image to begin.</p>
+
+                <div class="mt-6">
+                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-stone-400"><Layers3 class="h-4 w-4" />Layers</h3>
+                    <div class="mt-3 space-y-1">
+                        <div v-for="(object, index) in layerObjects" :key="layerKey(object)" class="rounded-md border border-white/5 p-2" :class="selected === object ? 'bg-sky-500/15' : 'bg-transparent'" @click="activateLayer(object)">
+                            <div class="flex items-center gap-2">
+                                <input
+                                    :value="objectLabel(object, index)"
+                                    class="min-w-0 flex-1 rounded border border-white/10 bg-stone-900/80 px-2 py-1.5 text-sm text-stone-200 outline-none focus:border-sky-400"
+                                    aria-label="Layer name"
+                                    title="Rename layer"
+                                    @click.stop
+                                    @focus="activateLayer(object)"
+                                    @input="renameLayer(object, ($event.target as HTMLInputElement).value)"
+                                    @keydown.enter="($event.target as HTMLInputElement).blur()"
+                                />
+                                <Lock v-if="object.lockMovementX" class="h-3.5 w-3.5 shrink-0 text-stone-400" />
+                            </div>
+                            <div class="mt-2 grid grid-cols-2 gap-1">
+                                <button class="rounded border border-white/10 px-2 py-1.5 text-xs text-stone-300 hover:bg-white/5 hover:text-white" title="Bring forward one layer" @click.stop="moveSpecificLayer(object, 'forward')"><ArrowUp class="mr-1 inline h-3.5 w-3.5" />Forward</button>
+                                <button class="rounded border border-white/10 px-2 py-1.5 text-xs text-stone-300 hover:bg-white/5 hover:text-white" title="Send backward one layer" @click.stop="moveSpecificLayer(object, 'backward')"><ArrowDown class="mr-1 inline h-3.5 w-3.5" />Backward</button>
+                            </div>
+                        </div>
+                        <p v-if="layerObjects.length === 0" class="py-3 text-xs text-stone-500">Add text or an image to begin.</p>
+                    </div>
                 </div>
             </aside>
 
@@ -734,7 +1190,9 @@ watch(stageDimensions, dimensions => {
                     </div>
                 </div>
                 <div class="sticky bottom-0 z-20 mx-auto mt-4 flex max-w-md items-center gap-3 rounded-xl border border-white/10 bg-stone-950/95 px-4 py-3 text-xs text-stone-300 shadow-xl backdrop-blur">
-                    <span>Zoom</span><input v-model.number="zoom" type="range" min="0.35" max="2" step="0.05" class="w-full" /><span class="w-12 text-right">{{ Math.round(zoom * 100) }}%</span>
+                    <span>Zoom</span>
+                    <input v-model.number="zoom" type="range" min="0.35" max="2" step="0.05" class="w-full" />
+                    <span class="w-12 text-right">{{ Math.round(zoom * 100) }}%</span>
                     <Button variant="secondary" size="sm" @click="zoom = 1">100%</Button>
                 </div>
             </main>
@@ -742,6 +1200,11 @@ watch(stageDimensions, dimensions => {
             <aside class="min-h-0 overflow-y-auto border-l border-white/10 p-4">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Properties</h2>
                 <div v-if="selected" class="mt-4 space-y-4">
+                    <label class="block text-sm">
+                        Layer name
+                        <input :value="String(selected.get('name') || '')" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" @input="renameLayer(selected, ($event.target as HTMLInputElement).value)" />
+                    </label>
+
                     <template v-if="selected.type === 'i-text'">
                         <label class="block text-sm">Text<textarea :value="String(selected.get('text') ?? '')" rows="3" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" @input="updateSelected('text', ($event.target as HTMLTextAreaElement).value)" /></label>
                         <div class="grid grid-cols-2 gap-3">
@@ -761,6 +1224,7 @@ watch(stageDimensions, dimensions => {
                         <label class="block text-sm">Outline width<input :value="Number(selected.get('strokeWidth') ?? 0)" type="range" min="0" max="12" step="0.5" class="mt-2 w-full" @input="updateSelected('strokeWidth', Number(($event.target as HTMLInputElement).value))" /></label>
                         <label class="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm"><span>Text shadow</span><input type="checkbox" :checked="Boolean(selected.get('shadow'))" @change="updateSelected('shadow', ($event.target as HTMLInputElement).checked ? 'rgba(0,0,0,.55) 0 4px 12px' : null)" /></label>
                     </template>
+
                     <template v-if="selected.type === 'rect'">
                         <div class="grid grid-cols-2 gap-3">
                             <label class="text-sm">Fill<input :value="String(selected.get('fill') ?? '#0f172a')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('fill', ($event.target as HTMLInputElement).value)" /></label>
@@ -769,20 +1233,41 @@ watch(stageDimensions, dimensions => {
                         <label class="block text-sm">Border width<input :value="Number(selected.get('strokeWidth') ?? 0)" type="range" min="0" max="20" step="1" class="mt-2 w-full" @input="updateSelected('strokeWidth', Number(($event.target as HTMLInputElement).value))" /></label>
                         <label class="block text-sm">Corner rounding<input :value="Number(selected.get('rx') ?? 0)" type="range" min="0" max="120" step="2" class="mt-2 w-full" @input="updateSelected('rx', Number(($event.target as HTMLInputElement).value)); updateSelected('ry', Number(($event.target as HTMLInputElement).value))" /></label>
                     </template>
+
+                    <div v-if="selectedIsImage" class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="flex items-center gap-2 text-sm font-semibold"><Pipette class="h-4 w-4" />Remove solid background</h3>
+                            <input v-model="backgroundColor" type="color" class="h-8 w-10 cursor-pointer rounded border-0 bg-transparent" title="Background color" />
+                        </div>
+                        <p class="mt-2 text-xs leading-relaxed text-stone-400">Click the background in the preview, then adjust tolerance and edge softness.</p>
+                        <canvas ref="backgroundPreviewCanvas" class="mt-3 max-h-44 w-full cursor-crosshair rounded-lg border border-white/10 bg-[linear-gradient(45deg,#2a2a2a_25%,transparent_25%),linear-gradient(-45deg,#2a2a2a_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#2a2a2a_75%),linear-gradient(-45deg,transparent_75%,#2a2a2a_75%)] bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0px] object-contain" title="Click a color to remove" @click="pickBackgroundColor" />
+                        <label class="mt-3 block text-xs text-stone-300">Tolerance: {{ backgroundTolerance }}<input v-model.number="backgroundTolerance" type="range" min="0" max="160" step="1" class="mt-1 w-full" /></label>
+                        <label class="mt-3 block text-xs text-stone-300">Edge softness: {{ backgroundFeather }}<input v-model.number="backgroundFeather" type="range" min="0" max="100" step="1" class="mt-1 w-full" /></label>
+                        <p v-if="backgroundStatus" class="mt-2 text-xs text-sky-300">{{ backgroundStatus }}</p>
+                        <div class="mt-3 grid grid-cols-2 gap-2">
+                            <Button variant="secondary" size="sm" :disabled="backgroundBusy" @click="previewBackgroundRemoval">{{ backgroundBusy ? 'Working…' : 'Preview' }}</Button>
+                            <Button size="sm" :disabled="backgroundBusy" @click="applyBackgroundRemoval">Apply</Button>
+                        </div>
+                        <Button v-if="selected.get('originalSrc')" variant="ghost" size="sm" class="mt-2 w-full" :disabled="backgroundBusy" @click="restoreOriginalImage"><RotateCcw class="mr-2 h-4 w-4" />Restore original</Button>
+                    </div>
+
                     <label class="block text-sm">Opacity<input :value="Number(selected.get('opacity') ?? 1)" type="range" min="0.05" max="1" step="0.05" class="mt-2 w-full" @input="updateSelected('opacity', Number(($event.target as HTMLInputElement).value))" /></label>
                     <label class="block text-sm">Rotation<input :value="Number(selected.get('angle') ?? 0)" type="range" min="-180" max="180" class="mt-2 w-full" @input="updateSelected('angle', Number(($event.target as HTMLInputElement).value))" /></label>
                     <div class="grid grid-cols-2 gap-2">
                         <Button variant="secondary" @click="duplicateSelected"><Copy class="mr-2 h-4 w-4" />Duplicate</Button>
                         <Button variant="secondary" @click="toggleLock"><component :is="selected.lockMovementX ? Unlock : Lock" class="mr-2 h-4 w-4" />{{ selected.lockMovementX ? 'Unlock' : 'Lock' }}</Button>
-                        <Button variant="secondary" @click="moveLayer('up')"><ArrowUp class="mr-2 h-4 w-4" />Forward</Button>
-                        <Button variant="secondary" @click="moveLayer('down')"><ArrowDown class="mr-2 h-4 w-4" />Backward</Button>
+                        <Button variant="secondary" @click="moveLayer('forward')"><ArrowUp class="mr-2 h-4 w-4" />Forward</Button>
+                        <Button variant="secondary" @click="moveLayer('backward')"><ArrowDown class="mr-2 h-4 w-4" />Backward</Button>
+                        <Button variant="secondary" @click="moveLayerToEdge('front')">To front</Button>
+                        <Button variant="secondary" @click="moveLayerToEdge('back')">To back</Button>
                     </div>
                     <Button variant="destructive" class="w-full" @click="removeSelected"><Trash2 class="mr-2 h-4 w-4" />Remove element</Button>
                 </div>
                 <p v-else class="mt-5 text-sm text-stone-400">Select an element to edit it.</p>
 
                 <div class="mt-8 border-t border-white/10 pt-5">
-                    <h3 class="flex items-center gap-2 text-sm font-semibold"><Download class="h-4 w-4" />Download design</h3><p v-if="exportStatus" class="mt-2 text-xs text-sky-300">{{ exportStatus }}</p>
+                    <h3 class="flex items-center gap-2 text-sm font-semibold"><Download class="h-4 w-4" />Download design</h3>
+                    <p v-if="exportStatus" class="mt-2 text-xs text-sky-300">{{ exportStatus }}</p>
                     <div class="mt-3 grid grid-cols-2 gap-2">
                         <label class="text-xs text-stone-400">Format<select v-model="exportFormat" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select></label>
                         <label class="text-xs text-stone-400">Fit<select v-model="exportFit" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="contain">Fit inside</option><option value="cover">Crop to fill</option></select></label>
@@ -792,7 +1277,7 @@ watch(stageDimensions, dimensions => {
                     </div>
                     <div class="mt-4 rounded-lg border border-white/10 p-3">
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Custom size</p>
-                        <div class="mt-2 grid grid-cols-2 gap-2"><input v-model.number="customWidth" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /><input v-model.number="customHeight" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /></div>
+                        <div class="mt-2 grid grid-cols-2 gap-2"><input v-model.number="customWidth" type="number" min="320" :max="props.limits.max_server_width" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /><input v-model.number="customHeight" type="number" min="320" :max="props.limits.max_server_height" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /></div>
                         <Button class="mt-2 w-full" :disabled="exporting" @click="exportDesign(customWidth, customHeight, 'custom')">{{ exporting ? 'Preparing…' : 'Download custom size' }}</Button>
                         <Button variant="secondary" class="mt-2 w-full" :disabled="exporting" @click="queueServerExport(customWidth, customHeight, 'Full resolution')">{{ exporting ? 'Queueing…' : 'Render full resolution on server' }}</Button>
                         <p class="mt-2 text-xs leading-relaxed text-stone-500">Server rendering uses the highest-resolution licensed source and continues through the queue even if you leave this page.</p>
@@ -801,8 +1286,19 @@ watch(stageDimensions, dimensions => {
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Recent exports</p>
                         <div class="mt-2 space-y-2">
                             <div v-for="record in recentExports" :key="record.uuid" class="rounded-lg border border-white/10 p-3 text-xs">
-                                <div class="flex items-start justify-between gap-2"><div><p class="font-medium text-white">{{ record.preset_name || 'Custom' }} · {{ record.width }}×{{ record.height }}</p><p class="mt-1 text-stone-400">{{ record.format }}<span v-if="record.size"> · {{ record.size }}</span> · {{ record.status === 'completed' ? record.created_at : record.status }}</p><p v-if="record.status === 'failed'" class="mt-1 text-red-300">{{ record.error_message }}</p></div><button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button></div>
-                                <a v-if="record.download_url" :href="record.download_url" class="mt-2 inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a><span v-else class="mt-2 inline-flex text-stone-500">{{ record.status === 'failed' ? 'Render failed' : 'Rendering…' }}</span>
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p class="font-medium text-white">{{ record.preset_name || 'Custom' }} · {{ record.width }}×{{ record.height }}</p>
+                                        <p class="mt-1 text-stone-400">{{ record.format }}<span v-if="record.size"> · {{ record.size }}</span> · {{ record.status === 'completed' ? record.created_at : record.status }}</p>
+                                        <p v-if="record.status === 'failed'" class="mt-1 text-red-300">{{ record.error_message || 'The render failed.' }}</p>
+                                    </div>
+                                    <button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button>
+                                </div>
+                                <div class="mt-2 flex flex-wrap gap-3">
+                                    <a v-if="record.download_url" :href="record.download_url" class="inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a>
+                                    <button v-else-if="record.retryable" class="inline-flex font-medium text-amber-300 hover:text-amber-200" :disabled="exporting" @click="retryServerExport(record)">Retry render</button>
+                                    <span v-else class="inline-flex text-stone-500">{{ record.status === 'failed' ? 'Render failed' : 'Rendering…' }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
