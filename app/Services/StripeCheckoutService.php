@@ -29,7 +29,9 @@ class StripeCheckoutService
         abort_unless($licenseType->is_active, 404, 'This license is not available.');
 
         if ($this->purchaseService->userHasPurchasedImage($user, $image)) {
-            throw ValidationException::withMessages(['image' => 'You already have an active license for this asset.']);
+            throw ValidationException::withMessages([
+                'image' => 'You already have an active license for this asset.',
+            ]);
         }
 
         $order = $this->purchaseService->createPendingOrder($user, $image, $licenseType);
@@ -58,9 +60,12 @@ class StripeCheckoutService
                     'checkout_type' => 'single',
                     'commerce_version' => (string) ($order->commerce_version ?: '1.0'),
                 ],
-            ], ['idempotency_key' => 'checkout-order-'.$order->id]);
+            ], [
+                'idempotency_key' => $this->idempotencyKey($order),
+            ]);
         } catch (Throwable $exception) {
             $order->update(['status' => Order::STATUS_FAILED]);
+
             throw $exception;
         }
 
@@ -85,9 +90,12 @@ class StripeCheckoutService
                 'success_url' => url('/checkout/success?session_id={CHECKOUT_SESSION_ID}'),
                 'cancel_url' => url('/cart'),
                 'metadata' => $plan->metadata,
-            ], ['idempotency_key' => 'checkout-order-'.$plan->order->id]);
+            ], [
+                'idempotency_key' => $this->idempotencyKey($plan->order),
+            ]);
         } catch (Throwable $exception) {
             $plan->order->update(['status' => Order::STATUS_FAILED]);
+
             throw $exception;
         }
 
@@ -97,5 +105,18 @@ class StripeCheckoutService
         ]);
 
         return $session;
+    }
+
+    private function idempotencyKey(Order $order): string
+    {
+        $identity = implode('|', [
+            app()->environment(),
+            config('app.url'),
+            $order->id,
+            $order->order_number,
+            $order->created_at?->format('Y-m-d\TH:i:s.uP'),
+        ]);
+
+        return 'checkout-'.hash('sha256', $identity);
     }
 }
