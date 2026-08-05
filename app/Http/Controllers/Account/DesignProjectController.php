@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Account\DesignExportController;
 use App\Models\DesignProject;
 use App\Models\License;
 use Illuminate\Http\RedirectResponse;
@@ -16,11 +17,13 @@ class DesignProjectController extends Controller
 {
     public function index(Request $request): Response
     {
-        $projects = DesignProject::query()->where('user_id',$request->user()->id)->with(['asset.primaryPreviewFile','license'])->latest('updated_at')->get()->map(fn(DesignProject $p)=>[
+        $projects = DesignProject::query()->where('user_id',$request->user()->id)->with(['asset.primaryPreviewFile','license','exports' => fn ($query) => $query->latest('completed_at')])->latest('updated_at')->get()->map(fn(DesignProject $p)=>[
             'uuid'=>$p->uuid,'title'=>$p->title,'status'=>$p->status,'updated_at'=>$p->updated_at?->diffForHumans(),
             'canvas'=>[$p->canvas_width,$p->canvas_height],
             'preview_url'=>$p->asset?->primaryPreviewFile ? route('assets.preview',[$p->asset,$p->asset->primaryPreviewFile]) : null,
             'edit_url'=>route('account.designs.edit',$p),
+            'export_count'=>$p->exports->where('status','completed')->count(),
+            'latest_exports'=>$p->exports->where('status','completed')->take(3)->map(fn($export)=>DesignExportController::present($p,$export))->values(),
         ]);
         return Inertia::render('Account/Designs/Index',['projects'=>$projects]);
     }
@@ -43,7 +46,7 @@ class DesignProjectController extends Controller
     public function edit(Request $request, DesignProject $design): Response
     {
         $this->owned($request,$design);
-        $design->load(['asset.primaryPreviewFile','license','uploads']);
+        $design->load(['asset.primaryPreviewFile','license','uploads','exports' => fn ($query) => $query->where('status','completed')->latest('completed_at')->limit(12)]);
         $design->forceFill(['last_opened_at'=>now()])->save();
         $file=$design->asset?->primaryPreviewFile;
         return Inertia::render('Account/Designs/Edit',[
@@ -52,7 +55,9 @@ class DesignProjectController extends Controller
                 'design_json'=>$design->design_json ?: ['version'=>1,'objects'=>[]],
                 'source_url'=>$file ? route('assets.preview',[$design->asset,$file]) : null,
                 'save_url'=>route('account.designs.update',$design),'upload_url'=>route('account.designs.uploads.store',$design),
+                'export_url'=>route('account.designs.exports.store',$design),
                 'uploads'=>$design->uploads->map(fn($u)=>['uuid'=>$u->uuid,'name'=>$u->original_filename,'url'=>route('account.designs.uploads.show',[$design,$u->uuid])]),
+                'exports'=>$design->exports->map(fn($export)=>DesignExportController::present($design,$export))->values(),
             ],
             'export_presets'=>[['name'=>'Social Square','width'=>1080,'height'=>1080],['name'=>'Social Portrait','width'=>1080,'height'=>1350],['name'=>'Story / Reel','width'=>1080,'height'=>1920],['name'=>'HD Landscape','width'=>1920,'height'=>1080]],
         ]);
@@ -79,6 +84,7 @@ class DesignProjectController extends Controller
     {
         $this->owned($request,$design);
         foreach($design->uploads as $upload) Storage::disk($upload->disk)->delete($upload->path);
+        foreach($design->exports as $export) if ($export->disk && $export->path) Storage::disk($export->disk)->delete($export->path);
         $design->delete();
         return redirect()->route('account.designs.index')->with('success','Design deleted.');
     }

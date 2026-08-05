@@ -24,6 +24,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button';
 
 type ExportPreset = { name: string; width: number; height: number };
+type ExportRecord = { uuid: string; width: number; height: number; format: string; fit_mode: string; preset_name: string | null; size: string | null; created_at: string; download_url: string; delete_url: string };
 type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[] };
 interface Project {
     uuid: string;
@@ -34,6 +35,8 @@ interface Project {
     source_url: string | null;
     save_url: string;
     upload_url: string;
+    export_url: string;
+    exports: ExportRecord[];
     uploads: { uuid: string; name: string; url: string }[];
 }
 
@@ -46,6 +49,8 @@ const savedMessage = ref('');
 const selected = ref<FabricObject | null>(null);
 const zoom = ref(1);
 const exporting = ref(false);
+const exportStatus = ref('');
+const recentExports = ref<ExportRecord[]>([...props.project.exports]);
 const exportFormat = ref<'jpeg' | 'png' | 'webp'>('jpeg');
 const exportFit = ref<'contain' | 'cover'>('contain');
 const customWidth = ref(props.project.canvas_width);
@@ -277,17 +282,44 @@ async function exportDesign(width: number, height: number, name: string): Promis
         const mime = exportFormat.value === 'jpeg' ? 'image/jpeg' : `image/${exportFormat.value}`;
         const blob = await new Promise<Blob | null>(resolve => output.toBlob(resolve, mime, 0.92));
         if (!blob) throw new Error('The browser could not create the download.');
-        const url = URL.createObjectURL(blob);
+        exportStatus.value = 'Saving export…';
+        const form = new FormData();
+        form.append('file', blob, `${name}.${exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value}`);
+        form.append('width', String(width));
+        form.append('height', String(height));
+        form.append('format', exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value);
+        form.append('fit_mode', exportFit.value);
+        form.append('preset_name', name);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const response = await fetch(props.project.export_url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
+            body: form,
+        });
+        if (!response.ok) {
+            const payload = await response.json().catch(() => null) as { message?: string } | null;
+            throw new Error(payload?.message ?? 'The completed export could not be saved.');
+        }
+        const record = await response.json() as ExportRecord;
+        recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
+        exportStatus.value = 'Export saved';
         const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `${title.value.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase()}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value}`;
+        anchor.href = record.download_url;
         anchor.click();
-        URL.revokeObjectURL(url);
     } catch (error) {
         alert(error instanceof Error ? error.message : 'The design could not be exported.');
     } finally {
         exporting.value = false;
+        window.setTimeout(() => exportStatus.value = '', 2200);
     }
+}
+
+function deleteExport(record: ExportRecord): void {
+    if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) return;
+    router.delete(record.delete_url, {
+        preserveScroll: true,
+        onSuccess: () => recentExports.value = recentExports.value.filter(item => item.uuid !== record.uuid),
+    });
 }
 
 function keyboard(event: KeyboardEvent): void {
@@ -475,7 +507,7 @@ watch(stageDimensions, dimensions => {
                 <p v-else class="mt-5 text-sm text-stone-400">Select an element to edit it.</p>
 
                 <div class="mt-8 border-t border-white/10 pt-5">
-                    <h3 class="flex items-center gap-2 text-sm font-semibold"><Download class="h-4 w-4" />Download design</h3>
+                    <h3 class="flex items-center gap-2 text-sm font-semibold"><Download class="h-4 w-4" />Download design</h3><p v-if="exportStatus" class="mt-2 text-xs text-sky-300">{{ exportStatus }}</p>
                     <div class="mt-3 grid grid-cols-2 gap-2">
                         <label class="text-xs text-stone-400">Format<select v-model="exportFormat" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select></label>
                         <label class="text-xs text-stone-400">Fit<select v-model="exportFit" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="contain">Fit inside</option><option value="cover">Crop to fill</option></select></label>
@@ -487,6 +519,15 @@ watch(stageDimensions, dimensions => {
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Custom size</p>
                         <div class="mt-2 grid grid-cols-2 gap-2"><input v-model.number="customWidth" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /><input v-model.number="customHeight" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /></div>
                         <Button class="mt-2 w-full" :disabled="exporting" @click="exportDesign(customWidth, customHeight, 'custom')">{{ exporting ? 'Preparing…' : 'Download custom size' }}</Button>
+                    </div>
+                    <div v-if="recentExports.length" class="mt-5 border-t border-white/10 pt-4">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Recent exports</p>
+                        <div class="mt-2 space-y-2">
+                            <div v-for="record in recentExports" :key="record.uuid" class="rounded-lg border border-white/10 p-3 text-xs">
+                                <div class="flex items-start justify-between gap-2"><div><p class="font-medium text-white">{{ record.preset_name || 'Custom' }} · {{ record.width }}×{{ record.height }}</p><p class="mt-1 text-stone-400">{{ record.format }}<span v-if="record.size"> · {{ record.size }}</span> · {{ record.created_at }}</p></div><button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button></div>
+                                <a :href="record.download_url" class="mt-2 inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
