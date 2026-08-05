@@ -10,6 +10,10 @@ import {
     Copy,
     Download,
     ImagePlus,
+    LibraryBig,
+    Maximize2,
+    Search,
+    X,
     Layers3,
     Lock,
     Pipette,
@@ -37,9 +41,13 @@ FabricObject.customProperties = [
     'originalSrc',
     'backgroundRemoval',
     'lockedByUser',
+    'sourceType',
+    'sourceAssetId',
+    'sourceLicenseId',
 ];
 
 type ExportPreset = { name: string; width: number; height: number };
+type LibraryItem = { license_id: number; asset_id: number; title: string; license_name: string | null; licensed_at: string | null; thumbnail_url: string; image_url: string };
 type ExportRecord = {
     uuid: string;
     width: number;
@@ -57,7 +65,7 @@ type ExportRecord = {
     download_url: string | null;
     delete_url: string;
 };
-type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[] };
+type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[]; canvas_background_fit?: 'cover' | 'contain' };
 type Limits = {
     max_layer_count: number;
     max_browser_width: number;
@@ -80,6 +88,7 @@ interface Project {
     export_url: string;
     server_export_url: string;
     preview_upload_url: string;
+    library_url: string;
     exports: ExportRecord[];
     uploads: { uuid: string; name: string; url: string }[];
 }
@@ -90,6 +99,20 @@ const canvasElement = ref<HTMLCanvasElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const workspaceElement = ref<HTMLElement | null>(null);
 const backgroundPreviewCanvas = ref<HTMLCanvasElement | null>(null);
+const libraryOpen = ref(false);
+const librarySearch = ref('');
+const libraryLoading = ref(false);
+const libraryAdding = ref<number | null>(null);
+const libraryItems = ref<LibraryItem[]>([]);
+const libraryError = ref('');
+const canvasSizeOpen = ref(false);
+const canvasWidth = ref(props.project.canvas_width);
+const canvasHeight = ref(props.project.canvas_height);
+const pendingCanvasWidth = ref(props.project.canvas_width);
+const pendingCanvasHeight = ref(props.project.canvas_height);
+const canvasResizeBehavior = ref<'keep' | 'scale'>('keep');
+const canvasBackgroundFit = ref<'cover' | 'contain'>(props.project.design_json?.canvas_background_fit === 'contain' ? 'contain' : 'cover');
+const canvasSizeError = ref('');
 
 const title = ref(props.project.title);
 const saving = ref(false);
@@ -102,8 +125,8 @@ const exportStatus = ref('');
 const recentExports = ref<ExportRecord[]>([...props.project.exports]);
 const exportFormat = ref<'jpeg' | 'png' | 'webp'>('jpeg');
 const exportFit = ref<'contain' | 'cover'>('contain');
-const customWidth = ref(props.project.canvas_width);
-const customHeight = ref(props.project.canvas_height);
+const customWidth = ref(canvasWidth.value);
+const customHeight = ref(canvasHeight.value);
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);
 const layerVersion = ref(0);
@@ -121,11 +144,12 @@ const isSmallScreen = ref(window.innerWidth < props.limits.recommended_min_width
 const selectedIsImage = computed(() => selected.value instanceof FabricImage);
 const canUndo = computed(() => historyIndex.value > 0);
 const canRedo = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
-const hasBlockingOperation = computed(() => saving.value || uploading.value || exporting.value || backgroundBusy.value);
+const hasBlockingOperation = computed(() => saving.value || uploading.value || exporting.value || backgroundBusy.value || libraryAdding.value !== null);
 const processingNotice = computed(() => {
     if (exporting.value) return 'An export is currently being prepared or rendered.';
     if (uploading.value) return 'An image upload is still in progress.';
     if (backgroundBusy.value) return 'Background removal is still running.';
+    if (libraryAdding.value !== null) return 'A UC Library image is still being added.';
     if (saving.value) return 'Your design is still being saved.';
     return '';
 });
@@ -138,12 +162,12 @@ const viewportWidth = ref(Math.max(360, window.innerWidth - 590));
 const viewportHeight = ref(Math.max(360, window.innerHeight - 170));
 const fitFactor = computed(() => Math.min(
     1,
-    viewportWidth.value / props.project.canvas_width,
-    viewportHeight.value / props.project.canvas_height,
+    viewportWidth.value / canvasWidth.value,
+    viewportHeight.value / canvasHeight.value,
 ));
 const stageDimensions = computed(() => ({
-    width: Math.max(1, Math.round(props.project.canvas_width * fitFactor.value * zoom.value)),
-    height: Math.max(1, Math.round(props.project.canvas_height * fitFactor.value * zoom.value)),
+    width: Math.max(1, Math.round(canvasWidth.value * fitFactor.value * zoom.value)),
+    height: Math.max(1, Math.round(canvasHeight.value * fitFactor.value * zoom.value)),
 }));
 const layerObjects = computed(() => {
     layerVersion.value;
@@ -159,11 +183,16 @@ function measureWorkspace(): void {
 }
 
 function fabricJson(): Record<string, unknown> {
-    return canvas?.toJSON(['layerId', 'name', 'uploadUuid', 'originalUploadUuid', 'originalSrc', 'backgroundRemoval', 'lockedByUser']) as Record<string, unknown> ?? { objects: [] };
+    return canvas?.toJSON(['layerId', 'name', 'uploadUuid', 'originalUploadUuid', 'originalSrc', 'backgroundRemoval', 'lockedByUser', 'sourceType', 'sourceAssetId', 'sourceLicenseId']) as Record<string, unknown> ?? { objects: [] };
 }
 
 function snapshot(): string {
-    return JSON.stringify(fabricJson());
+    return JSON.stringify({
+        fabric: fabricJson(),
+        canvasWidth: canvasWidth.value,
+        canvasHeight: canvasHeight.value,
+        backgroundFit: canvasBackgroundFit.value,
+    });
 }
 
 function scheduleAutosave(): void {
@@ -187,7 +216,19 @@ function pushHistory(): void {
 async function restoreHistory(index: number): Promise<void> {
     if (!canvas || index < 0 || index >= history.value.length) return;
     restoringHistory = true;
-    await canvas.loadFromJSON(JSON.parse(history.value[index]));
+    const restored = JSON.parse(history.value[index]) as {
+        fabric?: Record<string, unknown>;
+        canvasWidth?: number;
+        canvasHeight?: number;
+        backgroundFit?: 'cover' | 'contain';
+    };
+    canvasWidth.value = Math.max(320, Number(restored.canvasWidth ?? canvasWidth.value));
+    canvasHeight.value = Math.max(320, Number(restored.canvasHeight ?? canvasHeight.value));
+    canvasBackgroundFit.value = restored.backgroundFit === 'contain' ? 'contain' : 'cover';
+    canvas.setDimensions({ width: canvasWidth.value, height: canvasHeight.value });
+    await canvas.loadFromJSON(restored.fabric ?? restored);
+    canvas.backgroundColor = '#ffffff';
+    await refitBackground(canvasBackgroundFit.value);
     canvas.requestRenderAll();
     historyIndex.value = index;
     selected.value = null;
@@ -252,9 +293,9 @@ function save(silent = false): void {
     saving.value = true;
     router.put(props.project.save_url, {
         title: title.value,
-        canvas_width: props.project.canvas_width,
-        canvas_height: props.project.canvas_height,
-        design_json: { version: 2, fabric: fabricJson() },
+        canvas_width: canvasWidth.value,
+        canvas_height: canvasHeight.value,
+        design_json: { version: 2, fabric: fabricJson(), canvas_background_fit: canvasBackgroundFit.value },
     }, {
         preserveScroll: true,
         preserveState: true,
@@ -271,7 +312,7 @@ function save(silent = false): void {
 async function uploadPreview(): Promise<void> {
     if (!canvas) return;
     const maxEdge = 720;
-    const multiplier = Math.min(1, maxEdge / Math.max(props.project.canvas_width, props.project.canvas_height));
+    const multiplier = Math.min(1, maxEdge / Math.max(canvasWidth.value, canvasHeight.value));
     const previewCanvas = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
     const blob = await new Promise<Blob | null>(resolve => previewCanvas.toBlob(resolve, 'image/webp', 0.82));
     if (!blob) return;
@@ -289,10 +330,10 @@ async function uploadPreview(): Promise<void> {
 function addText(): void {
     if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
     const text = new IText('Double-click to edit', {
-        left: props.project.canvas_width * 0.1,
-        top: props.project.canvas_height * 0.1,
-        width: props.project.canvas_width * 0.45,
-        fontSize: Math.max(32, Math.round(props.project.canvas_width * 0.035)),
+        left: canvasWidth.value * 0.1,
+        top: canvasHeight.value * 0.1,
+        width: canvasWidth.value * 0.45,
+        fontSize: Math.max(32, Math.round(canvasWidth.value * 0.035)),
         fill: '#ffffff',
         fontFamily: 'Arial',
         fontWeight: '600',
@@ -311,10 +352,10 @@ function addText(): void {
 function addShape(): void {
     if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
     const shape = new Rect({
-        left: props.project.canvas_width * 0.15,
-        top: props.project.canvas_height * 0.15,
-        width: props.project.canvas_width * 0.28,
-        height: props.project.canvas_height * 0.16,
+        left: canvasWidth.value * 0.15,
+        top: canvasHeight.value * 0.15,
+        width: canvasWidth.value * 0.28,
+        height: canvasHeight.value * 0.16,
         rx: 18,
         ry: 18,
         fill: 'rgba(15,23,42,0.72)',
@@ -548,6 +589,72 @@ async function restoreOriginalImage(): Promise<void> {
     }
 }
 
+async function loadLibrary(): Promise<void> {
+    if (libraryLoading.value) return;
+    libraryLoading.value = true;
+    libraryError.value = '';
+    try {
+        const url = new URL(props.project.library_url, window.location.origin);
+        if (librarySearch.value.trim()) url.searchParams.set('search', librarySearch.value.trim());
+        const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+            const payload = await response.json().catch(() => null) as { message?: string } | null;
+            throw new Error(payload?.message ?? 'Your licensed image library could not be loaded.');
+        }
+        const payload = await response.json() as { items: LibraryItem[] };
+        libraryItems.value = payload.items;
+    } catch (error) {
+        libraryError.value = error instanceof Error ? error.message : 'Your licensed image library could not be loaded.';
+    } finally {
+        libraryLoading.value = false;
+    }
+}
+
+function openLibrary(): void {
+    libraryOpen.value = true;
+    void loadLibrary();
+}
+
+function closeLibrary(): void {
+    if (libraryAdding.value !== null) return;
+    libraryOpen.value = false;
+}
+
+async function addLibraryImage(item: LibraryItem): Promise<void> {
+    if (!canvas || libraryAdding.value !== null) return;
+    if (canvas.getObjects().length >= props.limits.max_layer_count) {
+        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+        return;
+    }
+
+    libraryAdding.value = item.license_id;
+    try {
+        const image = await FabricImage.fromURL(item.image_url, { crossOrigin: 'anonymous' });
+        const maxWidth = canvasWidth.value * 0.5;
+        const maxHeight = canvasHeight.value * 0.5;
+        image.scale(Math.min(maxWidth / (image.width || 1), maxHeight / (image.height || 1), 1));
+        image.set({
+            left: canvasWidth.value * 0.15,
+            top: canvasHeight.value * 0.15,
+            name: item.title,
+            layerId: createLayerId(),
+            sourceType: 'licensed_asset',
+            sourceAssetId: item.asset_id,
+            sourceLicenseId: item.license_id,
+        });
+        canvas.add(image);
+        canvas.setActiveObject(image);
+        canvas.requestRenderAll();
+        selectObject(image);
+        pushHistory();
+        libraryOpen.value = false;
+    } catch (error) {
+        alert(error instanceof Error ? error.message : 'The licensed image could not be added to this design.');
+    } finally {
+        libraryAdding.value = null;
+    }
+}
+
 async function upload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -574,12 +681,12 @@ async function upload(event: Event): Promise<void> {
         }
         const data = await response.json() as { url: string; uuid: string; name: string };
         const image = await FabricImage.fromURL(data.url, { crossOrigin: 'anonymous' });
-        const maxWidth = props.project.canvas_width * 0.45;
-        const maxHeight = props.project.canvas_height * 0.45;
+        const maxWidth = canvasWidth.value * 0.45;
+        const maxHeight = canvasHeight.value * 0.45;
         image.scale(Math.min(maxWidth / (image.width || 1), maxHeight / (image.height || 1), 1));
         image.set({
-            left: props.project.canvas_width * 0.15,
-            top: props.project.canvas_height * 0.15,
+            left: canvasWidth.value * 0.15,
+            top: canvasHeight.value * 0.15,
             name: data.name,
             uploadUuid: data.uuid,
         });
@@ -702,10 +809,10 @@ function snapObject(object: FabricObject): void {
     if (!canvas || !snapEnabled.value || object.lockMovementX) return;
     const threshold = Math.max(4, 10 / zoom.value);
     const rect = object.getBoundingRect();
-    const canvasWidth = props.project.canvas_width;
-    const canvasHeight = props.project.canvas_height;
-    const xTargets = [0, canvasWidth / 2, canvasWidth];
-    const yTargets = [0, canvasHeight / 2, canvasHeight];
+    const currentCanvasWidth = canvasWidth.value;
+    const currentCanvasHeight = canvasHeight.value;
+    const xTargets = [0, currentCanvasWidth / 2, currentCanvasWidth];
+    const yTargets = [0, currentCanvasHeight / 2, currentCanvasHeight];
     const objectX = [rect.left, rect.left + rect.width / 2, rect.left + rect.width];
     const objectY = [rect.top, rect.top + rect.height / 2, rect.top + rect.height];
 
@@ -756,13 +863,13 @@ function renderGuides(): void {
     for (const x of verticalGuides.value) {
         context.beginPath();
         context.moveTo(x, 0);
-        context.lineTo(x, props.project.canvas_height);
+        context.lineTo(x, canvasHeight.value);
         context.stroke();
     }
     for (const y of horizontalGuides.value) {
         context.beginPath();
         context.moveTo(0, y);
-        context.lineTo(props.project.canvas_width, y);
+        context.lineTo(canvasWidth.value, y);
         context.stroke();
     }
     context.restore();
@@ -797,6 +904,107 @@ function validateRequestedSize(width: number, height: number, mode: 'browser' | 
     return true;
 }
 
+function openCanvasSize(): void {
+    pendingCanvasWidth.value = canvasWidth.value;
+    pendingCanvasHeight.value = canvasHeight.value;
+    canvasResizeBehavior.value = 'keep';
+    canvasBackgroundFit.value = 'cover';
+    canvasSizeError.value = '';
+    canvasSizeOpen.value = true;
+}
+
+function applyCanvasPreset(preset: ExportPreset): void {
+    pendingCanvasWidth.value = preset.width;
+    pendingCanvasHeight.value = preset.height;
+}
+
+async function refitBackground(mode: 'cover' | 'contain'): Promise<void> {
+    if (!canvas || !(canvas.backgroundImage instanceof FabricImage)) return;
+    const background = canvas.backgroundImage;
+    const element = background.getElement() as HTMLImageElement;
+    if (typeof element.decode === 'function') {
+        try { await element.decode(); } catch { /* already usable */ }
+    }
+    const sourceWidth = Math.max(1, element.naturalWidth || element.width || background.width || 1);
+    const sourceHeight = Math.max(1, element.naturalHeight || element.height || background.height || 1);
+    const scale = mode === 'cover'
+        ? Math.max(canvasWidth.value / sourceWidth, canvasHeight.value / sourceHeight)
+        : Math.min(canvasWidth.value / sourceWidth, canvasHeight.value / sourceHeight);
+    const renderedWidth = sourceWidth * scale;
+    const renderedHeight = sourceHeight * scale;
+    background.set({
+        width: sourceWidth,
+        height: sourceHeight,
+        originX: 'left',
+        originY: 'top',
+        left: (canvasWidth.value - renderedWidth) / 2,
+        top: (canvasHeight.value - renderedHeight) / 2,
+        scaleX: scale,
+        scaleY: scale,
+    });
+    background.setCoords();
+}
+
+async function changeCanvasSize(): Promise<void> {
+    if (!canvas) return;
+    const nextWidth = Math.round(Number(pendingCanvasWidth.value));
+    const nextHeight = Math.round(Number(pendingCanvasHeight.value));
+    const maxWidth = props.limits.max_server_width;
+    const maxHeight = props.limits.max_server_height;
+    const maxPixels = props.limits.max_server_pixels;
+
+    canvasSizeError.value = '';
+    if (!Number.isFinite(nextWidth) || !Number.isFinite(nextHeight) || nextWidth < 320 || nextHeight < 320) {
+        canvasSizeError.value = 'Canvas dimensions must be at least 320×320 pixels.';
+        return;
+    }
+    if (nextWidth > maxWidth || nextHeight > maxHeight || (nextWidth * nextHeight) > maxPixels) {
+        canvasSizeError.value = `Canvas size exceeds the allowed limit of ${maxWidth}×${maxHeight} and ${maxPixels.toLocaleString()} total pixels.`;
+        return;
+    }
+    if (nextWidth === canvasWidth.value && nextHeight === canvasHeight.value) {
+        canvasSizeOpen.value = false;
+        return;
+    }
+
+    const oldWidth = canvasWidth.value;
+    const oldHeight = canvasHeight.value;
+    const oldRatio = oldWidth / oldHeight;
+    const nextRatio = nextWidth / nextHeight;
+    if (Math.abs(Math.log(nextRatio / oldRatio)) > 0.35) {
+        const proceed = confirm('This changes the canvas aspect ratio significantly. Some layers may need to be repositioned. Continue?');
+        if (!proceed) return;
+    }
+
+    if (canvasResizeBehavior.value === 'scale') {
+        const scale = Math.min(nextWidth / oldWidth, nextHeight / oldHeight);
+        const offsetX = (nextWidth - (oldWidth * scale)) / 2;
+        const offsetY = (nextHeight - (oldHeight * scale)) / 2;
+        for (const object of canvas.getObjects()) {
+            object.set({
+                left: ((object.left ?? 0) * scale) + offsetX,
+                top: ((object.top ?? 0) * scale) + offsetY,
+                scaleX: (object.scaleX ?? 1) * scale,
+                scaleY: (object.scaleY ?? 1) * scale,
+            });
+            object.setCoords();
+        }
+    }
+
+    canvasWidth.value = nextWidth;
+    canvasHeight.value = nextHeight;
+    customWidth.value = nextWidth;
+    customHeight.value = nextHeight;
+    canvas.setDimensions({ width: nextWidth, height: nextHeight });
+    canvas.set('backgroundColor', '#ffffff');
+    await refitBackground(canvasBackgroundFit.value);
+    clearGuides();
+    measureWorkspace();
+    canvas.requestRenderAll();
+    canvasSizeOpen.value = false;
+    pushHistory();
+}
+
 function leaveDesign(event: MouseEvent): void {
     const messages: string[] = [];
     if (dirty.value) messages.push('You have unsaved changes.');
@@ -814,6 +1022,15 @@ function beforeUnload(event: BeforeUnloadEvent): void {
     event.returnValue = '';
 }
 
+function downloadWithoutLeavingEditor(url: string): void {
+    const frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.src = url;
+    document.body.appendChild(frame);
+    window.setTimeout(() => frame.remove(), 60_000);
+}
+
 async function exportDesign(width: number, height: number, name: string): Promise<void> {
     if (!canvas || exporting.value) return;
     if (!validateRequestedSize(width, height, 'browser')) return;
@@ -822,7 +1039,7 @@ async function exportDesign(width: number, height: number, name: string): Promis
     try {
         canvas.discardActiveObject();
         canvas.requestRenderAll();
-        const multiplier = Math.max(width / props.project.canvas_width, height / props.project.canvas_height);
+        const multiplier = Math.max(width / canvasWidth.value, height / canvasHeight.value);
         const source = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
         const output = document.createElement('canvas');
         output.width = width;
@@ -851,6 +1068,7 @@ async function exportDesign(width: number, height: number, name: string): Promis
         form.append('format', exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value);
         form.append('fit_mode', exportFit.value);
         form.append('preset_name', name);
+        form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson(), canvas_background_fit: canvasBackgroundFit.value }));
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
         const response = await fetch(props.project.export_url, {
             method: 'POST',
@@ -865,9 +1083,7 @@ async function exportDesign(width: number, height: number, name: string): Promis
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         exportStatus.value = 'Export saved';
         if (record.download_url) {
-            const anchor = document.createElement('a');
-            anchor.href = record.download_url;
-            anchor.click();
+            downloadWithoutLeavingEditor(record.download_url);
         }
     } catch (error) {
         exportStatus.value = 'Export failed';
@@ -891,7 +1107,7 @@ async function queueServerExport(width: number, height: number, name: string, fo
         canvas.backgroundImage = undefined;
         canvas.requestRenderAll();
 
-        const multiplier = Math.max(width / props.project.canvas_width, height / props.project.canvas_height);
+        const multiplier = Math.max(width / canvasWidth.value, height / canvasHeight.value);
         const source = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
         const overlay = document.createElement('canvas');
         overlay.width = width;
@@ -919,7 +1135,7 @@ async function queueServerExport(width: number, height: number, name: string, fo
         form.append('format', format === 'jpeg' ? 'jpg' : format);
         form.append('fit_mode', fitMode);
         form.append('preset_name', name);
-        form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson() }));
+        form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson(), canvas_background_fit: canvasBackgroundFit.value }));
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
         const response = await fetch(props.project.server_export_url, {
             method: 'POST',
@@ -952,7 +1168,7 @@ async function pollServerExport(record: ExportRecord): Promise<void> {
             recentExports.value = recentExports.value.map(item => item.uuid === current.uuid ? current : item);
             if (current.status === 'completed') {
                 exportStatus.value = 'Full-resolution export ready';
-                if (current.download_url) window.location.href = current.download_url;
+                if (current.download_url) downloadWithoutLeavingEditor(current.download_url);
                 window.setTimeout(() => { exportStatus.value = ''; }, 3000);
                 return;
             }
@@ -1000,13 +1216,13 @@ onMounted(async () => {
     await nextTick();
     if (!canvasElement.value) return;
     canvas = new Canvas(canvasElement.value, {
-        width: props.project.canvas_width,
-        height: props.project.canvas_height,
+        width: canvasWidth.value,
+        height: canvasHeight.value,
         preserveObjectStacking: true,
         selectionColor: 'rgba(56,189,248,.14)',
         selectionBorderColor: '#38bdf8',
     });
-    canvas.backgroundColor = '#1c1917';
+    canvas.backgroundColor = '#ffffff';
 
     const saved = props.project.design_json?.fabric;
     if (saved) {
@@ -1030,6 +1246,7 @@ onMounted(async () => {
             }
         }
     }
+    canvas.set('backgroundColor', '#ffffff');
 
     canvas.getObjects().forEach((object, index) => ensureLayerMetadata(object, index));
 
@@ -1041,7 +1258,9 @@ onMounted(async () => {
         }
         const sourceWidth = Math.max(1, element.naturalWidth || element.width || background.width || 1);
         const sourceHeight = Math.max(1, element.naturalHeight || element.height || background.height || 1);
-        const scale = Math.max(props.project.canvas_width / sourceWidth, props.project.canvas_height / sourceHeight);
+        const scale = canvasBackgroundFit.value === 'cover'
+            ? Math.max(canvasWidth.value / sourceWidth, canvasHeight.value / sourceHeight)
+            : Math.min(canvasWidth.value / sourceWidth, canvasHeight.value / sourceHeight);
         const renderedWidth = sourceWidth * scale;
         const renderedHeight = sourceHeight * scale;
 
@@ -1050,8 +1269,8 @@ onMounted(async () => {
             height: sourceHeight,
             originX: 'left',
             originY: 'top',
-            left: (props.project.canvas_width - renderedWidth) / 2,
-            top: (props.project.canvas_height - renderedHeight) / 2,
+            left: (canvasWidth.value - renderedWidth) / 2,
+            top: (canvasHeight.value - renderedHeight) / 2,
             scaleX: scale,
             scaleY: scale,
             selectable: false,
@@ -1121,7 +1340,8 @@ watch(stageDimensions, dimensions => {
             <div class="min-w-0 flex-1">
                 <input v-model="title" class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white outline-none" />
                 <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-400">
-                    <span>{{ props.project.canvas_width }}×{{ props.project.canvas_height }}</span>
+                    <span>{{ canvasWidth }}×{{ canvasHeight }}</span>
+                    <button type="button" class="inline-flex items-center gap-1 text-sky-300 hover:text-sky-200" @click="openCanvasSize"><Maximize2 class="h-3.5 w-3.5" />Change canvas size</button>
                     <span v-if="dirty" class="text-amber-300">Unsaved changes</span>
                     <span v-if="savedMessage" class="text-emerald-300">{{ savedMessage }}</span>
                     <span v-if="processingNotice" class="text-sky-300">{{ processingNotice }}</span>
@@ -1145,6 +1365,7 @@ watch(stageDimensions, dimensions => {
                     <Button variant="secondary" class="justify-start" @click="addText"><Type class="mr-2 h-4 w-4" />Add text</Button>
                     <Button variant="secondary" class="justify-start" @click="addShape"><Square class="mr-2 h-4 w-4" />Add rectangle</Button>
                     <Button variant="secondary" class="justify-start" :disabled="uploading" @click="fileInput?.click()"><ImagePlus class="mr-2 h-4 w-4" />{{ uploading ? 'Uploading…' : 'Upload image' }}</Button>
+                    <Button variant="secondary" class="justify-start" @click="openLibrary"><LibraryBig class="mr-2 h-4 w-4" />Add from My Library</Button>
                     <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" @change="upload" />
                 </div>
 
@@ -1295,7 +1516,7 @@ watch(stageDimensions, dimensions => {
                                     <button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button>
                                 </div>
                                 <div class="mt-2 flex flex-wrap gap-3">
-                                    <a v-if="record.download_url" :href="record.download_url" class="inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a>
+                                    <button v-if="record.download_url" type="button" class="inline-flex font-medium text-sky-300 hover:text-sky-200" @click="downloadWithoutLeavingEditor(record.download_url)">Download again</button>
                                     <button v-else-if="record.retryable" class="inline-flex font-medium text-amber-300 hover:text-amber-200" :disabled="exporting" @click="retryServerExport(record)">Retry render</button>
                                     <span v-else class="inline-flex text-stone-500">{{ record.status === 'failed' ? 'Render failed' : 'Rendering…' }}</span>
                                 </div>
@@ -1304,6 +1525,86 @@ watch(stageDimensions, dimensions => {
                     </div>
                 </div>
             </aside>
+        </div>
+
+        <div v-if="canvasSizeOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" @click.self="canvasSizeOpen = false">
+            <div class="w-full max-w-xl rounded-2xl border border-white/10 bg-stone-950 shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/10 p-4">
+                    <div>
+                        <h2 class="text-lg font-semibold">Change Canvas Size</h2>
+                        <p class="mt-1 text-sm text-stone-400">Changing aspect ratio may require repositioning some layers.</p>
+                    </div>
+                    <button class="rounded-lg p-2 text-stone-400 hover:bg-white/5 hover:text-white" @click="canvasSizeOpen = false"><X class="h-5 w-5" /></button>
+                </div>
+                <div class="space-y-5 p-5">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Presets</p>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <Button v-for="preset in export_presets" :key="preset.name" type="button" variant="secondary" class="justify-between" @click="applyCanvasPreset(preset)"><span>{{ preset.name }}</span><span class="text-xs text-stone-400">{{ preset.width }}×{{ preset.height }}</span></Button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="text-sm">Width<input v-model.number="pendingCanvasWidth" type="number" min="320" :max="props.limits.max_server_width" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" /></label>
+                        <label class="text-sm">Height<input v-model.number="pendingCanvasHeight" type="number" min="320" :max="props.limits.max_server_height" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" /></label>
+                    </div>
+                    <fieldset>
+                        <legend class="text-xs font-semibold uppercase tracking-wide text-stone-400">Resize behavior</legend>
+                        <label class="mt-2 flex gap-3 rounded-lg border border-white/10 p-3 text-sm"><input v-model="canvasResizeBehavior" type="radio" value="keep" /><span><strong>Keep layer sizes and positions</strong><span class="mt-1 block text-xs text-stone-400">Layers remain unchanged and may extend outside the new canvas.</span></span></label>
+                        <label class="mt-2 flex gap-3 rounded-lg border border-white/10 p-3 text-sm"><input v-model="canvasResizeBehavior" type="radio" value="scale" /><span><strong>Scale entire design to fit</strong><span class="mt-1 block text-xs text-stone-400">Layers scale proportionally and remain centered.</span></span></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend class="text-xs font-semibold uppercase tracking-wide text-stone-400">Background</legend>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <label class="flex gap-2 rounded-lg border border-white/10 p-3 text-sm"><input v-model="canvasBackgroundFit" type="radio" value="cover" /><span>Crop to fill</span></label>
+                            <label class="flex gap-2 rounded-lg border border-white/10 p-3 text-sm"><input v-model="canvasBackgroundFit" type="radio" value="contain" /><span>Fit inside</span></label>
+                        </div>
+                    </fieldset>
+                    <p v-if="canvasSizeError" class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{{ canvasSizeError }}</p>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-white/10 p-4">
+                    <Button type="button" variant="secondary" @click="canvasSizeOpen = false">Cancel</Button>
+                    <Button type="button" @click="changeCanvasSize">Change Canvas</Button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="libraryOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" @click.self="closeLibrary">
+            <div class="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-stone-950 shadow-2xl">
+                <div class="flex items-center gap-3 border-b border-white/10 p-4">
+                    <div class="min-w-0 flex-1">
+                        <h2 class="text-lg font-semibold">Add from My Library</h2>
+                        <p class="mt-1 text-sm text-stone-400">Choose an image you already have an active UC license for.</p>
+                    </div>
+                    <button class="rounded-lg p-2 text-stone-400 hover:bg-white/5 hover:text-white" @click="closeLibrary"><X class="h-5 w-5" /></button>
+                </div>
+                <form class="flex gap-2 border-b border-white/10 p-4" @submit.prevent="loadLibrary">
+                    <div class="relative flex-1">
+                        <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+                        <input v-model="librarySearch" class="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm" placeholder="Search licensed images…" />
+                    </div>
+                    <Button type="submit" variant="secondary" :disabled="libraryLoading">{{ libraryLoading ? 'Searching…' : 'Search' }}</Button>
+                </form>
+                <div class="min-h-0 flex-1 overflow-y-auto p-4">
+                    <p v-if="libraryError" class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{{ libraryError }}</p>
+                    <div v-else-if="libraryLoading" class="py-12 text-center text-sm text-stone-400">Loading your licensed images…</div>
+                    <div v-else-if="libraryItems.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <article v-for="item in libraryItems" :key="item.license_id" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+                            <div class="aspect-[4/3] bg-stone-900">
+                                <img :src="item.thumbnail_url" :alt="item.title" class="h-full w-full object-cover" />
+                            </div>
+                            <div class="p-3">
+                                <h3 class="truncate text-sm font-medium text-white">{{ item.title }}</h3>
+                                <p class="mt-1 text-xs text-stone-400">{{ item.license_name || 'Licensed image' }}<span v-if="item.licensed_at"> · {{ item.licensed_at }}</span></p>
+                                <Button class="mt-3 w-full" size="sm" :disabled="libraryAdding !== null" @click="addLibraryImage(item)">{{ libraryAdding === item.license_id ? 'Adding…' : 'Add to design' }}</Button>
+                            </div>
+                        </article>
+                    </div>
+                    <div v-else class="py-12 text-center">
+                        <LibraryBig class="mx-auto h-9 w-9 text-stone-600" />
+                        <p class="mt-3 text-sm text-stone-300">No matching licensed images were found.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

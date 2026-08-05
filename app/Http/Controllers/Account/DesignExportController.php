@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\RenderDesignExport;
 use App\Models\DesignExport;
 use App\Models\DesignProject;
+use App\Models\License;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,14 @@ class DesignExportController extends Controller
             'format' => ['required', Rule::in(['jpg', 'jpeg', 'png', 'webp'])],
             'fit_mode' => ['required', Rule::in(['contain', 'cover'])],
             'preset_name' => ['nullable', 'string', 'max:80'],
+            'design_json' => ['required', 'string'],
         ]);
+
+        $designJson = json_decode($validated['design_json'], true);
+        abort_unless(is_array($designJson) && isset($designJson['fabric']['objects']) && is_array($designJson['fabric']['objects']), 422, 'The design data is invalid.');
+        abort_if(count($designJson['fabric']['objects']) > (int) config('design-studio.max_layer_count', 200), 422, 'The design contains too many elements.');
+        $this->assertReferencedLibraryLicenses($request, $designJson);
+        $design->forceFill(['design_json' => $designJson])->save();
 
         abort_if(((int) $validated['width'] * (int) $validated['height']) > $maxPixels, 422, 'The requested browser export exceeds the allowed pixel limit.');
 
@@ -93,6 +101,7 @@ class DesignExportController extends Controller
         $designJson = json_decode($validated['design_json'], true);
         abort_unless(is_array($designJson) && isset($designJson['fabric']['objects']) && is_array($designJson['fabric']['objects']), 422, 'The design data is invalid.');
         abort_if(count($designJson['fabric']['objects']) > (int) config('design-studio.max_layer_count', 200), 422, 'The design contains too many elements.');
+        $this->assertReferencedLibraryLicenses($request, $designJson);
         $design->forceFill(['design_json' => $designJson])->save();
 
         $overlay = $request->file('overlay');
@@ -190,6 +199,49 @@ class DesignExportController extends Controller
     private function assertActiveLicense(DesignProject $design): void
     {
         abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+    }
+
+
+    /** @param array<string, mixed> $designJson */
+    private function assertReferencedLibraryLicenses(Request $request, array $designJson): void
+    {
+        $libraryObjects = collect($designJson['fabric']['objects'] ?? [])
+            ->filter(fn ($object) => is_array($object) && ($object['sourceType'] ?? null) === 'licensed_asset');
+
+        $references = $libraryObjects
+            ->map(fn (array $object) => [
+                'license_id' => (int) ($object['sourceLicenseId'] ?? 0),
+                'asset_id' => (int) ($object['sourceAssetId'] ?? 0),
+            ]);
+
+        abort_if(
+            $references->contains(fn (array $reference) => $reference['license_id'] <= 0 || $reference['asset_id'] <= 0),
+            422,
+            'A UC Library layer is missing its license reference.',
+        );
+
+        $references = $references
+            ->unique(fn (array $reference) => $reference['license_id'].'-'.$reference['asset_id'])
+            ->values();
+
+        if ($references->isEmpty()) {
+            return;
+        }
+
+        $licenses = License::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('id', $references->pluck('license_id'))
+            ->get()
+            ->keyBy('id');
+
+        foreach ($references as $reference) {
+            $license = $licenses->get($reference['license_id']);
+            abort_unless(
+                $license && $license->isActive() && (int) $license->asset_id === (int) $reference['asset_id'],
+                403,
+                'One or more UC Library images in this design no longer have an active matching license.',
+            );
+        }
     }
 
     private static function formatBytes(int $bytes): string

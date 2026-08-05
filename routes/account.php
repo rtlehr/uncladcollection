@@ -8,6 +8,7 @@ use App\Http\Controllers\Account\LicenseDocumentController;
 use App\Http\Controllers\Account\DesignProjectController;
 use App\Http\Controllers\Account\DesignUploadController;
 use App\Http\Controllers\Account\DesignExportController;
+use App\Http\Controllers\Account\DesignLibraryController;
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\NotificationPreferenceController;
 use App\Http\Controllers\Account\WishListItemController;
@@ -30,6 +31,8 @@ Route::middleware(['auth', 'verified'])
         Route::delete('/designs/{design}', [DesignProjectController::class, 'destroy'])->middleware('block.impersonation')->name('designs.destroy');
         Route::post('/designs/{design}/uploads', [DesignUploadController::class, 'store'])->middleware('block.impersonation')->name('designs.uploads.store');
         Route::get('/designs/{design}/uploads/{upload}', [DesignUploadController::class, 'show'])->name('designs.uploads.show');
+        Route::get('/designs/{design}/library', [DesignLibraryController::class, 'index'])->middleware('throttle:60,1')->name('designs.library.index');
+        Route::get('/designs/{design}/library/{license}/image', [DesignLibraryController::class, 'image'])->middleware('throttle:60,1')->name('designs.library.image');
         Route::post('/designs/{design}/exports', [DesignExportController::class, 'store'])->middleware(['block.impersonation', 'throttle:20,1'])->name('designs.exports.store');
         Route::post('/designs/{design}/exports/render', [DesignExportController::class, 'render'])->middleware(['block.impersonation', 'throttle:10,1'])->name('designs.exports.render');
         Route::get('/designs/{design}/exports/{export}/status', [DesignExportController::class, 'status'])->middleware('throttle:60,1')->name('designs.exports.status');
