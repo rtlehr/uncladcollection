@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\RenderDesignExport;
 use App\Models\DesignExport;
 use App\Models\DesignProject;
 use Illuminate\Http\JsonResponse;
@@ -57,6 +58,64 @@ class DesignExportController extends Controller
         return response()->json($this->present($design, $export), 201);
     }
 
+
+    public function render(Request $request, DesignProject $design): JsonResponse
+    {
+        $this->authorizeProject($request, $design);
+        abort_unless($design->license?->isActive(), 403, 'The license for this design is no longer active.');
+
+        $validated = $request->validate([
+            'width' => ['required', 'integer', 'min:320', 'max:'.config('design-studio.max_server_width', 12000)],
+            'height' => ['required', 'integer', 'min:320', 'max:'.config('design-studio.max_server_height', 12000)],
+            'format' => ['required', Rule::in(['jpg', 'jpeg', 'png', 'webp'])],
+            'fit_mode' => ['required', Rule::in(['contain', 'cover'])],
+            'preset_name' => ['nullable', 'string', 'max:80'],
+            'overlay' => ['required', 'file', 'max:51200', 'mimetypes:image/png'],
+            'design_json' => ['required', 'string'],
+        ]);
+
+        abort_if(((int) $validated['width'] * (int) $validated['height']) > (int) config('design-studio.max_server_pixels', 80000000), 422, 'The requested export exceeds the server rendering pixel limit.');
+
+        $designJson = json_decode($validated['design_json'], true);
+        abort_unless(is_array($designJson) && isset($designJson['fabric']['objects']) && is_array($designJson['fabric']['objects']), 422, 'The design data is invalid.');
+        abort_if(count($designJson['fabric']['objects']) > 200, 422, 'The design contains too many elements.');
+        $design->forceFill(['design_json' => $designJson])->save();
+
+        $overlay = $request->file('overlay');
+        $overlaySize = @getimagesize($overlay->getRealPath());
+        abort_unless(is_array($overlaySize), 422, 'The render overlay is not a valid PNG image.');
+        abort_unless((int) $overlaySize[0] === (int) $validated['width'] && (int) $overlaySize[1] === (int) $validated['height'], 422, 'The render overlay dimensions do not match the requested export.');
+        $overlayPath = $overlay->storeAs(
+            "designs/{$request->user()->id}/{$design->uuid}/render-overlays",
+            'overlay-'.now()->format('Ymd-His-u').'.png',
+            'local'
+        );
+        $format = $validated['format'] === 'jpeg' ? 'jpg' : $validated['format'];
+        $export = $design->exports()->create([
+            'user_id' => $request->user()->id,
+            'width' => $validated['width'],
+            'height' => $validated['height'],
+            'format' => $format,
+            'fit_mode' => $validated['fit_mode'],
+            'preset_name' => $validated['preset_name'] ?? null,
+            'status' => 'pending',
+            'render_engine' => 'server-gd',
+            'queued_at' => now(),
+        ]);
+
+        RenderDesignExport::dispatch($export->id, $overlayPath);
+
+        return response()->json(self::present($design, $export), 202);
+    }
+
+    public function status(Request $request, DesignProject $design, DesignExport $export): JsonResponse
+    {
+        $this->authorizeExport($request, $design, $export);
+        $export->refresh();
+
+        return response()->json(self::present($design, $export));
+    }
+
     public function download(Request $request, DesignProject $design, DesignExport $export): StreamedResponse
     {
         $this->authorizeExport($request, $design, $export);
@@ -90,8 +149,12 @@ class DesignExportController extends Controller
             'fit_mode' => $export->fit_mode,
             'preset_name' => $export->preset_name,
             'size' => $export->size_bytes ? self::formatBytes($export->size_bytes) : null,
+            'status' => $export->status,
+            'render_engine' => $export->render_engine,
+            'error_message' => $export->error_message,
             'created_at' => $export->completed_at?->diffForHumans() ?? $export->created_at?->diffForHumans(),
-            'download_url' => route('account.designs.exports.download', [$design, $export]),
+            'status_url' => route('account.designs.exports.status', [$design, $export]),
+            'download_url' => $export->status === 'completed' ? route('account.designs.exports.download', [$design, $export]) : null,
             'delete_url' => route('account.designs.exports.destroy', [$design, $export]),
         ];
     }

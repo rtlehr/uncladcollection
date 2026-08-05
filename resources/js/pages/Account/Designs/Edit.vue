@@ -25,7 +25,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button';
 
 type ExportPreset = { name: string; width: number; height: number };
-type ExportRecord = { uuid: string; width: number; height: number; format: string; fit_mode: string; preset_name: string | null; size: string | null; created_at: string; download_url: string; delete_url: string };
+type ExportRecord = { uuid: string; width: number; height: number; format: string; fit_mode: string; preset_name: string | null; size: string | null; status: string; render_engine: string | null; error_message: string | null; created_at: string; status_url: string; download_url: string | null; delete_url: string };
 type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[] };
 interface Project {
     uuid: string;
@@ -37,6 +37,7 @@ interface Project {
     save_url: string;
     upload_url: string;
     export_url: string;
+    server_export_url: string;
     preview_upload_url: string;
     exports: ExportRecord[];
     uploads: { uuid: string; name: string; url: string }[];
@@ -45,6 +46,7 @@ interface Project {
 const props = defineProps<{ project: Project; export_presets: ExportPreset[] }>();
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+const workspaceElement = ref<HTMLElement | null>(null);
 const title = ref(props.project.title);
 const saving = ref(false);
 const savedMessage = ref('');
@@ -70,15 +72,24 @@ let canvas: Canvas | null = null;
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 let restoringHistory = false;
 
-const stageDimensions = computed(() => {
-    const maxWidth = Math.max(360, window.innerWidth - 590);
-    const maxHeight = Math.max(360, window.innerHeight - 150);
-    const factor = Math.min(1, maxWidth / props.project.canvas_width, maxHeight / props.project.canvas_height);
-    return {
-        width: Math.round(props.project.canvas_width * factor * zoom.value),
-        height: Math.round(props.project.canvas_height * factor * zoom.value),
-    };
-});
+const viewportWidth = ref(Math.max(360, window.innerWidth - 590));
+const viewportHeight = ref(Math.max(360, window.innerHeight - 170));
+const fitFactor = computed(() => Math.min(
+    1,
+    viewportWidth.value / props.project.canvas_width,
+    viewportHeight.value / props.project.canvas_height,
+));
+const stageDimensions = computed(() => ({
+    width: Math.max(1, Math.round(props.project.canvas_width * fitFactor.value * zoom.value)),
+    height: Math.max(1, Math.round(props.project.canvas_height * fitFactor.value * zoom.value)),
+}));
+
+function measureWorkspace(): void {
+    const element = workspaceElement.value;
+    if (!element) return;
+    viewportWidth.value = Math.max(320, element.clientWidth - 48);
+    viewportHeight.value = Math.max(320, element.clientHeight - 88);
+}
 
 function fabricJson(): Record<string, unknown> {
     return canvas?.toJSON(['name', 'uploadUuid', 'lockedByUser']) as Record<string, unknown> ?? { objects: [] };
@@ -243,10 +254,13 @@ async function upload(event: Event): Promise<void> {
 }
 
 function removeSelected(): void {
-    if (!canvas || !selected.value) return;
-    canvas.remove(selected.value);
-    selected.value = null;
+    if (!canvas) return;
+    const activeObjects = canvas.getActiveObjects();
+    const objects = activeObjects.length ? activeObjects : (selected.value ? [selected.value] : []);
+    if (!objects.length) return;
     canvas.discardActiveObject();
+    objects.forEach(object => canvas?.remove(object));
+    selected.value = null;
     canvas.requestRenderAll();
     pushHistory();
 }
@@ -454,6 +468,89 @@ async function exportDesign(width: number, height: number, name: string): Promis
     }
 }
 
+async function queueServerExport(width: number, height: number, name: string): Promise<void> {
+    if (!canvas || exporting.value) return;
+    exporting.value = true;
+    exportStatus.value = 'Preparing full-resolution overlay…';
+    const background = canvas.backgroundImage;
+    try {
+        canvas.discardActiveObject();
+        canvas.backgroundImage = undefined;
+        canvas.requestRenderAll();
+
+        const multiplier = Math.max(width / props.project.canvas_width, height / props.project.canvas_height);
+        const source = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
+        const overlay = document.createElement('canvas');
+        overlay.width = width;
+        overlay.height = height;
+        const context = overlay.getContext('2d');
+        if (!context) throw new Error('Canvas rendering is unavailable.');
+        const scale = exportFit.value === 'cover'
+            ? Math.max(width / source.width, height / source.height)
+            : Math.min(width / source.width, height / source.height);
+        const drawWidth = source.width * scale;
+        const drawHeight = source.height * scale;
+        context.drawImage(source, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+
+        canvas.backgroundImage = background;
+        canvas.requestRenderAll();
+
+        const overlayBlob = await new Promise<Blob | null>(resolve => overlay.toBlob(resolve, 'image/png'));
+        if (!overlayBlob) throw new Error('The editor could not prepare the server-render overlay.');
+
+        exportStatus.value = 'Queueing full-resolution render…';
+        const form = new FormData();
+        form.append('overlay', overlayBlob, 'overlay.png');
+        form.append('width', String(width));
+        form.append('height', String(height));
+        form.append('format', exportFormat.value === 'jpeg' ? 'jpg' : exportFormat.value);
+        form.append('fit_mode', exportFit.value);
+        form.append('preset_name', name);
+        form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson() }));
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const response = await fetch(props.project.server_export_url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
+            body: form,
+        });
+        if (!response.ok) {
+            const payload = await response.json().catch(() => null) as { message?: string } | null;
+            throw new Error(payload?.message ?? 'The server render could not be queued.');
+        }
+        const record = await response.json() as ExportRecord;
+        recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
+        void pollServerExport(record);
+    } catch (error) {
+        canvas.backgroundImage = background;
+        canvas.requestRenderAll();
+        alert(error instanceof Error ? error.message : 'The server render could not be queued.');
+        exporting.value = false;
+        exportStatus.value = '';
+    }
+}
+
+async function pollServerExport(record: ExportRecord): Promise<void> {
+    for (let attempt = 0; attempt < 120; attempt++) {
+        await new Promise(resolve => window.setTimeout(resolve, 2500));
+        const response = await fetch(record.status_url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) continue;
+        const current = await response.json() as ExportRecord;
+        recentExports.value = recentExports.value.map(item => item.uuid === current.uuid ? current : item);
+        if (current.status === 'completed') {
+            exportStatus.value = 'Full-resolution export ready';
+            if (current.download_url) window.location.href = current.download_url;
+            window.setTimeout(() => exportStatus.value = '', 3000);
+            return;
+        }
+        if (current.status === 'failed') {
+            exportStatus.value = 'Server render failed';
+            alert(current.error_message ?? 'The server could not render this design.');
+            return;
+        }
+    }
+    exportStatus.value = 'Render is still processing. It will remain in Recent exports.';
+}
+
 function deleteExport(record: ExportRecord): void {
     if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) return;
     router.delete(record.delete_url, {
@@ -571,12 +668,16 @@ onMounted(async () => {
     });
     window.addEventListener('keydown', keyboard);
     window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener('resize', measureWorkspace);
+    await nextTick();
+    measureWorkspace();
 });
 
 onBeforeUnmount(() => {
     if (autosaveTimer) clearTimeout(autosaveTimer);
     window.removeEventListener('keydown', keyboard);
     window.removeEventListener('beforeunload', beforeUnload);
+    window.removeEventListener('resize', measureWorkspace);
     canvas?.dispose();
 });
 
@@ -589,8 +690,8 @@ watch(stageDimensions, dimensions => {
 
 <template>
     <Head :title="title" />
-    <div class="min-h-screen bg-stone-950 text-white">
-        <header class="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3">
+    <div class="flex h-screen flex-col overflow-hidden bg-stone-950 text-white">
+        <header class="shrink-0 flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3">
             <Button variant="ghost" as-child><Link href="/account/designs" @click="leaveDesign"><ArrowLeft class="mr-2 h-4 w-4" />My Designs</Link></Button>
             <input v-model="title" class="min-w-56 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-semibold" />
             <span class="min-w-20 text-right text-xs text-stone-400">{{ savedMessage || (dirty ? 'Unsaved changes' : `${project.canvas_width} × ${project.canvas_height}`) }}</span>
@@ -599,8 +700,8 @@ watch(stageDimensions, dimensions => {
             <Button :disabled="saving" @click="save(false)"><Save class="mr-2 h-4 w-4" />{{ saving ? 'Saving…' : 'Save' }}</Button>
         </header>
 
-        <div class="grid min-h-[calc(100vh-65px)] lg:grid-cols-[250px_minmax(0,1fr)_310px]">
-            <aside class="border-r border-white/10 p-4">
+        <div class="grid min-h-0 flex-1 lg:grid-cols-[250px_minmax(0,1fr)_310px]">
+            <aside class="min-h-0 overflow-y-auto border-r border-white/10 p-4">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Add</h2>
                 <div class="mt-4 grid gap-2">
                     <Button variant="secondary" class="justify-start" @click="addText"><Type class="mr-2 h-4 w-4" />Add text</Button>
@@ -626,18 +727,19 @@ watch(stageDimensions, dimensions => {
                 </div>
             </aside>
 
-            <main class="overflow-auto p-6">
+            <main ref="workspaceElement" class="relative min-h-0 overflow-auto p-6 pb-20">
                 <div class="mx-auto flex min-h-full items-center justify-center">
                     <div class="shadow-2xl" :style="{ width: `${stageDimensions.width}px`, height: `${stageDimensions.height}px` }">
                         <canvas ref="canvasElement" />
                     </div>
                 </div>
-                <div class="mx-auto mt-4 flex max-w-md items-center gap-3 text-xs text-stone-400">
-                    <span>Zoom</span><input v-model.number="zoom" type="range" min="0.5" max="1.5" step="0.05" class="w-full" /><span>{{ Math.round(zoom * 100) }}%</span>
+                <div class="sticky bottom-0 z-20 mx-auto mt-4 flex max-w-md items-center gap-3 rounded-xl border border-white/10 bg-stone-950/95 px-4 py-3 text-xs text-stone-300 shadow-xl backdrop-blur">
+                    <span>Zoom</span><input v-model.number="zoom" type="range" min="0.35" max="2" step="0.05" class="w-full" /><span class="w-12 text-right">{{ Math.round(zoom * 100) }}%</span>
+                    <Button variant="secondary" size="sm" @click="zoom = 1">100%</Button>
                 </div>
             </main>
 
-            <aside class="border-l border-white/10 p-4">
+            <aside class="min-h-0 overflow-y-auto border-l border-white/10 p-4">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Properties</h2>
                 <div v-if="selected" class="mt-4 space-y-4">
                     <template v-if="selected.type === 'i-text'">
@@ -692,13 +794,15 @@ watch(stageDimensions, dimensions => {
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Custom size</p>
                         <div class="mt-2 grid grid-cols-2 gap-2"><input v-model.number="customWidth" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /><input v-model.number="customHeight" type="number" min="320" max="12000" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /></div>
                         <Button class="mt-2 w-full" :disabled="exporting" @click="exportDesign(customWidth, customHeight, 'custom')">{{ exporting ? 'Preparing…' : 'Download custom size' }}</Button>
+                        <Button variant="secondary" class="mt-2 w-full" :disabled="exporting" @click="queueServerExport(customWidth, customHeight, 'Full resolution')">{{ exporting ? 'Queueing…' : 'Render full resolution on server' }}</Button>
+                        <p class="mt-2 text-xs leading-relaxed text-stone-500">Server rendering uses the highest-resolution licensed source and continues through the queue even if you leave this page.</p>
                     </div>
                     <div v-if="recentExports.length" class="mt-5 border-t border-white/10 pt-4">
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Recent exports</p>
                         <div class="mt-2 space-y-2">
                             <div v-for="record in recentExports" :key="record.uuid" class="rounded-lg border border-white/10 p-3 text-xs">
-                                <div class="flex items-start justify-between gap-2"><div><p class="font-medium text-white">{{ record.preset_name || 'Custom' }} · {{ record.width }}×{{ record.height }}</p><p class="mt-1 text-stone-400">{{ record.format }}<span v-if="record.size"> · {{ record.size }}</span> · {{ record.created_at }}</p></div><button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button></div>
-                                <a :href="record.download_url" class="mt-2 inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a>
+                                <div class="flex items-start justify-between gap-2"><div><p class="font-medium text-white">{{ record.preset_name || 'Custom' }} · {{ record.width }}×{{ record.height }}</p><p class="mt-1 text-stone-400">{{ record.format }}<span v-if="record.size"> · {{ record.size }}</span> · {{ record.status === 'completed' ? record.created_at : record.status }}</p><p v-if="record.status === 'failed'" class="mt-1 text-red-300">{{ record.error_message }}</p></div><button class="text-stone-500 hover:text-red-300" title="Delete export" @click="deleteExport(record)"><Trash2 class="h-4 w-4" /></button></div>
+                                <a v-if="record.download_url" :href="record.download_url" class="mt-2 inline-flex font-medium text-sky-300 hover:text-sky-200">Download again</a><span v-else class="mt-2 inline-flex text-stone-500">{{ record.status === 'failed' ? 'Render failed' : 'Rendering…' }}</span>
                             </div>
                         </div>
                     </div>

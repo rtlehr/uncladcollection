@@ -103,6 +103,7 @@ class DesignProjectController extends Controller
                 'preview_upload_url' => route('account.designs.preview.store', $design),
                 'upload_url' => route('account.designs.uploads.store', $design),
                 'export_url' => route('account.designs.exports.store', $design),
+                'server_export_url' => route('account.designs.exports.render', $design),
                 'uploads' => $design->uploads->map(fn ($upload) => [
                     'uuid' => $upload->uuid,
                     'name' => $upload->original_filename,

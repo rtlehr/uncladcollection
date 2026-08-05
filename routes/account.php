@@ -31,6 +31,8 @@ Route::middleware(['auth', 'verified'])
         Route::post('/designs/{design}/uploads', [DesignUploadController::class, 'store'])->middleware('block.impersonation')->name('designs.uploads.store');
         Route::get('/designs/{design}/uploads/{upload}', [DesignUploadController::class, 'show'])->name('designs.uploads.show');
         Route::post('/designs/{design}/exports', [DesignExportController::class, 'store'])->middleware(['block.impersonation', 'throttle:20,1'])->name('designs.exports.store');
+        Route::post('/designs/{design}/exports/render', [DesignExportController::class, 'render'])->middleware(['block.impersonation', 'throttle:10,1'])->name('designs.exports.render');
+        Route::get('/designs/{design}/exports/{export}/status', [DesignExportController::class, 'status'])->middleware('throttle:60,1')->name('designs.exports.status');
         Route::get('/designs/{design}/exports/{export}/download', [DesignExportController::class, 'download'])->middleware('throttle:30,1')->name('designs.exports.download');
         Route::delete('/designs/{design}/exports/{export}', [DesignExportController::class, 'destroy'])->middleware('block.impersonation')->name('designs.exports.destroy');
         Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
