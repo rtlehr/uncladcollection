@@ -25,6 +25,8 @@ Route::middleware(['auth', 'verified'])
         Route::post('/licenses/{license}/designs', [DesignProjectController::class, 'store'])->middleware('block.impersonation')->name('designs.store');
         Route::get('/designs/{design}/edit', [DesignProjectController::class, 'edit'])->name('designs.edit');
         Route::put('/designs/{design}', [DesignProjectController::class, 'update'])->middleware('block.impersonation')->name('designs.update');
+        Route::post('/designs/{design}/preview', [DesignProjectController::class, 'storePreview'])->middleware('block.impersonation')->name('designs.preview.store');
+        Route::get('/designs/{design}/preview', [DesignProjectController::class, 'preview'])->name('designs.preview.show');
         Route::delete('/designs/{design}', [DesignProjectController::class, 'destroy'])->middleware('block.impersonation')->name('designs.destroy');
         Route::post('/designs/{design}/uploads', [DesignUploadController::class, 'store'])->middleware('block.impersonation')->name('designs.uploads.store');
         Route::get('/designs/{design}/uploads/{upload}', [DesignUploadController::class, 'show'])->name('designs.uploads.show');

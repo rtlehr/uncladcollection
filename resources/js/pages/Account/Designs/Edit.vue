@@ -14,12 +14,13 @@ import {
     Lock,
     Redo2,
     Save,
+    Square,
     Trash2,
     Type,
     Undo2,
     Unlock,
 } from '@lucide/vue';
-import { Canvas, FabricImage, IText, type FabricObject } from 'fabric';
+import { Canvas, FabricImage, IText, Rect, type FabricObject } from 'fabric';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 
@@ -36,6 +37,7 @@ interface Project {
     save_url: string;
     upload_url: string;
     export_url: string;
+    preview_upload_url: string;
     exports: ExportRecord[];
     uploads: { uuid: string; name: string; url: string }[];
 }
@@ -58,6 +60,10 @@ const customHeight = ref(props.project.canvas_height);
 const history = ref<string[]>([]);
 const historyIndex = ref(-1);
 const layerVersion = ref(0);
+const dirty = ref(false);
+const snapEnabled = ref(true);
+const verticalGuides = ref<number[]>([]);
+const horizontalGuides = ref<number[]>([]);
 const canUndo = computed(() => historyIndex.value > 0);
 const canRedo = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
 let canvas: Canvas | null = null;
@@ -91,6 +97,7 @@ function pushHistory(): void {
     if (history.value.length > 60) history.value.shift();
     historyIndex.value = history.value.length - 1;
     layerVersion.value++;
+    dirty.value = true;
     scheduleAutosave();
 }
 
@@ -124,11 +131,32 @@ function save(silent = false): void {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
+            dirty.value = false;
+            void uploadPreview();
             savedMessage.value = silent ? 'Autosaved' : 'Saved';
             window.setTimeout(() => savedMessage.value = '', 1800);
         },
         onFinish: () => saving.value = false,
     });
+}
+
+
+async function uploadPreview(): Promise<void> {
+    if (!canvas) return;
+    const maxEdge = 720;
+    const multiplier = Math.min(1, maxEdge / Math.max(props.project.canvas_width, props.project.canvas_height));
+    const previewCanvas = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
+    const blob = await new Promise<Blob | null>(resolve => previewCanvas.toBlob(resolve, 'image/webp', 0.82));
+    if (!blob) return;
+
+    const form = new FormData();
+    form.append('preview', blob, 'preview.webp');
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    await fetch(props.project.preview_upload_url, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
+        body: form,
+    }).catch(() => null);
 }
 
 function selectObject(object: FabricObject | null): void {
@@ -156,7 +184,30 @@ function addText(): void {
     pushHistory();
 }
 
+
+function addShape(): void {
+    if (!canvas) return;
+    const shape = new Rect({
+        left: props.project.canvas_width * 0.15,
+        top: props.project.canvas_height * 0.15,
+        width: props.project.canvas_width * 0.28,
+        height: props.project.canvas_height * 0.16,
+        rx: 18,
+        ry: 18,
+        fill: 'rgba(15,23,42,0.72)',
+        stroke: '#ffffff',
+        strokeWidth: 0,
+        name: 'Rectangle',
+    });
+    canvas.add(shape);
+    canvas.setActiveObject(shape);
+    canvas.requestRenderAll();
+    selectObject(shape);
+    pushHistory();
+}
+
 async function upload(event: Event): Promise<void> {
+
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file || !canvas) return;
@@ -245,7 +296,7 @@ function updateSelected(property: string, value: unknown): void {
 }
 
 function objectLabel(object: FabricObject, index: number): string {
-    return String(object.get('name') || (object.type === 'i-text' ? `Text ${index + 1}` : `Image ${index + 1}`));
+    return String(object.get('name') || (object.type === 'i-text' ? `Text ${index + 1}` : object.type === 'rect' ? `Shape ${index + 1}` : `Image ${index + 1}`));
 }
 
 const layerObjects = computed(() => { layerVersion.value; return canvas ? [...canvas.getObjects()].reverse() : []; });
@@ -256,7 +307,96 @@ function activateLayer(object: FabricObject): void {
     selectObject(object);
 }
 
+
+function clearGuides(): void {
+    verticalGuides.value = [];
+    horizontalGuides.value = [];
+}
+
+function snapObject(object: FabricObject): void {
+    if (!canvas || !snapEnabled.value || object.lockMovementX) return;
+    const threshold = Math.max(4, 10 / zoom.value);
+    const rect = object.getBoundingRect();
+    const canvasWidth = props.project.canvas_width;
+    const canvasHeight = props.project.canvas_height;
+    const xTargets = [0, canvasWidth / 2, canvasWidth];
+    const yTargets = [0, canvasHeight / 2, canvasHeight];
+    const objectX = [rect.left, rect.left + rect.width / 2, rect.left + rect.width];
+    const objectY = [rect.top, rect.top + rect.height / 2, rect.top + rect.height];
+
+    let dx = 0;
+    let dy = 0;
+    let xGuide: number | null = null;
+    let yGuide: number | null = null;
+
+    for (const target of xTargets) {
+        for (const point of objectX) {
+            if (Math.abs(target - point) <= threshold) {
+                dx = target - point;
+                xGuide = target;
+                break;
+            }
+        }
+        if (xGuide !== null) break;
+    }
+    for (const target of yTargets) {
+        for (const point of objectY) {
+            if (Math.abs(target - point) <= threshold) {
+                dy = target - point;
+                yGuide = target;
+                break;
+            }
+        }
+        if (yGuide !== null) break;
+    }
+
+    if (dx || dy) {
+        object.set({
+            left: (object.left ?? 0) + dx,
+            top: (object.top ?? 0) + dy,
+        });
+        object.setCoords();
+    }
+    verticalGuides.value = xGuide === null ? [] : [xGuide];
+    horizontalGuides.value = yGuide === null ? [] : [yGuide];
+}
+
+function renderGuides(): void {
+    if (!canvas || (!verticalGuides.value.length && !horizontalGuides.value.length)) return;
+    const context = canvas.getContext();
+    context.save();
+    context.strokeStyle = '#38bdf8';
+    context.lineWidth = 2;
+    context.setLineDash([10, 8]);
+    for (const x of verticalGuides.value) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, props.project.canvas_height);
+        context.stroke();
+    }
+    for (const y of horizontalGuides.value) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(props.project.canvas_width, y);
+        context.stroke();
+    }
+    context.restore();
+}
+
+function leaveDesign(event: MouseEvent): void {
+    if (dirty.value && !confirm('You have unsaved changes. Leave the editor anyway?')) {
+        event.preventDefault();
+    }
+}
+
+function beforeUnload(event: BeforeUnloadEvent): void {
+    if (!dirty.value) return;
+    event.preventDefault();
+    event.returnValue = '';
+}
+
 async function exportDesign(width: number, height: number, name: string): Promise<void> {
+
     if (!canvas || exporting.value) return;
     exporting.value = true;
     try {
@@ -416,18 +556,31 @@ onMounted(async () => {
     canvas.on('selection:created', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:updated', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:cleared', () => selectObject(null));
-    canvas.on('object:modified', pushHistory);
-    canvas.on('text:changed', scheduleAutosave);
+    canvas.on('object:moving', event => {
+        if (event.target) snapObject(event.target);
+    });
+    canvas.on('object:modified', () => {
+        clearGuides();
+        pushHistory();
+    });
+    canvas.on('mouse:up', clearGuides);
+    canvas.on('after:render', renderGuides);
+    canvas.on('text:changed', () => {
+        dirty.value = true;
+        scheduleAutosave();
+    });
     window.addEventListener('keydown', keyboard);
+    window.addEventListener('beforeunload', beforeUnload);
 });
 
 onBeforeUnmount(() => {
     if (autosaveTimer) clearTimeout(autosaveTimer);
     window.removeEventListener('keydown', keyboard);
+    window.removeEventListener('beforeunload', beforeUnload);
     canvas?.dispose();
 });
 
-watch(title, scheduleAutosave);
+watch(title, () => { dirty.value = true; scheduleAutosave(); });
 watch(stageDimensions, dimensions => {
     if (!canvas) return;
     canvas.setDimensions(dimensions, { cssOnly: true });
@@ -438,9 +591,9 @@ watch(stageDimensions, dimensions => {
     <Head :title="title" />
     <div class="min-h-screen bg-stone-950 text-white">
         <header class="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3">
-            <Button variant="ghost" as-child><Link href="/account/designs"><ArrowLeft class="mr-2 h-4 w-4" />My Designs</Link></Button>
+            <Button variant="ghost" as-child><Link href="/account/designs" @click="leaveDesign"><ArrowLeft class="mr-2 h-4 w-4" />My Designs</Link></Button>
             <input v-model="title" class="min-w-56 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-semibold" />
-            <span class="min-w-20 text-right text-xs text-stone-400">{{ savedMessage || `${project.canvas_width} × ${project.canvas_height}` }}</span>
+            <span class="min-w-20 text-right text-xs text-stone-400">{{ savedMessage || (dirty ? 'Unsaved changes' : `${project.canvas_width} × ${project.canvas_height}`) }}</span>
             <Button variant="ghost" size="icon" :disabled="!canUndo" title="Undo" @click="undo"><Undo2 class="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" :disabled="!canRedo" title="Redo" @click="redo"><Redo2 class="h-4 w-4" /></Button>
             <Button :disabled="saving" @click="save(false)"><Save class="mr-2 h-4 w-4" />{{ saving ? 'Saving…' : 'Save' }}</Button>
@@ -451,9 +604,15 @@ watch(stageDimensions, dimensions => {
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Add</h2>
                 <div class="mt-4 grid gap-2">
                     <Button variant="secondary" class="justify-start" @click="addText"><Type class="mr-2 h-4 w-4" />Add text</Button>
+                    <Button variant="secondary" class="justify-start" @click="addShape"><Square class="mr-2 h-4 w-4" />Add shape</Button>
                     <Button variant="secondary" class="justify-start" @click="fileInput?.click()"><ImagePlus class="mr-2 h-4 w-4" />Upload image</Button>
                     <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" @change="upload" />
                 </div>
+
+                <label class="mt-5 flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-stone-300">
+                    <span>Alignment snapping</span>
+                    <input v-model="snapEnabled" type="checkbox" class="h-4 w-4" />
+                </label>
 
                 <div class="mt-7 flex items-center justify-between">
                     <h2 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-stone-400"><Layers3 class="h-4 w-4" />Layers</h2>
@@ -493,6 +652,20 @@ watch(stageDimensions, dimensions => {
                             <Button variant="secondary" size="sm" @click="updateSelected('textAlign', 'center')"><AlignCenter class="h-4 w-4" /></Button>
                             <Button variant="secondary" size="sm" @click="updateSelected('textAlign', 'right')"><AlignRight class="h-4 w-4" /></Button>
                         </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="text-sm">Text background<input :value="String(selected.get('textBackgroundColor') || '#000000')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('textBackgroundColor', ($event.target as HTMLInputElement).value)" /></label>
+                            <label class="text-sm">Outline color<input :value="String(selected.get('stroke') || '#000000')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('stroke', ($event.target as HTMLInputElement).value)" /></label>
+                        </div>
+                        <label class="block text-sm">Outline width<input :value="Number(selected.get('strokeWidth') ?? 0)" type="range" min="0" max="12" step="0.5" class="mt-2 w-full" @input="updateSelected('strokeWidth', Number(($event.target as HTMLInputElement).value))" /></label>
+                        <label class="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm"><span>Text shadow</span><input type="checkbox" :checked="Boolean(selected.get('shadow'))" @change="updateSelected('shadow', ($event.target as HTMLInputElement).checked ? 'rgba(0,0,0,.55) 0 4px 12px' : null)" /></label>
+                    </template>
+                    <template v-if="selected.type === 'rect'">
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="text-sm">Fill<input :value="String(selected.get('fill') ?? '#0f172a')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('fill', ($event.target as HTMLInputElement).value)" /></label>
+                            <label class="text-sm">Border<input :value="String(selected.get('stroke') ?? '#ffffff')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('stroke', ($event.target as HTMLInputElement).value)" /></label>
+                        </div>
+                        <label class="block text-sm">Border width<input :value="Number(selected.get('strokeWidth') ?? 0)" type="range" min="0" max="20" step="1" class="mt-2 w-full" @input="updateSelected('strokeWidth', Number(($event.target as HTMLInputElement).value))" /></label>
+                        <label class="block text-sm">Corner rounding<input :value="Number(selected.get('rx') ?? 0)" type="range" min="0" max="120" step="2" class="mt-2 w-full" @input="updateSelected('rx', Number(($event.target as HTMLInputElement).value)); updateSelected('ry', Number(($event.target as HTMLInputElement).value))" /></label>
                     </template>
                     <label class="block text-sm">Opacity<input :value="Number(selected.get('opacity') ?? 1)" type="range" min="0.05" max="1" step="0.05" class="mt-2 w-full" @input="updateSelected('opacity', Number(($event.target as HTMLInputElement).value))" /></label>
                     <label class="block text-sm">Rotation<input :value="Number(selected.get('angle') ?? 0)" type="range" min="-180" max="180" class="mt-2 w-full" @input="updateSelected('angle', Number(($event.target as HTMLInputElement).value))" /></label>
