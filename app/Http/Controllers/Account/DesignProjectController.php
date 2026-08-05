@@ -65,7 +65,11 @@ class DesignProjectController extends Controller
             'title'=>['required','string','max:120'],
             'canvas_width'=>['required','integer','min:320','max:12000'],
             'canvas_height'=>['required','integer','min:320','max:12000'],
-            'design_json'=>['required','array'], 'design_json.version'=>['required','integer'], 'design_json.objects'=>['present','array','max:200'],
+            'design_json' => ['required', 'array'],
+            'design_json.version' => ['required', 'integer'],
+            'design_json.fabric' => ['required_if:design_json.version,2', 'array'],
+            'design_json.fabric.objects' => ['required_if:design_json.version,2', 'array', 'max:200'],
+            'design_json.objects' => ['required_if:design_json.version,1', 'array', 'max:200'],
         ]);
         $design->update($data);
         return back()->with('success','Design saved.');
