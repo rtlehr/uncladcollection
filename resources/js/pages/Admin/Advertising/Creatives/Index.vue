@@ -108,7 +108,7 @@ const remove = (creative: any) => {
                         <div>
                             <h2 class="font-semibold">{{ creative.name }}</h2>
                             <p class="text-sm text-muted-foreground">
-                                {{ creative.placement?.name || 'No placement' }}
+                                {{ creative.placements?.map((placement: any) => placement.name).join(', ') || creative.placement?.name || 'No placement' }}
                                 · {{ creative.width || '—' }} ×
                                 {{ creative.height || '—' }}
                             </p>
@@ -125,7 +125,7 @@ const remove = (creative: any) => {
                         v-if="!creative.is_placement_compatible"
                         class="text-sm text-destructive"
                     >
-                        Dimensions do not match the selected placement.
+                        Dimensions do not match one or more selected placements.
                     </p>
 
                     <p

@@ -9,6 +9,7 @@ use App\Services\AdCreativeMediaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AdCreativeController extends Controller
@@ -17,7 +18,7 @@ class AdCreativeController extends Controller
     {
         return Inertia::render('Admin/Advertising/Creatives/Index', [
             'campaign' => $adCampaign->load(['advertiser', 'placements']),
-            'creatives' => $adCampaign->creatives()->with(['placement', 'approver'])->latest()->get(),
+            'creatives' => $adCampaign->creatives()->with(['placements', 'placement', 'approver'])->latest()->get(),
         ]);
     }
 
@@ -26,10 +27,14 @@ class AdCreativeController extends Controller
     public function store(Request $request, AdvertisingCampaign $adCampaign, AdCreativeMediaService $media)
     {
         $data = $this->validated($request, $adCampaign);
+        $placementIds = $data['placement_ids'];
+        unset($data['placement_ids']);
+        $data['ad_placement_id'] = $placementIds[0];
         $data['uuid'] = (string) Str::uuid();
         $data['advertising_campaign_id'] = $adCampaign->id;
         $this->attachMedia($request, $data, $media, 'advertising/'.$adCampaign->uuid.'/creatives/'.Str::uuid());
-        $adCampaign->creatives()->create($data);
+        $creative = $adCampaign->creatives()->create($data);
+        $creative->placements()->sync($placementIds);
         return to_route('admin.ad-campaigns.creatives.index', $adCampaign)->with('success', 'Creative added.');
     }
 
@@ -44,11 +49,15 @@ class AdCreativeController extends Controller
         $this->ensureCampaign($adCampaign, $creative);
         abort_if($creative->status === 'approved', 422, 'Approved creatives must be returned to draft before editing.');
         $data = $this->validated($request, $adCampaign, $creative);
+        $placementIds = $data['placement_ids'];
+        unset($data['placement_ids']);
+        $data['ad_placement_id'] = $placementIds[0];
         if ($request->hasFile('media') || $request->hasFile('media_original')) {
             $media->deleteCreativeMedia($creative);
             $this->attachMedia($request, $data, $media, 'advertising/'.$adCampaign->uuid.'/creatives/'.$creative->uuid);
         }
         $creative->update($data);
+        $creative->placements()->sync($placementIds);
         return to_route('admin.ad-campaigns.creatives.index', $adCampaign)->with('success', 'Creative updated.');
     }
 
@@ -102,7 +111,7 @@ class AdCreativeController extends Controller
     {
         return Inertia::render('Admin/Advertising/Creatives/Form', [
             'campaign' => $campaign->load(['advertiser', 'placements']),
-            'creative' => $creative?->load('placement'),
+            'creative' => $creative?->load(['placements', 'placement']),
         ]);
     }
 
@@ -110,15 +119,39 @@ class AdCreativeController extends Controller
     {
         $imageRequired = ! $creative && $request->input('creative_type', 'image') === 'image';
         $videoRequired = ! $creative && $request->input('creative_type') === 'video';
-        return $request->validate([
-            'ad_placement_id' => ['nullable', Rule::exists('ad_placements', 'id')->where(fn ($q) => $q->whereIn('id', $campaign->placements()->pluck('ad_placements.id')))],
+        $data = $request->validate([
+            'placement_ids' => ['required', 'array', 'min:1'],
+            'placement_ids.*' => ['integer', 'distinct', Rule::exists('ad_placements', 'id')->where(fn ($q) => $q->whereIn('id', $campaign->placements()->pluck('ad_placements.id')))],
             'name' => 'required|string|max:255', 'creative_type' => 'required|in:image,video',
             'media_original' => [$imageRequired ? 'required' : 'nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:20480'],
             'media' => [$imageRequired || $videoRequired ? 'required' : 'nullable', 'file', Rule::when($request->input('creative_type') === 'image', ['image', 'mimes:jpeg,jpg,png,webp', 'max:20480'], ['mimes:mp4,webm', 'max:102400'])],
             'media_edit_data' => 'nullable|json', 'width' => 'nullable|integer|min:1|max:10000', 'height' => 'nullable|integer|min:1|max:10000',
             'headline' => 'nullable|string|max:255', 'body' => 'nullable|string|max:2000', 'cta_label' => 'nullable|string|max:100',
-            'destination_url' => 'nullable|string|max:1000', 'alt_text' => 'nullable|string|max:1000',
+            'destination_url' => 'required|url|max:1000', 'alt_text' => 'nullable|string|max:1000',
         ]);
+
+        $this->ensurePlacementCompatibility($campaign, $data);
+
+        return $data;
+    }
+
+    private function ensurePlacementCompatibility(AdvertisingCampaign $campaign, array $data): void
+    {
+        if (empty($data['width']) || empty($data['height'])) {
+            return;
+        }
+
+        $placements = $campaign->placements()->whereIn('ad_placements.id', $data['placement_ids'])->get();
+        $incompatible = $placements->filter(fn ($placement) =>
+            $placement->width && $placement->height &&
+            ((int) $placement->width !== (int) $data['width'] || (int) $placement->height !== (int) $data['height'])
+        );
+
+        if ($incompatible->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'placement_ids' => 'This creative does not match: '.$incompatible->pluck('name')->join(', ').'. Select placements with matching dimensions.',
+            ]);
+        }
     }
 
     private function attachMedia(Request $request, array &$data, AdCreativeMediaService $media, string $directory): void

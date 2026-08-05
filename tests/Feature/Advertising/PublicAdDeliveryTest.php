@@ -26,6 +26,7 @@ class PublicAdDeliveryTest extends TestCase
             'status' => 'approved', 'creative_type' => 'image', 'media_path' => 'advertising/test/rendered/ad.jpg',
             'width' => 1200, 'height' => 300, 'destination_url' => 'https://example.com',
         ]);
+        $creative->placements()->attach($placement);
 
         $this->getJson('/ads/placements/homepage-below-hero')->assertOk()->assertJsonPath('creative.id', $creative->id);
         $this->postJson("/ads/creatives/{$creative->id}/impression", ['placement_code' => $placement->code])->assertOk();
@@ -33,6 +34,27 @@ class PublicAdDeliveryTest extends TestCase
 
         $this->assertDatabaseHas('analytics_events', ['event_name' => AnalyticsEventName::AdvertisingImpression->value, 'subject_id' => $creative->id]);
         $this->assertDatabaseHas('analytics_events', ['event_name' => AnalyticsEventName::AdvertisingClicked->value, 'subject_id' => $creative->id]);
+    }
+
+    public function test_one_creative_can_be_delivered_to_multiple_compatible_placements(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('advertising/test/rendered/shared.jpg', 'image');
+
+        $advertiser = Advertiser::factory()->create(['status' => 'active']);
+        $first = AdPlacement::factory()->create(['code' => 'homepage-below-hero', 'width' => 1200, 'height' => 300, 'is_active' => true]);
+        $second = AdPlacement::factory()->create(['code' => 'asset-gallery-inline', 'width' => 1200, 'height' => 300, 'is_active' => true]);
+        $campaign = AdvertisingCampaign::factory()->create(['advertiser_id' => $advertiser->id, 'status' => 'active', 'starts_at' => now()->subDay(), 'ends_at' => now()->addDay()]);
+        $campaign->placements()->attach([$first->id => ['priority' => 5], $second->id => ['priority' => 5]]);
+        $creative = AdCreative::factory()->create([
+            'advertising_campaign_id' => $campaign->id, 'ad_placement_id' => $first->id,
+            'status' => 'approved', 'creative_type' => 'image', 'media_path' => 'advertising/test/rendered/shared.jpg',
+            'width' => 1200, 'height' => 300, 'destination_url' => 'https://example.com',
+        ]);
+        $creative->placements()->attach([$first->id, $second->id]);
+
+        $this->getJson('/ads/placements/homepage-below-hero')->assertOk()->assertJsonPath('creative.id', $creative->id);
+        $this->getJson('/ads/placements/asset-gallery-inline')->assertOk()->assertJsonPath('creative.id', $creative->id);
     }
 
     public function test_ineligible_or_empty_placement_returns_no_content(): void

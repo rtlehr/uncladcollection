@@ -576,7 +576,7 @@ watch(
                         />
                     </div>
 
-                    <aside class="space-y-5 lg:sticky lg:top-24 lg:self-start">
+                    <aside class="space-y-5 lg:self-start">
                         <ArticleTableOfContents :items="tableOfContents" />
 
                         <PublicAuthorCard :author="blogPost.author" />
@@ -615,7 +615,13 @@ watch(
                                 </template>
                             </div>
                         </div>
-                    </aside>
+
+                        
+                    
+                        <PublicAdPlacement
+                            placement="blog-article-sidebar"
+                        />
+</aside>
                 </div>
             </section>
         </article>

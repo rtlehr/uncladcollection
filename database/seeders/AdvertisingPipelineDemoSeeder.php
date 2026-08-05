@@ -95,6 +95,7 @@ class AdvertisingPipelineDemoSeeder extends Seeder
             'asset-gallery-inline',
             'blog-index-inline',
             'blog-article-after-content',
+            'blog-article-sidebar',
         ])->get()->keyBy('code');
 
         $package = SponsorshipPackage::query()->updateOrCreate(
@@ -364,36 +365,40 @@ class AdvertisingPipelineDemoSeeder extends Seeder
 
     private function seedCreatives(AdvertisingCampaign $campaign, $placements, User $admin): void
     {
-        foreach ($placements as $placement) {
-            $directory = 'advertising/demo/sunhaven/'.$placement->code;
+        $groups = collect($placements)->groupBy(fn (AdPlacement $placement) => ($placement->width ?: 'flex').'x'.($placement->height ?: 'flex'));
+
+        foreach ($groups as $dimensionKey => $compatiblePlacements) {
+            /** @var AdPlacement $primary */
+            $primary = $compatiblePlacements->first();
+            $directory = 'advertising/demo/sunhaven/'.$dimensionKey;
             $path = $directory.'/rendered.svg';
             $originalPath = $directory.'/original.svg';
-            $svg = $this->svg((int) $placement->width, (int) $placement->height, $placement->name);
+            $svg = $this->svg((int) $primary->width, (int) $primary->height, 'SunHaven shared banner');
             Storage::disk('public')->put($path, $svg);
             Storage::disk('public')->put($originalPath, $svg);
 
-            AdCreative::withTrashed()->updateOrCreate(
+            $creative = AdCreative::withTrashed()->updateOrCreate(
                 [
                     'advertising_campaign_id' => $campaign->id,
-                    'ad_placement_id' => $placement->id,
-                    'name' => 'SunHaven '.$placement->name.' (Demo)',
+                    'name' => 'SunHaven '.$dimensionKey.' Shared Creative (Demo)',
                 ],
                 [
-                    'uuid' => $this->stableUuid('creative-'.$placement->code),
+                    'ad_placement_id' => $primary->id,
+                    'uuid' => $this->stableUuid('creative-'.$dimensionKey),
                     'creative_type' => 'image',
                     'status' => 'approved',
                     'media_path' => $path,
                     'original_media_path' => $originalPath,
                     'media_edit_data' => [
                         'demo' => true,
-                        'crop' => ['x' => 0, 'y' => 0, 'width' => $placement->width, 'height' => $placement->height],
-                        'placement_code' => $placement->code,
+                        'crop' => ['x' => 0, 'y' => 0, 'width' => $primary->width, 'height' => $primary->height],
+                        'placement_codes' => $compatiblePlacements->pluck('code')->values()->all(),
                     ],
                     'mime_type' => 'image/svg+xml',
-                    'original_filename' => 'sunhaven-'.$placement->code.'.svg',
+                    'original_filename' => 'sunhaven-'.$dimensionKey.'.svg',
                     'file_size' => strlen($svg),
-                    'width' => $placement->width,
-                    'height' => $placement->height,
+                    'width' => $primary->width,
+                    'height' => $primary->height,
                     'headline' => 'Find Your Natural Escape',
                     'body' => 'Discover a welcoming resort experience designed around comfort, nature, and community.',
                     'cta_label' => 'Explore SunHaven',
@@ -406,6 +411,8 @@ class AdvertisingPipelineDemoSeeder extends Seeder
                     'deleted_at' => null,
                 ]
             );
+
+            $creative->placements()->sync($compatiblePlacements->pluck('id')->all());
         }
     }
 
@@ -422,7 +429,7 @@ class AdvertisingPipelineDemoSeeder extends Seeder
 <p>This demonstration article explains the correct way sponsored advertising appears within Unclad Collection. The article body itself contains no advertiser HTML, tracking script, embedded banner, or manually pasted promotional markup.</p>
 <p>Editors should write and publish articles normally. Advertising is delivered by the site&rsquo;s placement system, which keeps editorial content separate from paid messages.</p>
 <h2>Where the advertisement appears</h2>
-<p>On the public article page, an approved advertisement may appear after the article content. The page template renders the reusable <strong>blog-article-after-content</strong> placement. If there is no eligible active campaign, the placement produces no empty box or broken layout.</p>
+<p>On the public article page, approved advertisements may appear after the article content and in the sidebar below the article keywords. The page template renders the reusable <strong>blog-article-after-content</strong> and <strong>blog-article-sidebar</strong> placements. If there is no eligible active campaign, either placement produces no empty box or broken layout.</p>
 <h2>Why this approach is correct</h2>
 <ul>
 <li>Campaign schedules and approvals remain enforced.</li>
@@ -465,12 +472,12 @@ HTML,
 
     private function seedAnalytics(AdvertisingCampaign $campaign, $placements, User $advertiserUser, BlogPost $blogPost): void
     {
-        $creatives = AdCreative::query()->where('advertising_campaign_id', $campaign->id)->get()->keyBy('ad_placement_id');
+        $creatives = AdCreative::query()->where('advertising_campaign_id', $campaign->id)->with('placements')->get();
         AnalyticsEvent::query()->where('source', self::DEMO_PREFIX)->delete();
 
         foreach (range(0, 6) as $daysAgo) {
             foreach ($placements as $placement) {
-                $creative = $creatives->get($placement->id);
+                $creative = $creatives->first(fn (AdCreative $creative) => $creative->placements->contains($placement->id));
                 if (! $creative) {
                     continue;
                 }

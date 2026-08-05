@@ -3,6 +3,7 @@
 namespace Tests\Feature\Advertising;
 
 use App\Models\AdCreative;
+use App\Models\AdPlacement;
 use App\Models\Advertiser;
 use App\Models\AdvertisingCampaign;
 use App\Models\AdvertisingInvoice;
@@ -37,7 +38,25 @@ class AdvertisingPipelineDemoSeederTest extends TestCase
         $this->assertSame('paid', $invoice->status);
         $this->assertSame(0, $invoice->balance_cents);
         $this->assertTrue($post->isPublished());
-        $this->assertSame(4, AdCreative::query()->where('advertising_campaign_id', $campaign->id)->where('status', 'approved')->count());
+        $this->assertSame(3, AdCreative::query()->where('advertising_campaign_id', $campaign->id)->where('status', 'approved')->count());
+        $this->assertDatabaseHas('ad_placements', [
+            'code' => 'blog-article-sidebar',
+            'location' => 'blog_article',
+            'format' => 'sidebar',
+            'width' => 300,
+            'height' => 250,
+            'is_active' => true,
+        ]);
+
+        $sidebarPlacement = AdPlacement::query()->where('code', 'blog-article-sidebar')->firstOrFail();
+        $this->assertTrue(
+            AdCreative::query()
+                ->where('advertising_campaign_id', $campaign->id)
+                ->where('width', 300)
+                ->where('height', 250)
+                ->whereHas('placements', fn ($query) => $query->whereKey($sidebarPlacement->id))
+                ->exists()
+        );
         $this->assertGreaterThan(0, AnalyticsEvent::query()->where('source', AdvertisingPipelineDemoSeeder::DEMO_PREFIX)->count());
         $this->assertSame(1, Advertiser::query()->where('slug', 'sunhaven-naturist-resort-demo')->count());
         $this->assertSame($advertiser->id, $campaign->advertiser_id);

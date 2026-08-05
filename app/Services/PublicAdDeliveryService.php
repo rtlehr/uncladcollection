@@ -21,8 +21,8 @@ class PublicAdDeliveryService
         }
 
         $creatives = AdCreative::query()
-            ->with(['campaign.placements', 'placement'])
-            ->where('ad_placement_id', $placement->id)
+            ->with(['campaign.placements', 'placements'])
+            ->whereHas('placements', fn ($query) => $query->whereKey($placement->id))
             ->where('status', 'approved')
             ->whereNotNull('media_path')
             ->whereHas('campaign', fn ($query) => $query->current())
@@ -36,7 +36,7 @@ class PublicAdDeliveryService
             return null;
         }
 
-        $creative = $this->weightedChoice($creatives);
+        $creative = $this->weightedChoice($creatives, $placement);
 
         return [
             'placement' => [
@@ -72,7 +72,7 @@ class PublicAdDeliveryService
 
     private function isEligible(AdCreative $creative, AdPlacement $placement): bool
     {
-        if (! $creative->campaign || ! $creative->campaign->placements->contains($placement->id)) {
+        if (! $creative->campaign || ! $creative->campaign->placements->contains($placement->id) || ! $creative->placements->contains($placement->id)) {
             return false;
         }
 
@@ -102,10 +102,10 @@ class PublicAdDeliveryService
         return in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true);
     }
 
-    private function weightedChoice(Collection $creatives): AdCreative
+    private function weightedChoice(Collection $creatives, AdPlacement $placement): AdCreative
     {
-        $weighted = $creatives->map(function (AdCreative $creative) {
-            $pivot = $creative->campaign->placements->firstWhere('id', $creative->ad_placement_id)?->pivot;
+        $weighted = $creatives->map(function (AdCreative $creative) use ($placement) {
+            $pivot = $creative->campaign->placements->firstWhere('id', $placement->id)?->pivot;
             return ['creative' => $creative, 'weight' => max(1, (int) ($pivot?->priority ?? 1))];
         });
 

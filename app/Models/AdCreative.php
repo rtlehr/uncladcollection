@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,12 +27,17 @@ class AdCreative extends Model
 
     public function campaign(): BelongsTo { return $this->belongsTo(AdvertisingCampaign::class, 'advertising_campaign_id'); }
     public function placement(): BelongsTo { return $this->belongsTo(AdPlacement::class, 'ad_placement_id'); }
+    public function placements(): BelongsToMany { return $this->belongsToMany(AdPlacement::class, 'ad_creative_placement')->withTimestamps(); }
     public function approver(): BelongsTo { return $this->belongsTo(User::class, 'approved_by'); }
     public function getMediaUrlAttribute(): ?string { return $this->media_path ? Storage::disk('public')->url($this->media_path) : null; }
     public function getOriginalMediaUrlAttribute(): ?string { return $this->original_media_path ? Storage::disk('public')->url($this->original_media_path) : null; }
     public function getIsPlacementCompatibleAttribute(): bool
     {
-        if (! $this->placement || ! $this->width || ! $this->height || ! $this->placement->width || ! $this->placement->height) return true;
-        return $this->width === $this->placement->width && $this->height === $this->placement->height;
+        $placements = $this->relationLoaded('placements') ? $this->placements : $this->placements()->get();
+        if ($placements->isEmpty() || ! $this->width || ! $this->height) return true;
+        return $placements->every(fn (AdPlacement $placement) =>
+            ! $placement->width || ! $placement->height ||
+            ((int) $this->width === (int) $placement->width && (int) $this->height === (int) $placement->height)
+        );
     }
 }
