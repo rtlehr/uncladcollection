@@ -5,6 +5,8 @@ use App\Http\Controllers\Account\WishListController;
 use App\Http\Controllers\Account\AccountOrderController;
 use App\Http\Controllers\Account\PrivacyController;
 use App\Http\Controllers\Account\LicenseDocumentController;
+use App\Http\Controllers\Account\DesignProjectController;
+use App\Http\Controllers\Account\DesignUploadController;
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\NotificationPreferenceController;
 use App\Http\Controllers\Account\WishListItemController;
@@ -18,6 +20,13 @@ Route::middleware(['auth', 'verified'])
     ->group(function (): void {
         Route::get('/', AccountDashboardController::class)->name('index');
         Route::get('/library', [PurchaseBrowseController::class, 'index'])->name('library.index');
+        Route::get('/designs', [DesignProjectController::class, 'index'])->name('designs.index');
+        Route::post('/licenses/{license}/designs', [DesignProjectController::class, 'store'])->middleware('block.impersonation')->name('designs.store');
+        Route::get('/designs/{design}/edit', [DesignProjectController::class, 'edit'])->name('designs.edit');
+        Route::put('/designs/{design}', [DesignProjectController::class, 'update'])->middleware('block.impersonation')->name('designs.update');
+        Route::delete('/designs/{design}', [DesignProjectController::class, 'destroy'])->middleware('block.impersonation')->name('designs.destroy');
+        Route::post('/designs/{design}/uploads', [DesignUploadController::class, 'store'])->middleware('block.impersonation')->name('designs.uploads.store');
+        Route::get('/designs/{design}/uploads/{upload}', [DesignUploadController::class, 'show'])->name('designs.uploads.show');
         Route::get('/orders', [AccountOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AccountOrderController::class, 'show'])->name('orders.show');
         Route::get('/privacy', [PrivacyController::class, 'edit'])->name('privacy.edit');

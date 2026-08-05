@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Bell, Heart, LibraryBig, LockKeyhole, LifeBuoy, PackageSearch, ShieldCheck, UserRound } from '@lucide/vue';
+import { Bell, Heart, Images, LibraryBig, LockKeyhole, LifeBuoy, PackageSearch, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 
@@ -11,6 +11,7 @@ const items = [
     { label: 'Overview', href: '/account', icon: UserRound },
     { label: 'My Library', href: '/account/library', icon: LibraryBig },
     { label: 'My Orders', href: '/account/orders', icon: PackageSearch },
+    { label: 'My Designs', href: '/account/designs', icon: Images },
     { label: 'Wish Lists', href: '/account/wish-lists', icon: Heart },
     { label: 'Profile', href: '/settings/profile', icon: UserRound },
     { label: 'Security', href: '/settings/security', icon: LockKeyhole },
