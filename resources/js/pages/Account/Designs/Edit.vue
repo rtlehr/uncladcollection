@@ -158,6 +158,23 @@ let canvas: Canvas | null = null;
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 let restoringHistory = false;
 
+const studioWebFonts = ['Caveat', 'Dancing Script', 'Patrick Hand'];
+
+async function ensureStudioFontsLoaded(): Promise<void> {
+    if (!('fonts' in document)) return;
+
+    await Promise.all(
+        studioWebFonts.map(async fontFamily => {
+            try {
+                await document.fonts.load(`48px "${fontFamily}"`);
+            } catch {
+                // The browser will fall back gracefully if the remote font
+                // cannot be loaded.
+            }
+        }),
+    );
+}
+
 const viewportWidth = ref(Math.max(360, window.innerWidth - 590));
 const viewportHeight = ref(Math.max(360, window.innerHeight - 170));
 const fitFactor = computed(() => Math.min(
@@ -786,6 +803,35 @@ function toggleLock(): void {
     pushHistory();
 }
 
+function flipSelected(axis: 'horizontal' | 'vertical'): void {
+    if (!selected.value || !canvas) return;
+    if (axis === 'horizontal') {
+        selected.value.set('flipX', !selected.value.flipX);
+    } else {
+        selected.value.set('flipY', !selected.value.flipY);
+    }
+    selected.value.setCoords();
+    canvas.requestRenderAll();
+    pushHistory();
+}
+
+async function updateSelectedFont(fontFamily: string): Promise<void> {
+    if (!selected.value || !canvas) return;
+
+    if ('fonts' in document) {
+        try {
+            await document.fonts.load(`48px "${fontFamily}"`);
+        } catch {
+            // Keep the selection usable even if the web font cannot load.
+        }
+    }
+
+    selected.value.set('fontFamily' as never, fontFamily as never);
+    selected.value.setCoords();
+    canvas.requestRenderAll();
+    pushHistory();
+}
+
 function updateSelected(property: string, value: unknown): void {
     if (!selected.value || !canvas) return;
     selected.value.set(property as never, value as never);
@@ -1215,6 +1261,8 @@ function keyboard(event: KeyboardEvent): void {
 onMounted(async () => {
     await nextTick();
     if (!canvasElement.value) return;
+
+    await ensureStudioFontsLoaded();
     canvas = new Canvas(canvasElement.value, {
         width: canvasWidth.value,
         height: canvasHeight.value,
@@ -1432,7 +1480,7 @@ watch(stageDimensions, dimensions => {
                             <label class="text-sm">Font size<input :value="Number(selected.get('fontSize') ?? 48)" type="number" min="8" max="500" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" @change="updateSelected('fontSize', Number(($event.target as HTMLInputElement).value))" /></label>
                             <label class="text-sm">Color<input :value="String(selected.get('fill') ?? '#ffffff')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('fill', ($event.target as HTMLInputElement).value)" /></label>
                         </div>
-                        <label class="block text-sm">Font family<select :value="String(selected.get('fontFamily') ?? 'Arial')" class="mt-2 w-full rounded-lg border border-white/10 bg-stone-900 p-2" @change="updateSelected('fontFamily', ($event.target as HTMLSelectElement).value)"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Tahoma</option><option>Times New Roman</option><option>Trebuchet MS</option><option>Verdana</option></select></label>
+                        <label class="block text-sm">Font family<select :value="String(selected.get('fontFamily') ?? 'Arial')" class="mt-2 w-full rounded-lg border border-white/10 bg-stone-900 p-2" @change="updateSelectedFont(($event.target as HTMLSelectElement).value)"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Caveat</option><option>Dancing Script</option><option>Patrick Hand</option><option>Tahoma</option><option>Times New Roman</option><option>Trebuchet MS</option><option>Verdana</option></select></label>
                         <div class="grid grid-cols-3 gap-2">
                             <Button variant="secondary" size="sm" @click="updateSelected('textAlign', 'left')"><AlignLeft class="h-4 w-4" /></Button>
                             <Button variant="secondary" size="sm" @click="updateSelected('textAlign', 'center')"><AlignCenter class="h-4 w-4" /></Button>
@@ -1477,6 +1525,8 @@ watch(stageDimensions, dimensions => {
                     <div class="grid grid-cols-2 gap-2">
                         <Button variant="secondary" @click="duplicateSelected"><Copy class="mr-2 h-4 w-4" />Duplicate</Button>
                         <Button variant="secondary" @click="toggleLock"><component :is="selected.lockMovementX ? Unlock : Lock" class="mr-2 h-4 w-4" />{{ selected.lockMovementX ? 'Unlock' : 'Lock' }}</Button>
+                        <Button variant="secondary" @click="flipSelected('horizontal')">Flip horizontal</Button>
+                        <Button variant="secondary" @click="flipSelected('vertical')">Flip vertical</Button>
                         <Button variant="secondary" @click="moveLayer('forward')"><ArrowUp class="mr-2 h-4 w-4" />Forward</Button>
                         <Button variant="secondary" @click="moveLayer('backward')"><ArrowDown class="mr-2 h-4 w-4" />Backward</Button>
                         <Button variant="secondary" @click="moveLayerToEdge('front')">To front</Button>
