@@ -1,5 +1,5 @@
 <script lang="ts">
-import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue'; 
+import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
 
 export default {
     layout: PublicBlankLayout,
