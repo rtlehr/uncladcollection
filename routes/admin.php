@@ -261,7 +261,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::post('/sponsorship-proposals/{sponsorshipProposal}/convert', [SponsorshipProposalController::class, 'convert'])->middleware('permission:convert_sponsorship_proposals')->name('sponsorship-proposals.convert');
         Route::get('/ad-inventory', [AdInventoryController::class, 'index'])->middleware('permission:manage_ad_inventory')->name('ad-inventory.index');
 
-        Route::resource('advertisers', AdvertiserController::class)->except(['show'])->middleware('permission:manage_advertisers');
+        Route::resource('advertisers', AdvertiserController::class)->middleware('permission:manage_advertisers');
         Route::post('/advertisers/{advertiser}/memberships', [AdvertiserMembershipController::class, 'store'])->middleware('permission:manage_advertisers')->name('advertisers.memberships.store');
         Route::patch('/advertisers/{advertiser}/memberships/{membership}', [AdvertiserMembershipController::class, 'update'])->middleware('permission:manage_advertisers')->name('advertisers.memberships.update');
         Route::delete('/advertisers/{advertiser}/memberships/{membership}', [AdvertiserMembershipController::class, 'destroy'])->middleware('permission:manage_advertisers')->name('advertisers.memberships.destroy');
@@ -280,6 +280,7 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::post('/advertising-invoices/{advertisingInvoice}/checkout', [AdvertisingInvoiceController::class, 'checkout'])->middleware('permission:record_advertising_payments')->name('advertising-invoices.checkout');
         Route::post('/ad-campaigns/{adCampaign}/submit', [AdvertisingCampaignController::class, 'submit'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.submit');
         Route::post('/ad-campaigns/{adCampaign}/decision', [AdvertisingCampaignController::class, 'approve'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.decision');
+        Route::post('/ad-campaigns/{adCampaign}/launch', [AdvertisingCampaignController::class, 'launch'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.launch');
         Route::get('/ad-campaigns/{adCampaign}/creatives', [AdCreativeController::class, 'index'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.index');
         Route::get('/ad-campaigns/{adCampaign}/creatives/create', [AdCreativeController::class, 'create'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.create');
         Route::post('/ad-campaigns/{adCampaign}/creatives', [AdCreativeController::class, 'store'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.store');
