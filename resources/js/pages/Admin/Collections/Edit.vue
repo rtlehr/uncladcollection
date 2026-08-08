@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 
+import CollectionCoverEditor from '@/components/admin/collections/CollectionCoverEditor.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import DetailRow from '@/Components/Shared/DetailRow.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
-import CollectionCoverEditor from '@/components/admin/collections/CollectionCoverEditor.vue';
-import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import type { AdminCollection } from '@/types/collection';

@@ -47,7 +47,9 @@ const allTools = computed(() => props.groups.flatMap((group) => group.tools));
 const normalizedQuery = computed(() => query.value.trim().toLowerCase());
 
 const filteredGroups = computed(() => {
-    if (!normalizedQuery.value) return props.groups;
+    if (!normalizedQuery.value) {
+return props.groups;
+}
 
     return props.groups
         .map((group) => ({
@@ -81,7 +83,10 @@ function remember(tool: AdminTool): void {
 onMounted(() => {
     try {
         const stored = JSON.parse(window.localStorage.getItem(storageKey) ?? '[]');
-        if (Array.isArray(stored)) recentIds.value = stored.filter((value) => typeof value === 'string');
+
+        if (Array.isArray(stored)) {
+recentIds.value = stored.filter((value) => typeof value === 'string');
+}
     } catch {
         recentIds.value = [];
     }

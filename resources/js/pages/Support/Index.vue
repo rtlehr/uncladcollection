@@ -14,6 +14,12 @@ import Pagination from '@/components/Shared/Pagination.vue';
 import StatusBadge from '@/components/Support/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 
+
+
+
+
+
+
 defineProps<{tickets:any}>();
 </script>
 

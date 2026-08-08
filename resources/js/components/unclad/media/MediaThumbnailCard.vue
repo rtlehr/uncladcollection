@@ -13,22 +13,40 @@ defineProps<{ file: MediaPresentationFile; selected: boolean }>();
 defineEmits<{ select: [] }>();
 
 function sizeLabel(bytes: number | null): string {
-    if (!bytes) return 'Unknown size';
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+    if (!bytes) {
+return 'Unknown size';
+}
+
+    if (bytes >= 1024 ** 3) {
+return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}
+
+    if (bytes >= 1024 ** 2) {
+return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+}
+
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function detailLabel(file: MediaPresentationFile): string {
-    if (file.width && file.height) return `${file.width} × ${file.height}`;
+    if (file.width && file.height) {
+return `${file.width} × ${file.height}`;
+}
+
     if (file.duration_seconds !== null) {
         const seconds = Number(file.duration_seconds);
-        if (Number.isFinite(seconds))
-            return `${Math.floor(seconds / 60)}:${Math.round(seconds % 60)
+
+        if (Number.isFinite(seconds)) {
+return `${Math.floor(seconds / 60)}:${Math.round(seconds % 60)
                 .toString()
                 .padStart(2, '0')}`;
+}
     }
-    if (file.page_count) return `${file.page_count} pages`;
+
+    if (file.page_count) {
+return `${file.page_count} pages`;
+}
+
     return sizeLabel(file.size_bytes);
 }
 </script>

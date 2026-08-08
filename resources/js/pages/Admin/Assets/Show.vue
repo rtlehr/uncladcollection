@@ -5,13 +5,22 @@ export default { layout: PublicBlankLayout };
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Eye, FolderOpen, UserRound } from '@lucide/vue';
-import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
-import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import AssetFormatBadge from '@/components/Assets/Public/AssetFormatBadge.vue';
-import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
 import AssetOfferingCard from '@/components/Assets/Public/AssetOfferingCard.vue';
 import AssetTechnicalSpecs from '@/components/Assets/Public/AssetTechnicalSpecs.vue';
+import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
+import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
 import type { PublicAsset, PublicAssetOffering, RelatedPublicAsset } from '@/types/publicAsset';
+
+
+
+
+
+
+
+
+
 
 defineProps<{ asset: PublicAsset; offerings: PublicAssetOffering[]; relatedAssets: RelatedPublicAsset[] }>();
 </script>

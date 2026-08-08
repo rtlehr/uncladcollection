@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { LogIn, Search, UserRoundCheck } from '@lucide/vue';
+import { LogIn, Search } from '@lucide/vue';
 import { ref } from 'vue';
 
 import SearchToolbar from '@/components/Admin/SearchToolbar.vue';
@@ -75,7 +75,9 @@ function sortByName(): void {
 }
 
 function impersonate(user: ImpersonationUser): void {
-    if (!user.can_impersonate || props.impersonationActive) return;
+    if (!user.can_impersonate || props.impersonationActive) {
+return;
+}
 
     router.post(`/admin/users/${user.id}/impersonate`, {}, {
         preserveScroll: true,

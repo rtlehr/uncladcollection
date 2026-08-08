@@ -8,7 +8,6 @@ export default {
 
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-
 import ContentSection from '@/components/Public/ContentSection.vue';
 import PublicBreadcrumbs from '@/components/Public/PublicBreadcrumbs.vue';
 import PublicCallout from '@/components/Public/PublicCallout.vue';
@@ -16,10 +15,23 @@ import PublicCTA from '@/components/Public/PublicCTA.vue';
 import PublicFAQ from '@/components/Public/PublicFAQ.vue';
 import PublicHero from '@/components/Public/PublicHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
-import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
-import StructuredData from '@/components/Public/StructuredData.vue';
 import PublicRelatedLinks from '@/components/Public/PublicRelatedLinks.vue';
+import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import PublicSidebarCard from '@/components/Public/PublicSidebarCard.vue';
+import StructuredData from '@/components/Public/StructuredData.vue';
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const breadcrumbs = [
     { label: 'Home', href: '/' },

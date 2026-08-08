@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Crop, ImageIcon, RefreshCw, Trash2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
-import ImageEditorDialog, {
-    type ImageEditData,
-} from '@/components/media/ImageEditorDialog.vue';
-import { MARKETPLACE_CARD_PRESET } from '@/config/imageEditorPresets';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData} from '@/components/media/ImageEditorDialog.vue';
 import { Button } from '@/components/ui/button';
+import { MARKETPLACE_CARD_PRESET } from '@/config/imageEditorPresets';
 
 export type AssetPresentationSource = {
     key: string;

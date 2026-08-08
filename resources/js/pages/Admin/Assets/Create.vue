@@ -2,20 +2,20 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue';
-import FormField from '@/Components/Forms/FormField.vue';
-import FormSection from '@/Components/Forms/FormSection.vue';
-import FormActions from '@/Components/Forms/FormActions.vue';
-import { Input } from '@/components/ui/input';
-import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
 import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
 import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
+import FormActions from '@/Components/Forms/FormActions.vue';
+import FormField from '@/Components/Forms/FormField.vue';
+import FormSection from '@/Components/Forms/FormSection.vue';
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
+import PageHeader from '@/Components/Shared/PageHeader.vue';
+import { Input } from '@/components/ui/input';
 import type { AdminAssetConfigurationGroup, ConfigurationDisplayTypeOption, NamedOption, PendingAssetFile, SelectOption } from '@/types/adminAsset';
 import type { ConfigurationTemplateSummary } from '@/types/configurationTemplate';
 
-const props = defineProps<{
+defineProps<{
     collections: NamedOption[];
     assetTypes: SelectOption[];
     statuses: SelectOption[];
@@ -114,6 +114,7 @@ function submit() {
     if (hasInvalidFiles.value) {
         return;
     }
+
     form.transform((data) => ({
         ...data,
         collection_id: data.collection_id === '' ? null : data.collection_id,

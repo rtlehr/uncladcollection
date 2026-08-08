@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ArrowDown, CheckCircle2, CreditCard, ShieldCheck } from '@lucide/vue';
-import AssetFulfillmentBadge from './AssetFulfillmentBadge.vue';
 import type { PublicAssetOffering } from '@/types/publicAsset';
+import AssetFulfillmentBadge from './AssetFulfillmentBadge.vue';
 
-const props = defineProps<{
+defineProps<{
     offerings: PublicAssetOffering[];
     formats: string[];
     fulfillmentType: 'digital' | 'physical' | 'hybrid';

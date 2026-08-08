@@ -264,8 +264,9 @@ function importSeed(event: Event): void {
                     >
                         <Link
                             :href="link.url"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Link>
                     </Button>
                 </template>
             </div>

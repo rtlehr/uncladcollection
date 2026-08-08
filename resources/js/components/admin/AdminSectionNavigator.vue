@@ -44,7 +44,10 @@ function isValidSection(id: string | null): id is string {
 }
 
 function selectSection(id: string): void {
-    if (!isValidSection(id)) return;
+    if (!isValidSection(id)) {
+return;
+}
+
     activeSection.value = id;
 }
 
@@ -58,14 +61,22 @@ function firstErrorSection(): string | null {
 
 onMounted(() => {
     const errorSection = firstErrorSection();
+
     if (errorSection) {
         activeSection.value = errorSection;
+
         return;
     }
 
-    if (!props.storageKey) return;
+    if (!props.storageKey) {
+return;
+}
+
     const stored = window.localStorage.getItem(props.storageKey);
-    if (isValidSection(stored)) activeSection.value = stored;
+
+    if (isValidSection(stored)) {
+activeSection.value = stored;
+}
 });
 
 watch(activeSection, (value) => {
@@ -78,7 +89,10 @@ watch(
     () => props.errors,
     () => {
         const errorSection = firstErrorSection();
-        if (errorSection) selectSection(errorSection);
+
+        if (errorSection) {
+selectSection(errorSection);
+}
     },
     { deep: true },
 );

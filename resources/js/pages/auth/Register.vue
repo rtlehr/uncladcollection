@@ -16,7 +16,6 @@ import {
     Sparkles,
     UserPlus,
 } from '@lucide/vue';
-
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import ContentSection from '@/components/Public/ContentSection.vue';
@@ -30,6 +29,22 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 defineProps<{
     passwordRules: string;

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { ref } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 defineOptions({ layout: AppLayout });
 const props = defineProps<{ filters: Record<string, string>; report: { totals: Record<string, number>; sources: Array<Record<string, number | string>> } }>();
 const period = ref(props.filters.period ?? '30_days');
-function apply(): void { router.get('/admin/analytics/discovery', { period: period.value }, { preserveState: true }); }
+function apply(): void {
+ router.get('/admin/analytics/discovery', { period: period.value }, { preserveState: true }); 
+}
 const money = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 </script>
 <template>

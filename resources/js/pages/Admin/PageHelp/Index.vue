@@ -46,13 +46,17 @@ function chooseImport(mode: 'merge' | 'replace'): void {
 function importSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+
+    if (!file) {
+return;
+}
 
     if (
         importMode.value === 'replace'
         && !window.confirm('Replace all existing Page Help content with this export? Entries missing from the file will be deleted.')
     ) {
         input.value = '';
+
         return;
     }
 

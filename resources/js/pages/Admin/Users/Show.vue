@@ -8,12 +8,12 @@ import {
 } from '@lucide/vue';
 
 import ActivityLog from '@/components/admin/ActivityLog.vue';
-import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
-import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
-import ShowSection from '@/Components/Show/ShowSection.vue';
 import DetailRow from '@/Components/Shared/DetailRow.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
 import DataTable from '@/Components/Tables/DataTable.vue';
 import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
 import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';

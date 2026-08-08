@@ -12,7 +12,9 @@ import type { PaginatedPurchases } from '@/types/purchase';
 const props=defineProps<{licenses:PaginatedPurchases;filters:{search:string;sort:string;status:string};statusCounts:Record<string,number>}>();
 const search=ref(props.filters.search);
 const tabs=[['all','All'],['active','Active'],['expiring_soon','Expiring Soon'],['expired','Expired'],['revoked','Revoked'],['refunded','Refunded']];
-function apply(status=props.filters.status){router.get('/account/library',{search:search.value,sort:props.filters.sort,status},{preserveState:true,replace:true});}
+function apply(status=props.filters.status){
+router.get('/account/library',{search:search.value,sort:props.filters.sort,status},{preserveState:true,replace:true});
+}
 </script>
 <template><Head title="My Library"/><AccountPageLayout><template #title>My Library</template><template #description>Manage every license, document, and download from one place.</template><div class="space-y-6">
 <div class="flex flex-col gap-3 sm:flex-row"><Input v-model="search" placeholder="Search assets, order numbers, or license keys" @keyup.enter="apply()"/><Button @click="apply()">Search</Button></div>

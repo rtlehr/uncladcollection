@@ -19,7 +19,9 @@ function addTier(): void {
     });
 }
 
-function dollars(cents: number | null): string { return ((cents ?? 0) / 100).toFixed(2); }
+function dollars(cents: number | null): string {
+ return ((cents ?? 0) / 100).toFixed(2); 
+}
 function updateDollars(tier: AdminAssetPricingTier, event: Event): void {
     const value = Number((event.target as HTMLInputElement).value);
     tier.unit_price_cents = Number.isFinite(value) ? Math.max(0, Math.round(value * 100)) : 0;

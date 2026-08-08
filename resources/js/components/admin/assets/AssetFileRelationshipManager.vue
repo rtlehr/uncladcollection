@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import {
     ArrowDown,
     ArrowRight,
@@ -8,6 +7,7 @@ import {
     Plus,
     Trash2,
 } from '@lucide/vue';
+import { computed } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import type {

@@ -212,7 +212,7 @@ const schemas = computed<SeoPrimarySchema[]>(() => {
             v-for="(schema, index) in schemas"
             :key="`structured-data-${index}`"
             type="application/ld+json"
-            v-text="JSON.stringify(schema)"
+            :textContent="JSON.stringify(schema)"
         />
     </Head>
 </template>

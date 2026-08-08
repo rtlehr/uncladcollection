@@ -11,10 +11,21 @@ withDefaults(defineProps<{
 function iconFor(format: string) {
     const value = format.toLowerCase();
 
-    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'tif', 'tiff'].includes(value)) return FileImage;
-    if (['mp4', 'mov', 'webm', 'ogg'].includes(value)) return FileVideo;
-    if (['eps', 'svg', 'ai'].includes(value)) return Shapes;
-    if (['zip', 'rar', '7z'].includes(value)) return FileArchive;
+    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'tif', 'tiff'].includes(value)) {
+return FileImage;
+}
+
+    if (['mp4', 'mov', 'webm', 'ogg'].includes(value)) {
+return FileVideo;
+}
+
+    if (['eps', 'svg', 'ai'].includes(value)) {
+return Shapes;
+}
+
+    if (['zip', 'rar', '7z'].includes(value)) {
+return FileArchive;
+}
 
     return FileText;
 }

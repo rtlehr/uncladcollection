@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
 import { Plus, X } from '@lucide/vue';
+import { computed, nextTick, ref } from 'vue';
 
 export interface TagOption {
     id?: number | null;
@@ -29,7 +29,10 @@ const input = ref<HTMLInputElement | null>(null);
 const normalizedSelected = computed(() => new Set(props.modelValue.map((value) => value.toLocaleLowerCase())));
 const matches = computed(() => {
     const needle = query.value.trim().toLocaleLowerCase();
-    if (!needle) return [];
+
+    if (!needle) {
+return [];
+}
 
     return props.options
         .filter((option) => !normalizedSelected.value.has(option.name.toLocaleLowerCase()))
@@ -39,6 +42,7 @@ const matches = computed(() => {
 
 const canCreate = computed(() => {
     const value = query.value.trim();
+
     return value.length > 0
         && props.modelValue.length < props.maxTags
         && !props.options.some((option) => option.name.toLocaleLowerCase() === value.toLocaleLowerCase())
@@ -47,7 +51,11 @@ const canCreate = computed(() => {
 
 function add(name: string): void {
     const value = name.trim();
-    if (!value || props.modelValue.length >= props.maxTags || normalizedSelected.value.has(value.toLocaleLowerCase())) return;
+
+    if (!value || props.modelValue.length >= props.maxTags || normalizedSelected.value.has(value.toLocaleLowerCase())) {
+return;
+}
+
     emit('update:modelValue', [...props.modelValue, value]);
     query.value = '';
     highlighted.value = 0;
@@ -62,21 +70,36 @@ function remove(name: string): void {
 function commit(): void {
     if (matches.value[highlighted.value]) {
         add(matches.value[highlighted.value].name);
+
         return;
     }
-    if (canCreate.value) add(query.value);
+
+    if (canCreate.value) {
+add(query.value);
+}
 }
 
 function onPaste(event: ClipboardEvent): void {
     const text = event.clipboardData?.getData('text') ?? '';
-    if (!/[;,\n]/.test(text)) return;
+
+    if (!/[;,\n]/.test(text)) {
+return;
+}
+
     event.preventDefault();
     const incoming = text.split(/[;,\n]/).map((item) => item.trim()).filter(Boolean);
     const combined = [...props.modelValue];
+
     for (const item of incoming) {
-        if (combined.length >= props.maxTags) break;
-        if (!combined.some((value) => value.toLocaleLowerCase() === item.toLocaleLowerCase())) combined.push(item);
+        if (combined.length >= props.maxTags) {
+break;
+}
+
+        if (!combined.some((value) => value.toLocaleLowerCase() === item.toLocaleLowerCase())) {
+combined.push(item);
+}
     }
+
     emit('update:modelValue', combined);
     query.value = '';
 }

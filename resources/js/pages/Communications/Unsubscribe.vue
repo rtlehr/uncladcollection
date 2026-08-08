@@ -6,7 +6,7 @@ export default { layout: PublicBlankLayout };
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
-const props = defineProps<{
+defineProps<{
     category: { key: string; label: string; description: string };
     maskedEmail: string;
     unsubscribeUrl: string;

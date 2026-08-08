@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Ban, Bot, Check, History, LoaderCircle, Sparkles } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 
 interface SuggestionRecord {
@@ -73,7 +73,9 @@ function toggleKeyword(keyword: string): void {
 }
 
 function excludeKeyword(keyword: string): void {
-    if (excludingKeywords.value.includes(keyword)) return;
+    if (excludingKeywords.value.includes(keyword)) {
+return;
+}
 
     selectedKeywords.value = selectedKeywords.value.filter((item) => item !== keyword);
     locallyExcludedKeywords.value = [...locallyExcludedKeywords.value, keyword];
@@ -96,7 +98,10 @@ function excludeKeyword(keyword: string): void {
 
 function excludeUncheckedKeywords(): void {
     const keywords = [...uncheckedKeywords.value];
-    if (keywords.length === 0) return;
+
+    if (keywords.length === 0) {
+return;
+}
 
     locallyExcludedKeywords.value = Array.from(new Set([
         ...locallyExcludedKeywords.value,
@@ -137,7 +142,10 @@ const fields = computed(() => [
 ].filter(([, , value]) => Array.isArray(value) ? value.length : Boolean(value)));
 
 function generate(): void {
-    if (!nonSexualConfirmed.value) return;
+    if (!nonSexualConfirmed.value) {
+return;
+}
+
     generating.value = true;
     router.post(`/admin/assets/${props.assetId}/ai-suggestions`, {
         non_sexual_content_confirmed: nonSexualConfirmed.value,
@@ -158,6 +166,7 @@ function toggle(field: string): void {
     if (field === 'keywords' && !selected.value.includes(field) && selectedKeywords.value.length === 0) {
         selectedKeywords.value = [...suggestedKeywords.value];
     }
+
     selected.value = selected.value.includes(field)
         ? selected.value.filter((item) => item !== field)
         : [...selected.value, field];
@@ -193,7 +202,9 @@ function appliedValues(): Record<string, unknown> {
 }
 
 function apply(): void {
-    if (!latest.value || selected.value.length === 0) return;
+    if (!latest.value || selected.value.length === 0) {
+return;
+}
 
     const values = appliedValues();
 
@@ -211,7 +222,9 @@ function apply(): void {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => emit('applied', values),
-        onFinish: () => { applying.value = false; selected.value = []; },
+        onFinish: () => {
+ applying.value = false; selected.value = []; 
+},
     });
 }
 

@@ -25,7 +25,7 @@ type PageHelpPayload = {
     manage_url?: string | null;
 };
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
     help: PageHelpPayload;
     publicStyle?: boolean;
 }>(), {
@@ -56,7 +56,9 @@ function clampWidth(width: number): number {
 }
 
 function syncWorkspaceClass(): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') {
+return;
+}
 
     const desktopOpen = isOpen.value && isDesktop.value;
     document.body.classList.toggle('page-help-workspace-open', desktopOpen);
@@ -92,11 +94,15 @@ function onMediaChange(event: MediaQueryListEvent | MediaQueryList): void {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && isOpen.value) close();
+    if (event.key === 'Escape' && isOpen.value) {
+close();
+}
 }
 
 function startResize(event: PointerEvent): void {
-    if (!isDesktop.value) return;
+    if (!isDesktop.value) {
+return;
+}
 
     startX = event.clientX;
     startWidth = panelWidth.value;
@@ -120,6 +126,7 @@ watch([isOpen, panelWidth, isDesktop], syncWorkspaceClass);
 onMounted(() => {
     isMounted.value = true;
     const savedWidth = Number(localStorage.getItem(STORAGE_WIDTH));
+
     if (Number.isFinite(savedWidth) && savedWidth > 0) {
         panelWidth.value = clampWidth(savedWidth);
     }

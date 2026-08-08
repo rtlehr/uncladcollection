@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
 import {
     ExternalLink,
     ImageIcon,
@@ -7,6 +6,7 @@ import {
     Monitor,
     Smartphone,
 } from '@lucide/vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -65,7 +65,9 @@ const previewMode = ref<'desktop' | 'mobile'>('desktop');
 watch(
     () => props.open,
     (value) => {
-        if (!value) return;
+        if (!value) {
+return;
+}
 
         Object.assign(form, props.initial);
         previewMode.value = 'desktop';

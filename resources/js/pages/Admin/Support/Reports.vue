@@ -2,7 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 
-const props = defineProps<{
+defineProps<{
     report: {
         period: { from: string; to: string };
         summary: Record<string, number | null>;
@@ -19,8 +19,14 @@ function changePeriod(event: Event) {
 }
 
 function formatMinutes(value: number | null) {
-    if (value === null) return '—';
-    if (value < 60) return `${value} min`;
+    if (value === null) {
+return '—';
+}
+
+    if (value < 60) {
+return `${value} min`;
+}
+
     return `${(value / 60).toFixed(1)} hr`;
 }
 </script>

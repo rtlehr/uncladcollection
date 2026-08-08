@@ -16,7 +16,6 @@ import {
     Mail,
     ShieldCheck,
 } from '@lucide/vue';
-
 import InputError from '@/components/InputError.vue';
 import ContentSection from '@/components/Public/ContentSection.vue';
 import PublicBreadcrumbs from '@/components/Public/PublicBreadcrumbs.vue';
@@ -29,6 +28,21 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 defineProps<{
     status?: string;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { Boxes, Check, ImageIcon, Search, X } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,10 @@ const layoutOptions = [
 watch(
     () => props.open,
     async (open) => {
-        if (!open) return;
+        if (!open) {
+return;
+}
+
         selected.value = null;
         layout.value = 'standard';
         heading.value = '';
@@ -67,7 +70,10 @@ async function searchAssets(): Promise<void> {
 
     try {
         const params = new URLSearchParams();
-        if (search.value.trim()) params.set('search', search.value.trim());
+
+        if (search.value.trim()) {
+params.set('search', search.value.trim());
+}
 
         const response = await fetch(
             `/admin/blog-posts/image-library?${params.toString()}`,
@@ -76,6 +82,7 @@ async function searchAssets(): Promise<void> {
 
         if (!response.ok) {
             const data = await response.json().catch(() => null);
+
             throw new Error(data?.message ?? `Unable to load Assets (${response.status}).`);
         }
 
@@ -94,7 +101,9 @@ function choose(asset: AssetCardOption): void {
 }
 
 function insert(): void {
-    if (!selected.value) return;
+    if (!selected.value) {
+return;
+}
 
     emit('insert', {
         assetId: selected.value.id,

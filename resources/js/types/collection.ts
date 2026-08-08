@@ -1,9 +1,9 @@
 import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
+import type { BlogPost } from '@/types/blog';
 import type {
     GalleryImage,
     PaginatedGalleryImages,
 } from '@/types/gallery';
-import type { BlogPost } from '@/types/blog';
 
 export interface AdminCollection {
     id: number;

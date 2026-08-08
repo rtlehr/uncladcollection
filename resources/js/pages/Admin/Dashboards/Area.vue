@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Activity, Boxes, FileText, LayoutDashboard, Megaphone, Settings, ShieldCheck } from '@lucide/vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import { Activity, Boxes, FileText, LayoutDashboard, Megaphone, ShieldCheck } from '@lucide/vue';
 import AdvertisingClientSetupGuide from '@/components/Advertising/AdvertisingClientSetupGuide.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import DashboardLinkCard from '@/components/Dashboard/DashboardLinkCard.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';

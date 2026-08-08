@@ -4,7 +4,7 @@ import { AlertTriangle, BellRing, FileArchive, HeartPulse, KeyRound } from '@luc
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 
-const props = defineProps<{ health: Record<string, number | boolean> }>();
+defineProps<{ health: Record<string, number | boolean> }>();
 const run = (dryRun: boolean) => router.post('/admin/customer-experience/maintain', { dry_run: dryRun }, { preserveScroll: true });
 </script>
 

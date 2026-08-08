@@ -13,21 +13,39 @@ const props = withDefaults(defineProps<{
 
 const selectedTemplateId = ref<number | ''>('');
 const emptyGroup = (): AdminAssetConfigurationGroup => ({ id: null, name: '', code: '', display_type: 'select', is_required: false, allows_multiple: false, placeholder: '', help_text: '', minimum_value: null, maximum_value: null, step_value: null, is_active: true, values: [] });
-function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)); }
-function addGroup(): void { model.value.push(emptyGroup()); }
+function clone<T>(value: T): T {
+ return JSON.parse(JSON.stringify(value)); 
+}
+function addGroup(): void {
+ model.value.push(emptyGroup()); 
+}
 function addFromLibrary(): void {
     const template = props.templates.find((item) => item.id === Number(selectedTemplateId.value));
-    if (!template) return;
+
+    if (!template) {
+return;
+}
+
     const group = clone(template.asset_group);
     group.code = model.value.some((item) => item.code === group.code) ? '' : group.code;
     model.value.push(group);
     selectedTemplateId.value = '';
 }
-function removeGroup(index: number): void { model.value.splice(index, 1); }
-function addValue(group: AdminAssetConfigurationGroup): void { group.values.push({ id: null, label: '', value: '', description: '', swatch_color: '#000000', image_path: null, is_default: false, is_active: true, price_adjustment_cents: 0, currency: 'USD' }); }
-function removeValue(group: AdminAssetConfigurationGroup, index: number): void { group.values.splice(index, 1); }
-function usesValues(type: string): boolean { return !['text', 'number'].includes(type); }
-function money(value: number): string { return `${value < 0 ? '-' : '+'}$${Math.abs(value / 100).toFixed(2)}`; }
+function removeGroup(index: number): void {
+ model.value.splice(index, 1); 
+}
+function addValue(group: AdminAssetConfigurationGroup): void {
+ group.values.push({ id: null, label: '', value: '', description: '', swatch_color: '#000000', image_path: null, is_default: false, is_active: true, price_adjustment_cents: 0, currency: 'USD' }); 
+}
+function removeValue(group: AdminAssetConfigurationGroup, index: number): void {
+ group.values.splice(index, 1); 
+}
+function usesValues(type: string): boolean {
+ return !['text', 'number'].includes(type); 
+}
+function money(value: number): string {
+ return `${value < 0 ? '-' : '+'}$${Math.abs(value / 100).toFixed(2)}`; 
+}
 </script>
 
 <template>

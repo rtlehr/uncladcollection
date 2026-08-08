@@ -49,10 +49,12 @@ const form = useForm({
 
 const previewHtml = computed(() => {
     let content = form.body_html;
+
     for (const variable of props.template.variables) {
         content = content.replaceAll(`{{ ${variable} }}`, `<strong>[${variable}]</strong>`);
         content = content.replaceAll(`{{${variable}}}`, `<strong>[${variable}]</strong>`);
     }
+
     return content;
 });
 
@@ -61,16 +63,22 @@ function submit(): void {
 }
 
 function restoreDefault(): void {
-    if (!confirm('Restore the code-provided system default? The current version will remain in revision history.')) return;
+    if (!confirm('Restore the code-provided system default? The current version will remain in revision history.')) {
+return;
+}
+
     router.post(`/admin/communications/email-templates/${props.template.id}/restore`, {}, { preserveScroll: true });
 }
 
 function sendTest(): void {
     testError.value = '';
+
     if (!testEmail.value.trim()) {
         testError.value = 'Enter an email address.';
+
         return;
     }
+
     router.post(
         `/admin/communications/email-templates/${props.template.id}/test`,
         { email: testEmail.value },

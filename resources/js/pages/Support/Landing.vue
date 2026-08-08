@@ -16,15 +16,25 @@ import {
     TicketCheck,
 } from '@lucide/vue';
 import { computed, nextTick, ref } from 'vue';
-
 import PublicBreadcrumbs from '@/components/Public/PublicBreadcrumbs.vue';
 import PublicFAQ from '@/components/Public/PublicFAQ.vue';
 import PublicHero from '@/components/Public/PublicHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSupportRequestForm from '@/components/Support/PublicSupportRequestForm.vue';
 import { Button } from '@/components/ui/button';
-
 import type { SupportPageContent } from '@/types/publicPages';
+
+
+
+
+
+
+
+
+
+
+
+
 
 type Category = {
     id: number;
@@ -36,7 +46,7 @@ type SupportFormHandle = {
     selectCategory: (categoryId: number) => void;
 };
 
-const props = defineProps<{
+defineProps<{
     supportPage: SupportPageContent;
     categories: Category[];
     isAuthenticated: boolean;

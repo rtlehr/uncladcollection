@@ -68,7 +68,9 @@ function requestDelete(comment: AdminCommentRecord) {
 }
 
 function confirmDelete() {
-    if (!selectedComment.value) return;
+    if (!selectedComment.value) {
+return;
+}
 
     deleting.value = true;
 

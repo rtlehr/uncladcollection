@@ -1,11 +1,11 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 
-import { initializeNavigationState } from '@/composables/useNavigationState';
 import { initializeTheme } from '@/composables/useAppearance';
+import { initializeNavigationState } from '@/composables/useNavigationState';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue';
 import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

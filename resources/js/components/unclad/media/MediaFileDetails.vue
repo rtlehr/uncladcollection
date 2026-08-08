@@ -4,18 +4,35 @@ import type { MediaPresentationFile } from '@/types/mediaPresentation';
 defineProps<{ file: MediaPresentationFile | null }>();
 
 function sizeLabel(bytes: number | null): string {
-    if (!bytes) return 'Unknown';
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+    if (!bytes) {
+return 'Unknown';
+}
+
+    if (bytes >= 1024 ** 3) {
+return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
+    if (bytes >= 1024 ** 2) {
+return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+}
+
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function durationLabel(value: number | string | null): string | null {
-    if (value === null) return null;
+    if (value === null) {
+return null;
+}
+
     const seconds = Number(value);
-    if (!Number.isFinite(seconds)) return null;
+
+    if (!Number.isFinite(seconds)) {
+return null;
+}
+
     const minutes = Math.floor(seconds / 60);
     const remainder = Math.round(seconds % 60).toString().padStart(2, '0');
+
     return `${minutes}:${remainder}`;
 }
 </script>

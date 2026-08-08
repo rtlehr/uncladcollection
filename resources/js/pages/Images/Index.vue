@@ -6,19 +6,34 @@ export default { layout: PublicBlankLayout };
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import GalleryEmpty from '@/components/Gallery/GalleryEmpty.vue';
 import GalleryFilters from '@/components/Gallery/GalleryFilters.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import GalleryHero from '@/components/Gallery/GalleryHero.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
-import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
-import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 import type { GalleryFilters as GalleryFilterState, GalleryOption, GallerySelectOption, PaginatedGalleryAssets } from '@/types/gallery';
 import type { PublicActiveFilter, PublicSearchSuggestion } from '@/types/publicSearch';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     assets: PaginatedGalleryAssets;
@@ -45,22 +60,61 @@ const sort = ref(props.filters.sort ?? (search.value ? 'relevance' : 'newest'));
 
 const activeFilters = computed<PublicActiveFilter[]>(() => {
     const items: PublicActiveFilter[] = [];
-    if (search.value) items.push({ key: 'search', label: `Search: ${search.value}` });
+
+    if (search.value) {
+items.push({ key: 'search', label: `Search: ${search.value}` });
+}
+
     const category = props.categories.find((item) => String(item.id) === categoryId.value);
-    if (category) items.push({ key: 'category_id', label: `Category: ${category.name}` });
+
+    if (category) {
+items.push({ key: 'category_id', label: `Category: ${category.name}` });
+}
+
     const collection = props.collections.find((item) => String(item.id) === collectionId.value);
-    if (collection) items.push({ key: 'collection_id', label: `Collection: ${collection.name}` });
+
+    if (collection) {
+items.push({ key: 'collection_id', label: `Collection: ${collection.name}` });
+}
+
     const tag = props.tags.find((item) => String(item.id) === tagId.value);
-    if (tag) items.push({ key: 'tag_id', label: `Tag: ${tag.name}` });
+
+    if (tag) {
+items.push({ key: 'tag_id', label: `Tag: ${tag.name}` });
+}
+
     const type = props.assetTypes.find((item) => item.value === assetType.value);
-    if (type) items.push({ key: 'asset_type', label: `Type: ${type.label}` });
+
+    if (type) {
+items.push({ key: 'asset_type', label: `Type: ${type.label}` });
+}
+
     const selectedFormat = props.formats.find((item) => item.value === format.value);
-    if (selectedFormat) items.push({ key: 'format', label: `Format: ${selectedFormat.label}` });
-    if (aiGenerated.value === '1') items.push({ key: 'ai_generated', label: 'AI Generated' });
-    if (aiGenerated.value === '0') items.push({ key: 'ai_generated', label: 'Photography Only' });
-    if (orientation.value) items.push({ key: 'orientation', label: `Orientation: ${orientation.value}` });
-    if (minWidth.value) items.push({ key: 'min_width', label: `Minimum width: ${minWidth.value}px` });
-    if (minHeight.value) items.push({ key: 'min_height', label: `Minimum height: ${minHeight.value}px` });
+
+    if (selectedFormat) {
+items.push({ key: 'format', label: `Format: ${selectedFormat.label}` });
+}
+
+    if (aiGenerated.value === '1') {
+items.push({ key: 'ai_generated', label: 'AI Generated' });
+}
+
+    if (aiGenerated.value === '0') {
+items.push({ key: 'ai_generated', label: 'Photography Only' });
+}
+
+    if (orientation.value) {
+items.push({ key: 'orientation', label: `Orientation: ${orientation.value}` });
+}
+
+    if (minWidth.value) {
+items.push({ key: 'min_width', label: `Minimum width: ${minWidth.value}px` });
+}
+
+    if (minHeight.value) {
+items.push({ key: 'min_height', label: `Minimum height: ${minHeight.value}px` });
+}
+
     return items;
 });
 
@@ -90,16 +144,46 @@ function resetFilters(): void {
 }
 
 function removeFilter(key: string): void {
-    if (key === 'search') search.value = '';
-    if (key === 'category_id') categoryId.value = '';
-    if (key === 'tag_id') tagId.value = '';
-    if (key === 'collection_id') collectionId.value = '';
-    if (key === 'ai_generated') aiGenerated.value = '';
-    if (key === 'asset_type') assetType.value = '';
-    if (key === 'format') format.value = '';
-    if (key === 'orientation') orientation.value = '';
-    if (key === 'min_width') minWidth.value = '';
-    if (key === 'min_height') minHeight.value = '';
+    if (key === 'search') {
+search.value = '';
+}
+
+    if (key === 'category_id') {
+categoryId.value = '';
+}
+
+    if (key === 'tag_id') {
+tagId.value = '';
+}
+
+    if (key === 'collection_id') {
+collectionId.value = '';
+}
+
+    if (key === 'ai_generated') {
+aiGenerated.value = '';
+}
+
+    if (key === 'asset_type') {
+assetType.value = '';
+}
+
+    if (key === 'format') {
+format.value = '';
+}
+
+    if (key === 'orientation') {
+orientation.value = '';
+}
+
+    if (key === 'min_width') {
+minWidth.value = '';
+}
+
+    if (key === 'min_height') {
+minHeight.value = '';
+}
+
     reload();
 }
 
@@ -108,6 +192,7 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
         const url = new URL(suggestion.href, window.location.origin);
         url.searchParams.set('suggestion_type', suggestion.type);
         router.visit(`${url.pathname}${url.search}`);
+
         return;
     }
 

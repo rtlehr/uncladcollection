@@ -2,7 +2,7 @@ import type { NamedItem, PaginationLink } from '@/types/common';
 
 export type AssetType = 'raster' | 'vector' | 'archive';
 
-export interface AssetOption extends NamedItem {}
+export type AssetOption = NamedItem;
 
 export interface AssetCardData {
     id: number;

@@ -9,8 +9,15 @@ const configuredUnit = computed(() => Math.max(0, props.baseUnitPriceCents + (pr
 const activeTier = computed(() => props.tiers.find(t => quantity.value >= t.minimum_quantity && (t.maximum_quantity === null || quantity.value <= t.maximum_quantity)) ?? null);
 const finalUnit = computed(() => {
     const tier = activeTier.value;
-    if (!tier) return configuredUnit.value;
-    if (tier.pricing_type === 'fixed_unit_price') return Math.min(configuredUnit.value, tier.unit_price_cents ?? configuredUnit.value);
+
+    if (!tier) {
+return configuredUnit.value;
+}
+
+    if (tier.pricing_type === 'fixed_unit_price') {
+return Math.min(configuredUnit.value, tier.unit_price_cents ?? configuredUnit.value);
+}
+
     return Math.max(0, Math.round(configuredUnit.value * (1 - ((tier.percentage_off ?? 0) / 100))));
 });
 const lineTotal = computed(() => finalUnit.value * quantity.value);

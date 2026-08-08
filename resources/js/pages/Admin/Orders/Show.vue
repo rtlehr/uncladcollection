@@ -9,8 +9,12 @@ import type { AdminOrderDetail, SelectOption } from '@/types/order';
 
 const props = defineProps<{ order: AdminOrderDetail; fulfillmentStatuses: SelectOption[] }>();
 const form = reactive({ fulfillment_status: props.order.fulfillment_status, shipping_carrier: props.order.shipping_carrier ?? '', tracking_number: props.order.tracking_number ?? '', fulfillment_notes: props.order.fulfillment_notes ?? '', event_note: '' });
-function saveFulfillment(){ router.patch(`/admin/orders/${props.order.id}/fulfillment`, form, { preserveScroll:true }); }
-function money(cents:number){ return new Intl.NumberFormat('en-US',{style:'currency',currency:props.order.currency||'USD'}).format(cents/100); }
+function saveFulfillment(){
+ router.patch(`/admin/orders/${props.order.id}/fulfillment`, form, { preserveScroll:true }); 
+}
+function money(cents:number){
+ return new Intl.NumberFormat('en-US',{style:'currency',currency:props.order.currency||'USD'}).format(cents/100); 
+}
 </script>
 <template>
 <Head :title="`Order ${order.order_number}`" />

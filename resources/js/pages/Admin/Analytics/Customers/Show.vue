@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft } from '@lucide/vue';
 import { reactive } from 'vue';
-import MetricCard from '@/Components/Shared/MetricCard.vue';
 import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
-import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
-import ShowSection from '@/Components/Show/ShowSection.vue';
 import TrendChart from '@/components/Analytics/TrendChart.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 const props=defineProps<{filters:any;report:any}>(); const filters=reactive({...props.filters});
 const money=(c:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);

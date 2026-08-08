@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
 import { AlertCircle, Brain, CheckCircle2, LoaderCircle, RefreshCw, Search, Sparkles } from '@lucide/vue';
+import { reactive, ref } from 'vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import ShowSection from '@/Components/Show/ShowSection.vue';
 
 const props = defineProps<{ filters: any; terms: any }>();
 const filters = reactive({ search: props.filters.search ?? '', status: props.filters.status ?? '', opportunity: props.filters.opportunity ?? false });
@@ -46,7 +46,12 @@ const stateFor = (row:any) => editing.value[row.id] ??= {
   status: row.mapping?.status ?? 'pending', is_content_opportunity: row.is_content_opportunity,
 };
 const save = (row:any, status?:string) => {
-  const state=stateFor(row); if(status) state.status=status;
+  const state=stateFor(row);
+
+ if(status) {
+state.status=status;
+}
+
   router.patch(`/admin/discovery/search-intelligence/${row.id}`, {
     status: state.status, canonical_term: state.canonical_term,
     synonyms: state.synonyms_text.split(',').map((v:string)=>v.trim()).filter(Boolean),

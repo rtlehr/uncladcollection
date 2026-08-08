@@ -5,7 +5,10 @@ import type { PublicAsset } from '@/types/publicAsset';
 defineProps<{ asset: PublicAsset }>();
 
 function published(value: string | null): string {
-    if (!value) return 'Recently published';
+    if (!value) {
+return 'Recently published';
+}
+
     return new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value));
 }
 </script>

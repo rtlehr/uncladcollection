@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import AssetPricingTierEditor from '@/components/admin/assets/AssetPricingTierEditor.vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import { Button } from '@/components/ui/button';
-import AssetPricingTierEditor from '@/components/admin/assets/AssetPricingTierEditor.vue';
 import type { AdminAssetFile, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const model = defineModel<AdminAssetOffering[]>({ required: true });
@@ -96,10 +96,13 @@ function moneyInput(cents: number | null): string {
 
 function updateMoney(offering: AdminAssetOffering, key: 'price_adjustment_cents' | 'price_override_cents', event: Event): void {
     const raw = (event.target as HTMLInputElement).value;
+
     if (key === 'price_override_cents' && raw === '') {
         offering.price_override_cents = null;
+
         return;
     }
+
     const value = Number(raw);
     offering[key] = Number.isFinite(value) ? Math.round(value * 100) : 0;
 }
@@ -110,13 +113,18 @@ function licenseFor(offering: AdminAssetOffering): LicenseTypeOption | undefined
 
 function calculatedPriceCents(offering: AdminAssetOffering): number {
     const license = licenseFor(offering);
-    if (!license) return 0;
+
+    if (!license) {
+return 0;
+}
+
     const subtotal = (offering.image_units * license.image_unit_price_cents)
         + (offering.video_units * license.video_unit_price_cents)
         + offering.price_adjustment_cents;
     const withMinimum = license.minimum_price_cents === null
         ? subtotal
         : Math.max(subtotal, license.minimum_price_cents);
+
     return offering.price_override_cents ?? Math.max(0, withMinimum);
 }
 

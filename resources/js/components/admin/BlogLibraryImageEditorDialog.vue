@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
-import ImageEditorDialog, {
-    type ImageEditData,
-} from '@/components/media/ImageEditorDialog.vue';
-import { BLOG_CONTENT_PRESETS } from '@/config/imageEditorPresets';
 import type { LibraryImage } from '@/components/admin/ImagePickerDialog.vue';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData} from '@/components/media/ImageEditorDialog.vue';
+import { BLOG_CONTENT_PRESETS } from '@/config/imageEditorPresets';
 import {
-    uploadBlogArticleImage,
-    type UploadedBlogArticleImage,
+    uploadBlogArticleImage
+    
 } from '@/lib/blogArticleImageUpload';
+import type {UploadedBlogArticleImage} from '@/lib/blogArticleImageUpload';
 
 const props = defineProps<{
     open: boolean;
@@ -48,7 +48,9 @@ async function applyEdited(payload: {
     edit: ImageEditData;
     previewUrl: string;
 }): Promise<void> {
-    if (!props.image) return;
+    if (!props.image) {
+return;
+}
 
     uploading.value = true;
     error.value = null;

@@ -19,6 +19,7 @@ const props = withDefaults(
 function favorite() {
     if (!props.isLoggedIn) {
         router.visit('/login');
+
         return;
     }
 
@@ -40,6 +41,7 @@ function unfavorite() {
 function toggleFavorite() {
     if (props.isFavorited) {
         unfavorite();
+
         return;
     }
 

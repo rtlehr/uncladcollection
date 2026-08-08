@@ -103,8 +103,9 @@ const summaryText = computed(() => {
                 :aria-label="ariaLabel(link)"
                 :aria-current="link.active ? 'page' : undefined"
                 :aria-disabled="!link.url ? 'true' : undefined"
-                v-html="link.label"
-            />
+            >
+                <span v-html="link.label" />
+            </Link>
         </nav>
     </div>
 </template>

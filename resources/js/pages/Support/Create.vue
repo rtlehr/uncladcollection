@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PageHeader from '@/components/Shared/PageHeader.vue';
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 const props = defineProps<{ mode: 'guest'|'member'; categories: Array<{id:number;name:string;description?:string}>; attachmentRules:{max_kb:number;extensions:string[]} }>();
-if (props.mode === 'guest') defineOptions({ layout: PublicPageLayout });
+
+if (props.mode === 'guest') {
+defineOptions({ layout: PublicPageLayout });
+}
+
 const form = useForm({ guest_name:'', guest_email:'', category_id:'', subject:'', description:'', attachments:[] as File[] });
 const submit=()=>form.post(props.mode==='guest'?'/support':'/support/tickets',{forceFormData:true});
 </script>

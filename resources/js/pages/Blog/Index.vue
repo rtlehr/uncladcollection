@@ -12,18 +12,16 @@ import {
     computed,
     ref,
 } from 'vue';
-
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import PublicBlogFilters from '@/components/Blog/PublicBlogFilters.vue';
 import PublicBlogHero from '@/components/Blog/PublicBlogHero.vue';
 import PublicBlogPagination from '@/components/Blog/PublicBlogPagination.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
-import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
-import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
-
 import type {
     BlogFilters,
     BlogPost,
@@ -35,6 +33,22 @@ import type {
     PublicActiveFilter,
     PublicSearchSuggestion,
 } from '@/types/publicSearch';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     posts: PaginatedBlogPosts;
@@ -128,9 +142,17 @@ function resetFilters(): void {
 }
 
 function removeFilter(key: string): void {
-    if (key === 'search') search.value = '';
-    if (key === 'category_id') categoryId.value = '';
-    if (key === 'tag_id') tagId.value = '';
+    if (key === 'search') {
+search.value = '';
+}
+
+    if (key === 'category_id') {
+categoryId.value = '';
+}
+
+    if (key === 'tag_id') {
+tagId.value = '';
+}
 
     applyFilters();
 }
@@ -138,6 +160,7 @@ function removeFilter(key: string): void {
 function selectSuggestion(suggestion: PublicSearchSuggestion): void {
     if (suggestion.href) {
         router.visit(suggestion.href);
+
         return;
     }
 

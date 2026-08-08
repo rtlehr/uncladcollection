@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ImageIcon, LayoutGrid, Library, ShoppingBag } from '@lucide/vue';
+import { LayoutGrid } from '@lucide/vue';
 import { ref } from 'vue';
 
 import AssetCard from '@/Components/Assets/AssetCard.vue';
@@ -15,8 +15,8 @@ import BlogAuthorCard from '@/Components/Blog/BlogAuthorCard.vue';
 import BlogMeta from '@/Components/Blog/BlogMeta.vue';
 import BlogPostCard from '@/Components/Blog/BlogPostCard.vue';
 import BlogPostList from '@/Components/Blog/BlogPostList.vue';
-import PurchaseSummary from '@/Components/Purchases/PurchaseSummary.vue';
 import PurchasedAssetCard from '@/Components/Purchases/PurchasedAssetCard.vue';
+import PurchaseSummary from '@/Components/Purchases/PurchaseSummary.vue';
 import ChipList from '@/Components/Shared/ChipList.vue';
 import DetailRow from '@/Components/Shared/DetailRow.vue';
 import DetailSection from '@/Components/Shared/DetailSection.vue';

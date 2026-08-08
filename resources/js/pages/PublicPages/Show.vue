@@ -8,15 +8,23 @@ export default {
 
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-
 import PublicBreadcrumbs from '@/components/Public/PublicBreadcrumbs.vue';
 import PublicFAQ from '@/components/Public/PublicFAQ.vue';
 import PublicHero from '@/components/Public/PublicHero.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
 import type { PublicPageRecord } from '@/types/publicPages';
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     publicPage: PublicPageRecord;

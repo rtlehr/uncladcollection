@@ -9,12 +9,18 @@ export default {
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Heart } from '@lucide/vue';
-
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
-
 import type { PaginatedGalleryAssets } from '@/types/gallery';
+
+
+
+
+
+
+
+
 
 defineProps<{
     assets: PaginatedGalleryAssets;

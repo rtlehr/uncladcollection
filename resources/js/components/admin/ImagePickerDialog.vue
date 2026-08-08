@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
 import { Images, Search, X } from '@lucide/vue';
+import { ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,7 @@ async function searchImages() {
             error.value =
                 data?.message
                 ?? `Unable to load image library (${response.status}).`;
+
             return;
         }
 

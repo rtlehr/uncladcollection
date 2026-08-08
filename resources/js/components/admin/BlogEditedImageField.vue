@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Crop, ImageIcon, Upload } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
-import ImageEditorDialog, {
-    type ImageEditData,
-    type ImageEditorPreset,
-} from '@/components/media/ImageEditorDialog.vue';
-import { Button } from '@/components/ui/button';
 import FormField from '@/Components/Forms/FormField.vue';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData, ImageEditorPreset} from '@/components/media/ImageEditorDialog.vue';
+import { Button } from '@/components/ui/button';
 
 const props = withDefaults(defineProps<{
     id: string;
@@ -58,14 +56,18 @@ function choose(): void {
 function selected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
 
-    if (!file) return;
+    if (!file) {
+return;
+}
 
     originalFile.value = file;
     source.value = file;
     editData.value = null;
     open.value = true;
 
-    if (input.value) input.value.value = '';
+    if (input.value) {
+input.value.value = '';
+}
 }
 
 function edit(): void {
@@ -73,7 +75,9 @@ function edit(): void {
         source.value = previewUrl.value;
     }
 
-    if (source.value) open.value = true;
+    if (source.value) {
+open.value = true;
+}
 }
 
 function applyEdited(payload: {

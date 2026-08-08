@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { ChevronLeft, ChevronRight, Maximize2 } from '@lucide/vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AssetViewerLightbox from '@/components/unclad/media/AssetViewerLightbox.vue';
 import MediaFileDetails from '@/components/unclad/media/MediaFileDetails.vue';
 import MediaThumbnailCard from '@/components/unclad/media/MediaThumbnailCard.vue';
@@ -39,19 +39,33 @@ const selectedIndex = computed(() =>
 );
 
 function move(offset: number): void {
-    if (props.files.length < 2) return;
+    if (props.files.length < 2) {
+return;
+}
+
     const current = selectedIndex.value < 0 ? 0 : selectedIndex.value;
     const next = (current + offset + props.files.length) % props.files.length;
     selectedId.value = props.files[next].id;
 }
 
 function onKeydown(event: KeyboardEvent): void {
-    if (lightboxOpen.value) return;
+    if (lightboxOpen.value) {
+return;
+}
+
     const target = event.target as HTMLElement | null;
-    if (target?.closest('input, textarea, select, [contenteditable="true"]'))
-        return;
-    if (event.key === 'ArrowLeft') move(-1);
-    if (event.key === 'ArrowRight') move(1);
+
+    if (target?.closest('input, textarea, select, [contenteditable="true"]')) {
+return;
+}
+
+    if (event.key === 'ArrowLeft') {
+move(-1);
+}
+
+    if (event.key === 'ArrowRight') {
+move(1);
+}
 }
 
 onMounted(() => window.addEventListener('keydown', onKeydown));

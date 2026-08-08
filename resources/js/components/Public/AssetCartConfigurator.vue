@@ -10,17 +10,18 @@ import {
 } from '@lucide/vue';
 import { computed, reactive, ref, watch } from 'vue';
 
-import AssetConfigurationSelector from './AssetConfigurationSelector.vue';
-import AssetFormatBadge from './AssetFormatBadge.vue';
-import AssetFulfillmentBadge from './AssetFulfillmentBadge.vue';
-import AssetOfferingCard from './AssetOfferingCard.vue';
-import AssetShippingAddress, { type ShippingAddressPayload } from './AssetShippingAddress.vue';
-
 import type {
     PublicAssetConfigurationGroup,
     PublicAssetOffering,
     PublicAssetPricingTier,
 } from '@/types/publicAsset';
+import AssetConfigurationSelector from './AssetConfigurationSelector.vue';
+import AssetFormatBadge from './AssetFormatBadge.vue';
+import AssetFulfillmentBadge from './AssetFulfillmentBadge.vue';
+import AssetOfferingCard from './AssetOfferingCard.vue';
+import AssetShippingAddress from './AssetShippingAddress.vue';
+import type {ShippingAddressPayload} from './AssetShippingAddress.vue';
+
 
 type DraftLine = {
     id: number;

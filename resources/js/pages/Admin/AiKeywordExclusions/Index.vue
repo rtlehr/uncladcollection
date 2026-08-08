@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { Ban, Plus, Search, Trash2 } from '@lucide/vue';
+import { ref } from 'vue';
+import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
-import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,10 +58,15 @@ function requestDelete(item: Item): void {
 }
 
 function confirmDelete(): void {
-    if (!selected.value) return;
+    if (!selected.value) {
+return;
+}
+
     router.delete(`/admin/ai-keyword-exclusions/${selected.value.id}`, {
         preserveScroll: true,
-        onFinish: () => { deleteOpen.value = false; selected.value = null; },
+        onFinish: () => {
+ deleteOpen.value = false; selected.value = null; 
+},
     });
 }
 </script>

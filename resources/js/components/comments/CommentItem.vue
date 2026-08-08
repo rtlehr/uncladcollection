@@ -1,14 +1,5 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-
-import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/composables/useAuth';
-import CommentStatusBadge from '@/components/comments/CommentStatusBadge.vue';
-import RelativeTime from '@/components/common/RelativeTime.vue';
-
 import {
     Check,
     EyeOff,
@@ -18,7 +9,12 @@ import {
     ChevronDown,
     ChevronRight,
 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
+import CommentStatusBadge from '@/components/comments/CommentStatusBadge.vue';
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue';
+import RelativeTime from '@/components/common/RelativeTime.vue';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,6 +23,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/composables/useAuth';
+
+
 
 type CommentUser = {
     id: number;
@@ -134,12 +134,10 @@ const isAuthor = computed(() =>
     props.comment.user.id === props.blogAuthorId
 );
 
-const isModerator = computed(() =>
-    can('manage_comments')
-);
-
 function submitReply() {
-    if (!replyBody.value.trim()) return;
+    if (!replyBody.value.trim()) {
+return;
+}
 
     processing.value = true;
 
@@ -163,7 +161,9 @@ function submitReply() {
 }
 
 function updateComment() {
-    if (!editBody.value.trim()) return;
+    if (!editBody.value.trim()) {
+return;
+}
 
     processing.value = true;
 
@@ -224,6 +224,7 @@ function confirmModerationAction(action: 'hide' | 'restore' | 'spam' | 'delete')
     if (action === 'delete') {
         deleteMode.value = 'admin';
         showDeleteDialog.value = true;
+
         return;
     }
 
@@ -231,7 +232,9 @@ function confirmModerationAction(action: 'hide' | 'restore' | 'spam' | 'delete')
 }
 
 function performModerationAction() {
-    if (!moderationAction.value) return;
+    if (!moderationAction.value) {
+return;
+}
 
     moderating.value = true;
 

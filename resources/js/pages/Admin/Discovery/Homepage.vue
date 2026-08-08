@@ -6,7 +6,9 @@ defineOptions({ layout: AppLayout });
 
 type Section = { id: number; section_key: string; label: string; eyebrow: string | null; heading: string | null; description: string | null; sort_order: number; item_limit: number; is_enabled: boolean; audience: string };
 const props = defineProps<{ sections: Section[] }>();
-function save(section: Section): void { router.patch(`/admin/discovery/homepage/${section.id}`, section, { preserveScroll: true }); }
+function save(section: Section): void {
+ router.patch(`/admin/discovery/homepage/${section.id}`, section, { preserveScroll: true }); 
+}
 </script>
 <template>
     <Head title="Homepage Discovery" />

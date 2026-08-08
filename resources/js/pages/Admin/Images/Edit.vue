@@ -8,7 +8,7 @@ import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
 import DetailRow from '@/Components/Shared/DetailRow.vue';
-import MetricCard from '@/Components/Shared/MetricCard.vue';
+
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import { Checkbox } from '@/components/ui/checkbox';

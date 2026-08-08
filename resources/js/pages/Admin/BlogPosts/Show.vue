@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 import { Eye, MessageSquare, Star } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
+import DetailRow from '@/Components/Shared/DetailRow.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
-import DetailRow from '@/Components/Shared/DetailRow.vue';
 import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
 import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';

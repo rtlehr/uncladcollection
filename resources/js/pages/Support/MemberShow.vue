@@ -9,12 +9,20 @@ export default {
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
+import InputError from '@/components/InputError.vue';
 import PageHeader from '@/components/Shared/PageHeader.vue';
 import StatusBadge from '@/components/Support/StatusBadge.vue';
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+
+
+
+
+
+
+
 const props=defineProps<{mode:'guest'|'member';ticket:any;guestToken?:string;attachmentRules:{max_kb:number;extensions:string[]}}>();
 const form=useForm({body:'',attachments:[] as File[]});
 const reply=()=>form.post(props.mode==='guest'?`/support/guest/${props.ticket.uuid}/${props.guestToken}/reply`:`/support/tickets/${props.ticket.uuid}/reply`,{forceFormData:true,preserveScroll:true,onSuccess:()=>form.reset()});

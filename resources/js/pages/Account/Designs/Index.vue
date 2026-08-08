@@ -75,8 +75,10 @@ function createBlankDesign(): void {
     const height = Math.round(Number(newHeight.value));
 
     createError.value = '';
+
     if (!Number.isFinite(width) || !Number.isFinite(height) || width < 320 || height < 320) {
         createError.value = 'Canvas dimensions must be at least 320×320 pixels.';
+
         return;
     }
 

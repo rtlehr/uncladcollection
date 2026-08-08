@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, Eye, MessageCircle, ShoppingBag, Users } from '@lucide/vue';
+import { Head, router } from '@inertiajs/vue3';
+import { Eye, MessageCircle, ShoppingBag, Users } from '@lucide/vue';
 import { reactive } from 'vue';
-import MetricCard from '@/Components/Shared/MetricCard.vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

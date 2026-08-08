@@ -10,8 +10,12 @@ const money=(v:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency
 const form=reactive({signer_name:'',signer_title:'',signer_email:'',signer_company:props.advertiser.name,terms_acknowledged:false});
 const declineReason=ref('');
 const accepting=ref(false); const declining=ref(false);
-function accept(){router.post(`/advertiser/proposals/${props.proposal.id}/accept`,form,{preserveScroll:true,onStart:()=>accepting.value=true,onFinish:()=>accepting.value=false});}
-function decline(){router.post(`/advertiser/proposals/${props.proposal.id}/decline`,{reason:declineReason.value},{preserveScroll:true,onStart:()=>declining.value=true,onFinish:()=>declining.value=false});}
+function accept(){
+router.post(`/advertiser/proposals/${props.proposal.id}/accept`,form,{preserveScroll:true,onStart:()=>accepting.value=true,onFinish:()=>accepting.value=false});
+}
+function decline(){
+router.post(`/advertiser/proposals/${props.proposal.id}/decline`,{reason:declineReason.value},{preserveScroll:true,onStart:()=>declining.value=true,onFinish:()=>declining.value=false});
+}
 </script>
 <template>
 <Head :title="proposal.title" />

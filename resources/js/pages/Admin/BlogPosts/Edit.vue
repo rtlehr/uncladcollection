@@ -3,24 +3,24 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
 
-import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 import BlogAiAssistantPanel from '@/components/admin/BlogAiAssistantPanel.vue';
 import BlogEditedImageField from '@/components/admin/BlogEditedImageField.vue';
-import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
-import {
-    BLOG_HEADER_PRESET,
-    BLOG_ICON_PRESET,
-} from '@/config/imageEditorPresets';
 import OptionChecklist from '@/Components/Admin/OptionChecklist.vue';
+import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import {
+    BLOG_HEADER_PRESET,
+    BLOG_ICON_PRESET,
+} from '@/config/imageEditorPresets';
 
 import type {
     AdminBlogOption,
@@ -106,7 +106,11 @@ function applyGeneratedTags(tags: string[]): void {
 
     for (const tag of tags) {
         const value = tag.trim();
-        if (!value) continue;
+
+        if (!value) {
+continue;
+}
+
         if (!merged.some((item) => item.toLocaleLowerCase() === value.toLocaleLowerCase())) {
             merged.push(value);
         }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Maximize2, Play } from '@lucide/vue';
-import MediaPreviewUnavailable from './MediaPreviewUnavailable.vue';
 import type { MediaPresentationFile } from '@/types/mediaPresentation';
+import MediaPreviewUnavailable from './MediaPreviewUnavailable.vue';
 
 defineProps<{
     file: MediaPresentationFile | null;

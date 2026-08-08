@@ -19,7 +19,6 @@ import {
     UserRound,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
-
 import MobilePurchaseBar from '@/components/Commerce/MobilePurchaseBar.vue';
 import PurchasePanel from '@/components/Commerce/PurchasePanel.vue';
 import GalleryCard from '@/components/Gallery/GalleryCard.vue';
@@ -30,13 +29,28 @@ import RecentlyViewedImages from '@/components/Gallery/RecentlyViewedImages.vue'
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
-
 import type {
     GalleryImage,
     GalleryImageDetail,
     GalleryLicenseType,
     GalleryNavigationImage,
 } from '@/types/gallery';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     imageRecord: GalleryImageDetail;
@@ -90,6 +104,7 @@ const downloadSummary = computed(() => {
 function toggleFavorite(): void {
     if (!isAuthenticated.value) {
         router.visit('/login');
+
         return;
     }
 

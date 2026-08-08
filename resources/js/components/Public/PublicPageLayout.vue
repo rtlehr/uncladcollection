@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import PublicSiteHeader from '@/components/Public/PublicSiteHeader.vue';
 import PublicSiteFooter from '@/components/Public/PublicSiteFooter.vue';
+import PublicSiteHeader from '@/components/Public/PublicSiteHeader.vue';
 
 const page = usePage();
 const site = computed(() => (page.props.site ?? {}) as Record<string, any>);

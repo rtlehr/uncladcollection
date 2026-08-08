@@ -12,6 +12,7 @@ const props = defineProps<{
 function purchase() {
     if (!props.isLoggedIn) {
         window.location.href = '/login';
+
         return;
     }
 
@@ -53,6 +54,7 @@ function purchase() {
 function addToCart() {
     if (!props.isLoggedIn) {
         router.visit('/login');
+
         return;
     }
 

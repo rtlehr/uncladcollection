@@ -10,13 +10,20 @@ const processing = ref<number | null>(null);
 const lists = computed(() => ((page.props.wish_lists as any[]) ?? []).filter((list) => !list.is_default));
 
 function save(listId: number): void {
-    if (processing.value) return;
+    if (processing.value) {
+return;
+}
+
     processing.value = listId;
     router.post(`/account/wish-lists/${listId}/assets/${props.assetId}`, {}, {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => { open.value = false; },
-        onFinish: () => { processing.value = null; },
+        onSuccess: () => {
+ open.value = false; 
+},
+        onFinish: () => {
+ processing.value = null; 
+},
     });
 }
 </script>

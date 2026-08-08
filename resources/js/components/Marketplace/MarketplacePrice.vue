@@ -11,7 +11,9 @@ const props = withDefaults(defineProps<{
 });
 
 const formattedPrice = computed(() => {
-    if (props.priceCents === null) return null;
+    if (props.priceCents === null) {
+return null;
+}
 
     return new Intl.NumberFormat('en-US', {
         style: 'currency',

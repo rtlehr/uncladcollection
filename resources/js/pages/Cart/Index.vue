@@ -16,9 +16,13 @@ import {
     ShoppingCart,
     Trash2,
 } from '@lucide/vue';
-
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import { Button } from '@/components/ui/button';
+
+
+
+
+
 
 const csrfToken =
     document

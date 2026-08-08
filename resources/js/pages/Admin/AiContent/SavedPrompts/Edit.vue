@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { Copy, RotateCcw, WandSparkles } from '@lucide/vue';
+import { ref } from 'vue';
+import SavedPromptForm from '@/components/admin/ai/SavedPromptForm.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
-import SavedPromptForm from '@/components/admin/ai/SavedPromptForm.vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -35,23 +35,44 @@ const form = useForm({
 });
 
 async function refine() {
-    if (!refinementInstruction.value.trim()) return;
+    if (!refinementInstruction.value.trim()) {
+return;
+}
+
     refining.value = true; refinementError.value = '';
+
     try {
         const response = await fetch(`/admin/ai-content/image-prompts/${props.savedPrompt.id}/refine`, {
             method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' },
             body: JSON.stringify({ prompt_text: form.prompt_text, instruction: refinementInstruction.value, content_context: form.content_context, output_mode: form.output_mode, body_detail_level: form.body_detail_level, description_depth: form.description_depth, character_detail_level: form.character_detail_level, environment_detail_level: form.environment_detail_level }),
         });
         const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message ?? 'Prompt refinement failed.');
-        form.prompt_text = payload.prompt; form.provider = payload.provider ?? form.provider; form.model = payload.model ?? form.model; form.refinement_instruction = refinementInstruction.value;
-    } catch (e) { refinementError.value = e instanceof Error ? e.message : 'Prompt refinement failed.'; }
-    finally { refining.value = false; }
+
+        if (!response.ok) {
+throw new Error(payload.message ?? 'Prompt refinement failed.');
 }
 
-function save() { form.put(`/admin/ai-content/image-prompts/${props.savedPrompt.id}`, { preserveScroll: true, onSuccess: () => { refinementInstruction.value = ''; form.refinement_instruction = ''; } }); }
-function restore(version: any) { if (confirm(`Restore version ${version.version_number}?`)) router.post(`/admin/ai-content/image-prompts/${props.savedPrompt.id}/versions/${version.id}/restore`, {}, { preserveScroll: true }); }
-async function copyPrompt() { await navigator.clipboard.writeText(form.prompt_text); copied.value = true; setTimeout(() => copied.value = false, 1200); }
+        form.prompt_text = payload.prompt; form.provider = payload.provider ?? form.provider; form.model = payload.model ?? form.model; form.refinement_instruction = refinementInstruction.value;
+    } catch (e) {
+ refinementError.value = e instanceof Error ? e.message : 'Prompt refinement failed.'; 
+} finally {
+ refining.value = false; 
+}
+}
+
+function save() {
+ form.put(`/admin/ai-content/image-prompts/${props.savedPrompt.id}`, { preserveScroll: true, onSuccess: () => {
+ refinementInstruction.value = ''; form.refinement_instruction = ''; 
+} }); 
+}
+function restore(version: any) {
+ if (confirm(`Restore version ${version.version_number}?`)) {
+router.post(`/admin/ai-content/image-prompts/${props.savedPrompt.id}/versions/${version.id}/restore`, {}, { preserveScroll: true });
+} 
+}
+async function copyPrompt() {
+ await navigator.clipboard.writeText(form.prompt_text); copied.value = true; setTimeout(() => copied.value = false, 1200); 
+}
 </script>
 
 <template>

@@ -2,26 +2,26 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref } from 'vue';
 import AdminSectionNavigator from '@/components/admin/AdminSectionNavigator.vue';
+import AdminAssetWorkspaceHeader from '@/components/admin/assets/AdminAssetWorkspaceHeader.vue';
+import AssetAiAssistant from '@/components/admin/assets/AssetAiAssistant.vue';
+import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
+import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
+import AssetFileRelationshipManager from '@/components/admin/assets/AssetFileRelationshipManager.vue';
+import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
+import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
+import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
+import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
+import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
+import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
+import FormActions from '@/Components/Forms/FormActions.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
-import FormActions from '@/Components/Forms/FormActions.vue';
+import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
 import ConfirmActionDialog from '@/Components/Shared/ConfirmActionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import AssetFileDropzone from '@/components/admin/assets/AssetFileDropzone.vue';
-import AdminAssetWorkspaceHeader from '@/components/admin/assets/AdminAssetWorkspaceHeader.vue';
-import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
-import AssetOfferingBuilder from '@/components/admin/assets/AssetOfferingBuilder.vue';
-import AssetOfferingMatrix from '@/components/admin/assets/AssetOfferingMatrix.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
-import AssetHealthCard from '@/components/admin/assets/AssetHealthCard.vue';
-import AssetAiAssistant from '@/components/admin/assets/AssetAiAssistant.vue';
-import AssetFileWorkspace from '@/components/admin/assets/AssetFileWorkspace.vue';
-import AssetConfigurationBuilder from '@/components/admin/assets/AssetConfigurationBuilder.vue';
-import AssetMarketplaceImageEditor from '@/components/admin/assets/AssetMarketplaceImageEditor.vue';
-import CreatableTagInput from '@/components/admin/tags/CreatableTagInput.vue';
-import AssetFileRelationshipManager from '@/components/admin/assets/AssetFileRelationshipManager.vue';
-import type { ImageEditData } from '@/components/media/ImageEditorDialog.vue';
+import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation';
 import type {
     AdminAsset,
     AdminAssetFile,
@@ -268,13 +268,16 @@ function uploadFiles() {
     if (!pendingFilesAreValid.value) {
         return;
     }
+
     uploadForm.files = pendingFiles.value.map((item) => item.file);
     uploadForm.file_roles = pendingFiles.value.map((item) => item.role);
     uploadForm.file_downloadable = pendingFiles.value.map((item) => item.downloadable ? 1 : 0);
     uploadForm.post(`/admin/assets/${props.assetRecord.id}/files`, {
         forceFormData: true,
         preserveScroll: true,
-        onSuccess: () => { pendingFiles.value = []; uploadForm.reset(); },
+        onSuccess: () => {
+ pendingFiles.value = []; uploadForm.reset(); 
+},
     });
 }
 
@@ -290,7 +293,11 @@ function saveFile(file: AdminAssetFile) {
 
 function replaceFile(file: AdminAssetFile, event: Event) {
     const replacement = (event.target as HTMLInputElement).files?.[0];
-    if (!replacement) return;
+
+    if (!replacement) {
+return;
+}
+
     replacingId.value = file.id;
     router.post(`/admin/assets/${props.assetRecord.id}/files/${file.id}/replace`, { file: replacement }, {
         forceFormData: true,
@@ -330,11 +337,25 @@ function saveOfferings(): void {
 }
 
 async function applyAiSuggestionsToForm(values: Record<string, unknown>): Promise<void> {
-    if (typeof values.title === 'string') form.title = values.title;
-    if (typeof values.description === 'string') form.description = values.description;
-    if (typeof values.alt_text === 'string') form.alt_text = values.alt_text;
-    if (typeof values.seo_title === 'string') form.seo_title = values.seo_title;
-    if (typeof values.seo_description === 'string') form.seo_description = values.seo_description;
+    if (typeof values.title === 'string') {
+form.title = values.title;
+}
+
+    if (typeof values.description === 'string') {
+form.description = values.description;
+}
+
+    if (typeof values.alt_text === 'string') {
+form.alt_text = values.alt_text;
+}
+
+    if (typeof values.seo_title === 'string') {
+form.seo_title = values.seo_title;
+}
+
+    if (typeof values.seo_description === 'string') {
+form.seo_description = values.seo_description;
+}
 
     if (Array.isArray(values.keywords)) {
         form.tag_names = values.keywords.filter((value): value is string => typeof value === 'string');

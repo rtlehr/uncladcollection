@@ -30,6 +30,7 @@ function confirmDelete() {
     deletion.runDelete((role, finish) => {
         if (role.is_locked) {
             finish();
+
             return;
         }
 

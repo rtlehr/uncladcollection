@@ -34,11 +34,25 @@ function formatDate(value: string | null): string {
 function displayStatus(post: PaginatedAdminBlogPosts['data'][number]): string {
     const now = new Date();
 
-    if (!post.is_active) return 'inactive';
-    if (post.status === 'draft') return 'draft';
-    if (post.published_at && new Date(post.published_at) > now) return 'scheduled';
-    if (post.expires_at && new Date(post.expires_at) <= now) return 'expired';
-    if (post.status === 'published') return 'live';
+    if (!post.is_active) {
+return 'inactive';
+}
+
+    if (post.status === 'draft') {
+return 'draft';
+}
+
+    if (post.published_at && new Date(post.published_at) > now) {
+return 'scheduled';
+}
+
+    if (post.expires_at && new Date(post.expires_at) <= now) {
+return 'expired';
+}
+
+    if (post.status === 'published') {
+return 'live';
+}
 
     return post.status;
 }

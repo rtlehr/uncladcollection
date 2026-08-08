@@ -10,7 +10,6 @@ export default {
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, ChevronRight, FolderOpen, Heart, ShieldCheck } from '@lucide/vue';
 import { computed, ref } from 'vue';
-
 import AssetCartConfigurator from '@/components/Assets/Public/AssetCartConfigurator.vue';
 import AssetDetailSummary from '@/components/Assets/Public/AssetDetailSummary.vue';
 import AssetFormatBadge from '@/components/Assets/Public/AssetFormatBadge.vue';
@@ -18,17 +17,34 @@ import AssetIncludedFiles from '@/components/Assets/Public/AssetIncludedFiles.vu
 import AssetPurchaseConfidence from '@/components/Assets/Public/AssetPurchaseConfidence.vue';
 import AssetPurchaseSummaryCard from '@/components/Assets/Public/AssetPurchaseSummaryCard.vue';
 import AssetTechnicalSpecs from '@/components/Assets/Public/AssetTechnicalSpecs.vue';
+import DiscoveryAssetGrid from '@/components/Discovery/DiscoveryAssetGrid.vue';
 import MarketplaceSectionHeader from '@/components/Marketplace/MarketplaceSectionHeader.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import AssetFilePreviewGallery from '@/components/unclad/assets/AssetFilePreviewGallery.vue';
-import DiscoveryAssetGrid from '@/components/Discovery/DiscoveryAssetGrid.vue';
-
 import type {
     PublicAsset,
     PublicAssetOffering,
     RelatedPublicAsset,
 } from '@/types/publicAsset';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     asset: PublicAsset;
@@ -44,10 +60,13 @@ const favoriteCount = ref(props.asset.favorites_count);
 const isAuthenticated = computed(() => Boolean((page.props.auth as any)?.user));
 
 function toggleFavorite(): void {
-    if (!props.asset.is_favoritable || favoriteProcessing.value) return;
+    if (!props.asset.is_favoritable || favoriteProcessing.value) {
+return;
+}
 
     if (!isAuthenticated.value) {
         router.visit('/login');
+
         return;
     }
 

@@ -7,8 +7,8 @@ import {
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 
-import SiteSettingField from '@/Components/Admin/SiteSettingField.vue';
 import BrandingSettingsPanel from '@/components/admin/BrandingSettingsPanel.vue';
+import SiteSettingField from '@/Components/Admin/SiteSettingField.vue';
 import FormActions from '@/Components/Forms/FormActions.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 

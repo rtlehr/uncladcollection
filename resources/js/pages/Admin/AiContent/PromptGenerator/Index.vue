@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
 import { Copy, Sparkles } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const props = defineProps<{ recent: Array<any> }>();
 const page = usePage<any>();
@@ -50,7 +50,10 @@ function submit() {
 }
 
 async function copy() {
-    if (!output.value) return;
+    if (!output.value) {
+return;
+}
+
     await navigator.clipboard.writeText(output.value);
     copied.value = true;
     setTimeout(() => (copied.value = false), 1500);

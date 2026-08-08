@@ -61,7 +61,9 @@ function requestDelete(report: AdminCommentReport) {
 }
 
 function confirmDelete() {
-    if (!selectedReport.value?.comment) return;
+    if (!selectedReport.value?.comment) {
+return;
+}
 
     deleting.value = true;
 

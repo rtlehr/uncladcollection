@@ -44,7 +44,9 @@ function close(): void {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-    if (!props.open) return;
+    if (!props.open) {
+return;
+}
 
     if (event.key === 'Escape') {
         event.preventDefault();
@@ -65,14 +67,18 @@ function handleTouchStart(event: TouchEvent): void {
 }
 
 function handleTouchEnd(event: TouchEvent): void {
-    if (touchStartX.value === null) return;
+    if (touchStartX.value === null) {
+return;
+}
 
     const endX = event.changedTouches[0]?.clientX ?? touchStartX.value;
     const distance = endX - touchStartX.value;
 
     touchStartX.value = null;
 
-    if (Math.abs(distance) < 60) return;
+    if (Math.abs(distance) < 60) {
+return;
+}
 
     if (distance > 0 && props.previousHref) {
         emit('previous');

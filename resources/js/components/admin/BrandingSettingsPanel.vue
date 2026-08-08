@@ -39,6 +39,7 @@ function setting(key: string): SiteSetting | undefined {
 
 function current(key: string): string {
     const item = setting(key);
+
     return item ? props.values[item.id] || '' : '';
 }
 

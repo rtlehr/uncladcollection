@@ -5,9 +5,9 @@ import {
     Package,
 } from '@lucide/vue';
 
+import type { PublicAssetOffering } from '@/types/publicAsset';
 import AssetFormatBadge from './AssetFormatBadge.vue';
 
-import type { PublicAssetOffering } from '@/types/publicAsset';
 
 withDefaults(
     defineProps<{

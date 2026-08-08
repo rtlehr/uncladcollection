@@ -21,7 +21,10 @@ const items = [
 ];
 
 function active(href: string): boolean {
-    if (href === '/account') return currentUrl.value === href;
+    if (href === '/account') {
+return currentUrl.value === href;
+}
+
     return currentUrl.value.startsWith(href);
 }
 </script>

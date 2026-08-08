@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { ArrowUpDown, Plus, Search } from '@lucide/vue';
+import { ref } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,9 @@ function sortBy(column: string) {
 }
 
 function remove(item: any) {
-    if (confirm(`Delete saved prompt “${item.title}”?`)) router.delete(`/admin/ai-content/image-prompts/${item.id}`);
+    if (confirm(`Delete saved prompt “${item.title}”?`)) {
+router.delete(`/admin/ai-content/image-prompts/${item.id}`);
+}
 }
 </script>
 
@@ -71,7 +73,7 @@ function remove(item: any) {
                 </div>
 
                 <div class="flex flex-wrap gap-2 border-t p-4">
-                    <Button v-for="link in items.links" :key="link.label" size="sm" variant="outline" :disabled="!link.url" @click="link.url && router.visit(link.url)" v-html="link.label" />
+                    <Button v-for="link in items.links" :key="link.label" size="sm" variant="outline" :disabled="!link.url" @click="link.url && router.visit(link.url)"><span v-html="link.label" /></Button>
                 </div>
             </div>
         </div>

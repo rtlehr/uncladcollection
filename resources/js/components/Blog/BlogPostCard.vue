@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 
+import { blogCardImage } from '@/lib/contentImages';
+import { formatDate } from '@/lib/formatDate';
 import type { BlogPost } from '@/types/blog';
 
-import { formatDate } from '@/lib/formatDate';
-import { blogCardImage } from '@/lib/contentImages';
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         post: BlogPost;
         variant?: 'grid' | 'featured';

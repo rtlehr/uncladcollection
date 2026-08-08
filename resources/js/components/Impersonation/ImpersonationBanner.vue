@@ -17,12 +17,16 @@ const payload = computed(() => page.props.impersonation ?? { active: false });
 const stopping = ref(false);
 
 function stopImpersonating(): void {
-    if (!payload.value.stop_url || stopping.value) return;
+    if (!payload.value.stop_url || stopping.value) {
+return;
+}
 
     stopping.value = true;
     router.post(payload.value.stop_url, {}, {
         preserveScroll: false,
-        onFinish: () => { stopping.value = false; },
+        onFinish: () => {
+ stopping.value = false; 
+},
     });
 }
 </script>

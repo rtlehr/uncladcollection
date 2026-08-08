@@ -17,7 +17,10 @@ function csrf(): string {
 }
 
 async function track(kind: 'impression' | 'click'): Promise<void> {
-    if (!ad.value || props.preview) return;
+    if (!ad.value || props.preview) {
+return;
+}
+
     await fetch(`/ads/creatives/${ad.value.creative.id}/${kind}`, {
         method: 'POST', credentials: 'same-origin', keepalive: true,
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' },
@@ -28,20 +31,33 @@ async function track(kind: 'impression' | 'click'): Promise<void> {
 async function load(): Promise<void> {
     try {
         const response = await fetch(`/ads/placements/${encodeURIComponent(props.placement)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
-        if (response.status === 204) return;
+
+        if (response.status === 204) {
+return;
+}
+
         if (response.ok) {
             ad.value = await response.json();
             await track('impression');
         }
-    } finally { loading.value = false; }
+    } finally {
+ loading.value = false; 
+}
 }
 
 function openAd(): void {
-    if (!ad.value) return;
+    if (!ad.value) {
+return;
+}
+
     void track('click');
     const url = ad.value.creative.destination_url;
-    if (url.startsWith('/')) window.location.href = url;
-    else window.open(url, '_blank', 'noopener,noreferrer');
+
+    if (url.startsWith('/')) {
+window.location.href = url;
+} else {
+window.open(url, '_blank', 'noopener,noreferrer');
+}
 }
 
 onMounted(load);

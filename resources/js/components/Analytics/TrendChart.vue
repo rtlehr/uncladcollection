@@ -13,6 +13,7 @@ const maxValue = computed(() => Math.max(...props.points.map((point) => point.re
 const coordinates = computed(() => props.points.map((point, index) => {
     const x = props.points.length <= 1 ? width / 2 : padding + (index * (width - padding * 2)) / (props.points.length - 1);
     const y = height - padding - (point.revenue_cents / maxValue.value) * (height - padding * 2);
+
     return { ...point, x, y };
 }));
 const polyline = computed(() => coordinates.value.map((point) => `${point.x},${point.y}`).join(' '));

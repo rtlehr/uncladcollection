@@ -39,13 +39,21 @@ const textClass = computed(() => ({ left: 'text-left items-start', center: 'text
 
 function csrfToken(): string {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
-    if (meta) return meta;
+
+    if (meta) {
+return meta;
+}
+
     const cookie = document.cookie.split('; ').find((item) => item.startsWith('XSRF-TOKEN='));
+
     return cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '';
 }
 
 function trackCampaign(action: 'impression' | 'click', button?: 'primary' | 'secondary'): void {
-    if (!props.campaign?.id) return;
+    if (!props.campaign?.id) {
+return;
+}
+
     void fetch(`/marketing-campaigns/${props.campaign.id}/${action}`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -60,21 +68,33 @@ function trackCampaign(action: 'impression' | 'click', button?: 'primary' | 'sec
 }
 
 onMounted(async () => {
-    if (props.campaign) trackCampaign('impression');
-    if (!props.campaign || props.campaign.media_type !== 'video' || !props.campaign.autoplay_first_visit) return;
+    if (props.campaign) {
+trackCampaign('impression');
+}
+
+    if (!props.campaign || props.campaign.media_type !== 'video' || !props.campaign.autoplay_first_visit) {
+return;
+}
+
     const played = sessionStorage.getItem('unclad-home-hero-played') === '1';
     const mobile = window.matchMedia('(max-width: 767px)').matches;
     canAutoplay.value = !played && (!mobile || props.campaign.autoplay_mobile);
+
     if (canAutoplay.value && video.value) {
         try {
             await video.value.play();
             sessionStorage.setItem('unclad-home-hero-played', '1');
-        } catch { canAutoplay.value = false; }
+        } catch {
+ canAutoplay.value = false; 
+}
     }
 });
 
 async function playVideo(): Promise<void> {
-    if (!video.value) return;
+    if (!video.value) {
+return;
+}
+
     manuallyPlaying.value = true;
     await video.value.play();
     sessionStorage.setItem('unclad-home-hero-played', '1');

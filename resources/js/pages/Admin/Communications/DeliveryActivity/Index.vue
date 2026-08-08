@@ -97,7 +97,7 @@ const retry = (log: Log) => {
 
         <div class="flex flex-wrap gap-2">
             <Link v-for="link in logs.links" :key="link.label" :href="link.url ?? '#'" preserve-scroll>
-                <Button size="sm" :variant="link.active ? 'default' : 'outline'" :disabled="!link.url" v-html="link.label" />
+                <Button size="sm" :variant="link.active ? 'default' : 'outline'" :disabled="!link.url"><span v-html="link.label" /></Button>
             </Link>
         </div>
     </div>

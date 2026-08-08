@@ -1,14 +1,4 @@
 <script setup lang="ts">
-import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { Node, mergeAttributes } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import Highlight from '@tiptap/extension-highlight';
-import Image from '@tiptap/extension-image';
-import { computed, ref, watch } from 'vue';
-
 import {
     AlignCenter,
     AlignLeft,
@@ -37,20 +27,27 @@ import {
     Undo2,
     WrapText,
 } from '@lucide/vue';
+import { Node, mergeAttributes } from '@tiptap/core';
+import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
+import StarterKit from '@tiptap/starter-kit';
+import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { computed, ref, watch } from 'vue';
 
-import { Button } from '@/components/ui/button';
+
 import BlogArticleImageDialog from '@/components/admin/BlogArticleImageDialog.vue';
-import ImagePickerDialog, {
-    type LibraryImage,
-} from '@/components/admin/ImagePickerDialog.vue';
 import BlogLibraryImageEditorDialog from '@/components/admin/BlogLibraryImageEditorDialog.vue';
+import BlogMediaPropertiesDialog from '@/components/admin/BlogMediaPropertiesDialog.vue';
+import type {BlogMediaProperties} from '@/components/admin/BlogMediaPropertiesDialog.vue';
+import type {LibraryImage} from '@/components/admin/ImagePickerDialog.vue';
+import ImagePickerDialog from '@/components/admin/ImagePickerDialog.vue';
+import type {SmartAssetCardInsert} from '@/components/admin/SmartAssetCardDialog.vue';
+import SmartAssetCardDialog from '@/components/admin/SmartAssetCardDialog.vue';
+import { Button } from '@/components/ui/button';
 import type { UploadedBlogArticleImage } from '@/lib/blogArticleImageUpload';
-import SmartAssetCardDialog, {
-    type SmartAssetCardInsert,
-} from '@/components/admin/SmartAssetCardDialog.vue';
-import BlogMediaPropertiesDialog, {
-    type BlogMediaProperties,
-} from '@/components/admin/BlogMediaPropertiesDialog.vue';
 
 const props = defineProps<{ modelValue: string }>();
 
@@ -347,6 +344,7 @@ const editor = useEditor({
             if (node.type.name !== 'image') {
                 selectedImage.value = false;
                 selectedImageSrc.value = null;
+
                 return false;
             }
 
@@ -375,7 +373,9 @@ const editor = useEditor({
 });
 
 const wordCount = computed(() => {
-    if (!editor.value) return 0;
+    if (!editor.value) {
+return 0;
+}
 
     return editor.value
         .getText()
@@ -391,7 +391,9 @@ const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 220))
 watch(
     () => props.modelValue,
     (value) => {
-        if (!editor.value) return;
+        if (!editor.value) {
+return;
+}
 
         if (editor.value.getHTML() !== value) {
             editor.value.commands.setContent(value || '', false);
@@ -402,7 +404,9 @@ watch(
 );
 
 function emitEditorHtml() {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const html = editor.value.getHTML();
     htmlCode.value = html;
@@ -410,11 +414,14 @@ function emitEditorHtml() {
 }
 
 function toggleCodeView() {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     if (!codeView.value) {
         htmlCode.value = editor.value.getHTML();
         codeView.value = true;
+
         return;
     }
 
@@ -429,15 +436,20 @@ function updateCode(value: string) {
 }
 
 function setLink() {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const previousUrl = editor.value.getAttributes('link').href;
     const url = window.prompt('Enter URL', previousUrl || 'https://');
 
-    if (url === null) return;
+    if (url === null) {
+return;
+}
 
     if (url === '') {
         editor.value.chain().focus().extendMarkRange('link').unsetLink().run();
+
         return;
     }
 
@@ -463,6 +475,7 @@ function findSelectedImage() {
     editor.value.state.doc.descendants((node, pos) => {
         if (node.type.name === 'image' && node.attrs.src === selectedImageSrc.value) {
             found = { node, pos };
+
             return false;
         }
 
@@ -486,8 +499,13 @@ function currentImageClass(): string {
 function currentAlignment(): string {
     const current = currentImageClass();
 
-    if (current.includes('blog-image-left')) return 'blog-image-left';
-    if (current.includes('blog-image-right')) return 'blog-image-right';
+    if (current.includes('blog-image-left')) {
+return 'blog-image-left';
+}
+
+    if (current.includes('blog-image-right')) {
+return 'blog-image-right';
+}
 
     return 'blog-image-center';
 }
@@ -510,19 +528,31 @@ function currentSize(): string {
         return 'blog-image-square-inline';
     }
 
-    if (current.includes('blog-image-small')) return 'blog-image-small';
-    if (current.includes('blog-image-medium')) return 'blog-image-medium';
-    if (current.includes('blog-image-full')) return 'blog-image-full';
+    if (current.includes('blog-image-small')) {
+return 'blog-image-small';
+}
+
+    if (current.includes('blog-image-medium')) {
+return 'blog-image-medium';
+}
+
+    if (current.includes('blog-image-full')) {
+return 'blog-image-full';
+}
 
     return 'blog-image-large';
 }
 
 function updateImage(alignment?: string, size?: string) {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const found = findSelectedImage();
 
-    if (!found) return;
+    if (!found) {
+return;
+}
 
     const newClass = imageClass(
         alignment ?? currentAlignment(),
@@ -547,7 +577,9 @@ function updateImage(alignment?: string, size?: string) {
 function openMediaProperties(): void {
     const found = findSelectedImage();
 
-    if (!found) return;
+    if (!found) {
+return;
+}
 
     const attrs = found.node.attrs;
 
@@ -572,11 +604,15 @@ function openMediaProperties(): void {
 function applyMediaProperties(
     properties: BlogMediaProperties,
 ): void {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const found = findSelectedImage();
 
-    if (!found) return;
+    if (!found) {
+return;
+}
 
     const { state, view } = editor.value;
 
@@ -606,11 +642,15 @@ function applyMediaProperties(
 }
 
 function removeImage() {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const found = findSelectedImage();
 
-    if (!found) return;
+    if (!found) {
+return;
+}
 
     const { state, view } = editor.value;
 
@@ -627,28 +667,6 @@ function removeImage() {
     emitEditorHtml();
 }
 
-function insertImage(
-    src: string,
-    alt: string | null = null,
-    sizeClass = 'blog-image-medium',
-) {
-    if (!editor.value) return;
-
-    editor.value
-        .chain()
-        .focus()
-        .setImage({
-            src,
-            alt: alt ?? '',
-            class: `blog-image-center ${sizeClass}`,
-        })
-        .run();
-
-    selectedImage.value = true;
-    selectedImageSrc.value = src;
-
-    emitEditorHtml();
-}
 
 
 function sizeClassForPreset(preset: string): string {
@@ -666,7 +684,9 @@ function sizeClassForPreset(preset: string): string {
 function insertEditedArticleImage(
     payload: UploadedBlogArticleImage,
 ): void {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     const sizeClass = sizeClassForPreset(payload.preset);
 
@@ -704,7 +724,9 @@ function insertEditedArticleImage(
 function insertSmartAssetCard(
     payload: SmartAssetCardInsert,
 ): void {
-    if (!editor.value) return;
+    if (!editor.value) {
+return;
+}
 
     editor.value
         .chain()

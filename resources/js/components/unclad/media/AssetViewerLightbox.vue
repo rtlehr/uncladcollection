@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
     ChevronLeft,
     ChevronRight,
@@ -10,8 +9,9 @@ import {
     ZoomIn,
     ZoomOut,
 } from '@lucide/vue';
-import MediaPreviewUnavailable from './MediaPreviewUnavailable.vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { MediaPresentationFile } from '@/types/mediaPresentation';
+import MediaPreviewUnavailable from './MediaPreviewUnavailable.vue';
 
 const props = defineProps<{
     open: boolean;
@@ -40,7 +40,10 @@ function resetZoom(): void {
 }
 
 function move(offset: number): void {
-    if (props.files.length < 2) return;
+    if (props.files.length < 2) {
+return;
+}
+
     const current = selectedIndex.value < 0 ? 0 : selectedIndex.value;
     const next = (current + offset + props.files.length) % props.files.length;
     emit('select', props.files[next].id);
@@ -48,14 +51,33 @@ function move(offset: number): void {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-    if (!props.open) return;
-    if (event.key === 'Escape') emit('close');
-    if (event.key === 'ArrowLeft') move(-1);
-    if (event.key === 'ArrowRight') move(1);
-    if (event.key === '+' || event.key === '=')
-        zoom.value = Math.min(2.5, zoom.value + 0.2);
-    if (event.key === '-') zoom.value = Math.max(0.5, zoom.value - 0.2);
-    if (event.key === '0') resetZoom();
+    if (!props.open) {
+return;
+}
+
+    if (event.key === 'Escape') {
+emit('close');
+}
+
+    if (event.key === 'ArrowLeft') {
+move(-1);
+}
+
+    if (event.key === 'ArrowRight') {
+move(1);
+}
+
+    if (event.key === '+' || event.key === '=') {
+zoom.value = Math.min(2.5, zoom.value + 0.2);
+}
+
+    if (event.key === '-') {
+zoom.value = Math.max(0.5, zoom.value - 0.2);
+}
+
+    if (event.key === '0') {
+resetZoom();
+}
 }
 
 async function toggleFullscreen(): Promise<void> {
@@ -76,7 +98,10 @@ watch(
     () => props.open,
     (open) => {
         document.body.style.overflow = open ? 'hidden' : '';
-        if (!open) resetZoom();
+
+        if (!open) {
+resetZoom();
+}
     },
 );
 

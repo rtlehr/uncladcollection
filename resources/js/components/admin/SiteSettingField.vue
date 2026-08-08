@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 
-import { computed } from 'vue';
 
 import type { SiteSetting } from '@/types/siteSetting';
 

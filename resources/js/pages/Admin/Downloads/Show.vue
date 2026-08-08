@@ -7,12 +7,12 @@ import {
     Receipt,
 } from '@lucide/vue';
 
-import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
-import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
-import ShowSection from '@/Components/Show/ShowSection.vue';
 import DetailRow from '@/Components/Shared/DetailRow.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
+import ShowDetailsGrid from '@/Components/Show/ShowDetailsGrid.vue';
+import ShowPageHeader from '@/Components/Show/ShowPageHeader.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 
 import type { AdminDownloadDetail } from '@/types/downloadDetail';

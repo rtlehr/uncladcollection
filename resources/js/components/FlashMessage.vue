@@ -12,13 +12,16 @@ const dismissed = ref<Set<string>>(new Set());
 
 const flashItems = computed<FlashItem[]>(() => {
     const flash = page.props.flash ?? {};
+
     return (['success', 'error', 'warning', 'info'] as FlashTone[])
         .filter((tone) => Boolean(flash[tone]))
         .map((tone) => ({ id: `${tone}:${flash[tone]}`, tone, message: String(flash[tone]) }))
         .filter((item) => !dismissed.value.has(item.id));
 });
 
-watch(() => page.url, () => { dismissed.value = new Set(); });
+watch(() => page.url, () => {
+ dismissed.value = new Set(); 
+});
 
 const toneClasses: Record<FlashTone, string> = {
     success: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',

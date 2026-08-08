@@ -1,19 +1,6 @@
 <script setup lang="ts">
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, FileArchive, FileImage, FilePlus2, FileText, Film, Trash2, UploadCloud } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import {
-    AlertCircle,
-    ArrowDown,
-    ArrowUp,
-    CheckCircle2,
-    FileArchive,
-    FileImage,
-    FilePlus2,
-    FileText,
-    Film,
-    Star,
-    Trash2,
-    UploadCloud,
-} from '@lucide/vue';
 
 import { Button } from '@/components/ui/button';
 import type {
@@ -116,13 +103,26 @@ function suggestedRole(file: File): string {
     const name = file.name.toLowerCase();
     const extension = extensionOf(name);
 
-    if (name.includes('preview')) return 'preview';
-    if (name.includes('thumb')) return 'thumbnail';
-    if (name.includes('icon')) return 'icon';
-    if (name.includes('poster')) return 'poster';
+    if (name.includes('preview')) {
+return 'preview';
+}
+
+    if (name.includes('thumb')) {
+return 'thumbnail';
+}
+
+    if (name.includes('icon')) {
+return 'icon';
+}
+
+    if (name.includes('poster')) {
+return 'poster';
+}
+
     if (name.includes('print') || ['tif', 'tiff'].includes(extension)) {
         return 'print';
     }
+
     if (
         name.includes('high') ||
         name.includes('hi-res') ||
@@ -131,16 +131,30 @@ function suggestedRole(file: File): string {
     ) {
         return 'high_resolution';
     }
-    if (['eps', 'svg', 'ai'].includes(extension)) return 'vector';
-    if (['mp4', 'mov', 'webm'].includes(extension)) return 'video';
-    if (['zip', '7z', 'rar'].includes(extension)) return 'bundle';
-    if (['psd', 'pdf'].includes(extension)) return 'source';
+
+    if (['eps', 'svg', 'ai'].includes(extension)) {
+return 'vector';
+}
+
+    if (['mp4', 'mov', 'webm'].includes(extension)) {
+return 'video';
+}
+
+    if (['zip', '7z', 'rar'].includes(extension)) {
+return 'bundle';
+}
+
+    if (['psd', 'pdf'].includes(extension)) {
+return 'source';
+}
 
     return 'primary';
 }
 
 function formatBytes(bytes: number): string {
-    if (!bytes) return '0 B';
+    if (!bytes) {
+return '0 B';
+}
 
     const units = ['B', 'KB', 'MB', 'GB'];
     const index = Math.min(
@@ -152,7 +166,9 @@ function formatBytes(bytes: number): string {
 }
 
 function formatDuration(seconds: number | null): string | null {
-    if (seconds === null) return null;
+    if (seconds === null) {
+return null;
+}
 
     const minutes = Math.floor(seconds / 60);
     const remaining = Math.round(seconds % 60)
@@ -396,8 +412,13 @@ function move(index: number, offset: number): void {
     const translateSelectedIndex = (
         selected: number | null,
     ): number | null => {
-        if (selected === index) return target;
-        if (selected === target) return index;
+        if (selected === index) {
+return target;
+}
+
+        if (selected === target) {
+return index;
+}
 
         return selected;
     };
@@ -421,9 +442,17 @@ function onDrop(event: DragEvent): void {
 }
 
 function iconFor(item: PendingAssetFile) {
-    if (item.metadata.kind === 'image') return FileImage;
-    if (item.metadata.kind === 'video') return Film;
-    if (item.metadata.kind === 'archive') return FileArchive;
+    if (item.metadata.kind === 'image') {
+return FileImage;
+}
+
+    if (item.metadata.kind === 'video') {
+return Film;
+}
+
+    if (item.metadata.kind === 'archive') {
+return FileArchive;
+}
 
     return FileText;
 }

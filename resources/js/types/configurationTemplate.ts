@@ -1,5 +1,6 @@
 import type { ConfigurationDisplayTypeOption } from '@/types/adminAsset';
 
+import type { AdminAssetConfigurationGroup } from '@/types/adminAsset';
 export interface ConfigurationTemplateValue {
     id: number | null;
     label: string;
@@ -34,7 +35,7 @@ export interface ConfigurationTemplate {
 }
 
 export interface ConfigurationTemplateSummary extends ConfigurationTemplate {
-    asset_group: import('@/types/adminAsset').AdminAssetConfigurationGroup;
+    asset_group: AdminAssetConfigurationGroup;
 }
 
 export type { ConfigurationDisplayTypeOption };

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { AlertTriangle, Check, Files, PackageCheck, X } from '@lucide/vue';
+import { computed } from 'vue';
 import type { AdminAssetFile, AdminAssetOffering } from '@/types/adminAsset';
 
 const props = defineProps<{
@@ -30,9 +30,18 @@ function formatPrice(offering: AdminAssetOffering): string {
 }
 
 function formatBytes(bytes: number): string {
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
-    if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes >= 1024 ** 3) {
+return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
+    if (bytes >= 1024 ** 2) {
+return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+}
+
+    if (bytes >= 1024) {
+return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
     return `${bytes} B`;
 }
 
@@ -45,8 +54,14 @@ function uniqueFormats(offering: AdminAssetOffering): string[] {
 }
 
 function warningFor(offering: AdminAssetOffering): string | null {
-    if (!includedFiles(offering).length) return 'No downloadable files are included.';
-    if (offering.price_cents <= 0) return 'This offering has no price.';
+    if (!includedFiles(offering).length) {
+return 'No downloadable files are included.';
+}
+
+    if (offering.price_cents <= 0) {
+return 'This offering has no price.';
+}
+
     return null;
 }
 </script>

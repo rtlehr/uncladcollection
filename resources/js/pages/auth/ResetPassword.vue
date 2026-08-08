@@ -17,7 +17,6 @@ import {
     ShieldCheck,
 } from '@lucide/vue';
 import { ref } from 'vue';
-
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import ContentSection from '@/components/Public/ContentSection.vue';
@@ -31,6 +30,23 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { update } from '@/routes/password';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     token: string;

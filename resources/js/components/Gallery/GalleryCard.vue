@@ -28,14 +28,19 @@ const formattedViewsCount = computed(() => Number(props.asset.views_count ?? 0).
 const formattedFavoriteCount = computed(() => Number(favoriteCount.value ?? 0).toLocaleString());
 
 function toggleFavorite(): void {
-    if (!props.asset.is_favoritable || !props.asset.favorite_url || !props.asset.unfavorite_url) return;
+    if (!props.asset.is_favoritable || !props.asset.favorite_url || !props.asset.unfavorite_url) {
+return;
+}
 
     if (!isAuthenticated.value) {
         router.visit('/login');
+
         return;
     }
 
-    if (favoriteProcessing.value) return;
+    if (favoriteProcessing.value) {
+return;
+}
 
     favoriteProcessing.value = true;
     const wasFavorited = favoriteState.value;

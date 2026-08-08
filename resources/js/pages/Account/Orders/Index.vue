@@ -27,7 +27,7 @@ defineProps<{ orders: { data: Order[]; links: Array<{url:string|null;label:strin
             </article>
             <p v-if="orders.data.length === 0" class="rounded-2xl border border-dashed p-10 text-center text-stone-500">You do not have any orders yet.</p>
             <nav v-if="orders.links.length > 3" class="flex flex-wrap gap-2" aria-label="Order pagination">
-                <Link v-for="link in orders.links" :key="link.label" :href="link.url || ''" :class="['rounded-lg border px-3 py-2 text-sm', { 'pointer-events-none opacity-50': !link.url, 'bg-stone-900 text-white': link.active }]" v-html="link.label" />
+                <Link v-for="link in orders.links" :key="link.label" :href="link.url || ''" :class="['rounded-lg border px-3 py-2 text-sm', { 'pointer-events-none opacity-50': !link.url, 'bg-stone-900 text-white': link.active }]"><span v-html="link.label" /></Link>
             </nav>
         </div>
     </AccountPageLayout>

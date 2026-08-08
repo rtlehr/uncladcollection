@@ -18,7 +18,7 @@ import {
     ref,
     watch,
 } from 'vue';
-
+import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import ArticleNavigation from '@/components/Blog/ArticleNavigation.vue';
 import ArticleShareActions from '@/components/Blog/ArticleShareActions.vue';
 import ArticleTableOfContents from '@/components/Blog/ArticleTableOfContents.vue';
@@ -26,19 +26,37 @@ import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import PublicAuthorCard from '@/components/Blog/PublicAuthorCard.vue';
 import ReadingProgress from '@/components/Blog/ReadingProgress.vue';
 import CommentSection from '@/components/comments/CommentSection.vue';
-import PublicAdPlacement from '@/components/Advertising/PublicAdPlacement.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
-
+import { articleHeaderImage } from '@/lib/contentImages';
+import { formatDate } from '@/lib/formatDate';
+import { readingTime as calculateReadingTime } from '@/lib/readingTime';
 import type {
     BlogNavigationPost,
     BlogPost,
 } from '@/types/blog';
 
-import { articleHeaderImage } from '@/lib/contentImages';
-import { formatDate } from '@/lib/formatDate';
-import { readingTime as calculateReadingTime } from '@/lib/readingTime';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     blogPost: BlogPost;
@@ -92,13 +110,6 @@ const metaDescription = computed(() =>
     || '',
 );
 
-const arrowIconSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-viewBox="0 0 24 24" fill="none" stroke="currentColor"
-stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
-`;
-
 function slugifyHeading(value: string): string {
     return value
         .toLowerCase()
@@ -118,7 +129,9 @@ function escapeHtml(value: unknown): string {
 }
 
 function formatMoney(cents: number | null, currency = 'USD'): string {
-    if (cents === null) return 'View pricing';
+    if (cents === null) {
+return 'View pricing';
+}
 
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -132,6 +145,7 @@ async function buildEnhancedContent(): Promise<void> {
     if (!html) {
         enhancedContent.value = '';
         tableOfContents.value = [];
+
         return;
     }
 
@@ -219,8 +233,13 @@ async function buildEnhancedContent(): Promise<void> {
             `uc-media-spacing-${spacingStyle}`,
         ].filter(Boolean).join(' ');
 
-        if (imageId) figure.setAttribute('data-image-id', imageId);
-        if (slug) figure.setAttribute('data-image-slug', slug);
+        if (imageId) {
+figure.setAttribute('data-image-id', imageId);
+}
+
+        if (slug) {
+figure.setAttribute('data-image-slug', slug);
+}
 
         const clonedImg = img.cloneNode(true) as HTMLImageElement;
         clonedImg.className = 'uc-article-media-image';
@@ -302,7 +321,9 @@ async function buildEnhancedContent(): Promise<void> {
             const heading = node.dataset.heading ?? '';
             const description = node.dataset.description ?? '';
 
-            if (!slug) return;
+            if (!slug) {
+return;
+}
 
             try {
                 const response = await fetch(

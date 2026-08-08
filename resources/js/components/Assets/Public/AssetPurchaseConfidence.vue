@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { BadgeCheck, CreditCard, Download, PackageCheck, RefreshCcw } from '@lucide/vue';
 
-const props = defineProps<{ fulfillmentType: 'digital' | 'physical' | 'hybrid' }>();
+defineProps<{ fulfillmentType: 'digital' | 'physical' | 'hybrid' }>();
 </script>
 
 <template>

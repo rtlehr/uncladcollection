@@ -8,9 +8,9 @@ import {
     watch,
 } from 'vue';
 
+import NotificationBell from '@/components/Notifications/NotificationBell.vue';
 import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import PublicCartMenu from '@/components/Public/PublicCartMenu.vue';
-import NotificationBell from '@/components/Notifications/NotificationBell.vue';
 import { login, register } from '@/routes';
 
 const page = usePage();

@@ -1,13 +1,23 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { FileImage, FileText, Film } from '@lucide/vue';
+import { computed } from 'vue';
 import type { PublicAssetFile } from '@/types/publicAsset';
 
 const props = defineProps<{ files: PublicAssetFile[] }>();
 const imageFiles = computed(() => props.files.filter(file => ['image','vector'].includes(file.media_type) && (file.width || file.height)));
 const videoFiles = computed(() => props.files.filter(file => file.media_type === 'video'));
 const documentFiles = computed(() => props.files.filter(file => file.media_type === 'document'));
-function duration(seconds: number | string | null): string { const value = Number(seconds || 0); if (!value) return '—'; const m = Math.floor(value / 60); const s = Math.round(value % 60); return `${m}:${String(s).padStart(2, '0')}`; }
+function duration(seconds: number | string | null): string {
+ const value = Number(seconds || 0);
+
+ if (!value) {
+return '—';
+}
+
+ const m = Math.floor(value / 60); const s = Math.round(value % 60);
+
+ return `${m}:${String(s).padStart(2, '0')}`; 
+}
 </script>
 <template>
     <section v-if="imageFiles.length || videoFiles.length || documentFiles.length" class="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">

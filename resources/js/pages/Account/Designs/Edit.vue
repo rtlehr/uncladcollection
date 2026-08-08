@@ -146,11 +146,26 @@ const canUndo = computed(() => historyIndex.value > 0);
 const canRedo = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
 const hasBlockingOperation = computed(() => saving.value || uploading.value || exporting.value || backgroundBusy.value || libraryAdding.value !== null);
 const processingNotice = computed(() => {
-    if (exporting.value) return 'An export is currently being prepared or rendered.';
-    if (uploading.value) return 'An image upload is still in progress.';
-    if (backgroundBusy.value) return 'Background removal is still running.';
-    if (libraryAdding.value !== null) return 'A UC Library image is still being added.';
-    if (saving.value) return 'Your design is still being saved.';
+    if (exporting.value) {
+return 'An export is currently being prepared or rendered.';
+}
+
+    if (uploading.value) {
+return 'An image upload is still in progress.';
+}
+
+    if (backgroundBusy.value) {
+return 'Background removal is still running.';
+}
+
+    if (libraryAdding.value !== null) {
+return 'A UC Library image is still being added.';
+}
+
+    if (saving.value) {
+return 'Your design is still being saved.';
+}
+
     return '';
 });
 
@@ -161,7 +176,9 @@ let restoringHistory = false;
 const studioWebFonts = ['Caveat', 'Dancing Script', 'Patrick Hand'];
 
 async function ensureStudioFontsLoaded(): Promise<void> {
-    if (!('fonts' in document)) return;
+    if (!('fonts' in document)) {
+return;
+}
 
     await Promise.all(
         studioWebFonts.map(async fontFamily => {
@@ -187,13 +204,18 @@ const stageDimensions = computed(() => ({
     height: Math.max(1, Math.round(canvasHeight.value * fitFactor.value * zoom.value)),
 }));
 const layerObjects = computed(() => {
-    layerVersion.value;
+    void layerVersion.value;
+
     return canvas ? [...canvas.getObjects()].reverse() : [];
 });
 
 function measureWorkspace(): void {
     const element = workspaceElement.value;
-    if (!element) return;
+
+    if (!element) {
+return;
+}
+
     viewportWidth.value = Math.max(320, element.clientWidth - 48);
     viewportHeight.value = Math.max(320, element.clientHeight - 88);
     isSmallScreen.value = window.innerWidth < props.limits.recommended_min_width;
@@ -213,17 +235,31 @@ function snapshot(): string {
 }
 
 function scheduleAutosave(): void {
-    if (autosaveTimer) clearTimeout(autosaveTimer);
+    if (autosaveTimer) {
+clearTimeout(autosaveTimer);
+}
+
     autosaveTimer = setTimeout(() => save(true), 1200);
 }
 
 function pushHistory(): void {
-    if (!canvas || restoringHistory) return;
+    if (!canvas || restoringHistory) {
+return;
+}
+
     const current = snapshot();
-    if (history.value[historyIndex.value] === current) return;
+
+    if (history.value[historyIndex.value] === current) {
+return;
+}
+
     history.value = history.value.slice(0, historyIndex.value + 1);
     history.value.push(current);
-    if (history.value.length > 60) history.value.shift();
+
+    if (history.value.length > 60) {
+history.value.shift();
+}
+
     historyIndex.value = history.value.length - 1;
     layerVersion.value++;
     dirty.value = true;
@@ -231,7 +267,10 @@ function pushHistory(): void {
 }
 
 async function restoreHistory(index: number): Promise<void> {
-    if (!canvas || index < 0 || index >= history.value.length) return;
+    if (!canvas || index < 0 || index >= history.value.length) {
+return;
+}
+
     restoringHistory = true;
     const restored = JSON.parse(history.value[index]) as {
         fabric?: Record<string, unknown>;
@@ -253,8 +292,12 @@ async function restoreHistory(index: number): Promise<void> {
     restoringHistory = false;
 }
 
-function undo(): void { void restoreHistory(historyIndex.value - 1); }
-function redo(): void { void restoreHistory(historyIndex.value + 1); }
+function undo(): void {
+ void restoreHistory(historyIndex.value - 1); 
+}
+function redo(): void {
+ void restoreHistory(historyIndex.value + 1); 
+}
 
 function selectObject(object: FabricObject | null): void {
     selected.value = object;
@@ -272,6 +315,7 @@ function ensureLayerMetadata(object: FabricObject, index = 0): void {
     if (!object.get('layerId')) {
         object.set('layerId' as never, createLayerId() as never);
     }
+
     if (!object.get('name')) {
         object.set('name' as never, defaultLayerName(object, index) as never);
     }
@@ -279,13 +323,23 @@ function ensureLayerMetadata(object: FabricObject, index = 0): void {
 
 function layerKey(object: FabricObject): string {
     ensureLayerMetadata(object);
+
     return String(object.get('layerId'));
 }
 
 function defaultLayerName(object: FabricObject | null, index = 0): string {
-    if (!object) return 'Layer';
-    if (object.type === 'i-text') return `Text ${index + 1}`;
-    if (object.type === 'rect') return `Shape ${index + 1}`;
+    if (!object) {
+return 'Layer';
+}
+
+    if (object.type === 'i-text') {
+return `Text ${index + 1}`;
+}
+
+    if (object.type === 'rect') {
+return `Shape ${index + 1}`;
+}
+
     return `Image ${index + 1}`;
 }
 
@@ -294,7 +348,10 @@ function objectLabel(object: FabricObject, index: number): string {
 }
 
 function renameLayer(object: FabricObject, value: string): void {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     ensureLayerMetadata(object);
     const trimmed = value.trim();
     object.set('name' as never, (trimmed || defaultLayerName(object)) as never);
@@ -306,7 +363,10 @@ function renameLayer(object: FabricObject, value: string): void {
 }
 
 function save(silent = false): void {
-    if (!canvas || saving.value) return;
+    if (!canvas || saving.value) {
+return;
+}
+
     saving.value = true;
     router.put(props.project.save_url, {
         title: title.value,
@@ -320,19 +380,29 @@ function save(silent = false): void {
             dirty.value = false;
             void uploadPreview();
             savedMessage.value = silent ? 'Autosaved' : 'Saved';
-            window.setTimeout(() => { savedMessage.value = ''; }, 1800);
+            window.setTimeout(() => {
+ savedMessage.value = ''; 
+}, 1800);
         },
-        onFinish: () => { saving.value = false; },
+        onFinish: () => {
+ saving.value = false; 
+},
     });
 }
 
 async function uploadPreview(): Promise<void> {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     const maxEdge = 720;
     const multiplier = Math.min(1, maxEdge / Math.max(canvasWidth.value, canvasHeight.value));
     const previewCanvas = canvas.toCanvasElement(multiplier, { enableRetinaScaling: false });
     const blob = await new Promise<Blob | null>(resolve => previewCanvas.toBlob(resolve, 'image/webp', 0.82));
-    if (!blob) return;
+
+    if (!blob) {
+return;
+}
 
     const form = new FormData();
     form.append('preview', blob, 'preview.webp');
@@ -345,7 +415,10 @@ async function uploadPreview(): Promise<void> {
 }
 
 function addText(): void {
-    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
+    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) {
+return;
+}
+
     const text = new IText('Double-click to edit', {
         left: canvasWidth.value * 0.1,
         top: canvasHeight.value * 0.1,
@@ -367,7 +440,10 @@ function addText(): void {
 }
 
 function addShape(): void {
-    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) return;
+    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) {
+return;
+}
+
     const shape = new Rect({
         left: canvasWidth.value * 0.15,
         top: canvasHeight.value * 0.15,
@@ -391,8 +467,12 @@ function addShape(): void {
 function imageSource(image: FabricImage, preferOriginal = false): string {
     if (preferOriginal) {
         const original = image.get('originalSrc');
-        if (typeof original === 'string' && original) return original;
+
+        if (typeof original === 'string' && original) {
+return original;
+}
     }
+
     return image.getSrc();
 }
 
@@ -400,6 +480,7 @@ async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
     const image = new Image();
     image.crossOrigin = 'anonymous';
     image.src = src;
+
     if (typeof image.decode === 'function') {
         await image.decode();
     } else {
@@ -408,11 +489,13 @@ async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
             image.onerror = () => reject(new Error('The selected image could not be loaded.'));
         });
     }
+
     return image;
 }
 
 function hexToRgb(hex: string): [number, number, number] {
     const normalized = hex.replace('#', '').padEnd(6, '0').slice(0, 6);
+
     return [
         Number.parseInt(normalized.slice(0, 2), 16),
         Number.parseInt(normalized.slice(2, 4), 16),
@@ -427,7 +510,11 @@ function rgbToHex(red: number, green: number, blue: number): string {
 async function drawBackgroundPreview(): Promise<void> {
     const preview = backgroundPreviewCanvas.value;
     const object = selected.value;
-    if (!preview || !(object instanceof FabricImage)) return;
+
+    if (!preview || !(object instanceof FabricImage)) {
+return;
+}
+
     try {
         const source = await loadHtmlImage(imageSource(object, true));
         const maxWidth = 260;
@@ -436,7 +523,11 @@ async function drawBackgroundPreview(): Promise<void> {
         preview.width = Math.max(1, Math.round(source.naturalWidth * scale));
         preview.height = Math.max(1, Math.round(source.naturalHeight * scale));
         const context = preview.getContext('2d', { willReadFrequently: true });
-        if (!context) return;
+
+        if (!context) {
+return;
+}
+
         context.clearRect(0, 0, preview.width, preview.height);
         context.drawImage(source, 0, 0, preview.width, preview.height);
     } catch {
@@ -446,12 +537,20 @@ async function drawBackgroundPreview(): Promise<void> {
 
 function pickBackgroundColor(event: MouseEvent): void {
     const preview = backgroundPreviewCanvas.value;
-    if (!preview) return;
+
+    if (!preview) {
+return;
+}
+
     const rect = preview.getBoundingClientRect();
     const x = Math.max(0, Math.min(preview.width - 1, Math.floor((event.clientX - rect.left) * preview.width / rect.width)));
     const y = Math.max(0, Math.min(preview.height - 1, Math.floor((event.clientY - rect.top) * preview.height / rect.height)));
     const pixel = preview.getContext('2d', { willReadFrequently: true })?.getImageData(x, y, 1, 1).data;
-    if (!pixel) return;
+
+    if (!pixel) {
+return;
+}
+
     backgroundColor.value = rgbToHex(pixel[0], pixel[1], pixel[2]);
     backgroundStatus.value = 'Background color selected';
 }
@@ -467,7 +566,11 @@ async function createTransparentBackgroundBlob(image: FabricImage): Promise<Blob
     output.width = width;
     output.height = height;
     const context = output.getContext('2d', { willReadFrequently: true });
-    if (!context) throw new Error('Image processing is unavailable in this browser.');
+
+    if (!context) {
+throw new Error('Image processing is unavailable in this browser.');
+}
+
     context.drawImage(source, 0, 0, width, height);
     const pixels = context.getImageData(0, 0, width, height);
     const [targetRed, targetGreen, targetBlue] = hexToRgb(backgroundColor.value);
@@ -480,15 +583,21 @@ async function createTransparentBackgroundBlob(image: FabricImage): Promise<Blob
         const green = pixels.data[offset + 1];
         const blue = pixels.data[offset + 2];
         const distance = Math.sqrt(((red - targetRed) ** 2) + ((green - targetGreen) ** 2) + ((blue - targetBlue) ** 2));
+
         if (distance <= tolerance) {
             pixels.data[offset + 3] = 0;
         } else if (feather > 0 && distance < featherEnd) {
             pixels.data[offset + 3] = Math.round(pixels.data[offset + 3] * ((distance - tolerance) / feather));
         }
     }
+
     context.putImageData(pixels, 0, 0);
     const blob = await new Promise<Blob | null>(resolve => output.toBlob(resolve, 'image/png'));
-    if (!blob) throw new Error('The transparent PNG could not be created.');
+
+    if (!blob) {
+throw new Error('The transparent PNG could not be created.');
+}
+
     return blob;
 }
 
@@ -514,12 +623,18 @@ async function setImageSourcePreservingLayout(image: FabricImage, src: string): 
 async function previewBackgroundRemoval(): Promise<void> {
     const image = selected.value;
     const preview = backgroundPreviewCanvas.value;
-    if (!(image instanceof FabricImage) || !preview || backgroundBusy.value) return;
+
+    if (!(image instanceof FabricImage) || !preview || backgroundBusy.value) {
+return;
+}
+
     backgroundBusy.value = true;
     backgroundStatus.value = 'Preparing preview…';
+
     try {
         const blob = await createTransparentBackgroundBlob(image);
         const url = URL.createObjectURL(blob);
+
         try {
             const processed = await loadHtmlImage(url);
             const maxWidth = 260;
@@ -533,6 +648,7 @@ async function previewBackgroundRemoval(): Promise<void> {
         } finally {
             URL.revokeObjectURL(url);
         }
+
         backgroundStatus.value = 'Preview shown — apply it to save';
     } catch (error) {
         backgroundStatus.value = '';
@@ -544,9 +660,14 @@ async function previewBackgroundRemoval(): Promise<void> {
 
 async function applyBackgroundRemoval(): Promise<void> {
     const image = selected.value;
-    if (!(image instanceof FabricImage) || backgroundBusy.value) return;
+
+    if (!(image instanceof FabricImage) || backgroundBusy.value) {
+return;
+}
+
     backgroundBusy.value = true;
     backgroundStatus.value = 'Removing background…';
+
     try {
         const originalSrc = image.get('originalSrc') || imageSource(image);
         const originalUploadUuid = image.get('originalUploadUuid') || image.get('uploadUuid');
@@ -560,7 +681,11 @@ async function applyBackgroundRemoval(): Promise<void> {
             headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
             body: form,
         });
-        if (!response.ok) throw new Error('The transparent image could not be saved.');
+
+        if (!response.ok) {
+throw new Error('The transparent image could not be saved.');
+}
+
         const uploaded = await response.json() as { url: string; uuid: string; name: string };
         image.set({
             originalSrc,
@@ -586,10 +711,19 @@ async function applyBackgroundRemoval(): Promise<void> {
 
 async function restoreOriginalImage(): Promise<void> {
     const image = selected.value;
-    if (!(image instanceof FabricImage) || backgroundBusy.value) return;
+
+    if (!(image instanceof FabricImage) || backgroundBusy.value) {
+return;
+}
+
     const originalSrc = image.get('originalSrc');
-    if (typeof originalSrc !== 'string' || !originalSrc) return;
+
+    if (typeof originalSrc !== 'string' || !originalSrc) {
+return;
+}
+
     backgroundBusy.value = true;
+
     try {
         await setImageSourcePreservingLayout(image, originalSrc);
         image.set({
@@ -607,17 +741,28 @@ async function restoreOriginalImage(): Promise<void> {
 }
 
 async function loadLibrary(): Promise<void> {
-    if (libraryLoading.value) return;
+    if (libraryLoading.value) {
+return;
+}
+
     libraryLoading.value = true;
     libraryError.value = '';
+
     try {
         const url = new URL(props.project.library_url, window.location.origin);
-        if (librarySearch.value.trim()) url.searchParams.set('search', librarySearch.value.trim());
+
+        if (librarySearch.value.trim()) {
+url.searchParams.set('search', librarySearch.value.trim());
+}
+
         const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+
         if (!response.ok) {
             const payload = await response.json().catch(() => null) as { message?: string } | null;
+
             throw new Error(payload?.message ?? 'Your licensed image library could not be loaded.');
         }
+
         const payload = await response.json() as { items: LibraryItem[] };
         libraryItems.value = payload.items;
     } catch (error) {
@@ -633,18 +778,26 @@ function openLibrary(): void {
 }
 
 function closeLibrary(): void {
-    if (libraryAdding.value !== null) return;
+    if (libraryAdding.value !== null) {
+return;
+}
+
     libraryOpen.value = false;
 }
 
 async function addLibraryImage(item: LibraryItem): Promise<void> {
-    if (!canvas || libraryAdding.value !== null) return;
+    if (!canvas || libraryAdding.value !== null) {
+return;
+}
+
     if (canvas.getObjects().length >= props.limits.max_layer_count) {
         alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+
         return;
     }
 
     libraryAdding.value = item.license_id;
+
     try {
         const image = await FabricImage.fromURL(item.image_url, { crossOrigin: 'anonymous' });
         const maxWidth = canvasWidth.value * 0.5;
@@ -675,14 +828,20 @@ async function addLibraryImage(item: LibraryItem): Promise<void> {
 async function upload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file || !canvas) return;
+
+    if (!file || !canvas) {
+return;
+}
+
     if (canvas.getObjects().length >= props.limits.max_layer_count) {
         alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
         input.value = '';
+
         return;
     }
 
     uploading.value = true;
+
     try {
         const form = new FormData();
         form.append('image', file);
@@ -692,10 +851,13 @@ async function upload(event: Event): Promise<void> {
             headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
             body: form,
         });
+
         if (!response.ok) {
             const payload = await response.json().catch(() => null) as { message?: string } | null;
+
             throw new Error(payload?.message ?? 'The image could not be uploaded.');
         }
+
         const data = await response.json() as { url: string; uuid: string; name: string };
         const image = await FabricImage.fromURL(data.url, { crossOrigin: 'anonymous' });
         const maxWidth = canvasWidth.value * 0.45;
@@ -721,10 +883,17 @@ async function upload(event: Event): Promise<void> {
 }
 
 function removeSelected(): void {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     const activeObjects = canvas.getActiveObjects();
     const objects = activeObjects.length ? activeObjects : (selected.value ? [selected.value] : []);
-    if (!objects.length) return;
+
+    if (!objects.length) {
+return;
+}
+
     canvas.discardActiveObject();
     objects.forEach(object => canvas?.remove(object));
     selected.value = null;
@@ -734,7 +903,10 @@ function removeSelected(): void {
 }
 
 function duplicateSelected(): void {
-    if (!canvas || !selected.value || canvas.getObjects().length >= props.limits.max_layer_count) return;
+    if (!canvas || !selected.value || canvas.getObjects().length >= props.limits.max_layer_count) {
+return;
+}
+
     selected.value.clone().then((copy: FabricObject) => {
         copy.set({
             left: (selected.value?.left ?? 0) + 30,
@@ -751,7 +923,10 @@ function duplicateSelected(): void {
 }
 
 function finishLayerMove(object: FabricObject, moved: boolean): void {
-    if (!canvas || !moved) return;
+    if (!canvas || !moved) {
+return;
+}
+
     canvas.setActiveObject(object);
     selectObject(object);
     layerVersion.value++;
@@ -760,7 +935,10 @@ function finishLayerMove(object: FabricObject, moved: boolean): void {
 }
 
 function moveLayer(direction: 'forward' | 'backward'): void {
-    if (!canvas || !selected.value) return;
+    if (!canvas || !selected.value) {
+return;
+}
+
     const object = selected.value;
     const moved = direction === 'forward'
         ? canvas.bringObjectForward(object)
@@ -769,7 +947,10 @@ function moveLayer(direction: 'forward' | 'backward'): void {
 }
 
 function moveLayerToEdge(direction: 'front' | 'back'): void {
-    if (!canvas || !selected.value) return;
+    if (!canvas || !selected.value) {
+return;
+}
+
     const object = selected.value;
     const moved = direction === 'front'
         ? canvas.bringObjectToFront(object)
@@ -778,7 +959,10 @@ function moveLayerToEdge(direction: 'front' | 'back'): void {
 }
 
 function moveSpecificLayer(object: FabricObject, direction: 'forward' | 'backward'): void {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     canvas.setActiveObject(object);
     selectObject(object);
     const moved = direction === 'forward'
@@ -788,7 +972,10 @@ function moveSpecificLayer(object: FabricObject, direction: 'forward' | 'backwar
 }
 
 function toggleLock(): void {
-    if (!selected.value || !canvas) return;
+    if (!selected.value || !canvas) {
+return;
+}
+
     const lock = !selected.value.lockMovementX;
     selected.value.set({
         lockMovementX: lock,
@@ -804,19 +991,25 @@ function toggleLock(): void {
 }
 
 function flipSelected(axis: 'horizontal' | 'vertical'): void {
-    if (!selected.value || !canvas) return;
+    if (!selected.value || !canvas) {
+return;
+}
+
     if (axis === 'horizontal') {
         selected.value.set('flipX', !selected.value.flipX);
     } else {
         selected.value.set('flipY', !selected.value.flipY);
     }
+
     selected.value.setCoords();
     canvas.requestRenderAll();
     pushHistory();
 }
 
 async function updateSelectedFont(fontFamily: string): Promise<void> {
-    if (!selected.value || !canvas) return;
+    if (!selected.value || !canvas) {
+return;
+}
 
     if ('fonts' in document) {
         try {
@@ -833,7 +1026,10 @@ async function updateSelectedFont(fontFamily: string): Promise<void> {
 }
 
 function updateSelected(property: string, value: unknown): void {
-    if (!selected.value || !canvas) return;
+    if (!selected.value || !canvas) {
+return;
+}
+
     selected.value.set(property as never, value as never);
     selected.value.setCoords();
     canvas.requestRenderAll();
@@ -852,7 +1048,10 @@ function clearGuides(): void {
 }
 
 function snapObject(object: FabricObject): void {
-    if (!canvas || !snapEnabled.value || object.lockMovementX) return;
+    if (!canvas || !snapEnabled.value || object.lockMovementX) {
+return;
+}
+
     const threshold = Math.max(4, 10 / zoom.value);
     const rect = object.getBoundingRect();
     const currentCanvasWidth = canvasWidth.value;
@@ -875,8 +1074,12 @@ function snapObject(object: FabricObject): void {
                 break;
             }
         }
-        if (xGuide !== null) break;
+
+        if (xGuide !== null) {
+break;
+}
     }
+
     for (const target of yTargets) {
         for (const point of objectY) {
             if (Math.abs(target - point) <= threshold) {
@@ -885,7 +1088,10 @@ function snapObject(object: FabricObject): void {
                 break;
             }
         }
-        if (yGuide !== null) break;
+
+        if (yGuide !== null) {
+break;
+}
     }
 
     if (dx || dy) {
@@ -895,43 +1101,61 @@ function snapObject(object: FabricObject): void {
         });
         object.setCoords();
     }
+
     verticalGuides.value = xGuide === null ? [] : [xGuide];
     horizontalGuides.value = yGuide === null ? [] : [yGuide];
 }
 
 function renderGuides(): void {
-    if (!canvas || (!verticalGuides.value.length && !horizontalGuides.value.length)) return;
+    if (!canvas || (!verticalGuides.value.length && !horizontalGuides.value.length)) {
+return;
+}
+
     const context = canvas.getContext();
     context.save();
     context.strokeStyle = '#38bdf8';
     context.lineWidth = 2;
     context.setLineDash([10, 8]);
+
     for (const x of verticalGuides.value) {
         context.beginPath();
         context.moveTo(x, 0);
         context.lineTo(x, canvasHeight.value);
         context.stroke();
     }
+
     for (const y of horizontalGuides.value) {
         context.beginPath();
         context.moveTo(0, y);
         context.lineTo(canvasWidth.value, y);
         context.stroke();
     }
+
     context.restore();
 }
 
 function normalizeFormat(value: string): 'jpeg' | 'png' | 'webp' {
     const lowered = value.toLowerCase();
-    if (lowered === 'jpg') return 'jpeg';
-    if (lowered === 'png') return 'png';
-    if (lowered === 'webp') return 'webp';
+
+    if (lowered === 'jpg') {
+return 'jpeg';
+}
+
+    if (lowered === 'png') {
+return 'png';
+}
+
+    if (lowered === 'webp') {
+return 'webp';
+}
+
     return 'jpeg';
 }
 
 function validateRequestedSize(width: number, height: number, mode: 'browser' | 'server'): boolean {
     if (!Number.isFinite(width) || !Number.isFinite(height) || width < 320 || height < 320) {
         alert('Please enter a valid width and height of at least 320 pixels.');
+
         return false;
     }
 
@@ -941,12 +1165,16 @@ function validateRequestedSize(width: number, height: number, mode: 'browser' | 
 
     if (width > maxWidth || height > maxHeight) {
         alert(`The requested ${mode} export exceeds the maximum allowed size of ${maxWidth}×${maxHeight}.`);
+
         return false;
     }
+
     if ((width * height) > maxPixels) {
         alert(`The requested ${mode} export exceeds the maximum allowed pixel count.`);
+
         return false;
     }
+
     return true;
 }
 
@@ -965,12 +1193,19 @@ function applyCanvasPreset(preset: ExportPreset): void {
 }
 
 async function refitBackground(mode: 'cover' | 'contain'): Promise<void> {
-    if (!canvas || !(canvas.backgroundImage instanceof FabricImage)) return;
+    if (!canvas || !(canvas.backgroundImage instanceof FabricImage)) {
+return;
+}
+
     const background = canvas.backgroundImage;
     const element = background.getElement() as HTMLImageElement;
+
     if (typeof element.decode === 'function') {
-        try { await element.decode(); } catch { /* already usable */ }
+        try {
+ await element.decode(); 
+} catch { /* already usable */ }
     }
+
     const sourceWidth = Math.max(1, element.naturalWidth || element.width || background.width || 1);
     const sourceHeight = Math.max(1, element.naturalHeight || element.height || background.height || 1);
     const scale = mode === 'cover'
@@ -992,7 +1227,10 @@ async function refitBackground(mode: 'cover' | 'contain'): Promise<void> {
 }
 
 async function changeCanvasSize(): Promise<void> {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     const nextWidth = Math.round(Number(pendingCanvasWidth.value));
     const nextHeight = Math.round(Number(pendingCanvasHeight.value));
     const maxWidth = props.limits.max_server_width;
@@ -1000,16 +1238,22 @@ async function changeCanvasSize(): Promise<void> {
     const maxPixels = props.limits.max_server_pixels;
 
     canvasSizeError.value = '';
+
     if (!Number.isFinite(nextWidth) || !Number.isFinite(nextHeight) || nextWidth < 320 || nextHeight < 320) {
         canvasSizeError.value = 'Canvas dimensions must be at least 320×320 pixels.';
+
         return;
     }
+
     if (nextWidth > maxWidth || nextHeight > maxHeight || (nextWidth * nextHeight) > maxPixels) {
         canvasSizeError.value = `Canvas size exceeds the allowed limit of ${maxWidth}×${maxHeight} and ${maxPixels.toLocaleString()} total pixels.`;
+
         return;
     }
+
     if (nextWidth === canvasWidth.value && nextHeight === canvasHeight.value) {
         canvasSizeOpen.value = false;
+
         return;
     }
 
@@ -1017,15 +1261,20 @@ async function changeCanvasSize(): Promise<void> {
     const oldHeight = canvasHeight.value;
     const oldRatio = oldWidth / oldHeight;
     const nextRatio = nextWidth / nextHeight;
+
     if (Math.abs(Math.log(nextRatio / oldRatio)) > 0.35) {
         const proceed = confirm('This changes the canvas aspect ratio significantly. Some layers may need to be repositioned. Continue?');
-        if (!proceed) return;
+
+        if (!proceed) {
+return;
+}
     }
 
     if (canvasResizeBehavior.value === 'scale') {
         const scale = Math.min(nextWidth / oldWidth, nextHeight / oldHeight);
         const offsetX = (nextWidth - (oldWidth * scale)) / 2;
         const offsetY = (nextHeight - (oldHeight * scale)) / 2;
+
         for (const object of canvas.getObjects()) {
             object.set({
                 left: ((object.left ?? 0) * scale) + offsetX,
@@ -1053,9 +1302,18 @@ async function changeCanvasSize(): Promise<void> {
 
 function leaveDesign(event: MouseEvent): void {
     const messages: string[] = [];
-    if (dirty.value) messages.push('You have unsaved changes.');
-    if (hasBlockingOperation.value && processingNotice.value) messages.push(processingNotice.value);
-    if (!messages.length) return;
+
+    if (dirty.value) {
+messages.push('You have unsaved changes.');
+}
+
+    if (hasBlockingOperation.value && processingNotice.value) {
+messages.push(processingNotice.value);
+}
+
+    if (!messages.length) {
+return;
+}
 
     if (!confirm(`${messages.join(' ')} Leave the editor anyway?`)) {
         event.preventDefault();
@@ -1063,7 +1321,10 @@ function leaveDesign(event: MouseEvent): void {
 }
 
 function beforeUnload(event: BeforeUnloadEvent): void {
-    if (!dirty.value && !hasBlockingOperation.value) return;
+    if (!dirty.value && !hasBlockingOperation.value) {
+return;
+}
+
     event.preventDefault();
     event.returnValue = '';
 }
@@ -1078,10 +1339,16 @@ function downloadWithoutLeavingEditor(url: string): void {
 }
 
 async function exportDesign(width: number, height: number, name: string): Promise<void> {
-    if (!canvas || exporting.value) return;
-    if (!validateRequestedSize(width, height, 'browser')) return;
+    if (!canvas || exporting.value) {
+return;
+}
+
+    if (!validateRequestedSize(width, height, 'browser')) {
+return;
+}
 
     exporting.value = true;
+
     try {
         canvas.discardActiveObject();
         canvas.requestRenderAll();
@@ -1091,11 +1358,16 @@ async function exportDesign(width: number, height: number, name: string): Promis
         output.width = width;
         output.height = height;
         const context = output.getContext('2d');
-        if (!context) throw new Error('Canvas export is unavailable.');
+
+        if (!context) {
+throw new Error('Canvas export is unavailable.');
+}
+
         if (exportFormat.value === 'jpeg') {
             context.fillStyle = '#ffffff';
             context.fillRect(0, 0, width, height);
         }
+
         const scale = exportFit.value === 'cover'
             ? Math.max(width / source.width, height / source.height)
             : Math.min(width / source.width, height / source.height);
@@ -1104,7 +1376,10 @@ async function exportDesign(width: number, height: number, name: string): Promis
         context.drawImage(source, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
         const mime = exportFormat.value === 'jpeg' ? 'image/jpeg' : `image/${exportFormat.value}`;
         const blob = await new Promise<Blob | null>(resolve => output.toBlob(resolve, mime, 0.92));
-        if (!blob) throw new Error('The browser could not create the download.');
+
+        if (!blob) {
+throw new Error('The browser could not create the download.');
+}
 
         exportStatus.value = 'Saving export…';
         const form = new FormData();
@@ -1121,13 +1396,17 @@ async function exportDesign(width: number, height: number, name: string): Promis
             headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
             body: form,
         });
+
         if (!response.ok) {
             const payload = await response.json().catch(() => null) as { message?: string } | null;
+
             throw new Error(payload?.message ?? 'The completed export could not be saved.');
         }
+
         const record = await response.json() as ExportRecord;
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         exportStatus.value = 'Export saved';
+
         if (record.download_url) {
             downloadWithoutLeavingEditor(record.download_url);
         }
@@ -1136,13 +1415,20 @@ async function exportDesign(width: number, height: number, name: string): Promis
         alert(error instanceof Error ? error.message : 'The design could not be exported.');
     } finally {
         exporting.value = false;
-        window.setTimeout(() => { exportStatus.value = ''; }, 2200);
+        window.setTimeout(() => {
+ exportStatus.value = ''; 
+}, 2200);
     }
 }
 
 async function queueServerExport(width: number, height: number, name: string, format: 'jpeg' | 'png' | 'webp' = exportFormat.value, fitMode: 'contain' | 'cover' = exportFit.value): Promise<void> {
-    if (!canvas || exporting.value) return;
-    if (!validateRequestedSize(width, height, 'server')) return;
+    if (!canvas || exporting.value) {
+return;
+}
+
+    if (!validateRequestedSize(width, height, 'server')) {
+return;
+}
 
     exporting.value = true;
     exportStatus.value = 'Preparing full-resolution overlay…';
@@ -1159,7 +1445,11 @@ async function queueServerExport(width: number, height: number, name: string, fo
         overlay.width = width;
         overlay.height = height;
         const context = overlay.getContext('2d');
-        if (!context) throw new Error('Canvas rendering is unavailable.');
+
+        if (!context) {
+throw new Error('Canvas rendering is unavailable.');
+}
+
         const scale = fitMode === 'cover'
             ? Math.max(width / source.width, height / source.height)
             : Math.min(width / source.width, height / source.height);
@@ -1171,7 +1461,10 @@ async function queueServerExport(width: number, height: number, name: string, fo
         canvas.requestRenderAll();
 
         const overlayBlob = await new Promise<Blob | null>(resolve => overlay.toBlob(resolve, 'image/png'));
-        if (!overlayBlob) throw new Error('The editor could not prepare the server-render overlay.');
+
+        if (!overlayBlob) {
+throw new Error('The editor could not prepare the server-render overlay.');
+}
 
         exportStatus.value = 'Queueing full-resolution render…';
         const form = new FormData();
@@ -1188,10 +1481,13 @@ async function queueServerExport(width: number, height: number, name: string, fo
             headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' },
             body: form,
         });
+
         if (!response.ok) {
             const payload = await response.json().catch(() => null) as { message?: string } | null;
+
             throw new Error(payload?.message ?? 'The server render could not be queued.');
         }
+
         const record = await response.json() as ExportRecord;
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         await pollServerExport(record);
@@ -1209,20 +1505,35 @@ async function pollServerExport(record: ExportRecord): Promise<void> {
         for (let attempt = 0; attempt < 120; attempt++) {
             await new Promise(resolve => window.setTimeout(resolve, 2500));
             const response = await fetch(record.status_url, { headers: { Accept: 'application/json' } });
-            if (!response.ok) continue;
+
+            if (!response.ok) {
+continue;
+}
+
             const current = await response.json() as ExportRecord;
             recentExports.value = recentExports.value.map(item => item.uuid === current.uuid ? current : item);
+
             if (current.status === 'completed') {
                 exportStatus.value = 'Full-resolution export ready';
-                if (current.download_url) downloadWithoutLeavingEditor(current.download_url);
-                window.setTimeout(() => { exportStatus.value = ''; }, 3000);
+
+                if (current.download_url) {
+downloadWithoutLeavingEditor(current.download_url);
+}
+
+                window.setTimeout(() => {
+ exportStatus.value = ''; 
+}, 3000);
+
                 return;
             }
+
             if (current.status === 'failed') {
                 exportStatus.value = 'Server render failed';
+
                 return;
             }
         }
+
         exportStatus.value = 'Render is still processing. It will remain in Recent exports.';
     } finally {
         exporting.value = false;
@@ -1236,19 +1547,33 @@ async function retryServerExport(record: ExportRecord): Promise<void> {
 }
 
 function deleteExport(record: ExportRecord): void {
-    if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) return;
+    if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) {
+return;
+}
+
     router.delete(record.delete_url, {
         preserveScroll: true,
-        onSuccess: () => { recentExports.value = recentExports.value.filter(item => item.uuid !== record.uuid); },
+        onSuccess: () => {
+ recentExports.value = recentExports.value.filter(item => item.uuid !== record.uuid); 
+},
     });
 }
 
 function keyboard(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+return;
+}
+
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
-        event.shiftKey ? redo() : undo();
+
+        if (event.shiftKey) {
+            redo();
+        } else {
+            undo();
+        }
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
         event.preventDefault();
         save();
@@ -1260,7 +1585,10 @@ function keyboard(event: KeyboardEvent): void {
 
 onMounted(async () => {
     await nextTick();
-    if (!canvasElement.value) return;
+
+    if (!canvasElement.value) {
+return;
+}
 
     await ensureStudioFontsLoaded();
     canvas = new Canvas(canvasElement.value, {
@@ -1273,6 +1601,7 @@ onMounted(async () => {
     canvas.backgroundColor = '#ffffff';
 
     const saved = props.project.design_json?.fabric;
+
     if (saved) {
         await canvas.loadFromJSON(saved);
     } else if (Array.isArray(props.project.design_json?.objects)) {
@@ -1294,6 +1623,7 @@ onMounted(async () => {
             }
         }
     }
+
     canvas.set('backgroundColor', '#ffffff');
 
     canvas.getObjects().forEach((object, index) => ensureLayerMetadata(object, index));
@@ -1301,9 +1631,13 @@ onMounted(async () => {
     if (props.project.source_url) {
         const background = await FabricImage.fromURL(props.project.source_url, { crossOrigin: 'anonymous' });
         const element = background.getElement() as HTMLImageElement;
+
         if (typeof element.decode === 'function') {
-            try { await element.decode(); } catch { /* noop */ }
+            try {
+ await element.decode(); 
+} catch { /* noop */ }
         }
+
         const sourceWidth = Math.max(1, element.naturalWidth || element.width || background.width || 1);
         const sourceHeight = Math.max(1, element.naturalHeight || element.height || background.height || 1);
         const scale = canvasBackgroundFit.value === 'cover'
@@ -1338,13 +1672,24 @@ onMounted(async () => {
     canvas.on('selection:created', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:updated', event => selectObject(event.selected?.[0] ?? null));
     canvas.on('selection:cleared', () => selectObject(null));
-    canvas.on('object:moving', event => { if (event.target) snapObject(event.target); });
-    canvas.on('object:modified', () => { clearGuides(); pushHistory(); });
+    canvas.on('object:moving', event => {
+ if (event.target) {
+snapObject(event.target);
+} 
+});
+    canvas.on('object:modified', () => {
+ clearGuides(); pushHistory(); 
+});
     canvas.on('object:added', event => {
-        if (event.target) ensureLayerMetadata(event.target, canvas?.getObjects().length ?? 0);
+        if (event.target) {
+ensureLayerMetadata(event.target, canvas?.getObjects().length ?? 0);
+}
+
         layerVersion.value++;
     });
-    canvas.on('object:removed', () => { layerVersion.value++; });
+    canvas.on('object:removed', () => {
+ layerVersion.value++; 
+});
     canvas.on('mouse:up', clearGuides);
     canvas.on('after:render', renderGuides);
     canvas.on('text:changed', () => {
@@ -1360,7 +1705,10 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-    if (autosaveTimer) clearTimeout(autosaveTimer);
+    if (autosaveTimer) {
+clearTimeout(autosaveTimer);
+}
+
     window.removeEventListener('keydown', keyboard);
     window.removeEventListener('beforeunload', beforeUnload);
     window.removeEventListener('resize', measureWorkspace);
@@ -1373,7 +1721,10 @@ watch(title, () => {
 });
 
 watch(stageDimensions, dimensions => {
-    if (!canvas) return;
+    if (!canvas) {
+return;
+}
+
     canvas.setDimensions(dimensions, { cssOnly: true });
 });
 </script>

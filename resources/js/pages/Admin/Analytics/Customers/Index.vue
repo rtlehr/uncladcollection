@@ -2,11 +2,11 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Download, ShoppingCart, UserRoundCheck, UserRoundPlus, Users } from '@lucide/vue';
 import { reactive } from 'vue';
-import MetricCard from '@/Components/Shared/MetricCard.vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
-import ShowSection from '@/Components/Show/ShowSection.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
+import MetricCard from '@/Components/Shared/MetricCard.vue';
+import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

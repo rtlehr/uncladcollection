@@ -34,7 +34,9 @@ const showSuggestions = computed(() => focused.value && (loading.value || liveSu
 const activeDescendant = computed(() => activeIndex.value >= 0 ? `${listboxId}-option-${activeIndex.value}` : undefined);
 
 watch(() => props.suggestions, (value) => {
-    if (! focused.value) liveSuggestions.value = value;
+    if (! focused.value) {
+liveSuggestions.value = value;
+}
 });
 
 watch(model, () => {
@@ -43,13 +45,22 @@ watch(model, () => {
 });
 
 onBeforeUnmount(() => {
-    if (timer) clearTimeout(timer);
+    if (timer) {
+clearTimeout(timer);
+}
+
     controller?.abort();
 });
 
 function scheduleSuggestions(): void {
-    if (! focused.value) return;
-    if (timer) clearTimeout(timer);
+    if (! focused.value) {
+return;
+}
+
+    if (timer) {
+clearTimeout(timer);
+}
+
     timer = setTimeout(loadSuggestions, 250);
 }
 
@@ -60,17 +71,27 @@ async function loadSuggestions(): Promise<void> {
 
     try {
         const url = new URL(props.suggestionEndpoint, window.location.origin);
-        if (model.value.trim()) url.searchParams.set('q', model.value.trim());
+
+        if (model.value.trim()) {
+url.searchParams.set('q', model.value.trim());
+}
+
         const response = await fetch(url.toString(), {
             headers: { Accept: 'application/json' },
             signal: controller.signal,
             credentials: 'same-origin',
         });
-        if (! response.ok) throw new Error('Suggestion request failed');
+
+        if (! response.ok) {
+throw new Error('Suggestion request failed');
+}
+
         const payload = await response.json() as { suggestions?: PublicSearchSuggestion[] };
         liveSuggestions.value = payload.suggestions ?? [];
     } catch (error) {
-        if ((error as Error).name !== 'AbortError') liveSuggestions.value = props.suggestions;
+        if ((error as Error).name !== 'AbortError') {
+liveSuggestions.value = props.suggestions;
+}
     } finally {
         loading.value = false;
     }
@@ -84,7 +105,10 @@ function selectSuggestion(suggestion: PublicSearchSuggestion): void {
 }
 
 function moveActive(direction: 1 | -1): void {
-    if (! liveSuggestions.value.length) return;
+    if (! liveSuggestions.value.length) {
+return;
+}
+
     const next = activeIndex.value + direction;
     activeIndex.value = next < 0 ? liveSuggestions.value.length - 1 : next % liveSuggestions.value.length;
 }
@@ -92,8 +116,10 @@ function moveActive(direction: 1 | -1): void {
 function submitOrSelect(): void {
     if (activeIndex.value >= 0 && liveSuggestions.value[activeIndex.value]) {
         selectSuggestion(liveSuggestions.value[activeIndex.value]);
+
         return;
     }
+
     focused.value = false;
     emit('search');
 }

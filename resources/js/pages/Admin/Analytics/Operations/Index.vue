@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { AlertTriangle, BadgeDollarSign, CheckCircle2, Clock3, PackageCheck, ShoppingCart } from '@lucide/vue';
+import { AlertTriangle, BadgeDollarSign, CheckCircle2, Clock3, ShoppingCart } from '@lucide/vue';
 import { reactive } from 'vue';
+import AnalyticsEmptyState from '@/components/Analytics/AnalyticsEmptyState.vue';
 import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
-import AnalyticsEmptyState from '@/components/Analytics/AnalyticsEmptyState.vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';

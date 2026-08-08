@@ -33,6 +33,7 @@ function confirmDelete() {
     deletion.runDelete((permission, finish) => {
         if (permission.is_locked) {
             finish();
+
             return;
         }
 

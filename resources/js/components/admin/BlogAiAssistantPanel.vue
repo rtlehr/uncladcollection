@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Ban, Check, Copy, LoaderCircle, Sparkles, WandSparkles } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 
@@ -104,7 +104,9 @@ function toggleGeneratedTag(tag: string): void {
 }
 
 function updateLocalGeneratedTags(tagsToRemove: string[]): void {
-    if (!result.value) return;
+    if (!result.value) {
+return;
+}
 
     const normalized = new Set(tagsToRemove.map((tag) => tag.toLocaleLowerCase()));
     result.value.generated_tags = result.value.generated_tags.filter(
@@ -127,7 +129,9 @@ function updateLocalGeneratedTags(tagsToRemove: string[]): void {
 }
 
 function excludeGeneratedTag(tag: string): void {
-    if (excludingTags.value.includes(tag)) return;
+    if (excludingTags.value.includes(tag)) {
+return;
+}
 
     updateLocalGeneratedTags([tag]);
     excludingTags.value = [...excludingTags.value, tag];
@@ -140,6 +144,7 @@ function excludeGeneratedTag(tag: string): void {
         preserveState: true,
         onError: () => {
             locallyExcludedTags.value = locallyExcludedTags.value.filter((item) => item !== tag);
+
             if (result.value && !result.value.generated_tags.includes(tag)) {
                 result.value.generated_tags = [...result.value.generated_tags, tag];
             }
@@ -152,7 +157,10 @@ function excludeGeneratedTag(tag: string): void {
 
 function excludeUncheckedGeneratedTags(): void {
     const tags = [...uncheckedGeneratedTags.value];
-    if (!tags.length) return;
+
+    if (!tags.length) {
+return;
+}
 
     updateLocalGeneratedTags(tags);
     excludingTags.value = Array.from(new Set([...excludingTags.value, ...tags]));
@@ -164,6 +172,7 @@ function excludeUncheckedGeneratedTags(): void {
         preserveState: true,
         onError: () => {
             locallyExcludedTags.value = locallyExcludedTags.value.filter((item) => !tags.includes(item));
+
             if (result.value) {
                 result.value.generated_tags = Array.from(new Set([...result.value.generated_tags, ...tags]));
             }
@@ -177,7 +186,9 @@ function excludeUncheckedGeneratedTags(): void {
 function normalizedScore(value: number | undefined): number {
     const numeric = Number(value ?? 0);
 
-    if (!Number.isFinite(numeric)) return 0;
+    if (!Number.isFinite(numeric)) {
+return 0;
+}
 
     const percentage = numeric > 0 && numeric <= 10 ? numeric * 10 : numeric;
 
@@ -187,9 +198,17 @@ function normalizedScore(value: number | undefined): number {
 function readabilityLevel(score: number | undefined, suppliedLevel?: string): string {
     const normalized = normalizedScore(score);
 
-    if (normalized >= 85) return 'Excellent';
-    if (normalized >= 70) return 'Good';
-    if (normalized > 0) return 'Needs work';
+    if (normalized >= 85) {
+return 'Excellent';
+}
+
+    if (normalized >= 70) {
+return 'Good';
+}
+
+    if (normalized > 0) {
+return 'Needs work';
+}
 
     return suppliedLevel || 'Not rated';
 }
@@ -207,7 +226,10 @@ function currentSettings(): Record<string, any> {
 
 async function applyGeneratedTags(): Promise<void> {
     const names = [...selectedGeneratedTags.value];
-    if (!names.length) return;
+
+    if (!names.length) {
+return;
+}
 
     applyingTags.value = true;
     error.value = '';
@@ -254,13 +276,17 @@ async function applyGeneratedTags(): Promise<void> {
 }
 
 async function generateDetailedPrompt(imageType: 'header' | 'inline', inlineIndex: number | null = null): Promise<boolean> {
-    if (!result.value) return false;
+    if (!result.value) {
+return false;
+}
 
     const image = imageType === 'header'
         ? result.value.header_image
         : result.value.inline_images?.[inlineIndex ?? 0];
 
-    if (!image) return false;
+    if (!image) {
+return false;
+}
 
     const key = imageType === 'header' ? 'header' : `inline-${inlineIndex ?? 0}`;
     promptLoadingKey.value = key;
@@ -329,18 +355,26 @@ async function generateDetailedPrompt(imageType: 'header' | 'inline', inlineInde
 }
 
 async function generateAllDetailedPrompts(): Promise<void> {
-    if (!result.value || generatingAllPrompts.value) return;
+    if (!result.value || generatingAllPrompts.value) {
+return;
+}
 
     generatingAllPrompts.value = true;
     promptError.value = '';
 
     try {
         const headerSucceeded = await generateDetailedPrompt('header');
-        if (!headerSucceeded) return;
+
+        if (!headerSucceeded) {
+return;
+}
 
         for (let index = 0; index < (result.value.inline_images?.length ?? 0); index += 1) {
             const succeeded = await generateDetailedPrompt('inline', index);
-            if (!succeeded) return;
+
+            if (!succeeded) {
+return;
+}
         }
     } finally {
         generatingAllPrompts.value = false;
@@ -386,6 +420,7 @@ async function analyze(): Promise<void> {
         if (!response.ok) {
             const detail = payload.message
                 ?? (responseText.trim() !== '' ? responseText.slice(0, 500) : `Request failed with HTTP ${response.status}`);
+
             throw new Error(detail);
         }
 
@@ -405,7 +440,10 @@ async function analyze(): Promise<void> {
 }
 
 async function copy(value: string | undefined, key: string): Promise<void> {
-    if (!value) return;
+    if (!value) {
+return;
+}
+
     await navigator.clipboard.writeText(value);
     copiedKey.value = key;
     window.setTimeout(() => (copiedKey.value = ''), 1400);

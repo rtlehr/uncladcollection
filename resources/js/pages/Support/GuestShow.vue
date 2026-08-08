@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import PageHeader from '@/components/Shared/PageHeader.vue';
 import StatusBadge from '@/components/Support/StatusBadge.vue';
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 const props=defineProps<{mode:'guest'|'member';ticket:any;guestToken?:string;attachmentRules:{max_kb:number;extensions:string[]}}>();
 defineOptions({layout:PublicPageLayout});
 const form=useForm({body:'',attachments:[] as File[]});

@@ -4,13 +4,20 @@ export default { layout: PublicBlankLayout };
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { Heart } from '@lucide/vue';
+import { computed } from 'vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
 import type { GalleryAsset, GalleryPaginationLink } from '@/types/gallery';
+
+
+
+
+
+
+
 
 interface Item { id: number; note: string | null; asset: GalleryAsset }
 interface Pagination {

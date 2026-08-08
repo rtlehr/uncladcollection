@@ -83,6 +83,7 @@ function reset(): void {
 
 function submit(): void {
     const options = { preserveScroll: true, onSuccess: reset };
+
     if (editing.value) {
         form.put(`/admin/discovery/collections/${editing.value.id}`, options);
     } else {
@@ -91,7 +92,10 @@ function submit(): void {
 }
 
 function remove(item: Placement): void {
-    if (!confirm(`Remove the ${item.collection.name} placement?`)) return;
+    if (!confirm(`Remove the ${item.collection.name} placement?`)) {
+return;
+}
+
     router.delete(`/admin/discovery/collections/${item.id}`, { preserveScroll: true });
 }
 

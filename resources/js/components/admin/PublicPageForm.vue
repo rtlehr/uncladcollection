@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Plus, Trash2 } from '@lucide/vue';
+import { computed } from 'vue';
 
+import PublicPageHeaderEditor from '@/components/admin/PublicPageHeaderEditor.vue';
+import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 import FormField from '@/Components/Forms/FormField.vue';
 import FormGrid from '@/Components/Forms/FormGrid.vue';
 import FormSection from '@/Components/Forms/FormSection.vue';
-import PublicPageHeaderEditor from '@/components/admin/PublicPageHeaderEditor.vue';
-import RichTextEditor from '@/components/admin/RichTextEditorV2.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';

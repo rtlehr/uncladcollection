@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import {
-    BadgeDollarSign, BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2,
-    Heart, ImageIcon, LayoutGrid, LifeBuoy, Megaphone, ShieldCheck,
-} from '@lucide/vue';
+import { BarChart3, BookOpen, Boxes, Building2, FileText, FolderGit2, ImageIcon, LayoutGrid, LifeBuoy, Megaphone, ShieldCheck } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -20,9 +17,13 @@ const mainNavItems: NavItem[] = [
     { title: 'Admin Command Center', href: '/admin', icon: LayoutGrid },
     { title: 'Public Website', href: '/', icon: ImageIcon },
 ];
-if (authUser?.has_advertiser_portal) mainNavItems.push({ title: 'Advertiser Portal', href: '/advertiser', icon: Building2 });
+
+if (authUser?.has_advertiser_portal) {
+mainNavItems.push({ title: 'Advertiser Portal', href: '/advertiser', icon: Building2 });
+}
 
 const adminDashboardItems: NavItem[] = [];
+
 if (can('view_admin')) {
     adminDashboardItems.push(
         { title: 'Assets Dashboard', href: '/admin/assets-dashboard', icon: Boxes },
@@ -33,6 +34,7 @@ if (can('view_admin')) {
         { title: 'Administration Dashboard', href: '/admin/administration-dashboard', icon: ShieldCheck },
     );
 }
+
 if (can('view_reports')) {
     adminDashboardItems.push({ title: 'Marketplace Intelligence', href: '/admin/analytics', icon: BarChart3 });
 }

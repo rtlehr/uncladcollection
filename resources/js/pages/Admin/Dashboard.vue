@@ -12,8 +12,9 @@ import {
     Users,
 } from '@lucide/vue';
 
+import AdminCommandCenter from '@/components/admin/AdminCommandCenter.vue';
+import type {AdminToolGroup} from '@/components/admin/AdminCommandCenter.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import AdminCommandCenter, { type AdminToolGroup } from '@/components/admin/AdminCommandCenter.vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';

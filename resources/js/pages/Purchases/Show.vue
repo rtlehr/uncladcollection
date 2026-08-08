@@ -2,15 +2,27 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 import AssetHero from '@/components/Assets/AssetHero.vue';
+import PurchaseSummary from '@/components/Purchases/PurchaseSummary.vue';
 import DetailRow from '@/components/Shared/DetailRow.vue';
 import DetailSection from '@/components/Shared/DetailSection.vue';
-import PurchaseSummary from '@/components/Purchases/PurchaseSummary.vue';
 import { Button } from '@/components/ui/button';
 import type { PurchaseDetailRecord, PurchasedIncludedFile } from '@/types/purchase';
 const props=defineProps<{licenseRecord:PurchaseDetailRecord}>();
-function formatBytes(bytes:number|null){if(!bytes)return 'Size unavailable';const u=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);return `${(bytes/Math.pow(1024,i)).toFixed(i?1:0)} ${u[i]}`;}
-function createDesign(){router.post(`/account/licenses/${props.licenseRecord.id}/designs`);}
-function fileSubtitle(file:PurchasedIncludedFile){return [file.extension,file.role?.replaceAll('_',' '),formatBytes(file.size_bytes)].filter(Boolean).join(' · ');}
+function formatBytes(bytes:number|null){
+if(!bytes){
+return 'Size unavailable';
+}
+
+const u=['B','KB','MB','GB'];const i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);
+
+return `${(bytes/Math.pow(1024,i)).toFixed(i?1:0)} ${u[i]}`;
+}
+function createDesign(){
+router.post(`/account/licenses/${props.licenseRecord.id}/designs`);
+}
+function fileSubtitle(file:PurchasedIncludedFile){
+return [file.extension,file.role?.replaceAll('_',' '),formatBytes(file.size_bytes)].filter(Boolean).join(' · ');
+}
 </script>
 <template><Head :title="licenseRecord.product.title"/><AccountPageLayout><template #title>License Details</template><template #description>Review rights, documents, files, and download history.</template><div class="space-y-8">
 <AssetHero :title="licenseRecord.product.title" :collection-name="licenseRecord.product.collection?.name" back-href="/account/library" back-label="Back to My Library"><template #actions><Button v-if="licenseRecord.kind==='asset'&&licenseRecord.status.can_download" @click="createDesign">Customize Image</Button><Button v-if="licenseRecord.download_url&&licenseRecord.can_download" as-child><a :href="licenseRecord.download_url">Download</a></Button><Button v-else disabled variant="secondary">Download Unavailable</Button><Button variant="outline" as-child><Link :href="licenseRecord.product.public_url">View Asset</Link></Button></template></AssetHero>

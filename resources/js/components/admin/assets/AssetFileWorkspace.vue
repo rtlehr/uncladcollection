@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import {
     Archive,
     CheckCircle2,
@@ -16,9 +15,10 @@ import {
     Upload,
     VectorSquare,
 } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import StatusBadge from '@/Components/Shared/StatusBadge.vue';
 import type { AdminAssetFile, SelectOption } from '@/types/adminAsset';
 
 const props = defineProps<{
@@ -62,11 +62,26 @@ function normalizedRole(file: AdminAssetFile): string {
 function fileGroup(file: AdminAssetFile): string {
     const value = normalizedRole(file);
 
-    if (value.includes('preview') || file.is_primary_preview || file.is_poster) return 'presentation';
-    if (value.includes('source') || value.includes('original') || value.includes('master')) return 'source';
-    if (value.includes('video') || file.preview_kind === 'video') return 'video';
-    if (value.includes('archive') || ['zip', 'rar', '7z'].includes(file.extension.toLowerCase())) return 'package';
-    if (file.is_downloadable) return 'deliverable';
+    if (value.includes('preview') || file.is_primary_preview || file.is_poster) {
+return 'presentation';
+}
+
+    if (value.includes('source') || value.includes('original') || value.includes('master')) {
+return 'source';
+}
+
+    if (value.includes('video') || file.preview_kind === 'video') {
+return 'video';
+}
+
+    if (value.includes('archive') || ['zip', 'rar', '7z'].includes(file.extension.toLowerCase())) {
+return 'package';
+}
+
+    if (file.is_downloadable) {
+return 'deliverable';
+}
+
     return 'supporting';
 }
 
@@ -122,7 +137,10 @@ function startDrag(file: AdminAssetFile): void {
 
 function dropAt(file: AdminAssetFile): void {
     const targetIndex = localFiles.value.findIndex((item) => item.id === file.id);
-    if (draggedIndex.value === null || draggedIndex.value === targetIndex) return;
+
+    if (draggedIndex.value === null || draggedIndex.value === targetIndex) {
+return;
+}
 
     const items = [...localFiles.value];
     const [moved] = items.splice(draggedIndex.value, 1);
@@ -154,16 +172,34 @@ function applyActive(value: boolean): void {
 }
 
 function formatBytes(bytes: number | null): string {
-    if (!bytes) return 'Unknown size';
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
-    if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (!bytes) {
+return 'Unknown size';
+}
+
+    if (bytes >= 1024 ** 3) {
+return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
+    if (bytes >= 1024 ** 2) {
+return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+}
+
+    if (bytes >= 1024) {
+return `${(bytes / 1024).toFixed(1)} KB`;
+}
+
     return `${bytes} B`;
 }
 
 function dimensions(file: AdminAssetFile): string | null {
-    if (file.width && file.height) return `${file.width} × ${file.height}`;
-    if (file.duration_seconds) return `${Number(file.duration_seconds).toFixed(1)} sec`;
+    if (file.width && file.height) {
+return `${file.width} × ${file.height}`;
+}
+
+    if (file.duration_seconds) {
+return `${Number(file.duration_seconds).toFixed(1)} sec`;
+}
+
     return null;
 }
 
@@ -177,11 +213,27 @@ function roleLabel(role: string): string {
 
 function iconFor(file: AdminAssetFile) {
     const extension = file.extension.toLowerCase();
-    if (file.preview_kind === 'video' || ['mp4', 'mov', 'webm'].includes(extension)) return Film;
-    if (['eps', 'svg', 'ai'].includes(extension)) return VectorSquare;
-    if (['zip', 'rar', '7z'].includes(extension)) return Archive;
-    if (['pdf', 'doc', 'docx', 'txt'].includes(extension)) return FileText;
-    if (file.preview_kind === 'image' || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'tif', 'tiff'].includes(extension)) return FileImage;
+
+    if (file.preview_kind === 'video' || ['mp4', 'mov', 'webm'].includes(extension)) {
+return Film;
+}
+
+    if (['eps', 'svg', 'ai'].includes(extension)) {
+return VectorSquare;
+}
+
+    if (['zip', 'rar', '7z'].includes(extension)) {
+return Archive;
+}
+
+    if (['pdf', 'doc', 'docx', 'txt'].includes(extension)) {
+return FileText;
+}
+
+    if (file.preview_kind === 'image' || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'tif', 'tiff'].includes(extension)) {
+return FileImage;
+}
+
     return File;
 }
 </script>

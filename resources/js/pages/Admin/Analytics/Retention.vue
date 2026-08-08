@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { BellRing, Download, Heart, RefreshCcw, ShoppingCart, Users } from '@lucide/vue';
+import { BellRing, Download, Heart, RefreshCcw, Users } from '@lucide/vue';
 import { reactive } from 'vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import MetricCard from '@/components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';

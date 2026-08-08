@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import {
     Focus,
     Crop,
@@ -12,6 +11,7 @@ import {
     RotateCw,
     Undo2,
 } from '@lucide/vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -303,6 +303,7 @@ function clampOffsets(): void {
 function beginDrag(event: PointerEvent): void {
     if (focusMode.value) {
         setFocusPoint(event);
+
         return;
     }
 
@@ -418,10 +419,12 @@ function handleKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
         if (focusMode.value) {
             focusMode.value = false;
+
             return;
         }
 
         close();
+
         return;
     }
 
@@ -455,6 +458,7 @@ async function apply(): Promise<void> {
 
     if (!image || !stage || !naturalWidth.value) {
         editorError.value = 'The image has not finished loading yet.';
+
         return;
     }
 

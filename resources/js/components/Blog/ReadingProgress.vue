@@ -12,6 +12,7 @@ function updateProgress(): void {
 
     if (!article) {
         progress.value = 0;
+
         return;
     }
 

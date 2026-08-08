@@ -9,6 +9,10 @@ import { Download, Heart, KeyRound, LibraryBig } from '@lucide/vue';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 
+
+
+
+
 defineProps<{
     summary: { licenses: number; active_licenses: number; favorites: number; downloads_used: number };
     alerts: Array<{ type: string; title: string; message: string; href: string }>;

@@ -3,7 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 import type { Permission } from '@/types/role';
 
-const props = defineProps<{
+defineProps<{
     title: string;
     permissions: Permission[];
     selectedPermissionIds: number[];

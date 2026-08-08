@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
+import TrendChart from '@/components/Analytics/TrendChart.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
-import TrendChart from '@/components/Analytics/TrendChart.vue';
-import { Button } from '@/components/ui/button';
 const props=defineProps<{filters:any;report:any}>();
 const money=(c:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format((c||0)/100);
 const timeline=props.report.timeline.map((p:any)=>({label:p.label,revenue_cents:p.revenue_cents,orders_count:p.orders}));

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Activity, BadgeDollarSign, Download, Eye, KeyRound, PackageCheck, ShoppingCart, TrendingUp, Users } from '@lucide/vue';
+import { Activity, BadgeDollarSign, Download, Eye, PackageCheck, ShoppingCart, TrendingUp, Users } from '@lucide/vue';
 import { computed, reactive } from 'vue';
+import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import DistributionBars from '@/components/Analytics/DistributionBars.vue';
 import TrendChart from '@/components/Analytics/TrendChart.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
-import AnalyticsFilterPanel from '@/components/Analytics/AnalyticsFilterPanel.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,12 +25,20 @@ const wholeMoney = (cents: number) => new Intl.NumberFormat('en-US', { style: 'c
 const dateTime = (value: string | null) => value ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '';
 const trendText = (key: string) => {
     const change = metrics.value[key]?.change_percent;
-    if (change === null || change === undefined) return 'No prior-period baseline';
+
+    if (change === null || change === undefined) {
+return 'No prior-period baseline';
+}
+
     return `${change > 0 ? '+' : ''}${change}% vs prior period`;
 };
 const trendTone = (key: string) => {
     const change = metrics.value[key]?.change_percent;
-    if (change === null || change === 0) return 'neutral';
+
+    if (change === null || change === 0) {
+return 'neutral';
+}
+
     return change > 0 ? 'positive' : 'negative';
 };
 const applyFilters = () => router.get('/admin/analytics', filters, { preserveState: true, replace: true });

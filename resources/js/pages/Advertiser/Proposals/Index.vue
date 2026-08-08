@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import AdvertiserPortalHeader from '@/components/Advertiser/AdvertiserPortalHeader.vue';
-const props = defineProps<{ advertiser:any; membership:any; proposals:any[] }>();
+defineProps<{ advertiser:any; membership:any; proposals:any[] }>();
 const money=(value:number,currency='USD')=>new Intl.NumberFormat('en-US',{style:'currency',currency}).format((value||0)/100);
 const statusClass=(status:string)=>({sent:'bg-blue-100 text-blue-800',accepted:'bg-emerald-100 text-emerald-800',declined:'bg-red-100 text-red-800',expired:'bg-amber-100 text-amber-800',converted:'bg-violet-100 text-violet-800'}[status]||'bg-muted text-muted-foreground');
 </script>

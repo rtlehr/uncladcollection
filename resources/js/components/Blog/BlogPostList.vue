@@ -3,9 +3,9 @@ import { Link } from '@inertiajs/vue3';
 
 import SidebarCard from '@/Components/Shared/SidebarCard.vue';
 
+import { formatDate } from '@/lib/formatDate';
 import type { BlogPost } from '@/types/blog';
 
-import { formatDate } from '@/lib/formatDate';
 
 defineProps<{
     title: string;

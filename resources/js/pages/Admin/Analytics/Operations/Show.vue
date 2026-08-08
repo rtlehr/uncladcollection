@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { AlertTriangle, BadgeDollarSign, Clock3, PackageCheck } from '@lucide/vue';
-import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import AnalyticsEmptyState from '@/components/Analytics/AnalyticsEmptyState.vue';
+import AnalyticsHeader from '@/components/Analytics/AnalyticsHeader.vue';
 import MetricCard from '@/Components/Shared/MetricCard.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
-const props = defineProps<{ filters:any; report:any }>();
+defineProps<{ filters:any; report:any }>();
 const money = (cents:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format((cents||0)/100);
 const date = (value:string|null) => value ? new Intl.DateTimeFormat('en-US',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value)) : '—';
 </script>

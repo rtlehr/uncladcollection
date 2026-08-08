@@ -8,10 +8,10 @@ import {
 
 import PerformanceImage from '@/components/Public/PerformanceImage.vue';
 
-import type { BlogPost } from '@/types/blog';
 import { blogCardImage } from '@/lib/contentImages';
 import { formatDate } from '@/lib/formatDate';
 import { readingTime } from '@/lib/readingTime';
+import type { BlogPost } from '@/types/blog';
 
 withDefaults(
     defineProps<{

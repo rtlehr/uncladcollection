@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import ShowPageHeader from '@/components/Show/ShowPageHeader.vue';
-import ShowSection from '@/components/Show/ShowSection.vue';
 import DetailRow from '@/components/Shared/DetailRow.vue';
 import StatusBadge from '@/components/Shared/StatusBadge.vue';
+import ShowPageHeader from '@/components/Show/ShowPageHeader.vue';
+import ShowSection from '@/components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

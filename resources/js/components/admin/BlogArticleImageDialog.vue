@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { ImagePlus } from '@lucide/vue';
+import { computed, ref } from 'vue';
 
-import ImageEditorDialog, {
-    type ImageEditData,
-} from '@/components/media/ImageEditorDialog.vue';
-import { BLOG_CONTENT_PRESETS } from '@/config/imageEditorPresets';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData} from '@/components/media/ImageEditorDialog.vue';
 import { Button } from '@/components/ui/button';
+import { BLOG_CONTENT_PRESETS } from '@/config/imageEditorPresets';
 import {
-    uploadBlogArticleImage,
-    type UploadedBlogArticleImage,
+    uploadBlogArticleImage
+    
 } from '@/lib/blogArticleImageUpload';
+import type {UploadedBlogArticleImage} from '@/lib/blogArticleImageUpload';
 
-const props = defineProps<{ disabled?: boolean }>();
+defineProps<{ disabled?: boolean }>();
 
 const emit = defineEmits<{
     uploaded: [payload: UploadedBlogArticleImage];
@@ -34,14 +34,18 @@ function choose(): void {
 function selected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
 
-    if (!file) return;
+    if (!file) {
+return;
+}
 
     source.value = file;
     originalName.value = file.name;
     error.value = null;
     editorOpen.value = true;
 
-    if (input.value) input.value.value = '';
+    if (input.value) {
+input.value.value = '';
+}
 }
 
 async function uploadEdited(payload: {

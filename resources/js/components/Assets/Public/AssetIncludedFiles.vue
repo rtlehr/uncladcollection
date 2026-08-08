@@ -5,17 +5,33 @@ import type { PublicAssetFile } from '@/types/publicAsset';
 defineProps<{ files: PublicAssetFile[] }>();
 
 function bytes(value: number | null): string {
-    if (!value) return 'Unknown size';
+    if (!value) {
+return 'Unknown size';
+}
+
     const units = ['B', 'KB', 'MB', 'GB'];
     const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+
     return `${(value / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`;
 }
 
 function iconFor(file: PublicAssetFile) {
-    if (file.media_type === 'video') return Film;
-    if (file.media_type === 'image' || file.media_type === 'vector') return FileImage;
-    if (file.media_type === 'archive') return FileArchive;
-    if (file.media_type === 'document') return FileText;
+    if (file.media_type === 'video') {
+return Film;
+}
+
+    if (file.media_type === 'image' || file.media_type === 'vector') {
+return FileImage;
+}
+
+    if (file.media_type === 'archive') {
+return FileArchive;
+}
+
+    if (file.media_type === 'document') {
+return FileText;
+}
+
     return File;
 }
 </script>

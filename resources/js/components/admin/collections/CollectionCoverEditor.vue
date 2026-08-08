@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue';
 import { ImageIcon, Pencil, Trash2, Upload } from '@lucide/vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
-import ImageEditorDialog, {
-    type ImageEditData,
-} from '@/components/media/ImageEditorDialog.vue';
-import { COLLECTION_COVER_PRESET } from '@/config/imageEditorPresets';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData} from '@/components/media/ImageEditorDialog.vue';
 import { Button } from '@/components/ui/button';
+import { COLLECTION_COVER_PRESET } from '@/config/imageEditorPresets';
 
 const props = withDefaults(
     defineProps<{

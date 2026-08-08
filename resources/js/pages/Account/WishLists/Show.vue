@@ -4,13 +4,20 @@ export default { layout: PublicBlankLayout };
 </script>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, Copy, LockKeyhole, Share2, Trash2 } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import type { GalleryAsset, GalleryPaginationLink } from '@/types/gallery';
+
+
+
+
+
+
+
 
 interface WishListSummary {
     id: number;
@@ -51,7 +58,9 @@ const notificationForm = useForm({
 function update(): void {
     form.patch(`/account/wish-lists/${props.wish_list.id}`, {
         preserveScroll: true,
-        onSuccess: () => { editOpen.value = false; },
+        onSuccess: () => {
+ editOpen.value = false; 
+},
     });
 }
 function updateNotifications(): void {
@@ -61,13 +70,21 @@ function setVisibility(visibility: 'private' | 'unlisted'): void {
     router.patch(`/account/wish-lists/${props.wish_list.id}/sharing`, { visibility }, { preserveScroll: true });
 }
 async function copyShareLink(): Promise<void> {
-    if (!props.wish_list.share_url) return;
+    if (!props.wish_list.share_url) {
+return;
+}
+
     await navigator.clipboard.writeText(props.wish_list.share_url);
     copied.value = true;
-    window.setTimeout(() => { copied.value = false; }, 2000);
+    window.setTimeout(() => {
+ copied.value = false; 
+}, 2000);
 }
 function destroyList(): void {
-    if (props.wish_list.is_default || !window.confirm(`Delete "${props.wish_list.name}"? Assets saved only here will no longer be favorited.`)) return;
+    if (props.wish_list.is_default || !window.confirm(`Delete "${props.wish_list.name}"? Assets saved only here will no longer be favorited.`)) {
+return;
+}
+
     router.delete(`/account/wish-lists/${props.wish_list.id}`);
 }
 </script>

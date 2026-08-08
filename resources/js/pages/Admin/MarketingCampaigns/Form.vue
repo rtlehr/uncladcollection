@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, ref } from 'vue';
 import { ImageIcon, Pencil } from '@lucide/vue';
-import ImageEditorDialog, { type ImageEditData } from '@/components/media/ImageEditorDialog.vue';
-import { MARKETING_HERO_PRESET } from '@/config/imageEditorPresets';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import ImageEditorDialog from '@/components/media/ImageEditorDialog.vue';
+import type {ImageEditData} from '@/components/media/ImageEditorDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MARKETING_HERO_PRESET } from '@/config/imageEditorPresets';
 import type { MarketingCampaign } from '@/types/marketingCampaign';
 
 const props = defineProps<{ campaign?: MarketingCampaign | null }>();
@@ -32,7 +33,11 @@ const form = useForm({
 const editorFilename = computed(() => selectedOriginal.value?.name ?? 'marketing-hero.jpg');
 function chooseMedia(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
+
+    if (!file) {
+return;
+}
+
     if (file.type.startsWith('image/')) {
         selectedOriginal.value = file;
         originalSource.value = file;
@@ -42,7 +47,9 @@ function chooseMedia(e: Event): void {
         form.media = file;
     }
 }
-function choosePoster(e: Event): void { form.poster = (e.target as HTMLInputElement).files?.[0] ?? null; }
+function choosePoster(e: Event): void {
+ form.poster = (e.target as HTMLInputElement).files?.[0] ?? null; 
+}
 function applyEdited(payload: { file: File; edit: ImageEditData; previewUrl: string }): void {
     if (editedPreview.value?.startsWith('blob:')) {
         URL.revokeObjectURL(editedPreview.value);
@@ -85,7 +92,11 @@ function submit(): void {
             preserveScroll: true,
         });
 }
-onBeforeUnmount(() => { if (editedPreview.value?.startsWith('blob:')) URL.revokeObjectURL(editedPreview.value); });
+onBeforeUnmount(() => {
+ if (editedPreview.value?.startsWith('blob:')) {
+URL.revokeObjectURL(editedPreview.value);
+} 
+});
 </script>
 
 <template>

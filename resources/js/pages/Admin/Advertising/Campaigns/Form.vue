@@ -28,6 +28,7 @@ const form = useForm({
 const save = () => {
     if (props.campaign) {
         form.put(`/admin/ad-campaigns/${props.campaign.id}`);
+
         return;
     }
 

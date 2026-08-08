@@ -9,6 +9,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Bell, CheckCheck, Settings } from '@lucide/vue';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 
+
+
+
 interface NotificationItem {
     id: string;
     title: string;

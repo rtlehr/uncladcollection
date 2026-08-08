@@ -30,28 +30,45 @@ const assignmentForm = useForm({ assignments: props.features.map((f) => ({
     fallback_model: f.assignment.fallback_model ?? '', fallback_enabled: Boolean(f.assignment.fallback_enabled),
 }))});
 
-function saveProvider(provider: Provider, index: number) { providerForms[index].put(`/admin/ai-providers/${provider.id}`, { preserveScroll: true }); }
-function createProvider() { createForm.post('/admin/ai-providers', { preserveScroll: true, onSuccess: () => createForm.reset() }); }
+function saveProvider(provider: Provider, index: number) {
+ providerForms[index].put(`/admin/ai-providers/${provider.id}`, { preserveScroll: true }); 
+}
+function createProvider() {
+ createForm.post('/admin/ai-providers', { preserveScroll: true, onSuccess: () => createForm.reset() }); 
+}
 async function testProvider(provider: Provider) {
     testing.value = provider.id;
+
     try {
         const response = await fetch(`/admin/ai-providers/${provider.id}/test`, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' } });
         const result = await response.json();
         alert(result.success ? `Connected using ${result.model}. ${result.duration_ms} ms.` : result.message);
         router.reload({ only: ['providers'] });
-    } finally { testing.value = null; }
+    } finally {
+ testing.value = null; 
+}
 }
 async function loadModels(provider: Provider) {
     loadingModels.value = provider.id;
+
     try {
         const response = await fetch(`/admin/ai-providers/${provider.id}/models`, { headers: { Accept: 'application/json' } });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message ?? 'Could not load models.');
-        models.value[provider.id] = result.models ?? [];
-    } catch (e) { alert(e instanceof Error ? e.message : 'Could not load models.'); }
-    finally { loadingModels.value = null; }
+
+        if (!response.ok) {
+throw new Error(result.message ?? 'Could not load models.');
 }
-function providerById(id: number|null) { return props.providers.find((p) => p.id === Number(id)); }
+
+        models.value[provider.id] = result.models ?? [];
+    } catch (e) {
+ alert(e instanceof Error ? e.message : 'Could not load models.'); 
+} finally {
+ loadingModels.value = null; 
+}
+}
+function providerById(id: number|null) {
+ return props.providers.find((p) => p.id === Number(id)); 
+}
 </script>
 
 <template>

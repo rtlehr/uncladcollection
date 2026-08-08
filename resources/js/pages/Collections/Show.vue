@@ -12,7 +12,6 @@ import {
     computed,
     ref,
 } from 'vue';
-
 import PublicArticleCard from '@/components/Blog/PublicArticleCard.vue';
 import CollectionHero from '@/components/Collections/CollectionHero.vue';
 import CollectionToolbar from '@/components/Collections/CollectionToolbar.vue';
@@ -22,10 +21,9 @@ import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import PublicActiveFilters from '@/components/Public/PublicActiveFilters.vue';
 import PublicPageLayout from '@/components/Public/PublicPageLayout.vue';
+import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
 import PublicSeoHead from '@/components/Public/PublicSeoHead.vue';
 import StructuredData from '@/components/Public/StructuredData.vue';
-import PublicResultSummary from '@/components/Public/PublicResultSummary.vue';
-
 import type {
     CollectionArticle,
     CollectionFilters,
@@ -39,6 +37,24 @@ import type {
     PublicActiveFilter,
     PublicSearchSuggestion,
 } from '@/types/publicSearch';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const props = defineProps<{
     collection: PublicCollection;
@@ -105,8 +121,13 @@ function resetFilters(): void {
 }
 
 function removeFilter(key: string): void {
-    if (key === 'search') search.value = '';
-    if (key === 'sort') sort.value = 'curated';
+    if (key === 'search') {
+search.value = '';
+}
+
+    if (key === 'sort') {
+sort.value = 'curated';
+}
 
     reload();
 }

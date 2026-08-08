@@ -8,6 +8,9 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Eye, Heart, LockKeyhole, Plus, Share2 } from '@lucide/vue';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 
+
+
+
 interface WishListSummary {
     id: number;
     name: string;

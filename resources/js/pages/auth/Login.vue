@@ -10,7 +10,6 @@ export default {
 <script setup lang="ts">
 import { Form, Link } from '@inertiajs/vue3';
 import { ArrowRight, CheckCircle2, LockKeyhole, ShieldCheck } from '@lucide/vue';
-
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -27,6 +26,25 @@ import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 defineProps<{
     status?: string;

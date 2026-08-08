@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { EditorContent, useEditor } from '@tiptap/vue-3';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
+import StarterKit from '@tiptap/starter-kit';
+import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { computed, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
@@ -111,6 +111,7 @@ function toggleCodeView() {
     if (!codeView.value) {
         htmlCode.value = editor.value.getHTML();
         codeView.value = true;
+
         return;
     }
 
@@ -138,6 +139,7 @@ function setLink() {
 
     if (url === '') {
         editor.value.chain().focus().extendMarkRange('link').unsetLink().run();
+
         return;
     }
 
@@ -274,6 +276,7 @@ async function uploadImage() {
 
             if (!response.ok) {
                 alert('Image upload failed.');
+
                 return;
             }
 
@@ -290,7 +293,7 @@ async function uploadImage() {
                 .run();
 
             emitEditorHtml();
-        } catch (error) {
+        } catch {
             alert('Image upload failed.');
         } finally {
             uploadingImage.value = false;

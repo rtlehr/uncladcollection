@@ -7,6 +7,8 @@ export default { layout: PublicBlankLayout };
 import { Head, useForm } from '@inertiajs/vue3';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 
+
+
 interface NotificationCategory {
     key: string;
     label: string;

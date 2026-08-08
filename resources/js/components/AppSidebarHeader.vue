@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
+import { computed } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CartDropdown from '@/components/CartDropdown.vue';
+import PageHelpPanel from '@/components/PageHelp/PageHelpPanel.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 

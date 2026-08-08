@@ -2,9 +2,10 @@
 import { computed } from 'vue';
 
 import {
-    getStatusBadgeConfig,
-    type StatusBadgeTone,
+    getStatusBadgeConfig
+    
 } from '@/lib/statusBadge';
+import type {StatusBadgeTone} from '@/lib/statusBadge';
 
 const props = withDefaults(
     defineProps<{
