@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Advertising\AdvertiserWorkflowService;
+use App\Advertising\AdvertisingRotationStatusService;
 use App\Advertising\AdvertisingWorkflowContextService;
 use App\Http\Controllers\Controller;
-use App\Models\{AdPlacement, AdvertisingCampaign, Advertiser};
+use App\Models\{AdPlacement, AdminActivity, AdvertisingCampaign, AdvertisingInvoice, Advertiser};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\AdminActivityService;
 use Inertia\Inertia;
 
 class AdvertisingCampaignController extends Controller
@@ -44,6 +46,7 @@ class AdvertisingCampaignController extends Controller
         AdvertisingCampaign $adCampaign,
         AdvertisingWorkflowContextService $context,
         AdvertiserWorkflowService $workflow,
+        AdvertisingRotationStatusService $rotationStatus,
     ) {
         $campaign = $adCampaign->load(['advertiser', 'placements', 'creatives.placements', 'approver']);
 
@@ -52,6 +55,9 @@ class AdvertisingCampaignController extends Controller
             'workflowContext' => $context->payload($campaign->advertiser, null, $campaign),
             'nextStep' => $this->nextStep($campaign, $workflow),
             'launchReadiness' => $workflow->launchReadiness($campaign),
+            'progressTimeline' => $this->progressTimeline($campaign, $workflow),
+            'rotationStatus' => $rotationStatus->forCampaign($campaign),
+            'workflowHistory' => $this->workflowHistory($campaign),
         ]);
     }
 
@@ -69,20 +75,24 @@ class AdvertisingCampaignController extends Controller
             ->with('success', 'Advertising campaign updated. Continue with the next workflow step shown below.');
     }
 
-    public function submit(AdvertisingCampaign $adCampaign)
+    public function submit(AdvertisingCampaign $adCampaign, AdminActivityService $activity)
     {
         abort_unless(in_array($adCampaign->status, ['draft', 'rejected'], true), 422);
+        $oldStatus = $adCampaign->status;
         $adCampaign->update(['status' => 'submitted', 'submitted_at' => now(), 'rejection_reason' => null]);
+        $this->logStatusChange($activity, $adCampaign, $oldStatus, 'submitted', 'Campaign submitted for approval.');
 
         return back()->with('success', 'Campaign submitted. Next step: record the approval decision.');
     }
 
-    public function approve(Request $request, AdvertisingCampaign $adCampaign)
+    public function approve(Request $request, AdvertisingCampaign $adCampaign, AdminActivityService $activity)
     {
         $request->validate([
             'decision' => 'required|in:approve,reject',
             'rejection_reason' => 'required_if:decision,reject|nullable|string|max:2000',
         ]);
+
+        $oldStatus = $adCampaign->status;
 
         if ($request->decision === 'approve') {
             $adCampaign->update([
@@ -91,6 +101,7 @@ class AdvertisingCampaignController extends Controller
                 'approved_by' => $request->user()->id,
                 'rejection_reason' => null,
             ]);
+            $this->logStatusChange($activity, $adCampaign, $oldStatus, 'approved', 'Campaign approved.');
             $message = 'Campaign approved. Next step: complete launch-readiness checks and billing.';
         } else {
             $adCampaign->update([
@@ -99,6 +110,7 @@ class AdvertisingCampaignController extends Controller
                 'approved_by' => $request->user()->id,
                 'rejection_reason' => $request->rejection_reason,
             ]);
+            $this->logStatusChange($activity, $adCampaign, $oldStatus, 'rejected', 'Campaign rejected: '.$request->rejection_reason);
             $message = 'Campaign rejected. Correct the campaign and resubmit it for approval.';
         }
 
@@ -112,7 +124,7 @@ class AdvertisingCampaignController extends Controller
      * date that has arrived activates it immediately. Calling this endpoint again
      * for a scheduled campaign on/after its start date activates it.
      */
-    public function launch(AdvertisingCampaign $adCampaign, AdvertiserWorkflowService $workflow)
+    public function launch(AdvertisingCampaign $adCampaign, AdvertiserWorkflowService $workflow, AdminActivityService $activity)
     {
         abort_unless(in_array($adCampaign->status, ['approved', 'scheduled'], true), 422);
 
@@ -131,14 +143,78 @@ class AdvertisingCampaignController extends Controller
             ]);
         }
 
+        $oldStatus = $adCampaign->status;
         $status = $adCampaign->starts_at?->isFuture() ? 'scheduled' : 'active';
         $adCampaign->update(['status' => $status]);
+        $this->logStatusChange(
+            $activity,
+            $adCampaign,
+            $oldStatus,
+            $status,
+            $status === 'scheduled' ? 'Campaign scheduled for launch.' : 'Campaign activated and eligible for delivery.',
+        );
 
         if ($status === 'scheduled') {
             return back()->with('success', 'Campaign scheduled for '.$adCampaign->starts_at->format('M j, Y g:i A').'.');
         }
 
         return back()->with('success', 'Campaign is now active and eligible for ad delivery.');
+    }
+
+
+    public function pause(AdvertisingCampaign $adCampaign, AdminActivityService $activity)
+    {
+        abort_unless($adCampaign->status === 'active', 422);
+
+        $adCampaign->update(['status' => 'paused']);
+        $this->logStatusChange($activity, $adCampaign, 'active', 'paused', 'Campaign delivery paused.');
+
+        return back()->with('success', 'Campaign paused. It is no longer eligible for public ad delivery.');
+    }
+
+    public function resume(AdvertisingCampaign $adCampaign, AdvertiserWorkflowService $workflow, AdminActivityService $activity)
+    {
+        abort_unless($adCampaign->status === 'paused', 422);
+
+        if ($adCampaign->starts_at?->isFuture()) {
+            throw ValidationException::withMessages([
+                'campaign' => 'Campaign cannot resume before its scheduled start time.',
+            ]);
+        }
+
+        if ($adCampaign->ends_at?->isPast()) {
+            throw ValidationException::withMessages([
+                'campaign' => 'Campaign end date has passed. Extend the schedule or complete the campaign.',
+            ]);
+        }
+
+        $readiness = $workflow->launchReadiness($adCampaign);
+        $blockingChecks = collect($readiness['checks'])
+            ->where('required', true)
+            ->where('passed', false)
+            ->reject(fn ($check) => $check['key'] === 'campaign_approved');
+
+        if ($blockingChecks->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'campaign' => 'Campaign cannot resume: '.$blockingChecks->pluck('label')->implode(', ').'.',
+            ]);
+        }
+
+        $adCampaign->update(['status' => 'active']);
+        $this->logStatusChange($activity, $adCampaign, 'paused', 'active', 'Campaign delivery resumed.');
+
+        return back()->with('success', 'Campaign resumed and is eligible for public ad delivery.');
+    }
+
+    public function complete(AdvertisingCampaign $adCampaign, AdminActivityService $activity)
+    {
+        abort_unless(in_array($adCampaign->status, ['active', 'paused'], true), 422);
+
+        $oldStatus = $adCampaign->status;
+        $adCampaign->update(['status' => 'completed']);
+        $this->logStatusChange($activity, $adCampaign, $oldStatus, 'completed', 'Campaign marked complete.');
+
+        return back()->with('success', 'Campaign completed. It is no longer eligible for public ad delivery.');
     }
 
     private function form(?AdvertisingCampaign $campaign = null, ?int $selectedAdvertiserId = null, ?array $workflowContext = null)
@@ -353,6 +429,28 @@ class AdvertisingCampaignController extends Controller
             ];
         }
 
+        if ($campaign->status === 'paused') {
+            return [
+                'eyebrow' => 'Campaign workflow · Paused',
+                'title' => 'Campaign delivery is paused',
+                'description' => 'This campaign is temporarily out of rotation. Resume it when delivery should continue, or mark it complete if the campaign has ended.',
+                'status' => 'attention',
+                'action' => ['label' => 'Resume Campaign', 'href' => "{$base}/resume", 'method' => 'post', 'data' => []],
+                'secondary' => ['label' => 'View Analytics', 'href' => '/admin/analytics/campaigns'],
+            ];
+        }
+
+        if ($campaign->status === 'completed') {
+            return [
+                'eyebrow' => 'Campaign workflow · Complete',
+                'title' => 'Campaign lifecycle is complete',
+                'description' => 'Delivery has ended. Review final performance and retain the workflow history for advertiser reporting.',
+                'status' => 'complete',
+                'action' => ['label' => 'View Analytics', 'href' => '/admin/analytics/campaigns', 'method' => 'get'],
+                'secondary' => ['label' => 'Client Workspace', 'href' => "/admin/advertisers/{$campaign->advertiser_id}"],
+            ];
+        }
+
         if ($campaign->status === 'active') {
             return [
                 'eyebrow' => 'Campaign workflow · Live',
@@ -372,4 +470,75 @@ class AdvertisingCampaignController extends Controller
             'action' => ['label' => 'Client Workspace', 'href' => "/admin/advertisers/{$campaign->advertiser_id}", 'method' => 'get'],
         ];
     }
+
+    private function progressTimeline(AdvertisingCampaign $campaign, AdvertiserWorkflowService $workflow): array
+    {
+        $campaign->loadMissing(['placements', 'creatives']);
+        $invoices = AdvertisingInvoice::query()->where('advertising_campaign_id', $campaign->id)->get();
+        $readiness = $workflow->launchReadiness($campaign, $invoices);
+        $allCreativesApproved = $campaign->creatives->isNotEmpty()
+            && $campaign->creatives->every(fn ($creative) => $creative->status === 'approved');
+
+        $setupComplete = $campaign->placements->isNotEmpty();
+        $approvalComplete = in_array($campaign->status, ['approved', 'scheduled', 'active', 'paused', 'completed'], true);
+        $billingComplete = $invoices->isNotEmpty() && (int) $invoices->sum('balance_cents') <= 0;
+        $launched = in_array($campaign->status, ['active', 'paused', 'completed'], true);
+
+        return [
+            $this->timelineStage('setup', 'Setup', $setupComplete ? 'complete' : 'current', 'Campaign placements and terms'),
+            $this->timelineStage('creative', 'Creative', ! $setupComplete ? 'pending' : ($allCreativesApproved ? 'complete' : 'current'), 'Creative files and approval'),
+            $this->timelineStage('approval', 'Approval', ! $allCreativesApproved ? 'pending' : ($approvalComplete ? 'complete' : 'current'), 'Internal campaign approval'),
+            $this->timelineStage('billing', 'Billing', ! $approvalComplete ? 'pending' : ($billingComplete ? 'complete' : ($invoices->isEmpty() ? 'current' : 'attention')), 'Invoice and payment status', false),
+            $this->timelineStage('launch', 'Launch', ! $approvalComplete ? 'pending' : ($launched ? 'complete' : ($readiness['ready'] ? 'current' : 'attention')), 'Launch-readiness checks'),
+            $this->timelineStage('live', 'Live', $campaign->status === 'completed' ? 'complete' : ($campaign->status === 'active' ? 'current' : ($campaign->status === 'paused' ? 'attention' : 'pending')), 'Delivery and performance'),
+        ];
+    }
+
+    private function workflowHistory(AdvertisingCampaign $campaign): array
+    {
+        return AdminActivity::query()
+            ->with('user:id,name,email')
+            ->where('subject_type', $campaign::class)
+            ->where('subject_id', $campaign->id)
+            ->where(function ($query) {
+                $query->where('field_name', 'status')
+                    ->orWhereIn('action', ['campaign_status', 'campaign_updated']);
+            })
+            ->latest('id')
+            ->limit(30)
+            ->get()
+            ->map(fn (AdminActivity $activity) => [
+                'id' => $activity->id,
+                'action' => $activity->action,
+                'old_value' => $activity->old_value,
+                'new_value' => $activity->new_value,
+                'description' => $activity->description,
+                'user_name' => $activity->user?->name ?? $activity->user?->email ?? 'System',
+                'created_at' => optional($activity->created_at)->toIso8601String(),
+            ])
+            ->all();
+    }
+
+    private function logStatusChange(
+        AdminActivityService $activity,
+        AdvertisingCampaign $campaign,
+        string $oldStatus,
+        string $newStatus,
+        string $description,
+    ): void {
+        $activity->log(
+            action: 'campaign_status',
+            subject: $campaign,
+            fieldName: 'status',
+            oldValue: $oldStatus,
+            newValue: $newStatus,
+            description: $description,
+        );
+    }
+
+    private function timelineStage(string $key, string $label, string $state, string $description, bool $required = true): array
+    {
+        return compact('key', 'label', 'state', 'description', 'required');
+    }
+
 }

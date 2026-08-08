@@ -281,6 +281,9 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::post('/ad-campaigns/{adCampaign}/submit', [AdvertisingCampaignController::class, 'submit'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.submit');
         Route::post('/ad-campaigns/{adCampaign}/decision', [AdvertisingCampaignController::class, 'approve'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.decision');
         Route::post('/ad-campaigns/{adCampaign}/launch', [AdvertisingCampaignController::class, 'launch'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.launch');
+        Route::post('/ad-campaigns/{adCampaign}/pause', [AdvertisingCampaignController::class, 'pause'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.pause');
+        Route::post('/ad-campaigns/{adCampaign}/resume', [AdvertisingCampaignController::class, 'resume'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.resume');
+        Route::post('/ad-campaigns/{adCampaign}/complete', [AdvertisingCampaignController::class, 'complete'])->middleware('permission:approve_ad_campaigns')->name('ad-campaigns.complete');
         Route::get('/ad-campaigns/{adCampaign}/creatives', [AdCreativeController::class, 'index'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.index');
         Route::get('/ad-campaigns/{adCampaign}/creatives/create', [AdCreativeController::class, 'create'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.create');
         Route::post('/ad-campaigns/{adCampaign}/creatives', [AdCreativeController::class, 'store'])->middleware('permission:manage_ad_campaigns')->name('ad-campaigns.creatives.store');

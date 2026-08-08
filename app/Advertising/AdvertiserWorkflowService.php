@@ -88,6 +88,7 @@ class AdvertiserWorkflowService
         $firstCampaign = collect($campaigns)->first();
         $hasCampaign = count($campaigns) > 0;
         $hasActiveCampaign = collect($campaigns)->contains(fn (array $campaign) => $campaign['status'] === 'active');
+        $hasPausedCampaign = collect($campaigns)->contains(fn (array $campaign) => $campaign['status'] === 'paused');
         $hasReadyCampaign = collect($campaigns)->contains(fn (array $campaign) => $campaign['readiness']['ready']);
         $hasCampaignAttention = collect($campaigns)->contains(fn (array $campaign) => ! $campaign['readiness']['ready'] && $campaign['readiness']['blocking_count'] > 0);
         $allCampaignsCompleted = $hasCampaign && collect($campaigns)->every(fn (array $campaign) => in_array($campaign['status'], ['completed', 'canceled'], true));
@@ -198,22 +199,22 @@ class AdvertiserWorkflowService
             $billingState === 'complete' ? null : ($invoices->isEmpty() ? 'Create Invoice' : 'Open Billing')
         );
 
-        $launchState = ! $hasCampaign ? 'not_started' : ($hasActiveCampaign ? 'complete' : ($hasReadyCampaign ? 'current' : ($hasCampaignAttention ? 'attention' : 'waiting')));
+        $launchState = ! $hasCampaign ? 'not_started' : ($hasActiveCampaign ? 'complete' : ($hasPausedCampaign ? 'waiting' : ($hasReadyCampaign ? 'current' : ($hasCampaignAttention ? 'attention' : 'waiting'))));
         $stages[] = $this->stage(
             'launch', 'Launch Readiness', $launchState,
-            $hasActiveCampaign ? 'At least one campaign is live.' : ($hasReadyCampaign ? 'A campaign passes launch readiness checks.' : 'Campaign readiness checks still need attention.'),
+            $hasActiveCampaign ? 'At least one campaign is live.' : ($hasPausedCampaign ? 'A campaign is paused and currently out of delivery.' : ($hasReadyCampaign ? 'A campaign passes launch readiness checks.' : 'Campaign readiness checks still need attention.')),
             $hasCampaign ? $this->firstCampaignHref($campaigns) : null,
-            $hasActiveCampaign ? null : ($hasReadyCampaign ? 'Schedule or activate the ready campaign' : 'Resolve campaign launch blockers'),
-            $hasActiveCampaign ? null : 'Check Readiness'
+            $hasActiveCampaign ? null : ($hasPausedCampaign ? 'Resume the paused campaign when delivery should continue' : ($hasReadyCampaign ? 'Schedule or activate the ready campaign' : 'Resolve campaign launch blockers')),
+            $hasActiveCampaign ? null : ($hasPausedCampaign ? 'Open Campaign' : 'Check Readiness')
         );
 
-        $performanceState = $hasActiveCampaign ? 'current' : ($allCampaignsCompleted ? 'complete' : 'not_started');
+        $performanceState = $hasActiveCampaign ? 'current' : ($hasPausedCampaign ? 'waiting' : ($allCampaignsCompleted ? 'complete' : 'not_started'));
         $stages[] = $this->stage(
             'performance', 'Live / Performance', $performanceState,
-            $hasActiveCampaign ? 'Campaign performance can now be monitored.' : ($allCampaignsCompleted ? 'Campaign activity is complete and ready for reporting.' : 'Performance begins after a campaign launches.'),
+            $hasActiveCampaign ? 'Campaign performance can now be monitored.' : ($hasPausedCampaign ? 'Performance is retained while delivery is paused.' : ($allCampaignsCompleted ? 'Campaign activity is complete and ready for reporting.' : 'Performance begins after a campaign launches.')),
             '/admin/analytics/campaigns',
-            $hasActiveCampaign ? 'Monitor campaign performance' : null,
-            $hasActiveCampaign ? 'View Analytics' : null
+            $hasActiveCampaign ? 'Monitor campaign performance' : ($hasPausedCampaign ? 'Review paused campaign performance' : null),
+            ($hasActiveCampaign || $hasPausedCampaign) ? 'View Analytics' : null
         );
 
         return $stages;
@@ -229,7 +230,7 @@ class AdvertiserWorkflowService
 
         $checks = [];
         $checks[] = $this->check('advertiser_active', 'Advertiser is active', $campaign->advertiser?->status === 'active', true);
-        $checks[] = $this->check('campaign_approved', 'Campaign is approved', in_array($campaign->status, ['approved', 'scheduled', 'active', 'completed'], true), true);
+        $checks[] = $this->check('campaign_approved', 'Campaign is approved', in_array($campaign->status, ['approved', 'scheduled', 'active', 'paused', 'completed'], true), true);
         $checks[] = $this->check('dates_valid', 'Campaign dates are valid', $this->datesValid($campaign), true);
         $checks[] = $this->check('placements', 'At least one active placement is assigned', $campaign->placements->isNotEmpty() && $campaign->placements->every(fn ($placement) => (bool) $placement->is_active), true);
         $checks[] = $this->check('creatives', 'All creatives are approved', $creatives->isNotEmpty() && $creatives->every(fn ($creative) => $creative->status === 'approved'), true);
