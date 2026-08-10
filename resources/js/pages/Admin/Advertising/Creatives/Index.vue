@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { appConfirm, appPrompt } from '@/lib/appDialog';
 
 const props = defineProps<{
     campaign: any;
@@ -13,10 +14,10 @@ const submit = (creative: any) =>
         `/admin/ad-campaigns/${props.campaign.id}/creatives/${creative.id}/submit`,
     );
 
-const decide = (creative: any, decision: 'approve' | 'reject') => {
+const decide = async (creative: any, decision: 'approve' | 'reject') => {
     const rejectionReason =
         decision === 'reject'
-            ? prompt('Rejection reason') || 'Rejected'
+            ? (await appPrompt('Enter the reason this creative is being rejected.', { title: 'Reject creative', confirmLabel: 'Reject Creative', destructive: true, placeholder: 'Rejection reason' })) || 'Rejected'
             : '';
 
     router.post(
@@ -28,11 +29,12 @@ const decide = (creative: any, decision: 'approve' | 'reject') => {
     );
 };
 
-const returnToDraft = (creative: any) => {
+const returnToDraft = async (creative: any) => {
     if (
-        !confirm(
+        !(await appConfirm(
             'Return this creative to draft? It will immediately stop appearing in public ad rotation.',
-        )
+            { title: 'Return creative to draft?', confirmLabel: 'Return to Draft', destructive: true },
+        ))
     ) {
         return;
     }
@@ -42,8 +44,8 @@ const returnToDraft = (creative: any) => {
     );
 };
 
-const remove = (creative: any) => {
-    if (!confirm('Delete this creative?')) {
+const remove = async (creative: any) => {
+    if (!(await appConfirm('Delete this creative?', { title: 'Delete creative?', confirmLabel: 'Delete Creative', destructive: true }))) {
         return;
     }
 

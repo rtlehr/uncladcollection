@@ -7,6 +7,7 @@ import PageHeader from '@/Components/Shared/PageHeader.vue';
 import ShowSection from '@/Components/Show/ShowSection.vue';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { appConfirm } from '@/lib/appDialog';
 
 const props = defineProps<{ savedPrompt: any }>();
 const refining = ref(false);
@@ -65,8 +66,8 @@ function save() {
  refinementInstruction.value = ''; form.refinement_instruction = ''; 
 } }); 
 }
-function restore(version: any) {
- if (confirm(`Restore version ${version.version_number}?`)) {
+async function restore(version: any) {
+ if (await appConfirm(`Restore version ${version.version_number}?`, { title: 'Restore prompt version?', confirmLabel: 'Restore Version' })) {
 router.post(`/admin/ai-content/image-prompts/${props.savedPrompt.id}/versions/${version.id}/restore`, {}, { preserveScroll: true });
 } 
 }

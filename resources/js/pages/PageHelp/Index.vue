@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 
 import PageHeader from '@/components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
+import { appConfirm } from '@/lib/appDialog';
 
 const props = defineProps<{
     entries: any;
@@ -43,7 +44,7 @@ function chooseImport(mode: 'merge' | 'replace'): void {
     importInput.value?.click();
 }
 
-function importSelected(event: Event): void {
+async function importSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -53,7 +54,7 @@ return;
 
     if (
         importMode.value === 'replace'
-        && !window.confirm('Replace all existing Page Help content with this export? Entries missing from the file will be deleted.')
+        && !(await appConfirm('Replace all existing Page Help content with this export? Entries missing from the file will be deleted.', { title: 'Replace all Page Help content?', confirmLabel: 'Replace All', destructive: true }))
     ) {
         input.value = '';
 

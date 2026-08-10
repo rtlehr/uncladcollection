@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { appConfirm } from '@/lib/appDialog';
 
 type Revision = {
     id: number;
@@ -62,8 +63,8 @@ function submit(): void {
     form.put(`/admin/communications/email-templates/${props.template.id}`, { preserveScroll: true });
 }
 
-function restoreDefault(): void {
-    if (!confirm('Restore the code-provided system default? The current version will remain in revision history.')) {
+async function restoreDefault(): Promise<void> {
+    if (!(await appConfirm('Restore the code-provided system default? The current version will remain in revision history.', { title: 'Restore system default?', confirmLabel: 'Restore Default' }))) {
 return;
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3'; import { ref } from 'vue';
-import PageHeader from '@/Components/Shared/PageHeader.vue'; import ShowSection from '@/Components/Show/ShowSection.vue'; import { Button } from '@/components/ui/button'; import { Input } from '@/components/ui/input';
+import PageHeader from '@/Components/Shared/PageHeader.vue'; import ShowSection from '@/Components/Show/ShowSection.vue'; import { Button } from '@/components/ui/button'; import { Input } from '@/components/ui/input'; import { appConfirm } from '@/lib/appDialog';
 const props=defineProps<{items:any,filters:any}>(); const search=ref(props.filters.search??''); const upload=useForm<{file:File|null}>({file:null});
 function find(){
 router.get('/admin/ai-content/prompt-library',{search:search.value||undefined},{preserveState:true,replace:true});
@@ -11,8 +11,8 @@ upload.post('/admin/ai-content/prompt-library/import',{forceFormData:true});
 function toggle(item:any){
 router.put(`/admin/ai-content/prompt-library/${item.id}`,{...item,is_enabled:!item.is_enabled},{preserveScroll:true});
 }
-function remove(item:any){
-if(confirm(`Delete ${item.title}?`)){
+async function remove(item:any){
+if(await appConfirm(`Delete ${item.title}?`, { title: 'Delete prompt example?', confirmLabel: 'Delete Example', destructive: true })){
 router.delete(`/admin/ai-content/prompt-library/${item.id}`,{preserveScroll:true});
 }
 }

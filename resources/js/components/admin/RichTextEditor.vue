@@ -9,6 +9,7 @@ import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { computed, ref, watch } from 'vue';
 
 import { Button } from '@/components/ui/button';
+import { appAlert, appPrompt } from '@/lib/appDialog';
 
 const props = defineProps<{
     modelValue: string;
@@ -125,13 +126,13 @@ function updateCode(value: string) {
     emit('update:modelValue', value);
 }
 
-function setLink() {
+async function setLink() {
     if (!editor.value) {
         return;
     }
 
     const previousUrl = editor.value.getAttributes('link').href;
-    const url = window.prompt('Enter URL', previousUrl || 'https://');
+    const url = await appPrompt('Enter URL', { title: 'Add or edit link', confirmLabel: 'Apply Link', defaultValue: previousUrl || 'https://', inputType: 'url' });
 
     if (url === null) {
         return;
@@ -275,7 +276,7 @@ async function uploadImage() {
             });
 
             if (!response.ok) {
-                alert('Image upload failed.');
+                void appAlert('Image upload failed.', { title: 'Image upload failed' });
 
                 return;
             }
@@ -294,7 +295,7 @@ async function uploadImage() {
 
             emitEditorHtml();
         } catch {
-            alert('Image upload failed.');
+            void appAlert('Image upload failed.', { title: 'Image upload failed' });
         } finally {
             uploadingImage.value = false;
         }

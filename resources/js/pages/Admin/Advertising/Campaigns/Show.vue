@@ -5,6 +5,7 @@ import CampaignProgressTimeline from '@/components/Advertising/CampaignProgressT
 import WorkflowContextBanner from '@/components/Advertising/WorkflowContextBanner.vue';
 import WorkflowNextStepCard from '@/components/Advertising/WorkflowNextStepCard.vue';
 import { Button } from '@/components/ui/button';
+import { appConfirm, appPrompt } from '@/lib/appDialog';
 
 const props = defineProps<{
     campaign: any;
@@ -19,20 +20,20 @@ const props = defineProps<{
 const page = usePage();
 
 const submit = () => router.post(`/admin/ad-campaigns/${props.campaign.id}/submit`, {}, { preserveScroll: true });
-const decide = (decision: string) => router.post(
+const decide = async (decision: string) => router.post(
     `/admin/ad-campaigns/${props.campaign.id}/decision`,
-    { decision, rejection_reason: decision === 'reject' ? prompt('Reason for rejection') || 'Rejected' : '' },
+    { decision, rejection_reason: decision === 'reject' ? (await appPrompt('Enter the reason this campaign is being rejected.', { title: 'Reject campaign', confirmLabel: 'Reject Campaign', destructive: true, placeholder: 'Rejection reason' })) || 'Rejected' : '' },
     { preserveScroll: true },
 );
 
-const lifecycle = (action: 'pause' | 'resume' | 'complete') => {
+const lifecycle = async (action: 'pause' | 'resume' | 'complete') => {
     const messages = {
         pause: 'Pause this campaign? It will immediately stop being eligible for public ad delivery.',
         resume: 'Resume this campaign and return it to public ad delivery?',
         complete: 'Mark this campaign complete? It will stop delivering and the campaign will move to final reporting.',
     };
 
-    if (!confirm(messages[action])) return;
+    if (!(await appConfirm(messages[action], { title: action === 'complete' ? 'Complete campaign?' : action === 'pause' ? 'Pause campaign?' : 'Resume campaign?', confirmLabel: action === 'complete' ? 'Mark Complete' : action === 'pause' ? 'Pause Campaign' : 'Resume Campaign', destructive: action !== 'resume' }))) return;
 
     router.post(`/admin/ad-campaigns/${props.campaign.id}/${action}`, {}, { preserveScroll: true });
 };

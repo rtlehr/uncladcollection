@@ -29,6 +29,7 @@ import {
 import { Canvas, FabricImage, FabricObject, IText, Rect } from 'fabric';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
+import { appAlert, appConfirm } from '@/lib/appDialog';
 
 // Fabric 7 only guarantees custom properties survive serialization when they
 // are registered globally. These values are needed for stable layer rows,
@@ -657,7 +658,7 @@ return;
         backgroundStatus.value = 'Preview shown — apply it to save';
     } catch (error) {
         backgroundStatus.value = '';
-        alert(error instanceof Error ? error.message : 'The background could not be removed.');
+        void appAlert(error instanceof Error ? error.message : 'The background could not be removed.');
     } finally {
         backgroundBusy.value = false;
     }
@@ -708,7 +709,7 @@ throw new Error('The transparent image could not be saved.');
         void drawBackgroundPreview();
     } catch (error) {
         backgroundStatus.value = '';
-        alert(error instanceof Error ? error.message : 'The background could not be removed.');
+        void appAlert(error instanceof Error ? error.message : 'The background could not be removed.');
     } finally {
         backgroundBusy.value = false;
     }
@@ -838,7 +839,7 @@ async function addLibraryImage(file: LibraryFile): Promise<void> {
     }
 
     if (canvas.getObjects().length >= props.limits.max_layer_count) {
-        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+        void appAlert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
         return;
     }
 
@@ -868,7 +869,7 @@ async function addLibraryImage(file: LibraryFile): Promise<void> {
         librarySelectedAsset.value = null;
         libraryFiles.value = [];
     } catch (error) {
-        alert(error instanceof Error ? error.message : 'The licensed image could not be added to this design.');
+        void appAlert(error instanceof Error ? error.message : 'The licensed image could not be added to this design.');
     } finally {
         libraryAdding.value = null;
     }
@@ -883,7 +884,7 @@ return;
 }
 
     if (canvas.getObjects().length >= props.limits.max_layer_count) {
-        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+        void appAlert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
         input.value = '';
 
         return;
@@ -924,7 +925,7 @@ return;
         selectObject(image);
         pushHistory();
     } catch (error) {
-        alert(error instanceof Error ? error.message : 'The image could not be uploaded.');
+        void appAlert(error instanceof Error ? error.message : 'The image could not be uploaded.');
     } finally {
         uploading.value = false;
         input.value = '';
@@ -1203,7 +1204,7 @@ return 'webp';
 
 function validateRequestedSize(width: number, height: number, mode: 'browser' | 'server'): boolean {
     if (!Number.isFinite(width) || !Number.isFinite(height) || width < 320 || height < 320) {
-        alert('Please enter a valid width and height of at least 320 pixels.');
+        void appAlert('Please enter a valid width and height of at least 320 pixels.');
 
         return false;
     }
@@ -1213,13 +1214,13 @@ function validateRequestedSize(width: number, height: number, mode: 'browser' | 
     const maxPixels = mode === 'browser' ? props.limits.max_browser_pixels : props.limits.max_server_pixels;
 
     if (width > maxWidth || height > maxHeight) {
-        alert(`The requested ${mode} export exceeds the maximum allowed size of ${maxWidth}×${maxHeight}.`);
+        void appAlert(`The requested ${mode} export exceeds the maximum allowed size of ${maxWidth}×${maxHeight}.`);
 
         return false;
     }
 
     if ((width * height) > maxPixels) {
-        alert(`The requested ${mode} export exceeds the maximum allowed pixel count.`);
+        void appAlert(`The requested ${mode} export exceeds the maximum allowed pixel count.`);
 
         return false;
     }
@@ -1312,7 +1313,7 @@ return;
     const nextRatio = nextWidth / nextHeight;
 
     if (Math.abs(Math.log(nextRatio / oldRatio)) > 0.35) {
-        const proceed = confirm('This changes the canvas aspect ratio significantly. Some layers may need to be repositioned. Continue?');
+        const proceed = await appConfirm('This changes the canvas aspect ratio significantly. Some layers may need to be repositioned. Continue?', { title: 'Change canvas aspect ratio?', confirmLabel: 'Continue' });
 
         if (!proceed) {
 return;
@@ -1349,23 +1350,31 @@ return;
     pushHistory();
 }
 
-function leaveDesign(event: MouseEvent): void {
+async function leaveDesign(event: MouseEvent): Promise<void> {
     const messages: string[] = [];
 
     if (dirty.value) {
-messages.push('You have unsaved changes.');
-}
+        messages.push('You have unsaved changes.');
+    }
 
     if (hasBlockingOperation.value && processingNotice.value) {
-messages.push(processingNotice.value);
-}
+        messages.push(processingNotice.value);
+    }
 
     if (!messages.length) {
-return;
-}
+        return;
+    }
 
-    if (!confirm(`${messages.join(' ')} Leave the editor anyway?`)) {
-        event.preventDefault();
+    event.preventDefault();
+
+    const proceed = await appConfirm(`${messages.join(' ')} Leave the editor anyway?`, {
+        title: 'Leave the editor?',
+        confirmLabel: 'Leave Editor',
+        destructive: true,
+    });
+
+    if (proceed) {
+        router.visit('/account/designs');
     }
 }
 
@@ -1461,7 +1470,7 @@ throw new Error('The browser could not create the download.');
         }
     } catch (error) {
         exportStatus.value = 'Export failed';
-        alert(error instanceof Error ? error.message : 'The design could not be exported.');
+        void appAlert(error instanceof Error ? error.message : 'The design could not be exported.');
     } finally {
         exporting.value = false;
         window.setTimeout(() => {
@@ -1544,7 +1553,7 @@ throw new Error('The editor could not prepare the server-render overlay.');
         canvas.backgroundImage = background;
         canvas.requestRenderAll();
         exportStatus.value = 'Server render failed';
-        alert(error instanceof Error ? error.message : 'The server render could not be queued.');
+        void appAlert(error instanceof Error ? error.message : 'The server render could not be queued.');
         exporting.value = false;
     }
 }
@@ -1595,8 +1604,8 @@ async function retryServerExport(record: ExportRecord): Promise<void> {
     await queueServerExport(record.width, record.height, record.preset_name || 'Retry render', normalizeFormat(record.format), exportFit.value);
 }
 
-function deleteExport(record: ExportRecord): void {
-    if (!confirm(`Delete the ${record.width}×${record.height} ${record.format} export?`)) {
+async function deleteExport(record: ExportRecord): Promise<void> {
+    if (!(await appConfirm(`Delete the ${record.width}×${record.height} ${record.format} export?`, { title: 'Delete export?', confirmLabel: 'Delete Export', destructive: true }))) {
 return;
 }
 

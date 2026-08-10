@@ -13,6 +13,7 @@ import { ref } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { appConfirm } from '@/lib/appDialog';
 
 type PublicPageListItem = {
     id: number;
@@ -55,8 +56,8 @@ function apply(): void {
     );
 }
 
-function remove(page: PublicPageListItem): void {
-    if (confirm(`Delete ${page.title}?`)) {
+async function remove(page: PublicPageListItem): Promise<void> {
+    if (await appConfirm(`Delete ${page.title}?`, { title: 'Delete public page?', confirmLabel: 'Delete Page', destructive: true })) {
         router.delete(`/admin/public-pages/${page.slug}`);
     }
 }

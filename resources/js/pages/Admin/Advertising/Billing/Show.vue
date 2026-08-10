@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import {Head,Link,router} from '@inertiajs/vue3'; import PageHeader from '@/Components/Shared/PageHeader.vue'; import {Button} from '@/components/ui/button';
+import {Head,Link,router} from '@inertiajs/vue3'; import PageHeader from '@/Components/Shared/PageHeader.vue'; import {Button} from '@/components/ui/button'; import { appPrompt } from '@/lib/appDialog';
 const p=defineProps<{invoice:any}>(); const money=(v:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:p.invoice.currency}).format(v/100);
-const post=(path:string,data:any={})=>router.post(path,data); const payment=()=>{
-const v=prompt('Payment amount in dollars', (p.invoice.balance_cents/100).toFixed(2));
+const post=(path:string,data:any={})=>router.post(path,data); const payment=async ()=>{
+const v=await appPrompt('Payment amount in dollars', { title: 'Record payment', confirmLabel: 'Record Payment', defaultValue: (p.invoice.balance_cents/100).toFixed(2), inputType: 'number' });
 
 if(v){
 post(`/admin/advertising-invoices/${p.invoice.id}/payments`,{amount_cents:Math.round(Number(v)*100),provider:'manual'});
 }
-}; const refund=()=>{
-const v=prompt('Refund amount in dollars');
+}; const refund=async ()=>{
+const v=await appPrompt('Refund amount in dollars', { title: 'Record refund', confirmLabel: 'Record Refund', inputType: 'number' });
 
 if(v){
 post(`/admin/advertising-invoices/${p.invoice.id}/refunds`,{amount_cents:Math.round(Number(v)*100)});

@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { initializeAppDialogs } from '@/lib/appDialog';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -54,6 +55,7 @@ createInertiaApp({
 initializeTheme();
 initializeNavigationState();
 initializeFlashToast();
+initializeAppDialogs();
 
 if (typeof document !== 'undefined') {
     document.documentElement.classList.add('js');

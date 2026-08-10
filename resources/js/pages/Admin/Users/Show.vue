@@ -19,6 +19,7 @@ import DataTableEmpty from '@/Components/Tables/DataTableEmpty.vue';
 import DataTableHeaderCell from '@/Components/Tables/DataTableHeaderCell.vue';
 import { Button } from '@/components/ui/button';
 
+import { appConfirm } from '@/lib/appDialog';
 import type {
     AdminActivityRecord,
     AdminUserRecord,
@@ -30,8 +31,8 @@ const { userRecord, activities, impersonation } = defineProps<{
     impersonation: { can_start: boolean; is_active: boolean };
 }>();
 
-function startImpersonation(): void {
-    if (!confirm(`View the public site as ${userRecord.name}? Sensitive actions will be disabled and the session will be audited.`)) {
+async function startImpersonation(): Promise<void> {
+    if (!(await appConfirm(`View the public site as ${userRecord.name}? Sensitive actions will be disabled and the session will be audited.`, { title: 'Start impersonation?', confirmLabel: 'View as User' }))) {
         return;
     }
 

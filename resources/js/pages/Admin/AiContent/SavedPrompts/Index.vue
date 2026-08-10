@@ -5,6 +5,7 @@ import { ref } from 'vue';
 import PageHeader from '@/Components/Shared/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { appConfirm } from '@/lib/appDialog';
 
 const props = defineProps<{ items: any; filters: { search?: string; sort?: string; direction?: string } }>();
 const search = ref(props.filters.search ?? '');
@@ -18,8 +19,8 @@ function sortBy(column: string) {
     router.get('/admin/ai-content/image-prompts', { search: search.value || undefined, sort: column, direction }, { preserveState: true, replace: true });
 }
 
-function remove(item: any) {
-    if (confirm(`Delete saved prompt “${item.title}”?`)) {
+async function remove(item: any) {
+    if (await appConfirm(`Delete saved prompt “${item.title}”?`, { title: 'Delete saved prompt?', confirmLabel: 'Delete Prompt', destructive: true })) {
 router.delete(`/admin/ai-content/image-prompts/${item.id}`);
 }
 }

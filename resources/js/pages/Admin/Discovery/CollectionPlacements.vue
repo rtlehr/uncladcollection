@@ -7,6 +7,7 @@ import StatusBadge from '@/components/Shared/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { appConfirm } from '@/lib/appDialog';
 
 interface Option { value: string; label: string }
 interface CollectionOption { id: number; name: string; slug: string }
@@ -91,8 +92,8 @@ function submit(): void {
     }
 }
 
-function remove(item: Placement): void {
-    if (!confirm(`Remove the ${item.collection.name} placement?`)) {
+async function remove(item: Placement): Promise<void> {
+    if (!(await appConfirm(`Remove the ${item.collection.name} placement?`, { title: 'Remove collection placement?', confirmLabel: 'Remove Placement', destructive: true }))) {
 return;
 }
 

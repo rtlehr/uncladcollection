@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { appAlert } from '@/lib/appDialog';
 
 interface Provider {
     id: number; name: string; slug: string; driver: string; base_url: string; api_key_masked: string|null;
@@ -42,7 +43,7 @@ async function testProvider(provider: Provider) {
     try {
         const response = await fetch(`/admin/ai-providers/${provider.id}/test`, { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '' } });
         const result = await response.json();
-        alert(result.success ? `Connected using ${result.model}. ${result.duration_ms} ms.` : result.message);
+        await appAlert(result.success ? `Connected using ${result.model}. ${result.duration_ms} ms.` : result.message, { title: result.success ? 'Connection successful' : 'Connection failed' });
         router.reload({ only: ['providers'] });
     } finally {
  testing.value = null; 
@@ -61,7 +62,7 @@ throw new Error(result.message ?? 'Could not load models.');
 
         models.value[provider.id] = result.models ?? [];
     } catch (e) {
- alert(e instanceof Error ? e.message : 'Could not load models.'); 
+ await appAlert(e instanceof Error ? e.message : 'Could not load models.', { title: 'Could not load models' }); 
 } finally {
  loadingModels.value = null; 
 }

@@ -22,6 +22,7 @@ const props = withDefaults(
         destructive?: boolean;
         loading?: boolean;
         disabled?: boolean;
+        showCancel?: boolean;
     }>(),
     {
         description: null,
@@ -31,6 +32,7 @@ const props = withDefaults(
         destructive: false,
         loading: false,
         disabled: false,
+        showCancel: true,
     },
 );
 
@@ -114,6 +116,7 @@ function handleCancel(): void {
 
             <DialogFooter class="gap-2 sm:gap-2">
                 <Button
+                    v-if="showCancel"
                     type="button"
                     variant="outline"
                     :disabled="loading"

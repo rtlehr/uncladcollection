@@ -48,6 +48,7 @@ import type {SmartAssetCardInsert} from '@/components/admin/SmartAssetCardDialog
 import SmartAssetCardDialog from '@/components/admin/SmartAssetCardDialog.vue';
 import { Button } from '@/components/ui/button';
 import type { UploadedBlogArticleImage } from '@/lib/blogArticleImageUpload';
+import { appPrompt } from '@/lib/appDialog';
 
 const props = defineProps<{ modelValue: string }>();
 
@@ -435,13 +436,13 @@ function updateCode(value: string) {
     emit('update:modelValue', value);
 }
 
-function setLink() {
+async function setLink() {
     if (!editor.value) {
 return;
 }
 
     const previousUrl = editor.value.getAttributes('link').href;
-    const url = window.prompt('Enter URL', previousUrl || 'https://');
+    const url = await appPrompt('Enter URL', { title: 'Add or edit link', confirmLabel: 'Apply Link', defaultValue: previousUrl || 'https://', inputType: 'url' });
 
     if (url === null) {
 return;

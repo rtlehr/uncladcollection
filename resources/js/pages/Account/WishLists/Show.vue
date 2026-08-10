@@ -11,6 +11,7 @@ import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 import GalleryGrid from '@/components/Gallery/GalleryGrid.vue';
 import PublicPagination from '@/components/Gallery/PublicPagination.vue';
 import type { GalleryAsset, GalleryPaginationLink } from '@/types/gallery';
+import { appConfirm } from '@/lib/appDialog';
 
 
 
@@ -80,8 +81,8 @@ return;
  copied.value = false; 
 }, 2000);
 }
-function destroyList(): void {
-    if (props.wish_list.is_default || !window.confirm(`Delete "${props.wish_list.name}"? Assets saved only here will no longer be favorited.`)) {
+async function destroyList(): Promise<void> {
+    if (props.wish_list.is_default || !(await appConfirm(`Delete "${props.wish_list.name}"? Assets saved only here will no longer be favorited.`, { title: 'Delete wish list?', confirmLabel: 'Delete Wish List', destructive: true }))) {
 return;
 }
 

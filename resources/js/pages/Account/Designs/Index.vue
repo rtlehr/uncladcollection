@@ -4,6 +4,7 @@ import { Download, ImagePlus, Pencil, Plus, Trash2, X } from '@lucide/vue';
 import { ref } from 'vue';
 import AccountPageLayout from '@/components/Account/AccountPageLayout.vue';
 import { Button } from '@/components/ui/button';
+import { appConfirm } from '@/lib/appDialog';
 
 interface ExportRecord {
     uuid: string;
@@ -51,8 +52,8 @@ const newTitle = ref('Untitled Design');
 const newWidth = ref(1920);
 const newHeight = ref(1080);
 
-function remove(project: Project): void {
-    if (confirm(`Delete “${project.title}”?`)) {
+async function remove(project: Project): Promise<void> {
+    if (await appConfirm(`Delete “${project.title}”?`, { title: 'Delete design?', confirmLabel: 'Delete Design', destructive: true })) {
         router.delete(`/account/designs/${project.uuid}`);
     }
 }
