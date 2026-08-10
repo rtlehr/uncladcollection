@@ -129,7 +129,7 @@ class DesignLibraryController extends Controller
         $file = $this->licensedImageFiles($license)
             ->first(fn (AssetFile $candidate): bool => $candidate->is($assetFile));
 
-        abort_unless($file, 404, 'This image file is not included in your purchased license or is no longer available.');
+        abort_unless($file, 404, 'This image file is no longer an active downloadable image for the licensed asset.');
 
         return $this->streamFile($file);
     }
@@ -152,19 +152,20 @@ class DesignLibraryController extends Controller
             return collect();
         }
 
-        $snapshot = collect($license->included_asset_files_snapshot ?? []);
-        $ids = $snapshot->pluck('asset_file_id')->filter()->map(fn ($id) => (int) $id);
-        $uuids = $snapshot->pluck('uuid')->filter()->map(fn ($uuid) => (string) $uuid);
-
+        /**
+         * A license grants access to the purchased asset, not permanently to
+         * the exact asset_file row IDs that existed at checkout time.
+         *
+         * Admins can legitimately replace an image file after purchase. The
+         * replacement receives a new asset_files.id, so filtering against the
+         * historical included_asset_files_snapshot would make a purchased
+         * image disappear from My Library. Instead, expose the asset's current
+         * active downloadable raster images while the asset license is active.
+         */
         /** @var Collection<int, AssetFile> $files */
         $files = $license->asset->activeFiles
-            ->filter(function (AssetFile $file) use ($ids, $uuids): bool {
-                $isIncluded = ($ids->isEmpty() && $uuids->isEmpty())
-                    || $ids->contains((int) $file->id)
-                    || $uuids->contains((string) $file->uuid);
-
-                return $isIncluded
-                    && $file->is_downloadable
+            ->filter(function (AssetFile $file): bool {
+                return $file->is_downloadable
                     && str_starts_with((string) $file->mime_type, 'image/')
                     && $file->exists();
             });

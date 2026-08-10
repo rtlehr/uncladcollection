@@ -17,8 +17,10 @@ interface LicenseTypeForm {
     name: string;
     slug: string;
     description: string;
+    pricing_model: 'per_unit' | 'flat_total';
     image_unit_price: string;
     video_unit_price: string;
+    total_price: string;
     minimum_price: string;
     currency: string;
     download_limit: number | null;
@@ -72,18 +74,40 @@ defineEmits<{
                 </p>
             </div>
 
-            <div class="space-y-2">
+            <div class="space-y-2 md:col-span-2">
+                <Label for="pricing_model">Pricing model</Label>
+                <Select v-model="form.pricing_model">
+                    <SelectTrigger id="pricing_model"><SelectValue placeholder="Select pricing model" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="per_unit">Price per image / video</SelectItem>
+                        <SelectItem value="flat_total">Flat total price</SelectItem>
+                    </SelectContent>
+                </Select>
+                <p class="text-xs text-muted-foreground">
+                    Per-unit multiplies the configured image/video counts. Flat total charges one amount regardless of how many images are included.
+                </p>
+                <p v-if="form.errors.pricing_model" class="text-sm text-red-600">{{ form.errors.pricing_model }}</p>
+            </div>
+
+            <div v-if="form.pricing_model === 'per_unit'" class="space-y-2">
                 <Label for="image_unit_price">Price per image</Label>
                 <Input id="image_unit_price" v-model="form.image_unit_price" type="number" min="0" step="0.01" placeholder="1.00" />
                 <p class="text-xs text-muted-foreground">Applied to each chargeable image unit in the asset package.</p>
                 <p v-if="form.errors.image_unit_price" class="text-sm text-red-600">{{ form.errors.image_unit_price }}</p>
             </div>
 
-            <div class="space-y-2">
+            <div v-if="form.pricing_model === 'per_unit'" class="space-y-2">
                 <Label for="video_unit_price">Price per video</Label>
                 <Input id="video_unit_price" v-model="form.video_unit_price" type="number" min="0" step="0.01" placeholder="5.00" />
                 <p class="text-xs text-muted-foreground">Applied to each chargeable video unit in the asset package.</p>
                 <p v-if="form.errors.video_unit_price" class="text-sm text-red-600">{{ form.errors.video_unit_price }}</p>
+            </div>
+
+            <div v-if="form.pricing_model === 'flat_total'" class="space-y-2 md:col-span-2">
+                <Label for="total_price">Total license price</Label>
+                <Input id="total_price" v-model="form.total_price" type="number" min="0" step="0.01" placeholder="5.00" />
+                <p class="text-xs text-muted-foreground">This is the total charge for the license, regardless of the number of images included.</p>
+                <p v-if="form.errors.total_price" class="text-sm text-red-600">{{ form.errors.total_price }}</p>
             </div>
 
             <div class="space-y-2">

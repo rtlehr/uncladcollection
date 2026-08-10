@@ -169,9 +169,11 @@ export interface LicenseTypeOption {
     id: number;
     name: string;
     description: string | null;
+    pricing_model: 'per_unit' | 'flat_total';
     price_cents: number;
     image_unit_price_cents: number;
     video_unit_price_cents: number;
+    total_price_cents: number | null;
     minimum_price_cents: number | null;
     currency: string;
     download_limit: number | null;

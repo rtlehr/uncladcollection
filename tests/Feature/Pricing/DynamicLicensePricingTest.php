@@ -57,3 +57,36 @@ it('uses dynamic pricing as the base for tiers and cart quantities', function ()
         ->and($quote->lineTotalCents)->toBe(1600)
         ->and($quote->toArray()['version'])->toBe(1);
 });
+
+
+it('supports a flat total license price regardless of image count', function (): void {
+    $offering = dynamicPricingFixture(
+        [
+            'pricing_model' => 'flat_total',
+            'total_price_cents' => 500,
+            'image_unit_price_cents' => 100,
+            'video_unit_price_cents' => 500,
+        ],
+        ['image_units' => 10, 'video_units' => 0],
+    );
+
+    $price = app(DynamicLicensePriceCalculator::class)->calculate($offering);
+
+    expect($price['pricing_model'])->toBe('flat_total')
+        ->and($price['image_units'])->toBe(10)
+        ->and($price['image_subtotal_cents'])->toBe(0)
+        ->and($price['final_price_cents'])->toBe(500);
+});
+
+it('charges the configured price for every image unit', function (): void {
+    $offering = dynamicPricingFixture(
+        ['pricing_model' => 'per_unit', 'image_unit_price_cents' => 100, 'video_unit_price_cents' => 0],
+        ['image_units' => 5, 'video_units' => 0],
+    );
+
+    $price = app(DynamicLicensePriceCalculator::class)->calculate($offering);
+
+    expect($price['pricing_model'])->toBe('per_unit')
+        ->and($price['image_subtotal_cents'])->toBe(500)
+        ->and($price['final_price_cents'])->toBe(500);
+});

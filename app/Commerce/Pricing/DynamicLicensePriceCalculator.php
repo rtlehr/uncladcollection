@@ -21,16 +21,24 @@ class DynamicLicensePriceCalculator
             $videoUnitPrice = (int) $license->price_cents;
         }
 
-        $imageSubtotal = $imageUnits * $imageUnitPrice;
-        $videoSubtotal = $videoUnits * $videoUnitPrice;
+        $pricingModel = $license->pricing_model === 'flat_total' ? 'flat_total' : 'per_unit';
+        $imageSubtotal = $pricingModel === 'per_unit' ? $imageUnits * $imageUnitPrice : 0;
+        $videoSubtotal = $pricingModel === 'per_unit' ? $videoUnits * $videoUnitPrice : 0;
 
-        $usesLegacyOfferingPrice = $imageUnits === 0
+        $usesLegacyOfferingPrice = $pricingModel === 'per_unit'
+            && $imageUnits === 0
             && $videoUnits === 0
             && (int) $offering->price_cents > 0;
 
-        $contentSubtotal = $usesLegacyOfferingPrice
-            ? (int) $offering->price_cents
-            : $imageSubtotal + $videoSubtotal;
+        if ($pricingModel === 'flat_total') {
+            $contentSubtotal = $license->total_price_cents !== null
+                ? (int) $license->total_price_cents
+                : max(0, (int) $license->price_cents);
+        } else {
+            $contentSubtotal = $usesLegacyOfferingPrice
+                ? (int) $offering->price_cents
+                : $imageSubtotal + $videoSubtotal;
+        }
 
         $calculated = max(0, $contentSubtotal + (int) $offering->price_adjustment_cents);
 
@@ -43,7 +51,9 @@ class DynamicLicensePriceCalculator
             : $calculated;
 
         return [
-            'version' => 2,
+            'version' => 3,
+            'pricing_model' => $pricingModel,
+            'total_price_cents' => $license->total_price_cents !== null ? (int) $license->total_price_cents : null,
             'image_units' => $imageUnits,
             'video_units' => $videoUnits,
             'image_unit_price_cents' => $imageUnitPrice,

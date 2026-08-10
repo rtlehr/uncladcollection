@@ -160,7 +160,7 @@ class AssetController extends Controller
         return Inertia::render('Admin/Assets/Edit', [
             ...$this->formOptions(),
             'assetRecord' => $this->formatAsset($asset, detailed: true),
-            'licenseTypes' => LicenseType::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'description', 'price_cents', 'image_unit_price_cents', 'video_unit_price_cents', 'minimum_price_cents', 'currency', 'download_limit', 'expires_after_days']),
+            'licenseTypes' => LicenseType::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'description', 'pricing_model', 'price_cents', 'image_unit_price_cents', 'video_unit_price_cents', 'total_price_cents', 'minimum_price_cents', 'currency', 'download_limit', 'expires_after_days']),
         ]);
     }
 

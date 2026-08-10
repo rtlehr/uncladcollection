@@ -595,6 +595,7 @@ function reorderFiles(files: AdminAssetFile[]): void {
                 <AssetOfferingMatrix
                     :files="assetRecord.files ?? []"
                     :offerings="offeringForm.offerings"
+                    :license-types="licenseTypes"
                 />
 
                 <AssetOfferingBuilder

@@ -118,9 +118,11 @@ function calculatedPriceCents(offering: AdminAssetOffering): number {
 return 0;
 }
 
-    const subtotal = (offering.image_units * license.image_unit_price_cents)
-        + (offering.video_units * license.video_unit_price_cents)
-        + offering.price_adjustment_cents;
+    const base = license.pricing_model === 'flat_total'
+        ? (license.total_price_cents ?? license.price_cents ?? 0)
+        : (offering.image_units * license.image_unit_price_cents)
+            + (offering.video_units * license.video_unit_price_cents);
+    const subtotal = base + offering.price_adjustment_cents;
     const withMinimum = license.minimum_price_cents === null
         ? subtotal
         : Math.max(subtotal, license.minimum_price_cents);
@@ -153,6 +155,9 @@ function packageStatus(offering: AdminAssetOffering): string {
                             :class="offering.is_active ? 'bg-background' : 'text-muted-foreground'"
                         >
                             {{ packageStatus(offering) }}
+                        </span>
+                        <span class="rounded-full border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
+                            {{ licenseFor(offering)?.pricing_model === 'flat_total' ? 'Flat total' : 'Per image / video' }}
                         </span>
                         <span
                             v-if="offering.include_all_active_files"
@@ -204,13 +209,15 @@ function packageStatus(offering: AdminAssetOffering): string {
                         </label>
 
                         <label class="space-y-1.5 text-sm">
-                            <span class="font-medium">Image units</span>
+                            <span class="font-medium">Chargeable image count</span>
                             <input v-model.number="offering.image_units" type="number" min="0" class="h-10 w-full rounded-md border bg-background px-3" />
+                            <span class="block text-xs text-muted-foreground">For per-image pricing, this is the number multiplied by the license's image unit price. Count logical images, not alternate formats of the same image.</span>
                         </label>
 
                         <label class="space-y-1.5 text-sm">
-                            <span class="font-medium">Video units</span>
+                            <span class="font-medium">Chargeable video count</span>
                             <input v-model.number="offering.video_units" type="number" min="0" class="h-10 w-full rounded-md border bg-background px-3" />
+                            <span class="block text-xs text-muted-foreground">Used only by per-image/video pricing. Flat-total licenses ignore these counts when calculating price.</span>
                         </label>
 
                         <label class="space-y-1.5 text-sm">
@@ -225,7 +232,7 @@ function packageStatus(offering: AdminAssetOffering): string {
 
                         <div class="rounded-lg border bg-muted/20 p-3 text-sm md:col-span-2">
                             <div class="font-medium">Calculated package price: {{ new Intl.NumberFormat('en-US', { style: 'currency', currency: offering.currency || 'USD' }).format(calculatedPriceCents(offering) / 100) }}</div>
-                            <div class="mt-1 text-xs text-muted-foreground">Based on this license's per-image and per-video prices, the package unit counts, minimum price, adjustment, and optional override.</div>
+                            <div class="mt-1 text-xs text-muted-foreground">Uses the selected license pricing model, package image/video units, minimum price, adjustment, and optional override.</div>
                         </div>
 
                         <label class="space-y-1.5 text-sm">

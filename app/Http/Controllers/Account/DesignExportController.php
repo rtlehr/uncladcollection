@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\RenderDesignExport;
-use App\Models\AssetFile;
 use App\Models\DesignExport;
 use App\Models\DesignProject;
 use App\Models\License;
@@ -252,36 +251,16 @@ class DesignExportController extends Controller
                 'One or more UC Library images in this design no longer have an active matching license.',
             );
 
-            // Backwards compatibility for layers created before a specific
-            // licensed asset file was stored on the Fabric object.
-            if ($reference['asset_file_id'] <= 0) {
-                continue;
-            }
-
-            $snapshot = collect($license->included_asset_files_snapshot ?? []);
-            $snapshotIds = $snapshot->pluck('asset_file_id')->filter()->map(fn ($id) => (int) $id);
-            $snapshotUuids = $snapshot->pluck('uuid')->filter()->map(fn ($uuid) => (string) $uuid);
-
-            $assetFile = AssetFile::query()
-                ->whereKey($reference['asset_file_id'])
-                ->where('asset_id', $reference['asset_id'])
-                ->where('is_active', true)
-                ->where('is_downloadable', true)
-                ->first();
-
-            $includedInSnapshot = $assetFile
-                && (($snapshotIds->isEmpty() && $snapshotUuids->isEmpty())
-                    || $snapshotIds->contains((int) $assetFile->id)
-                    || $snapshotUuids->contains((string) $assetFile->uuid));
-
-            abort_unless(
-                $assetFile
-                    && $includedInSnapshot
-                    && str_starts_with((string) $assetFile->mime_type, 'image/')
-                    && $assetFile->exists(),
-                403,
-                'One or more UC Library image files in this design are not included in the purchased asset license.',
-            );
+            /*
+             * The active license is the export entitlement for a UC Library
+             * layer. Do not re-authorize an existing saved design against the
+             * exact asset_files row that happened to exist when the layer was
+             * inserted. Admin replacement of an asset image creates a new file
+             * row and must not invalidate a customer's already-created design.
+             *
+             * New additions are still restricted by DesignLibraryController
+             * to the licensed asset's current active downloadable images.
+             */
         }
     }
 

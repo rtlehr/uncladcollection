@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Commerce\Pricing\DynamicLicensePriceCalculator;
+
 use App\Enums\AssetFileRole;
 use App\Enums\AssetMediaType;
 use App\Enums\AssetType;
@@ -32,7 +34,8 @@ class PublicAssetCatalogService
                 'activeFiles:id,asset_id,role,media_type,disk,directory,stored_filename,original_filename,extension,mime_type,size_bytes,width,height,duration_seconds,page_count,is_downloadable,is_active,sort_order',
                 'offerings' => fn ($query) => $query
                     ->where('is_active', true)
-                    ->select(['id', 'asset_id', 'name', 'price_cents', 'currency', 'is_active', 'sort_order']),
+                    ->with(['licenseType:id,name,slug,description,pricing_model,price_cents,image_unit_price_cents,video_unit_price_cents,total_price_cents,minimum_price_cents,currency', 'files'])
+                    ->select(['id', 'asset_id', 'license_type_id', 'name', 'description', 'image_units', 'video_units', 'price_cents', 'price_adjustment_cents', 'price_override_cents', 'currency', 'include_all_active_files', 'is_active', 'sort_order']),
                 'legacyImage:id,title,slug',
                 'categories:id,name',
                 'tags:id,name',
@@ -128,9 +131,18 @@ class PublicAssetCatalogService
         $preview = $this->resolvePreviewFile($asset, $files);
         $legacyImage = $asset->legacyImage;
         $offerings = $asset->offerings;
-        $startingPrice = $offerings->min('price_cents');
-        $highestPrice = $offerings->max('price_cents');
-        $currency = $offerings->firstWhere('price_cents', $startingPrice)?->currency ?? 'USD';
+        $calculator = app(DynamicLicensePriceCalculator::class);
+        $offeringPrices = $offerings->mapWithKeys(fn ($offering) => [
+            $offering->id => (int) $calculator->calculate($offering)['final_price_cents'],
+        ]);
+        $startingPrice = $offeringPrices->isNotEmpty() ? $offeringPrices->min() : null;
+        $highestPrice = $offeringPrices->isNotEmpty() ? $offeringPrices->max() : null;
+        $startingOfferingId = $startingPrice !== null
+            ? $offeringPrices->search($startingPrice, true)
+            : null;
+        $currency = $startingOfferingId !== null
+            ? ($offerings->firstWhere('id', $startingOfferingId)?->currency ?? 'USD')
+            : 'USD';
 
         $formatNames = $files
             ->pluck('extension')
@@ -141,7 +153,7 @@ class PublicAssetCatalogService
             ->values();
 
         $commerceOfferings = $offerings
-            ->map(function ($offering) use ($files): array {
+            ->map(function ($offering) use ($files, $calculator): array {
                 $includedFiles = $offering->include_all_active_files
                     ? $files->where('is_downloadable', true)
                     : ($offering->relationLoaded('files')
@@ -149,6 +161,8 @@ class PublicAssetCatalogService
                             ->where('is_active', true)
                             ->where('is_downloadable', true)
                         : collect());
+
+                $pricing = $calculator->calculate($offering);
 
                 return [
                     'id' => $offering->id,
@@ -160,7 +174,8 @@ class PublicAssetCatalogService
                         'name' => $offering->licenseType->name,
                         'slug' => $offering->licenseType->slug,
                     ] : null,
-                    'price_cents' => (int) $offering->price_cents,
+                    'price_cents' => (int) $pricing['final_price_cents'],
+                    'pricing_model' => $pricing['pricing_model'],
                     'currency' => $offering->currency ?: 'USD',
                     'formats' => $includedFiles
                         ->pluck('extension')

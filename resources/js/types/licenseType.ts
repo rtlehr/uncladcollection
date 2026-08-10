@@ -3,9 +3,11 @@ export interface AdminLicenseType {
     name: string;
     slug: string;
     description: string | null;
+    pricing_model: 'per_unit' | 'flat_total';
     price_cents: number;
     image_unit_price_cents: number;
     video_unit_price_cents: number;
+    total_price_cents: number | null;
     minimum_price_cents: number | null;
     currency: string;
     download_limit: number | null;
@@ -21,8 +23,10 @@ export interface EditableAdminLicenseType {
     name: string;
     slug: string;
     description: string | null;
+    pricing_model: 'per_unit' | 'flat_total';
     image_unit_price: string;
     video_unit_price: string;
+    total_price: string;
     minimum_price: string;
     currency: string;
     download_limit: number | null;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LicenseType;
+use App\Commerce\Pricing\DynamicLicensePriceCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -36,12 +37,17 @@ class LicenseTypeController extends Controller
         $validated['slug'] = Str::slug($validated['slug'] ?: $validated['name']);
         $validated['image_unit_price_cents'] = (int) round(((float) $validated['image_unit_price']) * 100);
         $validated['video_unit_price_cents'] = (int) round(((float) $validated['video_unit_price']) * 100);
+        $validated['total_price_cents'] = filled($validated['total_price'] ?? null)
+            ? (int) round(((float) $validated['total_price']) * 100)
+            : null;
         $validated['minimum_price_cents'] = filled($validated['minimum_price'] ?? null)
             ? (int) round(((float) $validated['minimum_price']) * 100)
             : null;
-        $validated['price_cents'] = $validated['image_unit_price_cents'];
+        $validated['price_cents'] = $validated['pricing_model'] === 'flat_total'
+            ? (int) ($validated['total_price_cents'] ?? 0)
+            : $validated['image_unit_price_cents'];
 
-        unset($validated['image_unit_price'], $validated['video_unit_price'], $validated['minimum_price']);
+        unset($validated['image_unit_price'], $validated['video_unit_price'], $validated['total_price'], $validated['minimum_price']);
 
         LicenseType::create($validated);
 
@@ -57,6 +63,9 @@ class LicenseTypeController extends Controller
                 ...$licenseType->toArray(),
                 'image_unit_price' => number_format($licenseType->image_unit_price_cents / 100, 2, '.', ''),
                 'video_unit_price' => number_format($licenseType->video_unit_price_cents / 100, 2, '.', ''),
+                'total_price' => $licenseType->total_price_cents !== null
+                    ? number_format($licenseType->total_price_cents / 100, 2, '.', '')
+                    : '',
                 'minimum_price' => $licenseType->minimum_price_cents !== null
                     ? number_format($licenseType->minimum_price_cents / 100, 2, '.', '')
                     : '',
@@ -71,14 +80,27 @@ class LicenseTypeController extends Controller
         $validated['slug'] = Str::slug($validated['slug'] ?: $validated['name']);
         $validated['image_unit_price_cents'] = (int) round(((float) $validated['image_unit_price']) * 100);
         $validated['video_unit_price_cents'] = (int) round(((float) $validated['video_unit_price']) * 100);
+        $validated['total_price_cents'] = filled($validated['total_price'] ?? null)
+            ? (int) round(((float) $validated['total_price']) * 100)
+            : null;
         $validated['minimum_price_cents'] = filled($validated['minimum_price'] ?? null)
             ? (int) round(((float) $validated['minimum_price']) * 100)
             : null;
-        $validated['price_cents'] = $validated['image_unit_price_cents'];
+        $validated['price_cents'] = $validated['pricing_model'] === 'flat_total'
+            ? (int) ($validated['total_price_cents'] ?? 0)
+            : $validated['image_unit_price_cents'];
 
-        unset($validated['image_unit_price'], $validated['video_unit_price'], $validated['minimum_price']);
+        unset($validated['image_unit_price'], $validated['video_unit_price'], $validated['total_price'], $validated['minimum_price']);
 
         $licenseType->update($validated);
+
+        // Keep the compatibility price stored on existing offerings aligned
+        // when an administrator changes the reusable license pricing rules.
+        $calculator = app(DynamicLicensePriceCalculator::class);
+        $licenseType->assetOfferings()->with('licenseType')->get()->each(function ($offering) use ($calculator): void {
+            $pricing = $calculator->calculate($offering);
+            $offering->update(['price_cents' => (int) $pricing['final_price_cents']]);
+        });
 
         return redirect()
             ->route('admin.license-types.index')
@@ -105,8 +127,10 @@ class LicenseTypeController extends Controller
                 'unique:license_types,slug,' . $licenseTypeId,
             ],
             'description' => ['nullable', 'string'],
+            'pricing_model' => ['required', 'in:per_unit,flat_total'],
             'image_unit_price' => ['required', 'numeric', 'min:0'],
             'video_unit_price' => ['required', 'numeric', 'min:0'],
+            'total_price' => ['nullable', 'required_if:pricing_model,flat_total', 'numeric', 'min:0'],
             'minimum_price' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
             'download_limit' => ['nullable', 'integer', 'min:1'],

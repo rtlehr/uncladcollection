@@ -4,12 +4,16 @@ namespace App\Services;
 
 use App\Models\Asset;
 use App\Models\AssetOffering;
+use App\Commerce\Pricing\DynamicLicensePriceCalculator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class AssetOfferingService
 {
-    public function __construct(private readonly AssetPricingService $pricingService) {}
+    public function __construct(
+        private readonly AssetPricingService $pricingService,
+        private readonly DynamicLicensePriceCalculator $dynamicPriceCalculator,
+    ) {}
     public function saveMany(Asset $asset, array $offerings): void
     {
         DB::transaction(function () use ($asset, $offerings): void {
@@ -38,6 +42,13 @@ class AssetOfferingService
                 $fileIds = collect($data['file_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
                 $validIds = $asset->activeFiles()->whereIn('id', $fileIds)->pluck('id');
                 $offering->files()->sync($validIds->mapWithKeys(fn ($id, $i) => [$id => ['sort_order' => ($i + 1) * 10]])->all());
+
+                // Keep the legacy/stored offering price synchronized for older
+                // presentation code and reports. Checkout still calculates from
+                // the pricing engine at purchase time.
+                $offering->load('licenseType');
+                $calculated = $this->dynamicPriceCalculator->calculate($offering);
+                $offering->update(['price_cents' => (int) $calculated['final_price_cents']]);
             }
 
             $asset->offerings()->whereNotIn('id', $keep)->delete();

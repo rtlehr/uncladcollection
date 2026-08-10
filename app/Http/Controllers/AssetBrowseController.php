@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetFile;
+use App\Commerce\Pricing\DynamicLicensePriceCalculator;
 use App\Analytics\AnalyticsTracker;
 use App\Enums\AnalyticsEventName;
 use App\Enums\DiscoverySource;
@@ -29,6 +30,7 @@ class AssetBrowseController extends Controller
         RecentlyViewedAssetService $recentlyViewed,
         RelatedAssetService $relatedAssetsService,
         AnalyticsTracker $analytics,
+        DynamicLicensePriceCalculator $dynamicPriceCalculator,
     ): Response
     {
         abort_unless(
@@ -48,7 +50,7 @@ class AssetBrowseController extends Controller
             'configurationGroups' => fn ($query) => $query->where('is_active', true)->with(['values' => fn ($query) => $query->where('is_active', true)->with(['rules' => fn ($query) => $query->where('is_active', true)])]),
             'offerings' => fn ($query) => $query
                 ->where('is_active', true)
-                ->with(['licenseType:id,name,slug,description,usage_terms', 'files', 'pricingTiers' => fn ($query) => $query->where('is_active', true)->orderBy('minimum_quantity')])
+                ->with(['licenseType:id,name,slug,description,usage_terms,pricing_model,price_cents,image_unit_price_cents,video_unit_price_cents,total_price_cents,minimum_price_cents,currency', 'files', 'pricingTiers' => fn ($query) => $query->where('is_active', true)->orderBy('minimum_quantity')])
                 ->orderBy('sort_order')
                 ->orderBy('id'),
         ]);
@@ -162,14 +164,16 @@ class AssetBrowseController extends Controller
                     ])->values(),
                 ])->values(),
             ],
-            'offerings' => $asset->offerings->map(function ($offering) use ($presentation, $asset) {
+            'offerings' => $asset->offerings->map(function ($offering) use ($presentation, $asset, $dynamicPriceCalculator) {
                 $included = $offering->includedFiles();
+                $pricing = $dynamicPriceCalculator->calculate($offering);
 
                 return [
                     'id' => $offering->id,
                     'name' => $offering->name,
                     'description' => $offering->description,
-                    'price_cents' => $offering->price_cents,
+                    'price_cents' => (int) $pricing['final_price_cents'],
+                    'pricing_model' => $pricing['pricing_model'],
                     'currency' => $offering->currency,
                     'download_limit' => $offering->download_limit,
                     'expires_after_days' => $offering->expires_after_days,

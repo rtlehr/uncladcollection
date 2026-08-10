@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { AlertTriangle, Check, Files, PackageCheck, X } from '@lucide/vue';
 import { computed } from 'vue';
-import type { AdminAssetFile, AdminAssetOffering } from '@/types/adminAsset';
+import type { AdminAssetFile, AdminAssetOffering, LicenseTypeOption } from '@/types/adminAsset';
 
 const props = defineProps<{
     files: AdminAssetFile[];
     offerings: AdminAssetOffering[];
+    licenseTypes: LicenseTypeOption[];
 }>();
 
 const activeOfferings = computed(() => props.offerings.filter((offering) => offering.is_active));
@@ -22,11 +23,27 @@ function includesFile(offering: AdminAssetOffering, file: AdminAssetFile): boole
     return file.is_downloadable && includedFiles(offering).some((item) => item.id === file.id);
 }
 
+function calculatedPriceCents(offering: AdminAssetOffering): number {
+    const license = props.licenseTypes.find((item) => item.id === offering.license_type_id);
+    if (!license) return offering.price_cents;
+
+    const base = license.pricing_model === 'flat_total'
+        ? (license.total_price_cents ?? license.price_cents ?? 0)
+        : (offering.image_units * license.image_unit_price_cents)
+            + (offering.video_units * license.video_unit_price_cents);
+    const subtotal = base + offering.price_adjustment_cents;
+    const withMinimum = license.minimum_price_cents === null
+        ? subtotal
+        : Math.max(subtotal, license.minimum_price_cents);
+
+    return offering.price_override_cents ?? Math.max(0, withMinimum);
+}
+
 function formatPrice(offering: AdminAssetOffering): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: offering.currency || 'USD',
-    }).format(offering.price_cents / 100);
+    }).format(calculatedPriceCents(offering) / 100);
 }
 
 function formatBytes(bytes: number): string {
@@ -58,7 +75,7 @@ function warningFor(offering: AdminAssetOffering): string | null {
 return 'No downloadable files are included.';
 }
 
-    if (offering.price_cents <= 0) {
+    if (calculatedPriceCents(offering) <= 0) {
 return 'This offering has no price.';
 }
 
