@@ -33,6 +33,8 @@ Route::middleware(['auth', 'verified'])
         Route::post('/designs/{design}/uploads', [DesignUploadController::class, 'store'])->middleware('block.impersonation')->name('designs.uploads.store');
         Route::get('/designs/{design}/uploads/{upload}', [DesignUploadController::class, 'show'])->name('designs.uploads.show');
         Route::get('/designs/{design}/library', [DesignLibraryController::class, 'index'])->middleware('throttle:60,1')->name('designs.library.index');
+        Route::get('/designs/{design}/library/{license}/files', [DesignLibraryController::class, 'files'])->middleware('throttle:60,1')->name('designs.library.files.index');
+        Route::get('/designs/{design}/library/{license}/files/{assetFile}/image', [DesignLibraryController::class, 'fileImage'])->middleware('throttle:60,1')->name('designs.library.files.image');
         Route::get('/designs/{design}/library/{license}/image', [DesignLibraryController::class, 'image'])->middleware('throttle:60,1')->name('designs.library.image');
         Route::post('/designs/{design}/exports', [DesignExportController::class, 'store'])->middleware(['block.impersonation', 'throttle:20,1'])->name('designs.exports.store');
         Route::post('/designs/{design}/exports/render', [DesignExportController::class, 'render'])->middleware(['block.impersonation', 'throttle:10,1'])->name('designs.exports.render');

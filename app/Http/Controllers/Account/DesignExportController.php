@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\RenderDesignExport;
+use App\Models\AssetFile;
 use App\Models\DesignExport;
 use App\Models\DesignProject;
 use App\Models\License;
@@ -216,6 +217,10 @@ class DesignExportController extends Controller
             ->map(fn (array $object) => [
                 'license_id' => (int) ($object['sourceLicenseId'] ?? 0),
                 'asset_id' => (int) ($object['sourceAssetId'] ?? 0),
+                // Older saved designs predate multi-image library support and
+                // therefore do not have a sourceAssetFileId. A positive file
+                // ID is required and validated for all newly-added layers.
+                'asset_file_id' => (int) ($object['sourceAssetFileId'] ?? 0),
             ]);
 
         abort_if(
@@ -225,7 +230,7 @@ class DesignExportController extends Controller
         );
 
         $references = $references
-            ->unique(fn (array $reference) => $reference['license_id'].'-'.$reference['asset_id'])
+            ->unique(fn (array $reference) => $reference['license_id'].'-'.$reference['asset_id'].'-'.$reference['asset_file_id'])
             ->values();
 
         if ($references->isEmpty()) {
@@ -239,11 +244,43 @@ class DesignExportController extends Controller
             ->keyBy('id');
 
         foreach ($references as $reference) {
+            /** @var License|null $license */
             $license = $licenses->get($reference['license_id']);
             abort_unless(
                 $license && $license->isActive() && (int) $license->asset_id === (int) $reference['asset_id'],
                 403,
                 'One or more UC Library images in this design no longer have an active matching license.',
+            );
+
+            // Backwards compatibility for layers created before a specific
+            // licensed asset file was stored on the Fabric object.
+            if ($reference['asset_file_id'] <= 0) {
+                continue;
+            }
+
+            $snapshot = collect($license->included_asset_files_snapshot ?? []);
+            $snapshotIds = $snapshot->pluck('asset_file_id')->filter()->map(fn ($id) => (int) $id);
+            $snapshotUuids = $snapshot->pluck('uuid')->filter()->map(fn ($uuid) => (string) $uuid);
+
+            $assetFile = AssetFile::query()
+                ->whereKey($reference['asset_file_id'])
+                ->where('asset_id', $reference['asset_id'])
+                ->where('is_active', true)
+                ->where('is_downloadable', true)
+                ->first();
+
+            $includedInSnapshot = $assetFile
+                && (($snapshotIds->isEmpty() && $snapshotUuids->isEmpty())
+                    || $snapshotIds->contains((int) $assetFile->id)
+                    || $snapshotUuids->contains((string) $assetFile->uuid));
+
+            abort_unless(
+                $assetFile
+                    && $includedInSnapshot
+                    && str_starts_with((string) $assetFile->mime_type, 'image/')
+                    && $assetFile->exists(),
+                403,
+                'One or more UC Library image files in this design are not included in the purchased asset license.',
             );
         }
     }

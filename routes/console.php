@@ -362,3 +362,7 @@ Artisan::command('design-studio:cleanup {--dry-run}', function (): int {
 })->purpose('Prune expired design exports and mark stale design renders as failed');
 
 Schedule::command('design-studio:cleanup')->dailyAt('03:10')->withoutOverlapping();
+
+// Keep advertising campaign lifecycle status in sync with scheduled start/end times.
+// Production/staging only need the normal Laravel scheduler cron (`php artisan schedule:run`).
+Schedule::command('advertising:sync-campaign-statuses')->everyFiveMinutes()->withoutOverlapping();

@@ -402,7 +402,7 @@ class AdvertisingCampaignController extends Controller
                     return [
                         'eyebrow' => 'Campaign workflow · Scheduled',
                         'title' => 'Campaign is scheduled',
-                        'description' => 'This campaign is launch ready and scheduled for '.$campaign->starts_at->format('M j, Y g:i A').'. On or after that time, return here to activate it.',
+                        'description' => 'This campaign is launch ready and scheduled for '.$campaign->starts_at->format('M j, Y g:i A').'. It will activate automatically when the scheduled start time arrives, provided launch-readiness checks still pass.',
                         'status' => 'waiting',
                         'action' => ['label' => 'Edit Schedule', 'href' => "{$base}/edit", 'method' => 'get'],
                         'secondary' => ['label' => 'Client Workspace', 'href' => "/admin/advertisers/{$campaign->advertiser_id}"],
@@ -496,16 +496,29 @@ class AdvertisingCampaignController extends Controller
 
     private function workflowHistory(AdvertisingCampaign $campaign): array
     {
+        $creativeIds = $campaign->creatives()->pluck('id');
+
         return AdminActivity::query()
             ->with('user:id,name,email')
-            ->where('subject_type', $campaign::class)
-            ->where('subject_id', $campaign->id)
-            ->where(function ($query) {
+            ->where(function ($query) use ($campaign, $creativeIds): void {
+                $query->where(function ($campaignQuery) use ($campaign): void {
+                    $campaignQuery->where('subject_type', $campaign::class)
+                        ->where('subject_id', $campaign->id);
+                });
+
+                if ($creativeIds->isNotEmpty()) {
+                    $query->orWhere(function ($creativeQuery) use ($creativeIds): void {
+                        $creativeQuery->where('subject_type', \App\Models\AdCreative::class)
+                            ->whereIn('subject_id', $creativeIds);
+                    });
+                }
+            })
+            ->where(function ($query): void {
                 $query->where('field_name', 'status')
-                    ->orWhereIn('action', ['campaign_status', 'campaign_updated']);
+                    ->orWhereIn('action', ['campaign_status', 'campaign_updated', 'creative_status', 'creative_created', 'creative_updated', 'creative_deleted']);
             })
             ->latest('id')
-            ->limit(30)
+            ->limit(40)
             ->get()
             ->map(fn (AdminActivity $activity) => [
                 'id' => $activity->id,

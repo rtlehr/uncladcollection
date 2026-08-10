@@ -44,10 +44,12 @@ FabricObject.customProperties = [
     'sourceType',
     'sourceAssetId',
     'sourceLicenseId',
+    'sourceAssetFileId',
 ];
 
 type ExportPreset = { name: string; width: number; height: number };
-type LibraryItem = { license_id: number; asset_id: number; title: string; license_name: string | null; licensed_at: string | null; thumbnail_url: string; image_url: string };
+type LibraryAsset = { license_id: number; asset_id: number; title: string; license_name: string | null; licensed_at: string | null; image_count: number; thumbnail_url: string; files_url: string };
+type LibraryFile = { id: number; uuid: string; name: string; role: string | null; format: string | null; width: number | null; height: number | null; thumbnail_url: string; image_url: string };
 type ExportRecord = {
     uuid: string;
     width: number;
@@ -103,7 +105,10 @@ const libraryOpen = ref(false);
 const librarySearch = ref('');
 const libraryLoading = ref(false);
 const libraryAdding = ref<number | null>(null);
-const libraryItems = ref<LibraryItem[]>([]);
+const libraryItems = ref<LibraryAsset[]>([]);
+const librarySelectedAsset = ref<LibraryAsset | null>(null);
+const libraryFiles = ref<LibraryFile[]>([]);
+const libraryFilesLoading = ref(false);
 const libraryError = ref('');
 const canvasSizeOpen = ref(false);
 const canvasWidth = ref(props.project.canvas_width);
@@ -222,7 +227,7 @@ return;
 }
 
 function fabricJson(): Record<string, unknown> {
-    return canvas?.toJSON(['layerId', 'name', 'uploadUuid', 'originalUploadUuid', 'originalSrc', 'backgroundRemoval', 'lockedByUser', 'sourceType', 'sourceAssetId', 'sourceLicenseId']) as Record<string, unknown> ?? { objects: [] };
+    return canvas?.toJSON(['layerId', 'name', 'uploadUuid', 'originalUploadUuid', 'originalSrc', 'backgroundRemoval', 'lockedByUser', 'sourceType', 'sourceAssetId', 'sourceLicenseId', 'sourceAssetFileId']) as Record<string, unknown> ?? { objects: [] };
 }
 
 function snapshot(): string {
@@ -742,31 +747,32 @@ return;
 
 async function loadLibrary(): Promise<void> {
     if (libraryLoading.value) {
-return;
-}
+        return;
+    }
 
     libraryLoading.value = true;
     libraryError.value = '';
+    librarySelectedAsset.value = null;
+    libraryFiles.value = [];
 
     try {
         const url = new URL(props.project.library_url, window.location.origin);
 
         if (librarySearch.value.trim()) {
-url.searchParams.set('search', librarySearch.value.trim());
-}
+            url.searchParams.set('search', librarySearch.value.trim());
+        }
 
         const response = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
 
         if (!response.ok) {
             const payload = await response.json().catch(() => null) as { message?: string } | null;
-
-            throw new Error(payload?.message ?? 'Your licensed image library could not be loaded.');
+            throw new Error(payload?.message ?? 'Your licensed asset library could not be loaded.');
         }
 
-        const payload = await response.json() as { items: LibraryItem[] };
+        const payload = await response.json() as { items: LibraryAsset[] };
         libraryItems.value = payload.items;
     } catch (error) {
-        libraryError.value = error instanceof Error ? error.message : 'Your licensed image library could not be loaded.';
+        libraryError.value = error instanceof Error ? error.message : 'Your licensed asset library could not be loaded.';
     } finally {
         libraryLoading.value = false;
     }
@@ -774,43 +780,84 @@ url.searchParams.set('search', librarySearch.value.trim());
 
 function openLibrary(): void {
     libraryOpen.value = true;
+    librarySelectedAsset.value = null;
+    libraryFiles.value = [];
     void loadLibrary();
 }
 
 function closeLibrary(): void {
     if (libraryAdding.value !== null) {
-return;
-}
-
-    libraryOpen.value = false;
-}
-
-async function addLibraryImage(item: LibraryItem): Promise<void> {
-    if (!canvas || libraryAdding.value !== null) {
-return;
-}
-
-    if (canvas.getObjects().length >= props.limits.max_layer_count) {
-        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
-
         return;
     }
 
-    libraryAdding.value = item.license_id;
+    libraryOpen.value = false;
+    librarySelectedAsset.value = null;
+    libraryFiles.value = [];
+}
+
+async function openLibraryAsset(item: LibraryAsset): Promise<void> {
+    if (libraryFilesLoading.value) {
+        return;
+    }
+
+    librarySelectedAsset.value = item;
+    libraryFiles.value = [];
+    libraryFilesLoading.value = true;
+    libraryError.value = '';
 
     try {
-        const image = await FabricImage.fromURL(item.image_url, { crossOrigin: 'anonymous' });
+        const response = await fetch(item.files_url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+            const payload = await response.json().catch(() => null) as { message?: string } | null;
+            throw new Error(payload?.message ?? 'The images in this purchased asset could not be loaded.');
+        }
+
+        const payload = await response.json() as { files: LibraryFile[] };
+        libraryFiles.value = payload.files;
+    } catch (error) {
+        libraryError.value = error instanceof Error ? error.message : 'The images in this purchased asset could not be loaded.';
+    } finally {
+        libraryFilesLoading.value = false;
+    }
+}
+
+function backToLibraryAssets(): void {
+    if (libraryAdding.value !== null) {
+        return;
+    }
+
+    librarySelectedAsset.value = null;
+    libraryFiles.value = [];
+    libraryError.value = '';
+}
+
+async function addLibraryImage(file: LibraryFile): Promise<void> {
+    const asset = librarySelectedAsset.value;
+    if (!canvas || !asset || libraryAdding.value !== null) {
+        return;
+    }
+
+    if (canvas.getObjects().length >= props.limits.max_layer_count) {
+        alert(`This design already has the maximum of ${props.limits.max_layer_count} layers.`);
+        return;
+    }
+
+    libraryAdding.value = file.id;
+
+    try {
+        const image = await FabricImage.fromURL(file.image_url, { crossOrigin: 'anonymous' });
         const maxWidth = canvasWidth.value * 0.5;
         const maxHeight = canvasHeight.value * 0.5;
         image.scale(Math.min(maxWidth / (image.width || 1), maxHeight / (image.height || 1), 1));
         image.set({
             left: canvasWidth.value * 0.15,
             top: canvasHeight.value * 0.15,
-            name: item.title,
+            name: file.name || asset.title,
             layerId: createLayerId(),
             sourceType: 'licensed_asset',
-            sourceAssetId: item.asset_id,
-            sourceLicenseId: item.license_id,
+            sourceAssetId: asset.asset_id,
+            sourceLicenseId: asset.license_id,
+            sourceAssetFileId: file.id,
         });
         canvas.add(image);
         canvas.setActiveObject(image);
@@ -818,6 +865,8 @@ return;
         selectObject(image);
         pushHistory();
         libraryOpen.value = false;
+        librarySelectedAsset.value = null;
+        libraryFiles.value = [];
     } catch (error) {
         alert(error instanceof Error ? error.message : 'The licensed image could not be added to this design.');
     } finally {
@@ -1970,40 +2019,74 @@ return;
         </div>
 
         <div v-if="libraryOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" @click.self="closeLibrary">
-            <div class="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-stone-950 shadow-2xl">
+            <div class="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-stone-950 shadow-2xl">
                 <div class="flex items-center gap-3 border-b border-white/10 p-4">
+                    <button v-if="librarySelectedAsset" class="rounded-lg p-2 text-stone-400 hover:bg-white/5 hover:text-white" title="Back to purchased assets" @click="backToLibraryAssets"><ArrowLeft class="h-5 w-5" /></button>
                     <div class="min-w-0 flex-1">
-                        <h2 class="text-lg font-semibold">Add from My Library</h2>
-                        <p class="mt-1 text-sm text-stone-400">Choose an image you already have an active UC license for.</p>
+                        <h2 class="text-lg font-semibold">{{ librarySelectedAsset ? librarySelectedAsset.title : 'Add from My Library' }}</h2>
+                        <p v-if="librarySelectedAsset" class="mt-1 text-sm text-stone-400">
+                            Choose one of the {{ librarySelectedAsset.image_count }} licensed images included with this asset.
+                        </p>
+                        <p v-else class="mt-1 text-sm text-stone-400">Choose a purchased asset, then select the image you want to add.</p>
                     </div>
                     <button class="rounded-lg p-2 text-stone-400 hover:bg-white/5 hover:text-white" @click="closeLibrary"><X class="h-5 w-5" /></button>
                 </div>
-                <form class="flex gap-2 border-b border-white/10 p-4" @submit.prevent="loadLibrary">
+
+                <form v-if="!librarySelectedAsset" class="flex gap-2 border-b border-white/10 p-4" @submit.prevent="loadLibrary">
                     <div class="relative flex-1">
                         <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
-                        <input v-model="librarySearch" class="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm" placeholder="Search licensed images…" />
+                        <input v-model="librarySearch" class="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm" placeholder="Search purchased assets…" />
                     </div>
                     <Button type="submit" variant="secondary" :disabled="libraryLoading">{{ libraryLoading ? 'Searching…' : 'Search' }}</Button>
                 </form>
+
                 <div class="min-h-0 flex-1 overflow-y-auto p-4">
                     <p v-if="libraryError" class="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{{ libraryError }}</p>
-                    <div v-else-if="libraryLoading" class="py-12 text-center text-sm text-stone-400">Loading your licensed images…</div>
-                    <div v-else-if="libraryItems.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <article v-for="item in libraryItems" :key="item.license_id" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-                            <div class="aspect-[4/3] bg-stone-900">
-                                <img :src="item.thumbnail_url" :alt="item.title" class="h-full w-full object-cover" />
-                            </div>
-                            <div class="p-3">
-                                <h3 class="truncate text-sm font-medium text-white">{{ item.title }}</h3>
-                                <p class="mt-1 text-xs text-stone-400">{{ item.license_name || 'Licensed image' }}<span v-if="item.licensed_at"> · {{ item.licensed_at }}</span></p>
-                                <Button class="mt-3 w-full" size="sm" :disabled="libraryAdding !== null" @click="addLibraryImage(item)">{{ libraryAdding === item.license_id ? 'Adding…' : 'Add to design' }}</Button>
-                            </div>
-                        </article>
-                    </div>
-                    <div v-else class="py-12 text-center">
-                        <LibraryBig class="mx-auto h-9 w-9 text-stone-600" />
-                        <p class="mt-3 text-sm text-stone-300">No matching licensed images were found.</p>
-                    </div>
+
+                    <template v-if="librarySelectedAsset">
+                        <div v-if="libraryFilesLoading" class="py-12 text-center text-sm text-stone-400">Loading images included with this asset…</div>
+                        <div v-else-if="libraryFiles.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <article v-for="file in libraryFiles" :key="file.id" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+                                <div class="aspect-[4/3] bg-stone-900">
+                                    <img :src="file.thumbnail_url" :alt="file.name" class="h-full w-full object-contain" loading="lazy" />
+                                </div>
+                                <div class="p-3">
+                                    <h3 class="truncate text-sm font-medium text-white" :title="file.name">{{ file.name }}</h3>
+                                    <p class="mt-1 text-xs text-stone-400">
+                                        <span v-if="file.role">{{ file.role }}</span>
+                                        <span v-if="file.format"> · {{ file.format }}</span>
+                                        <span v-if="file.width && file.height"> · {{ file.width }}×{{ file.height }}</span>
+                                    </p>
+                                    <Button class="mt-3 w-full" size="sm" :disabled="libraryAdding !== null" @click="addLibraryImage(file)">{{ libraryAdding === file.id ? 'Adding…' : 'Add to design' }}</Button>
+                                </div>
+                            </article>
+                        </div>
+                        <div v-else-if="!libraryError" class="py-12 text-center">
+                            <ImagePlus class="mx-auto h-9 w-9 text-stone-600" />
+                            <p class="mt-3 text-sm text-stone-300">No currently available image files were found in this purchased asset.</p>
+                        </div>
+                    </template>
+
+                    <template v-else>
+                        <div v-if="libraryLoading" class="py-12 text-center text-sm text-stone-400">Loading your purchased assets…</div>
+                        <div v-else-if="libraryItems.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <article v-for="item in libraryItems" :key="item.license_id" class="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+                                <div class="aspect-[4/3] bg-stone-900">
+                                    <img :src="item.thumbnail_url" :alt="item.title" class="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div class="p-3">
+                                    <h3 class="truncate text-sm font-medium text-white">{{ item.title }}</h3>
+                                    <p class="mt-1 text-xs text-stone-400">{{ item.license_name || 'Licensed asset' }}<span v-if="item.licensed_at"> · {{ item.licensed_at }}</span></p>
+                                    <p class="mt-2 text-xs font-medium text-sky-300">{{ item.image_count }} {{ item.image_count === 1 ? 'image' : 'images' }} included</p>
+                                    <Button class="mt-3 w-full" size="sm" variant="secondary" @click="openLibraryAsset(item)">View images</Button>
+                                </div>
+                            </article>
+                        </div>
+                        <div v-else-if="!libraryError" class="py-12 text-center">
+                            <LibraryBig class="mx-auto h-9 w-9 text-stone-600" />
+                            <p class="mt-3 text-sm text-stone-300">No matching purchased assets with usable images were found.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>

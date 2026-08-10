@@ -35,13 +35,22 @@ class DesignLibraryController extends Controller
             ->latest('id')
             ->limit(100)
             ->get()
-            ->filter(fn (License $license): bool => $license->asset !== null && $this->licensedImageFile($license) !== null)
-            ->unique('asset_id')
+            ->map(fn (License $license): array => [
+                'license' => $license,
+                'files' => $this->licensedImageFiles($license),
+            ])
+            ->filter(fn (array $entry): bool => $entry['license']->asset !== null && $entry['files']->isNotEmpty())
+            ->unique(fn (array $entry): int => (int) $entry['license']->asset_id)
             ->take(40)
             ->values()
-            ->map(function (License $license) use ($design): array {
+            ->map(function (array $entry) use ($design): array {
+                /** @var License $license */
+                $license = $entry['license'];
+                /** @var Collection<int, AssetFile> $files */
+                $files = $entry['files'];
                 $asset = $license->asset;
                 $preview = $asset?->primaryPreviewFile;
+                $fallback = $files->first();
 
                 return [
                     'license_id' => $license->id,
@@ -49,35 +58,80 @@ class DesignLibraryController extends Controller
                     'title' => $asset?->title ?? 'Untitled image',
                     'license_name' => $license->license_name ?: $license->licenseType?->name,
                     'licensed_at' => ($license->starts_at ?? $license->created_at)?->format('M j, Y'),
+                    'image_count' => $files->count(),
                     'thumbnail_url' => $preview
                         ? route('assets.preview', [$asset, $preview])
-                        : route('account.designs.library.image', [$design, $license]),
-                    'image_url' => route('account.designs.library.image', [$design, $license]),
+                        : route('account.designs.library.files.image', [$design, $license, $fallback]),
+                    'files_url' => route('account.designs.library.files.index', [$design, $license]),
                 ];
             });
 
         return response()->json(['items' => $licenses]);
     }
 
+    public function files(Request $request, DesignProject $design, License $license): JsonResponse
+    {
+        $this->authorizeProject($request, $design);
+        $this->authorizeLicense($request, $license);
+
+        $license->loadMissing(['asset', 'licenseType']);
+        $files = $this->licensedImageFiles($license);
+
+        abort_unless($license->asset && $files->isNotEmpty(), 404, 'No licensed image files are currently available for this asset.');
+
+        return response()->json([
+            'asset' => [
+                'license_id' => $license->id,
+                'asset_id' => $license->asset_id,
+                'title' => $license->asset->title ?? 'Untitled image',
+                'license_name' => $license->license_name ?: $license->licenseType?->name,
+                'licensed_at' => ($license->starts_at ?? $license->created_at)?->format('M j, Y'),
+                'image_count' => $files->count(),
+            ],
+            'files' => $files->values()->map(function (AssetFile $file) use ($design, $license): array {
+                $name = $file->original_filename ?: $file->stored_filename ?: 'Licensed image';
+
+                return [
+                    'id' => $file->id,
+                    'uuid' => $file->uuid,
+                    'name' => $name,
+                    'role' => ucfirst(str_replace('_', ' ', $file->role?->value ?? (string) $file->role)),
+                    'format' => strtoupper((string) ($file->extension ?: pathinfo($name, PATHINFO_EXTENSION))),
+                    'width' => $file->width,
+                    'height' => $file->height,
+                    'image_url' => route('account.designs.library.files.image', [$design, $license, $file]),
+                    'thumbnail_url' => route('account.designs.library.files.image', [$design, $license, $file]),
+                ];
+            })->all(),
+        ]);
+    }
+
+    /**
+     * Backwards-compatible endpoint for saved designs created before the
+     * library picker supported multiple files per asset.
+     */
     public function image(Request $request, DesignProject $design, License $license): StreamedResponse
     {
         $this->authorizeProject($request, $design);
-        abort_unless((int) $license->user_id === (int) $request->user()->id && $license->isActive(), 403);
+        $this->authorizeLicense($request, $license);
 
-        $file = $this->licensedImageFile($license);
+        $file = $this->licensedImageFiles($license)->first();
         abort_unless($file, 404, 'No licensed image file is currently available for this asset.');
 
-        return response()->stream(function () use ($file): void {
-            $stream = Storage::disk($file->disk)->readStream($file->path);
-            abort_unless($stream !== false, 404);
-            fpassthru($stream);
-            fclose($stream);
-        }, 200, [
-            'Content-Type' => $file->mime_type ?: 'application/octet-stream',
-            'Content-Disposition' => 'inline; filename="'.addslashes(basename($file->original_filename ?: $file->stored_filename)).'"',
-            'Cache-Control' => 'private, max-age=3600',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return $this->streamFile($file);
+    }
+
+    public function fileImage(Request $request, DesignProject $design, License $license, AssetFile $assetFile): StreamedResponse
+    {
+        $this->authorizeProject($request, $design);
+        $this->authorizeLicense($request, $license);
+
+        $file = $this->licensedImageFiles($license)
+            ->first(fn (AssetFile $candidate): bool => $candidate->is($assetFile));
+
+        abort_unless($file, 404, 'This image file is not included in your purchased license or is no longer available.');
+
+        return $this->streamFile($file);
     }
 
     private function authorizeProject(Request $request, DesignProject $design): void
@@ -85,11 +139,17 @@ class DesignLibraryController extends Controller
         abort_unless((int) $design->user_id === (int) $request->user()->id, 403);
     }
 
-    private function licensedImageFile(License $license): ?AssetFile
+    private function authorizeLicense(Request $request, License $license): void
+    {
+        abort_unless((int) $license->user_id === (int) $request->user()->id && $license->isActive(), 403);
+    }
+
+    /** @return Collection<int, AssetFile> */
+    private function licensedImageFiles(License $license): Collection
     {
         $license->loadMissing('asset.activeFiles');
         if (! $license->asset || ! $license->isActive()) {
-            return null;
+            return collect();
         }
 
         $snapshot = collect($license->included_asset_files_snapshot ?? []);
@@ -102,6 +162,7 @@ class DesignLibraryController extends Controller
                 $isIncluded = ($ids->isEmpty() && $uuids->isEmpty())
                     || $ids->contains((int) $file->id)
                     || $uuids->contains((string) $file->uuid);
+
                 return $isIncluded
                     && $file->is_downloadable
                     && str_starts_with((string) $file->mime_type, 'image/')
@@ -119,8 +180,25 @@ class DesignLibraryController extends Controller
         return $files
             ->sortBy(fn (AssetFile $file) => [
                 $priority[$file->role?->value ?? (string) $file->role] ?? 9,
+                (int) $file->sort_order,
                 -((int) $file->width * (int) $file->height),
+                (int) $file->id,
             ])
-            ->first();
+            ->values();
+    }
+
+    private function streamFile(AssetFile $file): StreamedResponse
+    {
+        return response()->stream(function () use ($file): void {
+            $stream = Storage::disk($file->disk)->readStream($file->path);
+            abort_unless($stream !== false, 404);
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => $file->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="'.addslashes(basename($file->original_filename ?: $file->stored_filename)).'"',
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdCreative;
 use App\Models\AdvertisingCampaign;
 use App\Services\AdCreativeMediaService;
+use App\Services\AdminActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -24,7 +25,7 @@ class AdCreativeController extends Controller
 
     public function create(AdvertisingCampaign $adCampaign) { return $this->form($adCampaign); }
 
-    public function store(Request $request, AdvertisingCampaign $adCampaign, AdCreativeMediaService $media)
+    public function store(Request $request, AdvertisingCampaign $adCampaign, AdCreativeMediaService $media, AdminActivityService $activity)
     {
         $data = $this->validated($request, $adCampaign);
         $placementIds = $data['placement_ids'];
@@ -35,6 +36,7 @@ class AdCreativeController extends Controller
         $this->attachMedia($request, $data, $media, 'advertising/'.$adCampaign->uuid.'/creatives/'.Str::uuid());
         $creative = $adCampaign->creatives()->create($data);
         $creative->placements()->sync($placementIds);
+        $activity->log(action: 'creative_created', subject: $creative, description: 'Creative "'.$creative->name.'" added to campaign.');
         return to_route('admin.ad-campaigns.creatives.index', $adCampaign)->with('success', 'Creative added.');
     }
 
@@ -44,7 +46,7 @@ class AdCreativeController extends Controller
         return $this->form($adCampaign, $creative);
     }
 
-    public function update(Request $request, AdvertisingCampaign $adCampaign, AdCreative $creative, AdCreativeMediaService $media)
+    public function update(Request $request, AdvertisingCampaign $adCampaign, AdCreative $creative, AdCreativeMediaService $media, AdminActivityService $activity)
     {
         $this->ensureCampaign($adCampaign, $creative);
         abort_if($creative->status === 'approved', 422, 'Approved creatives must be returned to draft before editing.');
@@ -58,35 +60,50 @@ class AdCreativeController extends Controller
         }
         $creative->update($data);
         $creative->placements()->sync($placementIds);
+        $activity->log(action: 'creative_updated', subject: $creative, description: 'Creative "'.$creative->name.'" updated.');
         return to_route('admin.ad-campaigns.creatives.index', $adCampaign)->with('success', 'Creative updated.');
     }
 
-    public function submit(AdvertisingCampaign $adCampaign, AdCreative $creative)
+    public function submit(AdvertisingCampaign $adCampaign, AdCreative $creative, AdminActivityService $activity)
     {
         $this->ensureCampaign($adCampaign, $creative);
         abort_unless(in_array($creative->status, ['draft', 'rejected']), 422);
         abort_unless($creative->media_path, 422, 'Creative media is required.');
+        $oldStatus = $creative->status;
         $creative->update(['status' => 'submitted', 'submitted_at' => now(), 'rejection_reason' => null]);
+        $this->logCreativeStatus($activity, $creative, $oldStatus, 'submitted', 'Creative "'.$creative->name.'" submitted for approval.');
         return back()->with('success', 'Creative submitted for approval.');
     }
 
-    public function decision(Request $request, AdvertisingCampaign $adCampaign, AdCreative $creative)
+    public function decision(Request $request, AdvertisingCampaign $adCampaign, AdCreative $creative, AdminActivityService $activity)
     {
         $this->ensureCampaign($adCampaign, $creative);
         $data = $request->validate(['decision' => 'required|in:approve,reject', 'rejection_reason' => 'required_if:decision,reject|nullable|string|max:2000']);
         abort_unless($creative->status === 'submitted', 422);
+        $oldStatus = $creative->status;
+        $newStatus = $data['decision'] === 'approve' ? 'approved' : 'rejected';
         $creative->update($data['decision'] === 'approve'
             ? ['status' => 'approved', 'approved_at' => now(), 'approved_by' => $request->user()->id, 'rejection_reason' => null]
             : ['status' => 'rejected', 'approved_at' => null, 'approved_by' => $request->user()->id, 'rejection_reason' => $data['rejection_reason']]);
+        $this->logCreativeStatus(
+            $activity,
+            $creative,
+            $oldStatus,
+            $newStatus,
+            $newStatus === 'approved'
+                ? 'Creative "'.$creative->name.'" approved.'
+                : 'Creative "'.$creative->name.'" rejected: '.$data['rejection_reason'],
+        );
         return back()->with('success', 'Creative decision recorded.');
     }
 
 
-    public function returnToDraft(AdvertisingCampaign $adCampaign, AdCreative $creative)
+    public function returnToDraft(AdvertisingCampaign $adCampaign, AdCreative $creative, AdminActivityService $activity)
     {
         $this->ensureCampaign($adCampaign, $creative);
         abort_unless($creative->status === 'approved', 422, 'Only approved creatives can be returned to draft.');
 
+        $oldStatus = $creative->status;
         $creative->update([
             'status' => 'draft',
             'approved_at' => null,
@@ -94,14 +111,16 @@ class AdCreativeController extends Controller
             'submitted_at' => null,
             'rejection_reason' => null,
         ]);
+        $this->logCreativeStatus($activity, $creative, $oldStatus, 'draft', 'Creative "'.$creative->name.'" returned to draft and removed from public ad rotation.');
 
         return back()->with('success', 'Creative returned to draft and removed from public ad rotation.');
     }
 
-    public function destroy(AdvertisingCampaign $adCampaign, AdCreative $creative, AdCreativeMediaService $media)
+    public function destroy(AdvertisingCampaign $adCampaign, AdCreative $creative, AdCreativeMediaService $media, AdminActivityService $activity)
     {
         $this->ensureCampaign($adCampaign, $creative);
         abort_if($creative->status === 'approved', 422, 'Approved creatives cannot be deleted.');
+        $activity->log(action: 'creative_deleted', subject: $creative, description: 'Creative "'.$creative->name.'" deleted from campaign.');
         $media->deleteCreativeMedia($creative);
         $creative->delete();
         return back()->with('success', 'Creative deleted.');
@@ -163,6 +182,23 @@ class AdCreativeController extends Controller
             $paths = $media->storeVideo($request->file('media'), $directory);
             $data = array_merge($data, $paths, ['mime_type' => $request->file('media')->getMimeType(), 'file_size' => $request->file('media')->getSize(), 'original_filename' => $request->file('media')->getClientOriginalName(), 'media_edit_data' => null]);
         }
+    }
+
+    private function logCreativeStatus(
+        AdminActivityService $activity,
+        AdCreative $creative,
+        string $oldStatus,
+        string $newStatus,
+        string $description,
+    ): void {
+        $activity->log(
+            action: 'creative_status',
+            subject: $creative,
+            fieldName: 'status',
+            oldValue: $oldStatus,
+            newValue: $newStatus,
+            description: $description,
+        );
     }
 
     private function ensureCampaign(AdvertisingCampaign $campaign, AdCreative $creative): void { abort_unless($creative->advertising_campaign_id === $campaign->id, 404); }
