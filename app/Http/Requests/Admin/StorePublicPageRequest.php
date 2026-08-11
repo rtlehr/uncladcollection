@@ -14,6 +14,7 @@ class StorePublicPageRequest extends FormRequest
     {
 
         return [
+            'parent_id' => ['nullable','integer', Rule::exists('public_pages','id')->whereNull('parent_id')],
             'title' => ['required','string','max:255'],
             'slug' => ['required','alpha_dash','max:255', 'unique:public_pages,slug', Rule::notIn(config('public-pages.reserved_slugs', []))],
             'eyebrow' => ['nullable','string','max:120'], 'introduction' => ['nullable','string','max:3000'],

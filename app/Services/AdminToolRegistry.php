@@ -66,6 +66,7 @@ class AdminToolRegistry
                 'id' => 'marketing', 'title' => 'Marketing & Advertising', 'description' => 'Campaigns, advertisers, sponsorships, and promotion.', 'icon' => 'Megaphone',
                 'tools' => [
                     $this->tool('marketing-campaigns', 'Marketing Campaigns', 'Create and track promotional campaigns.', '/admin/marketing-campaigns', 'Megaphone', 'manage_site_settings', ['promotion','social','campaign']),
+                    $this->tool('message-boxes', 'Message Boxes', 'Create scheduled modal, top-banner, and bottom-banner messages.', '/admin/message-boxes', 'MessageSquare', 'manage_message_boxes', ['message','modal','banner','announcement','popup']),
                     $this->tool('advertisers', 'Advertisers', 'Manage advertiser accounts and contacts.', '/admin/advertisers', 'Building2', 'manage_advertisers', ['sponsor','company']),
                     $this->tool('ad-campaigns', 'Advertising Campaigns', 'Manage paid advertising campaigns.', '/admin/ad-campaigns', 'BadgeDollarSign', 'manage_ad_campaigns', ['advertising','ads']),
                     $this->tool('sponsorship-pipeline', 'Sponsorship Pipeline', 'Review sponsorship leads and sales activity.', '/admin/sponsorship-leads', 'Handshake', 'view_sponsorship_sales', ['lead','sponsor','sales']),

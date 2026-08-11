@@ -1,0 +1,1 @@
+import{B as e,T as t,U as n,v as r,wt as i,x as a}from"./vue.runtime.esm-bundler-BWe95MEy.js";var o={class:`rounded-lg border bg-card p-6 shadow-sm`},s={class:`mb-4 text-lg font-semibold`},c=t({__name:`DetailSection`,props:{title:{}},setup(t){return(c,l)=>(e(),a(`section`,o,[r(`h2`,s,i(t.title),1),n(c.$slots,`default`)]))}});export{c as t};

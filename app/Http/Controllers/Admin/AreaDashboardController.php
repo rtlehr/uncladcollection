@@ -107,6 +107,7 @@ class AreaDashboardController extends Controller
             ['label' => 'Inactive campaigns', 'value' => MarketingCampaign::query()->where('is_active', false)->count()],
         ], [
             ['title' => 'Marketing Campaigns', 'description' => 'Manage homepage heroes and internal promotions.', 'href' => '/admin/marketing-campaigns'],
+            ['title' => 'Message Boxes', 'description' => 'Create scheduled modal, top-banner, and bottom-banner messages.', 'href' => '/admin/message-boxes'],
             ['title' => 'Marketing Analytics', 'description' => 'Review campaign impressions, clicks, and conversion influence.', 'href' => '/admin/analytics/campaigns'],
             ['title' => 'Site Settings', 'description' => 'Manage public-site presentation and behavior.', 'href' => '/admin/site-settings'],
             ['title' => 'Branding', 'description' => 'Manage logos, colors, and branded media in Site Settings.', 'href' => '/admin/site-settings#branding'],

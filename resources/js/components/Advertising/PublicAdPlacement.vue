@@ -8,6 +8,9 @@ type AdPayload = {
 };
 
 const props = withDefaults(defineProps<{ placement: string; class?: string; preview?: boolean }>(), { preview: false });
+const emit = defineEmits<{
+    availability: [hasAd: boolean];
+}>();
 const ad = ref<AdPayload | null>(null);
 const loading = ref(true);
 const rootClass = computed(() => props.class ?? '');
@@ -33,13 +36,18 @@ async function load(): Promise<void> {
         const response = await fetch(`/ads/placements/${encodeURIComponent(props.placement)}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
 
         if (response.status === 204) {
-return;
-}
+            emit('availability', false);
+            return;
+        }
 
         if (response.ok) {
             ad.value = await response.json();
+            emit('availability', true);
             await track('impression');
+            return;
         }
+
+        emit('availability', false);
     } finally {
  loading.value = false; 
 }

@@ -14,6 +14,7 @@ class UpdatePublicPageRequest extends FormRequest
     {
         $page = $this->route('publicPage');
         return [
+            'parent_id' => ['nullable','integer', Rule::exists('public_pages','id')->whereNull('parent_id'), Rule::notIn([$page->id]), Rule::prohibitedIf(fn () => $page->children()->exists())],
             'title' => ['required','string','max:255'],
             'slug' => ['required','alpha_dash','max:255', Rule::unique('public_pages','slug')->ignore($page), Rule::notIn(config('public-pages.reserved_slugs', []))],
             'eyebrow' => ['nullable','string','max:120'], 'introduction' => ['nullable','string','max:3000'],

@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             PageHelpSeeder::class,
             PublicPageSeeder::class,
+            MessageBoxSeeder::class,
             DevelopmentUserSeeder::class,
 
             CategorySeeder::class,

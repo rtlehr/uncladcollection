@@ -9,6 +9,12 @@ use App\Http\Controllers\SharedWishListController;
 use App\Http\Controllers\Admin\UserImpersonationController;
 use App\Http\Controllers\PublicPageContactController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MessageBoxController;
+
+Route::get('/message-boxes/eligible', [MessageBoxController::class, 'eligible'])->name('message-boxes.eligible');
+Route::post('/message-boxes/{messageBox}/seen', [MessageBoxController::class, 'seen'])->name('message-boxes.seen');
+Route::post('/message-boxes/{messageBox}/dismiss', [MessageBoxController::class, 'dismiss'])->name('message-boxes.dismiss');
+Route::post('/message-boxes/{messageBox}/submit', [MessageBoxController::class, 'submit'])->name('message-boxes.submit');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

@@ -16,6 +16,7 @@ const props = defineProps<{
     types: Record<string, string>;
     navigationLocations: Record<string, string>;
     statuses: string[];
+    parentPages: Array<{ id: number; title: string; slug: string }>;
     initialImageUrl?: string | null;
     initialOriginalUrl?: string | null;
     initialEditData?: any;
@@ -151,6 +152,26 @@ function addFaq(): void {
                             {{ status }}
                         </option>
                     </select>
+                </FormField>
+
+                <FormField label="Parent Page" for-id="parent_id" :error="form.errors.parent_id">
+                    <select
+                        id="parent_id"
+                        v-model="form.parent_id"
+                        class="h-10 w-full rounded-md border bg-background px-3"
+                    >
+                        <option :value="null">No parent — top-level page</option>
+                        <option
+                            v-for="parent in parentPages"
+                            :key="parent.id"
+                            :value="parent.id"
+                        >
+                            {{ parent.title }}
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        Child pages appear in a section menu with their parent and sibling pages.
+                    </p>
                 </FormField>
 
                 <FormField label="Published At" for-id="published_at">

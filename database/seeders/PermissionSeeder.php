@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder
@@ -128,6 +129,9 @@ class PermissionSeeder extends Seeder
                 'description' => 'Manage customer orders.',
             ],
 
+            // Managed Messages
+            ['group_name'=>'Marketing','name'=>'manage_message_boxes','label'=>'Manage Message Boxes','description'=>'Create, schedule, target, and publish managed modal and banner messages.'],
+
             // Sponsorship & Advertising
             ['group_name'=>'Advertising','name'=>'view_advertising','label'=>'View Advertising','description'=>'View sponsorship and advertising administration.'],
             ['group_name'=>'Advertising','name'=>'manage_advertisers','label'=>'Manage Advertisers','description'=>'Manage advertiser organizations and contacts.'],
@@ -224,6 +228,18 @@ class PermissionSeeder extends Seeder
                     'is_locked' => true,
                 ])
             );
+        }
+
+        // Existing administrator roles should receive new system permissions
+        // when this seeder is re-run on an established installation.
+        $adminRole = Role::where('name', 'admin')->first();
+
+        if ($adminRole) {
+            $messageBoxPermission = Permission::where('name', 'manage_message_boxes')->first();
+
+            if ($messageBoxPermission) {
+                $adminRole->permissions()->syncWithoutDetaching([$messageBoxPermission->id]);
+            }
         }
     }
 }

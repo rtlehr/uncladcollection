@@ -7,6 +7,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import PublicBlankLayout from '@/layouts/PublicBlankLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeAppDialogs } from '@/lib/appDialog';
+import { initializeMessageBoxes } from '@/lib/messageBoxes';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -56,6 +57,7 @@ initializeTheme();
 initializeNavigationState();
 initializeFlashToast();
 initializeAppDialogs();
+initializeMessageBoxes();
 
 if (typeof document !== 'undefined') {
     document.documentElement.classList.add('js');

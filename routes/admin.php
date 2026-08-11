@@ -62,6 +62,7 @@ use App\Http\Controllers\Admin\PublicPageTransferController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\EmailDeliveryLogController;
 use App\Http\Controllers\Admin\CommunicationSettingController;
+use App\Http\Controllers\Admin\MessageBoxController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -297,6 +298,9 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
         Route::resource('marketing-campaigns', MarketingCampaignController::class)
             ->except(['show'])
             ->middleware('permission:manage_site_settings');
+
+        Route::resource('message-boxes', MessageBoxController::class)
+            ->middleware('permission:manage_message_boxes');
 
         Route::resource('permissions', PermissionController::class)
             ->except(['show'])

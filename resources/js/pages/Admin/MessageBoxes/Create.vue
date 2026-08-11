@@ -1,0 +1,2 @@
+<script setup lang="ts">import {Head,Link} from '@inertiajs/vue3';import PageHeader from '@/components/Shared/PageHeader.vue';import {Button} from '@/components/ui/button';import Form from './Form.vue';</script>
+<template><Head title="Create Message Box"/><div class="space-y-6 p-6"><div class="flex items-start justify-between"><PageHeader title="Create Message Box" description="Create a targeted modal or 200px slide-in message."/><Button variant="outline" as-child><Link href="/admin/message-boxes">Back</Link></Button></div><Form/></div></template>

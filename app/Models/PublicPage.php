@@ -28,7 +28,7 @@ class PublicPage extends Model
     public const NAV_FOOTER_LEGAL = 'footer_legal';
 
     protected $fillable = [
-        'created_by_user_id', 'updated_by_user_id', 'title', 'slug', 'eyebrow',
+        'created_by_user_id', 'updated_by_user_id', 'parent_id', 'title', 'slug', 'eyebrow',
         'introduction', 'content', 'header_image_original_path', 'header_image_path',
         'header_image_edit', 'header_image_alt', 'page_type', 'status', 'is_active',
         'published_at', 'navigation_label', 'navigation_locations', 'sort_order',
@@ -47,6 +47,8 @@ class PublicPage extends Model
     public function getRouteKeyName(): string { return 'slug'; }
     public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by_user_id'); }
     public function updater(): BelongsTo { return $this->belongsTo(User::class, 'updated_by_user_id'); }
+    public function parent(): BelongsTo { return $this->belongsTo(self::class, 'parent_id'); }
+    public function children(): HasMany { return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order')->orderBy('title'); }
     public function activities(): MorphMany { return $this->morphMany(AdminActivity::class, 'subject'); }
     public function faqItems(): HasMany { return $this->hasMany(PublicPageFaqItem::class)->orderBy('sort_order')->orderBy('id'); }
     public function activeFaqItems(): HasMany { return $this->faqItems()->where('is_active', true); }

@@ -1,0 +1,1 @@
+import{B as e,T as t,xt as n,y as r,yt as i}from"./vue.runtime.esm-bundler-BWe95MEy.js";import{c as a,n as o}from"./button-BBC9afW5.js";var s=t({__name:`Spinner`,props:{class:{type:[Boolean,null,String,Object,Array]}},setup(t){let s=t;return(t,c)=>(e(),r(i(a),{role:`status`,"aria-label":`Loading`,class:n(i(o)(`size-4 animate-spin`,s.class))},null,8,[`class`]))}});export{s as t};

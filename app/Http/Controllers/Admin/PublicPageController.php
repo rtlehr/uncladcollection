@@ -44,7 +44,7 @@ class PublicPageController extends Controller
     public function edit(PublicPage $publicPage): Response
     {
         $this->authorize('update',$publicPage); $publicPage->load('faqItems');
-        return Inertia::render('Admin/PublicPages/Edit', [...$this->options(), 'publicPage'=>$publicPage]);
+        return Inertia::render('Admin/PublicPages/Edit', [...$this->options($publicPage), 'publicPage'=>$publicPage]);
     }
 
     public function update(UpdatePublicPageRequest $request, PublicPage $publicPage): RedirectResponse
@@ -93,6 +93,23 @@ class PublicPageController extends Controller
         foreach (array_values($items) as $index=>$item) $page->faqItems()->create(['question'=>$item['question'],'answer'=>$item['answer'],'is_active'=>(bool)($item['is_active']??true),'sort_order'=>(int)($item['sort_order']??(($index+1)*10))]);
     }
 
-    private function options(): array { return ['types'=>config('public-pages.types'),'navigationLocations'=>config('public-pages.navigation_locations'),'statuses'=>[PublicPage::STATUS_DRAFT,PublicPage::STATUS_PUBLISHED]]; }
+    private function options(?PublicPage $currentPage = null): array
+    {
+        $parentPages = ($currentPage?->children()->exists() ?? false)
+            ? collect()
+            : PublicPage::query()
+                ->whereNull('parent_id')
+                ->when($currentPage, fn ($query) => $query->where('id', '!=', $currentPage->getKey()))
+                ->orderBy('sort_order')
+                ->orderBy('title')
+                ->get(['id', 'title', 'slug']);
+
+        return [
+            'types' => config('public-pages.types'),
+            'navigationLocations' => config('public-pages.navigation_locations'),
+            'statuses' => [PublicPage::STATUS_DRAFT, PublicPage::STATUS_PUBLISHED],
+            'parentPages' => $parentPages,
+        ];
+    }
     private function assertPublishPermission(Request $request,string $status): void { if($status===PublicPage::STATUS_PUBLISHED&&!$request->user()?->hasPermission('publish_public_pages')) abort(403); }
 }
