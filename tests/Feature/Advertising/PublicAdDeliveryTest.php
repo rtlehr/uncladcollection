@@ -114,6 +114,51 @@ class PublicAdDeliveryTest extends TestCase
             ->assertJsonPath('creative.id', $creative->id);
     }
 
+
+    public function test_public_page_placements_can_deliver_ads(): void
+    {
+        Storage::fake('public');
+        $advertiser = Advertiser::factory()->create(['status' => 'active']);
+        $campaign = AdvertisingCampaign::factory()->create([
+            'advertiser_id' => $advertiser->id,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+        ]);
+
+        foreach ([
+            ['code' => 'public-page-after-content', 'width' => 760, 'height' => 240, 'file' => 'public-page-banner.jpg'],
+            ['code' => 'public-page-sidebar', 'width' => 300, 'height' => 250, 'file' => 'public-page-sidebar.jpg'],
+        ] as $data) {
+            $placement = AdPlacement::factory()->create([
+                'code' => $data['code'],
+                'width' => $data['width'],
+                'height' => $data['height'],
+                'is_active' => true,
+            ]);
+            $campaign->placements()->attach($placement->id, ['priority' => 50]);
+
+            $path = 'advertising/test/rendered/'.$data['file'];
+            Storage::disk('public')->put($path, 'image');
+            $creative = AdCreative::factory()->create([
+                'advertising_campaign_id' => $campaign->id,
+                'ad_placement_id' => $placement->id,
+                'status' => 'approved',
+                'creative_type' => 'image',
+                'media_path' => $path,
+                'width' => $data['width'],
+                'height' => $data['height'],
+                'destination_url' => 'https://example.com/'.$data['code'],
+            ]);
+            $creative->placements()->attach($placement->id);
+
+            $this->getJson('/ads/placements/'.$data['code'])
+                ->assertOk()
+                ->assertJsonPath('creative.id', $creative->id)
+                ->assertJsonPath('placement.code', $data['code']);
+        }
+    }
+
     public function test_ineligible_or_empty_placement_returns_no_content(): void
     {
         AdPlacement::factory()->create(['code' => 'empty-placement', 'is_active' => true]);

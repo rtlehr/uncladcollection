@@ -237,6 +237,17 @@ class AdvertiserWorkflowService
         $checks[] = $this->check('creative_files', 'All creative media files exist', $creatives->isNotEmpty() && $creatives->every(fn ($creative) => filled($creative->media_path) && Storage::disk('public')->exists($creative->media_path)), true);
         $checks[] = $this->check('destination_urls', 'All creatives have destination URLs', $creatives->isNotEmpty() && $creatives->every(fn ($creative) => filled($creative->destination_url)), true);
         $checks[] = $this->check('placement_compatibility', 'Creative dimensions match assigned placements', $creatives->isNotEmpty() && $creatives->every(fn ($creative) => $creative->is_placement_compatible), true);
+        $checks[] = $this->check(
+            'placement_creative_coverage',
+            'Every campaign placement has an approved creative assigned',
+            $campaign->placements->isNotEmpty() && $campaign->placements->every(
+                fn ($placement) => $creatives->contains(
+                    fn ($creative) => $creative->status === 'approved'
+                        && $creative->placements->contains($placement->id)
+                )
+            ),
+            true
+        );
         $checks[] = $this->check('billing', 'Billing record exists', $campaignInvoices->isNotEmpty(), false);
 
         $blocking = collect($checks)->where('required', true)->where('passed', false)->count();

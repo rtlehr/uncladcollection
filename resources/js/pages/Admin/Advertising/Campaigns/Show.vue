@@ -41,6 +41,12 @@ const lifecycle = async (action: 'pause' | 'resume' | 'complete') => {
 const formatDate = (value?: string | null) => value
     ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
     : '—';
+
+const hasApprovedCreativeForPlacement = (placementId: number | string): boolean =>
+    props.campaign.creatives.some(
+        (creative: any) => creative.status === 'approved'
+            && creative.placements?.some((placement: any) => Number(placement.id) === Number(placementId)),
+    );
 </script>
 
 <template>
@@ -114,6 +120,12 @@ const formatDate = (value?: string | null) => value
                     <div>
                         <p class="font-medium">{{ x.name }}</p>
                         <p class="text-sm text-muted-foreground">{{ x.location }} / {{ x.format }}</p>
+                        <p
+                            class="mt-1 text-xs"
+                            :class="hasApprovedCreativeForPlacement(x.id) ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"
+                        >
+                            {{ hasApprovedCreativeForPlacement(x.id) ? 'Approved creative assigned' : 'No approved creative assigned — this placement will not display an ad' }}
+                        </p>
                     </div>
                     <div class="text-right">
                         <p class="text-xs uppercase tracking-wide text-muted-foreground">Rotation weight</p>

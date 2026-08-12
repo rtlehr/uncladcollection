@@ -99,6 +99,41 @@ class AdvertisingCampaignWorkflowTest extends TestCase
         $this->assertSame('scheduled', $campaign->fresh()->status);
     }
 
+
+    public function test_campaign_cannot_launch_when_an_assigned_placement_has_no_approved_creative(): void
+    {
+        Storage::fake('public');
+        $user = $this->campaignAdmin();
+        $advertiser = Advertiser::factory()->create(['status' => 'active']);
+        $coveredPlacement = AdPlacement::factory()->create(['is_active' => true, 'width' => 760, 'height' => 240]);
+        $uncoveredPlacement = AdPlacement::factory()->create(['is_active' => true, 'width' => 300, 'height' => 250]);
+        $campaign = AdvertisingCampaign::factory()->create([
+            'advertiser_id' => $advertiser->id,
+            'status' => 'approved',
+            'starts_at' => now()->subMinute(),
+            'ends_at' => now()->addWeek(),
+        ]);
+        $campaign->placements()->attach([$coveredPlacement->id, $uncoveredPlacement->id]);
+
+        $creative = AdCreative::factory()->create([
+            'advertising_campaign_id' => $campaign->id,
+            'ad_placement_id' => $coveredPlacement->id,
+            'status' => 'approved',
+            'media_path' => 'marketing/test/covered.jpg',
+            'destination_url' => 'https://example.com',
+            'width' => 760,
+            'height' => 240,
+        ]);
+        $creative->placements()->attach($coveredPlacement);
+        Storage::disk('public')->put('marketing/test/covered.jpg', 'image-bytes');
+
+        $this->actingAs($user)
+            ->post('/admin/ad-campaigns/'.$campaign->id.'/launch')
+            ->assertSessionHasErrors('campaign');
+
+        $this->assertSame('approved', $campaign->fresh()->status);
+    }
+
     public function test_campaign_rotation_weight_can_be_updated_per_placement_without_losing_allocated_budget(): void
     {
         $user = $this->campaignAdmin();
