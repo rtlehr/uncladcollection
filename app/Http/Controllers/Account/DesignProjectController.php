@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Account;
 use App\Http\Controllers\Controller;
 use App\Models\DesignProject;
 use App\Models\License;
+use App\Models\StudioCreditPackage;
+use App\Services\DesignStudio\DesignProjectAssetService;
+use App\Services\DesignStudio\StudioCreditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,7 +92,7 @@ class DesignProjectController extends Controller
         return redirect()->route('account.designs.edit', $project);
     }
 
-    public function store(Request $request, License $license): RedirectResponse
+    public function store(Request $request, License $license, DesignProjectAssetService $projectAssets): RedirectResponse
     {
         abort_unless(
             (int) $license->user_id === (int) $request->user()->id
@@ -113,10 +116,12 @@ class DesignProjectController extends Controller
             'last_opened_at' => now(),
         ]);
 
+        $projectAssets->validateAndSync((int) $request->user()->id, $project, $project->design_json ?: []);
+
         return redirect()->route('account.designs.edit', $project);
     }
 
-    public function edit(Request $request, DesignProject $design): Response
+    public function edit(Request $request, DesignProject $design, StudioCreditService $studioCredits): Response
     {
         $this->owned($request, $design);
         $design->load([
@@ -163,6 +168,23 @@ class DesignProjectController extends Controller
                 'max_server_pixels' => (int) config('design-studio.max_server_pixels', 80000000),
                 'recommended_min_width' => (int) config('design-studio.recommended_min_width', 1024),
             ],
+            'studio_billing' => [
+                'available_credits' => $studioCredits->availableBalance($request->user()),
+                'posted_balance' => $studioCredits->balance($request->user()),
+                'complimentary_credits_per_asset_license' => (int) config('design-studio.complimentary_credits_per_asset_license', 1),
+                'packages' => StudioCreditPackage::query()
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(fn (StudioCreditPackage $package) => [
+                        'slug' => $package->slug,
+                        'name' => $package->name,
+                        'description' => $package->description,
+                        'credits' => $package->credits,
+                        'price' => $package->price_formatted,
+                        'checkout_url' => route('account.designs.studio-credits.checkout', [$design, $package]),
+                    ])->values(),
+            ],
             'export_presets' => [
                 ['name' => 'Social Square', 'width' => 1080, 'height' => 1080],
                 ['name' => 'Social Portrait', 'width' => 1080, 'height' => 1350],
@@ -172,7 +194,7 @@ class DesignProjectController extends Controller
         ]);
     }
 
-    public function update(Request $request, DesignProject $design): RedirectResponse
+    public function update(Request $request, DesignProject $design, DesignProjectAssetService $projectAssets): RedirectResponse
     {
         $this->owned($request, $design);
         $maxLayers = (int) config('design-studio.max_layer_count', 200);
@@ -188,6 +210,9 @@ class DesignProjectController extends Controller
         ]);
 
         $design->update($data);
+        if ((int) ($data['design_json']['version'] ?? 0) === 2) {
+            $projectAssets->validateAndSync((int) $request->user()->id, $design, $data['design_json']);
+        }
 
         return back()->with('success', 'Design saved.');
     }

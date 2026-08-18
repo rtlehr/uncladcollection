@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             CollectionSeeder::class,
             LicenseTypeSeeder::class,
+            StudioCreditPackageSeeder::class,
             AssetConfigurationTemplateSeeder::class,
             SupportTicketCategorySeeder::class,
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Enums\OrderFulfillmentStatus;
+use App\Services\DesignStudio\StudioCreditService;
 
 final class CheckoutEngine
 {
@@ -21,6 +22,7 @@ final class CheckoutEngine
         private readonly CartEngine $cartEngine,
         private readonly CheckoutSnapshotFactory $snapshots,
         private readonly StripeMetadataBuilder $metadata,
+        private readonly StudioCreditService $studioCredits,
     ) {}
 
     /** @param Collection<int, CartItem> $cartItems */
@@ -135,7 +137,8 @@ final class CheckoutEngine
             ]);
 
             foreach ($locked->items as $item) {
-                $this->createLicense($locked, $item);
+                $license = $this->createLicense($locked, $item);
+                $this->studioCredits->grantComplimentaryForLicense($license);
                 $item->update(['status' => OrderItem::STATUS_ACTIVE]);
 
                 if ($item->asset_id) {

@@ -9,6 +9,7 @@ use App\Services\AdvertisingBillingService;
 use App\Models\FinancialTransaction;
 use App\Enums\FinancialTransactionType;
 use App\Enums\FinancialTransactionStatus;
+use App\Services\DesignStudio\StudioCheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Stripe\Exception\SignatureVerificationException;
@@ -17,7 +18,11 @@ use UnexpectedValueException;
 
 class StripeWebhookController extends Controller
 {
-    public function __construct(private readonly CheckoutEngine $checkoutEngine, private readonly AdvertisingBillingService $advertisingBilling) {}
+    public function __construct(
+        private readonly CheckoutEngine $checkoutEngine,
+        private readonly AdvertisingBillingService $advertisingBilling,
+        private readonly StudioCheckoutService $studioCheckout,
+    ) {}
 
     public function __invoke(Request $request): Response
     {
@@ -37,6 +42,21 @@ class StripeWebhookController extends Controller
         }
 
         $session = $event->data->object ?? null;
+
+        if (($session->metadata->billing_type ?? null) === 'studio_credits') {
+            try {
+                if (in_array($event->type, ['checkout.session.completed', 'checkout.session.async_payment_succeeded'], true)) {
+                    $this->studioCheckout->completeStripePurchase($session);
+                } elseif (in_array($event->type, ['checkout.session.expired', 'checkout.session.async_payment_failed'], true)) {
+                    $this->studioCheckout->failStripePurchase($session);
+                }
+            } catch (\RuntimeException $exception) {
+                report($exception);
+                return response($exception->getMessage(), 400);
+            }
+
+            return response('Webhook handled.', 200);
+        }
 
         if (($session->metadata->billing_type ?? null) === 'advertising_invoice') {
             $payment = AdvertisingPayment::query()->where('stripe_checkout_session_id', $session->id ?? null)->first();

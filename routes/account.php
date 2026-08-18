@@ -9,6 +9,7 @@ use App\Http\Controllers\Account\DesignProjectController;
 use App\Http\Controllers\Account\DesignUploadController;
 use App\Http\Controllers\Account\DesignExportController;
 use App\Http\Controllers\Account\DesignLibraryController;
+use App\Http\Controllers\Account\StudioCreditCheckoutController;
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Account\NotificationPreferenceController;
 use App\Http\Controllers\Account\WishListItemController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])
         Route::get('/designs/{design}/library/{license}/files', [DesignLibraryController::class, 'files'])->middleware('throttle:60,1')->name('designs.library.files.index');
         Route::get('/designs/{design}/library/{license}/files/{assetFile}/image', [DesignLibraryController::class, 'fileImage'])->middleware('throttle:60,1')->name('designs.library.files.image');
         Route::get('/designs/{design}/library/{license}/image', [DesignLibraryController::class, 'image'])->middleware('throttle:60,1')->name('designs.library.image');
+        Route::post('/designs/{design}/studio-credits/{package}/checkout', StudioCreditCheckoutController::class)
+            ->middleware(['block.impersonation', 'throttle:10,1'])
+            ->name('designs.studio-credits.checkout');
         Route::post('/designs/{design}/exports', [DesignExportController::class, 'store'])->middleware(['block.impersonation', 'throttle:20,1'])->name('designs.exports.store');
         Route::post('/designs/{design}/exports/render', [DesignExportController::class, 'render'])->middleware(['block.impersonation', 'throttle:10,1'])->name('designs.exports.render');
         Route::get('/designs/{design}/exports/{export}/status', [DesignExportController::class, 'status'])->middleware('throttle:60,1')->name('designs.exports.status');

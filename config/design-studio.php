@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'currency' => env('DESIGN_STUDIO_CURRENCY', 'USD'),
+    'complimentary_credits_per_asset_license' => (int) env('DESIGN_STUDIO_COMPLIMENTARY_CREDITS_PER_ASSET_LICENSE', 1),
+    'single_export_reference_price_cents' => (int) env('DESIGN_STUDIO_SINGLE_EXPORT_REFERENCE_PRICE_CENTS', 100),
+
     'max_layer_count' => (int) env('DESIGN_STUDIO_MAX_LAYER_COUNT', 200),
 
     'max_upload_bytes' => (int) env('DESIGN_STUDIO_MAX_UPLOAD_BYTES', 10 * 1024 * 1024),

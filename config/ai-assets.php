@@ -35,5 +35,30 @@ return [
             'retry_times' => (int) env('OPENAI_RETRY_TIMES', 1),
             'retry_sleep_milliseconds' => (int) env('OPENAI_RETRY_SLEEP_MS', 750),
         ],
+
+        'venice' => [
+            'base_url' => env(
+                'VENICE_BASE_URL',
+                'https://api.venice.ai/api/v1'
+            ),
+
+            'token' => env('VENICE_API_KEY'),
+
+            'model' => env(
+                'VENICE_MODEL',
+                'gemini-2.5-flash'
+            ),
+
+            'connect_timeout_seconds' => env(
+                'VENICE_CONNECT_TIMEOUT',
+                20
+            ),
+
+            'timeout_seconds' => env(
+                'VENICE_TIMEOUT',
+                300
+            ),
+        ],
+
     ],
 ];

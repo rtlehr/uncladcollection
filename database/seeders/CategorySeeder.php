@@ -37,15 +37,15 @@ class CategorySeeder extends Seeder
             ],
 
             [
-                'name' => 'Nature',
+                'name' => 'Holiday',
                 'category_type' => 'image',
-                'description' => 'Outdoor and natural settings.',
+                'description' => 'Holidays and festive occasions.',
             ],
 
             [
-                'name' => 'Wellness',
+                'name' => 'Presntation',
                 'category_type' => 'image',
-                'description' => 'Health, wellness, and relaxation imagery.',
+                'description' => 'Presentation and public speaking images.',
             ],
 
             [

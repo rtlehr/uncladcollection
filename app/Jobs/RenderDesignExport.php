@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\DesignExport;
 use App\Services\DesignStudio\ServerDesignRenderer;
+use App\Services\DesignStudio\StudioCreditService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class RenderDesignExport implements ShouldQueue
 
     public function __construct(public int $designExportId, public string $overlayPath) {}
 
-    public function handle(ServerDesignRenderer $renderer): void
+    public function handle(ServerDesignRenderer $renderer, StudioCreditService $studioCredits): void
     {
         $export = DesignExport::query()->with(['project.asset.activeFiles', 'project.uploads', 'project.license'])->find($this->designExportId);
         if (! $export || $export->status === 'completed') {
@@ -33,12 +34,14 @@ class RenderDesignExport implements ShouldQueue
 
         try {
             $renderer->render($export, $this->overlayPath);
+            $studioCredits->consumeForExport($export->refresh());
         } catch (Throwable $exception) {
             report($exception);
             $export->forceFill([
                 'status' => 'failed',
                 'error_message' => mb_substr($exception->getMessage(), 0, 2000),
             ])->save();
+            $studioCredits->releaseForExport($export);
             Storage::disk('local')->delete($this->overlayPath);
         }
     }

@@ -8,6 +8,7 @@ import {
     ArrowLeft,
     ArrowUp,
     Copy,
+    Group as GroupIcon,
     Download,
     ImagePlus,
     LibraryBig,
@@ -16,6 +17,7 @@ import {
     X,
     Layers3,
     Lock,
+    Minus,
     Pipette,
     Redo2,
     RotateCcw,
@@ -25,8 +27,9 @@ import {
     Type,
     Undo2,
     Unlock,
+    Ungroup,
 } from '@lucide/vue';
-import { Canvas, FabricImage, FabricObject, IText, Rect } from 'fabric';
+import { ActiveSelection, Canvas, FabricImage, FabricObject, Group, IText, Line, Rect } from 'fabric';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { appAlert, appConfirm } from '@/lib/appDialog';
@@ -49,6 +52,8 @@ FabricObject.customProperties = [
 ];
 
 type ExportPreset = { name: string; width: number; height: number };
+type StudioCreditPackage = { slug: string; name: string; description: string | null; credits: number; price: string; checkout_url: string };
+type StudioBilling = { available_credits: number; posted_balance: number; complimentary_credits_per_asset_license: number; packages: StudioCreditPackage[] };
 type LibraryAsset = { license_id: number; asset_id: number; title: string; license_name: string | null; licensed_at: string | null; image_count: number; thumbnail_url: string; files_url: string };
 type LibraryFile = { id: number; uuid: string; name: string; role: string | null; format: string | null; width: number | null; height: number | null; thumbnail_url: string; image_url: string };
 type ExportRecord = {
@@ -67,6 +72,8 @@ type ExportRecord = {
     status_url: string;
     download_url: string | null;
     delete_url: string;
+    studio_billing_type?: string | null;
+    studio_credits_used?: number;
 };
 type SavedDesign = { version: number; fabric?: Record<string, unknown>; objects?: unknown[]; canvas_background_fit?: 'cover' | 'contain' };
 type Limits = {
@@ -96,7 +103,7 @@ interface Project {
     uploads: { uuid: string; name: string; url: string }[];
 }
 
-const props = defineProps<{ project: Project; export_presets: ExportPreset[]; limits: Limits }>();
+const props = defineProps<{ project: Project; export_presets: ExportPreset[]; limits: Limits; studio_billing: StudioBilling }>();
 
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -124,7 +131,9 @@ const title = ref(props.project.title);
 const saving = ref(false);
 const uploading = ref(false);
 const exporting = ref(false);
+const studioCredits = ref(props.studio_billing.available_credits);
 const selected = ref<FabricObject | null>(null);
+const activeSelectionCount = ref(0);
 const zoom = ref(1);
 const savedMessage = ref('');
 const exportStatus = ref('');
@@ -148,6 +157,10 @@ const horizontalGuides = ref<number[]>([]);
 const isSmallScreen = ref(window.innerWidth < props.limits.recommended_min_width);
 
 const selectedIsImage = computed(() => selected.value instanceof FabricImage);
+const selectedIsLine = computed(() => selected.value?.type === 'line');
+const selectedIsGroup = computed(() => selected.value instanceof Group && !(selected.value instanceof ActiveSelection));
+const canGroupSelection = computed(() => activeSelectionCount.value >= 2);
+const canExport = computed(() => studioCredits.value > 0);
 const canUndo = computed(() => historyIndex.value > 0);
 const canRedo = computed(() => historyIndex.value >= 0 && historyIndex.value < history.value.length - 1);
 const hasBlockingOperation = computed(() => saving.value || uploading.value || exporting.value || backgroundBusy.value || libraryAdding.value !== null);
@@ -294,6 +307,7 @@ return;
     canvas.requestRenderAll();
     historyIndex.value = index;
     selected.value = null;
+    activeSelectionCount.value = 0;
     layerVersion.value++;
     restoringHistory = false;
 }
@@ -307,6 +321,29 @@ function redo(): void {
 
 function selectObject(object: FabricObject | null): void {
     selected.value = object;
+    activeSelectionCount.value = object ? 1 : 0;
+    backgroundStatus.value = '';
+    void nextTick(() => drawBackgroundPreview());
+}
+
+function syncCanvasSelection(): void {
+    if (!canvas) {
+        selected.value = null;
+        activeSelectionCount.value = 0;
+        return;
+    }
+
+    const activeObject = canvas.getActiveObject();
+    const activeObjects = canvas.getActiveObjects();
+    activeSelectionCount.value = activeObjects.length;
+
+    if (activeObject instanceof ActiveSelection) {
+        selected.value = null;
+        backgroundStatus.value = '';
+        return;
+    }
+
+    selected.value = activeObject ?? null;
     backgroundStatus.value = '';
     void nextTick(() => drawBackgroundPreview());
 }
@@ -344,6 +381,14 @@ return `Text ${index + 1}`;
 
     if (object.type === 'rect') {
 return `Shape ${index + 1}`;
+}
+
+    if (object.type === 'line') {
+return `Line ${index + 1}`;
+}
+
+    if (object.type === 'group') {
+return `Group ${index + 1}`;
 }
 
     return `Image ${index + 1}`;
@@ -467,6 +512,32 @@ return;
     canvas.setActiveObject(shape);
     canvas.requestRenderAll();
     selectObject(shape);
+    pushHistory();
+}
+
+function addLine(): void {
+    if (!canvas || canvas.getObjects().length >= props.limits.max_layer_count) {
+return;
+}
+
+    const startX = canvasWidth.value * 0.18;
+    const startY = canvasHeight.value * 0.22;
+    const endX = canvasWidth.value * 0.62;
+    const endY = canvasHeight.value * 0.22;
+
+    const line = new Line([startX, startY, endX, endY], {
+        stroke: '#ffffff',
+        strokeWidth: 6,
+        strokeLineCap: 'round',
+        strokeLineJoin: 'round',
+        fill: undefined,
+        name: 'Line',
+    });
+    ensureLayerMetadata(line);
+    canvas.add(line);
+    canvas.setActiveObject(line);
+    canvas.requestRenderAll();
+    selectObject(line);
     pushHistory();
 }
 
@@ -932,6 +1003,74 @@ return;
     }
 }
 
+function groupSelected(): void {
+    if (!canvas) {
+return;
+}
+
+    const activeObject = canvas.getActiveObject();
+
+    if (!(activeObject instanceof ActiveSelection) || activeObject.size() < 2) {
+        void appAlert('Select at least two elements to create a group. Hold Shift while selecting elements on the canvas.');
+        return;
+    }
+
+    const canvasObjects = canvas.getObjects();
+    const selectedObjects = activeObject.getObjects();
+    const originalIndexes = selectedObjects
+        .map(object => canvasObjects.indexOf(object))
+        .filter(index => index >= 0);
+    const insertIndex = originalIndexes.length
+        ? Math.min(...originalIndexes)
+        : canvasObjects.length;
+
+    // Fabric 7 requires objects to be detached from the ActiveSelection
+    // before they are re-parented into a Group. removeAll() preserves each
+    // object's scene transform while removing the temporary selection parent.
+    const objects = activeObject.removeAll();
+    canvas.discardActiveObject();
+
+    const group = new Group(objects, { name: 'Group' });
+    ensureLayerMetadata(group);
+    canvas.insertAt(Math.min(insertIndex, canvas.getObjects().length), group);
+    canvas.setActiveObject(group);
+    group.setCoords();
+    selectObject(group);
+    layerVersion.value++;
+    canvas.requestRenderAll();
+    pushHistory();
+}
+
+function ungroupSelected(): void {
+    if (!canvas || !(selected.value instanceof Group) || selected.value instanceof ActiveSelection) {
+return;
+}
+
+    const group = selected.value;
+    const groupIndex = Math.max(0, canvas.getObjects().indexOf(group));
+
+    canvas.discardActiveObject();
+
+    // removeAll() detaches the children from the Group and applies the
+    // group's transform back to each child. Do not immediately wrap the
+    // released objects in a new ActiveSelection; doing so can recalculate
+    // their relative transform and cause visible jumps after ungrouping.
+    const objects = group.removeAll();
+    canvas.remove(group);
+
+    objects.forEach((object, index) => {
+        ensureLayerMetadata(object, index);
+        canvas?.insertAt(groupIndex + index, object);
+        object.setCoords();
+    });
+
+    selected.value = null;
+    activeSelectionCount.value = 0;
+    layerVersion.value++;
+    canvas.requestRenderAll();
+    pushHistory();
+}
+
 function removeSelected(): void {
     if (!canvas) {
 return;
@@ -947,6 +1086,7 @@ return;
     canvas.discardActiveObject();
     objects.forEach(object => canvas?.remove(object));
     selected.value = null;
+    activeSelectionCount.value = 0;
     layerVersion.value++;
     canvas.requestRenderAll();
     pushHistory();
@@ -1448,6 +1588,7 @@ throw new Error('The browser could not create the download.');
         form.append('fit_mode', exportFit.value);
         form.append('preset_name', name);
         form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson(), canvas_background_fit: canvasBackgroundFit.value }));
+        form.append('request_token', crypto.randomUUID());
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
         const response = await fetch(props.project.export_url, {
             method: 'POST',
@@ -1462,6 +1603,7 @@ throw new Error('The browser could not create the download.');
         }
 
         const record = await response.json() as ExportRecord;
+        studioCredits.value = Math.max(0, studioCredits.value - (record.studio_credits_used ?? 1));
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         exportStatus.value = 'Export saved';
 
@@ -1533,6 +1675,7 @@ throw new Error('The editor could not prepare the server-render overlay.');
         form.append('fit_mode', fitMode);
         form.append('preset_name', name);
         form.append('design_json', JSON.stringify({ version: 2, fabric: fabricJson(), canvas_background_fit: canvasBackgroundFit.value }));
+        form.append('request_token', crypto.randomUUID());
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
         const response = await fetch(props.project.server_export_url, {
             method: 'POST',
@@ -1547,6 +1690,7 @@ throw new Error('The editor could not prepare the server-render overlay.');
         }
 
         const record = await response.json() as ExportRecord;
+        studioCredits.value = Math.max(0, studioCredits.value - (record.studio_credits_used ?? 1));
         recentExports.value = [record, ...recentExports.value.filter(item => item.uuid !== record.uuid)].slice(0, 12);
         await pollServerExport(record);
     } catch (error) {
@@ -1586,6 +1730,7 @@ downloadWithoutLeavingEditor(current.download_url);
             }
 
             if (current.status === 'failed') {
+                studioCredits.value += (current.studio_credits_used ?? 1);
                 exportStatus.value = 'Server render failed';
 
                 return;
@@ -1602,6 +1747,14 @@ async function retryServerExport(record: ExportRecord): Promise<void> {
     exportFormat.value = normalizeFormat(record.format);
     exportFit.value = (record.fit_mode === 'cover' ? 'cover' : 'contain');
     await queueServerExport(record.width, record.height, record.preset_name || 'Retry render', normalizeFormat(record.format), exportFit.value);
+}
+
+function buyStudioCredits(packageOption: StudioCreditPackage): void {
+    if (exporting.value) {
+        return;
+    }
+
+    router.post(packageOption.checkout_url, {}, { preserveScroll: true });
 }
 
 async function deleteExport(record: ExportRecord): Promise<void> {
@@ -1727,9 +1880,9 @@ return;
     history.value = [initial];
     historyIndex.value = 0;
 
-    canvas.on('selection:created', event => selectObject(event.selected?.[0] ?? null));
-    canvas.on('selection:updated', event => selectObject(event.selected?.[0] ?? null));
-    canvas.on('selection:cleared', () => selectObject(null));
+    canvas.on('selection:created', syncCanvasSelection);
+    canvas.on('selection:updated', syncCanvasSelection);
+    canvas.on('selection:cleared', syncCanvasSelection);
     canvas.on('object:moving', event => {
  if (event.target) {
 snapObject(event.target);
@@ -1821,6 +1974,7 @@ return;
                 <div class="mt-4 grid gap-2">
                     <Button variant="secondary" class="justify-start" @click="addText"><Type class="mr-2 h-4 w-4" />Add text</Button>
                     <Button variant="secondary" class="justify-start" @click="addShape"><Square class="mr-2 h-4 w-4" />Add rectangle</Button>
+                    <Button variant="secondary" class="justify-start" @click="addLine"><Minus class="mr-2 h-4 w-4" />Add line</Button>
                     <Button variant="secondary" class="justify-start" :disabled="uploading" @click="fileInput?.click()"><ImagePlus class="mr-2 h-4 w-4" />{{ uploading ? 'Uploading…' : 'Upload image' }}</Button>
                     <Button variant="secondary" class="justify-start" @click="openLibrary"><LibraryBig class="mr-2 h-4 w-4" />Add from My Library</Button>
                     <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" @change="upload" />
@@ -1832,6 +1986,16 @@ return;
                         <input v-model="snapEnabled" type="checkbox" />
                     </label>
                     <p class="mt-2 text-xs text-stone-400">Objects snap to the canvas edges and center while you move them.</p>
+                </div>
+
+                <div class="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-sm font-medium">Grouping</span>
+                        <span v-if="activeSelectionCount > 1" class="text-xs text-sky-300">{{ activeSelectionCount }} selected</span>
+                    </div>
+                    <p class="mt-2 text-xs leading-relaxed text-stone-400">Hold Shift and select two or more elements on the canvas, then group them so they move, resize, rotate, and flip together.</p>
+                    <Button v-if="canGroupSelection" type="button" variant="secondary" class="mt-3 w-full" @click="groupSelected"><GroupIcon class="mr-2 h-4 w-4" />Group selected</Button>
+                    <Button v-else-if="selectedIsGroup" type="button" variant="secondary" class="mt-3 w-full" @click="ungroupSelected"><Ungroup class="mr-2 h-4 w-4" />Ungroup elements</Button>
                 </div>
 
                 <div class="mt-6">
@@ -1856,7 +2020,7 @@ return;
                                 <button class="rounded border border-white/10 px-2 py-1.5 text-xs text-stone-300 hover:bg-white/5 hover:text-white" title="Send backward one layer" @click.stop="moveSpecificLayer(object, 'backward')"><ArrowDown class="mr-1 inline h-3.5 w-3.5" />Backward</button>
                             </div>
                         </div>
-                        <p v-if="layerObjects.length === 0" class="py-3 text-xs text-stone-500">Add text or an image to begin.</p>
+                        <p v-if="layerObjects.length === 0" class="py-3 text-xs text-stone-500">Add text, shapes, lines, or an image to begin.</p>
                     </div>
                 </div>
             </aside>
@@ -1877,7 +2041,15 @@ return;
 
             <aside class="min-h-0 overflow-y-auto border-l border-white/10 p-4">
                 <h2 class="text-xs font-semibold uppercase tracking-widest text-stone-400">Properties</h2>
-                <div v-if="selected" class="mt-4 space-y-4">
+                <div v-if="activeSelectionCount > 1" class="mt-4 space-y-4">
+                    <div class="rounded-xl border border-sky-500/20 bg-sky-500/10 p-4">
+                        <p class="text-sm font-medium text-sky-100">{{ activeSelectionCount }} elements selected</p>
+                        <p class="mt-1 text-xs leading-relaxed text-sky-100/70">Group these elements to move, resize, rotate, flip, and reorder them as a single layer.</p>
+                        <Button type="button" class="mt-3 w-full" @click="groupSelected"><GroupIcon class="mr-2 h-4 w-4" />Group selected</Button>
+                    </div>
+                    <Button variant="destructive" class="w-full" @click="removeSelected"><Trash2 class="mr-2 h-4 w-4" />Remove selected elements</Button>
+                </div>
+                <div v-else-if="selected" class="mt-4 space-y-4">
                     <label class="block text-sm">
                         Layer name
                         <input :value="String(selected.get('name') || '')" class="mt-2 w-full rounded-lg border border-white/10 bg-white/5 p-2" @input="renameLayer(selected, ($event.target as HTMLInputElement).value)" />
@@ -1912,6 +2084,13 @@ return;
                         <label class="block text-sm">Corner rounding<input :value="Number(selected.get('rx') ?? 0)" type="range" min="0" max="120" step="2" class="mt-2 w-full" @input="updateSelected('rx', Number(($event.target as HTMLInputElement).value)); updateSelected('ry', Number(($event.target as HTMLInputElement).value))" /></label>
                     </template>
 
+                    <template v-if="selectedIsLine">
+                        <div class="grid grid-cols-1 gap-3">
+                            <label class="text-sm">Line color<input :value="String(selected.get('stroke') ?? '#ffffff')" type="color" class="mt-2 h-10 w-full rounded" @input="updateSelected('stroke', ($event.target as HTMLInputElement).value)" /></label>
+                        </div>
+                        <label class="block text-sm">Line width<input :value="Number(selected.get('strokeWidth') ?? 6)" type="range" min="1" max="40" step="1" class="mt-2 w-full" @input="updateSelected('strokeWidth', Number(($event.target as HTMLInputElement).value))" /></label>
+                    </template>
+
                     <div v-if="selectedIsImage" class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                         <div class="flex items-center justify-between gap-2">
                             <h3 class="flex items-center gap-2 text-sm font-semibold"><Pipette class="h-4 w-4" />Remove solid background</h3>
@@ -1941,25 +2120,43 @@ return;
                         <Button variant="secondary" @click="moveLayerToEdge('front')">To front</Button>
                         <Button variant="secondary" @click="moveLayerToEdge('back')">To back</Button>
                     </div>
+                    <Button v-if="selectedIsGroup" type="button" variant="secondary" class="w-full" @click="ungroupSelected"><Ungroup class="mr-2 h-4 w-4" />Ungroup elements</Button>
                     <Button variant="destructive" class="w-full" @click="removeSelected"><Trash2 class="mr-2 h-4 w-4" />Remove element</Button>
                 </div>
                 <p v-else class="mt-5 text-sm text-stone-400">Select an element to edit it.</p>
 
                 <div class="mt-8 border-t border-white/10 pt-5">
                     <h3 class="flex items-center gap-2 text-sm font-semibold"><Download class="h-4 w-4" />Download design</h3>
+                    <div class="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Studio export credits</p>
+                                <p class="mt-1 text-sm text-white"><strong>{{ studioCredits }}</strong> available</p>
+                            </div>
+                            <span class="rounded-full bg-white/10 px-2.5 py-1 text-xs text-stone-300">1 credit / new export</span>
+                        </div>
+                        <p class="mt-2 text-xs leading-relaxed text-stone-400">Editing, saving, previews, and re-downloading an existing completed export are free. A credit is used only when a new export completes successfully.</p>
+                        <div v-if="!canExport" class="mt-3 space-y-2 border-t border-white/10 pt-3">
+                            <p class="text-xs font-medium text-amber-200">Purchase Studio credits to create another finished export.</p>
+                            <Button v-for="packageOption in studio_billing.packages" :key="packageOption.slug" type="button" variant="secondary" class="w-full justify-between" @click="buyStudioCredits(packageOption)">
+                                <span>{{ packageOption.name }} · {{ packageOption.credits }} {{ packageOption.credits === 1 ? 'credit' : 'credits' }}</span>
+                                <span>{{ packageOption.price }}</span>
+                            </Button>
+                        </div>
+                    </div>
                     <p v-if="exportStatus" class="mt-2 text-xs text-sky-300">{{ exportStatus }}</p>
                     <div class="mt-3 grid grid-cols-2 gap-2">
                         <label class="text-xs text-stone-400">Format<select v-model="exportFormat" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option></select></label>
                         <label class="text-xs text-stone-400">Fit<select v-model="exportFit" class="mt-1 w-full rounded-md border border-white/10 bg-stone-900 p-2 text-white"><option value="contain">Fit inside</option><option value="cover">Crop to fill</option></select></label>
                     </div>
                     <div class="mt-3 space-y-2">
-                        <Button v-for="preset in export_presets" :key="preset.name" variant="secondary" class="w-full justify-between" :disabled="exporting" @click="exportDesign(preset.width, preset.height, preset.name)"><span>{{ preset.name }}</span><span class="text-xs text-stone-400">{{ preset.width }}×{{ preset.height }}</span></Button>
+                        <Button v-for="preset in export_presets" :key="preset.name" variant="secondary" class="w-full justify-between" :disabled="exporting || !canExport" @click="exportDesign(preset.width, preset.height, preset.name)"><span>{{ preset.name }}</span><span class="text-xs text-stone-400">{{ preset.width }}×{{ preset.height }} · 1 credit</span></Button>
                     </div>
                     <div class="mt-4 rounded-lg border border-white/10 p-3">
                         <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Custom size</p>
                         <div class="mt-2 grid grid-cols-2 gap-2"><input v-model.number="customWidth" type="number" min="320" :max="props.limits.max_server_width" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /><input v-model.number="customHeight" type="number" min="320" :max="props.limits.max_server_height" class="rounded-md border border-white/10 bg-white/5 p-2 text-sm" /></div>
-                        <Button class="mt-2 w-full" :disabled="exporting" @click="exportDesign(customWidth, customHeight, 'custom')">{{ exporting ? 'Preparing…' : 'Download custom size' }}</Button>
-                        <Button variant="secondary" class="mt-2 w-full" :disabled="exporting" @click="queueServerExport(customWidth, customHeight, 'Full resolution')">{{ exporting ? 'Queueing…' : 'Render full resolution on server' }}</Button>
+                        <Button class="mt-2 w-full" :disabled="exporting || !canExport" @click="exportDesign(customWidth, customHeight, 'custom')">{{ exporting ? 'Preparing…' : (canExport ? 'Export custom size · 1 credit' : 'Studio credit required') }}</Button>
+                        <Button variant="secondary" class="mt-2 w-full" :disabled="exporting || !canExport" @click="queueServerExport(customWidth, customHeight, 'Full resolution')">{{ exporting ? 'Queueing…' : (canExport ? 'Render full resolution · 1 credit' : 'Studio credit required') }}</Button>
                         <p class="mt-2 text-xs leading-relaxed text-stone-500">Server rendering uses the highest-resolution licensed source and continues through the queue even if you leave this page.</p>
                     </div>
                     <div v-if="recentExports.length" class="mt-5 border-t border-white/10 pt-4">

@@ -23,4 +23,5 @@ class DesignProject extends Model
     public function asset(): BelongsTo { return $this->belongsTo(Asset::class); }
     public function uploads(): HasMany { return $this->hasMany(DesignUpload::class); }
     public function exports(): HasMany { return $this->hasMany(DesignExport::class); }
+    public function projectAssets(): HasMany { return $this->hasMany(DesignProjectAsset::class); }
 }
