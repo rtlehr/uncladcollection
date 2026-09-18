@@ -131,6 +131,7 @@ class PermissionSeeder extends Seeder
 
             // Managed Messages
             ['group_name'=>'Marketing','name'=>'manage_message_boxes','label'=>'Manage Message Boxes','description'=>'Create, schedule, target, and publish managed modal and banner messages.'],
+            ['group_name'=>'Marketing','name'=>'manage_social_posts','label'=>'Manage X Posts','description'=>'Create, schedule, publish, retry, and review posts sent to X.'],
 
             // Sponsorship & Advertising
             ['group_name'=>'Advertising','name'=>'view_advertising','label'=>'View Advertising','description'=>'View sponsorship and advertising administration.'],
@@ -239,6 +240,11 @@ class PermissionSeeder extends Seeder
 
             if ($messageBoxPermission) {
                 $adminRole->permissions()->syncWithoutDetaching([$messageBoxPermission->id]);
+            }
+
+            $socialPostPermission = Permission::where('name', 'manage_social_posts')->first();
+            if ($socialPostPermission) {
+                $adminRole->permissions()->syncWithoutDetaching([$socialPostPermission->id]);
             }
         }
     }

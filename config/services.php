@@ -28,6 +28,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+
+    'x' => [
+        'api_key' => env('X_API_KEY'),
+        'api_secret' => env('X_API_SECRET'),
+        'access_token' => env('X_ACCESS_TOKEN'),
+        'access_token_secret' => env('X_ACCESS_TOKEN_SECRET'),
+        'api_base' => env('X_API_BASE', 'https://api.x.com'),
+        'upload_base' => env('X_UPLOAD_BASE', 'https://upload.twitter.com'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -63,6 +63,7 @@ use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\EmailDeliveryLogController;
 use App\Http\Controllers\Admin\CommunicationSettingController;
 use App\Http\Controllers\Admin\MessageBoxController;
+use App\Http\Controllers\Admin\SocialPostController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -301,6 +302,15 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('message-boxes', MessageBoxController::class)
             ->middleware('permission:manage_message_boxes');
+
+        Route::post('/social-posts/verify', [SocialPostController::class, 'verify'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.verify');
+        Route::post('/social-posts/{socialPost}/publish-now', [SocialPostController::class, 'publishNow'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.publish-now');
+        Route::resource('social-posts', SocialPostController::class)
+            ->parameters(['social-posts' => 'socialPost'])
+            ->except(['show'])
+            ->middleware('permission:manage_social_posts');
 
         Route::resource('permissions', PermissionController::class)
             ->except(['show'])

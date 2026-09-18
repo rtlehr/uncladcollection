@@ -366,3 +366,6 @@ Schedule::command('design-studio:cleanup')->dailyAt('03:10')->withoutOverlapping
 // Keep advertising campaign lifecycle status in sync with scheduled start/end times.
 // Production/staging only need the normal Laravel scheduler cron (`php artisan schedule:run`).
 Schedule::command('advertising:sync-campaign-statuses')->everyFiveMinutes()->withoutOverlapping();
+
+// Publish due X posts using the same Laravel scheduler cron.
+Schedule::command('social:x-publish')->everyMinute()->withoutOverlapping();
