@@ -8,6 +8,7 @@ class AiFeatureCatalog
         'blog_analysis' => 'Blog analysis, SEO, and tags',
         'blog_image_prompt' => 'Blog detailed image prompts',
         'image_prompt' => 'Standalone image prompt generator',
+        'social_post_generation' => 'Social / X post generation',
     ];
 
     public static function label(string $feature): string

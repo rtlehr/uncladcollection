@@ -64,6 +64,8 @@ use App\Http\Controllers\Admin\EmailDeliveryLogController;
 use App\Http\Controllers\Admin\CommunicationSettingController;
 use App\Http\Controllers\Admin\MessageBoxController;
 use App\Http\Controllers\Admin\SocialPostController;
+use App\Http\Controllers\Admin\SocialPostAiController;
+use App\Http\Controllers\Admin\SocialPostPromptAdditionController;
 
 
 Route::middleware(['auth', 'verified', 'permission:view_admin'])
@@ -302,6 +304,28 @@ Route::middleware(['auth', 'verified', 'permission:view_admin'])
 
         Route::resource('message-boxes', MessageBoxController::class)
             ->middleware('permission:manage_message_boxes');
+
+        Route::get('/social-posts/ai', [SocialPostAiController::class, 'index'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.index');
+        Route::post('/social-posts/ai/generate', [SocialPostAiController::class, 'generate'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.generate');
+        Route::post('/social-posts/ai/{suggestion}/regenerate', [SocialPostAiController::class, 'regenerate'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.regenerate');
+        Route::post('/social-posts/ai/{suggestion}/generate-more', [SocialPostAiController::class, 'generateMore'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.generate-more');
+        Route::post('/social-posts/ai/{suggestion}/accept', [SocialPostAiController::class, 'accept'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.accept');
+        Route::post('/social-posts/ai/{suggestion}/reject', [SocialPostAiController::class, 'reject'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.reject');
+        Route::post('/social-posts/ai/{suggestion}/publish-now', [SocialPostAiController::class, 'publishNow'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.publish-now');
+
+        Route::post('/social-posts/ai/prompt-additions', [SocialPostPromptAdditionController::class, 'store'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.prompt-additions.store');
+        Route::put('/social-posts/ai/prompt-additions/{promptAddition}', [SocialPostPromptAdditionController::class, 'update'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.prompt-additions.update');
+        Route::delete('/social-posts/ai/prompt-additions/{promptAddition}', [SocialPostPromptAdditionController::class, 'destroy'])
+            ->middleware('permission:manage_social_posts')->name('social-posts.ai.prompt-additions.destroy');
 
         Route::post('/social-posts/verify', [SocialPostController::class, 'verify'])
             ->middleware('permission:manage_social_posts')->name('social-posts.verify');

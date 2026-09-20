@@ -30,8 +30,9 @@ function statusClass(status:string) {
     <div class="space-y-6 p-6">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <PageHeader title="X Posts" description="Create, schedule, publish, and review posts sent to X." />
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 <Button variant="outline" @click="verifyConnection">Test X Connection</Button>
+                <Button variant="outline" as-child><Link href="/admin/social-posts/ai">Generate with AI</Link></Button>
                 <Button as-child><Link href="/admin/social-posts/create">Create Post</Link></Button>
             </div>
         </div>
